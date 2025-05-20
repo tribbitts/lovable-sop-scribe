@@ -81,10 +81,23 @@ export async function addScreenshot(
             // Use the padded canvas with rounded corners for PDF
             const imgData = paddedCanvas.toDataURL('image/jpeg', 0.92);
             
-            // Calculate image dimensions to fit within margins while preserving aspect ratio
+            // Calculate optimal image dimensions based on available space and aspect ratio
+            // Target height that would allow approximately 2 steps per page
+            const maxHeightForTwoStepsPerPage = (height - margin.top - margin.bottom - 100) / 2;
+            
+            // Ensure image fits width while maintaining aspect ratio
             const maxImgWidth = contentWidth - 20; // Leave a bit of margin
-            const imgWidth = Math.min(maxImgWidth, paddedCanvas.width * 0.5);
-            const imgHeight = (paddedCanvas.height * imgWidth) / paddedCanvas.width;
+            const aspectRatio = paddedCanvas.width / paddedCanvas.height;
+            
+            // Start with width constraint
+            let imgWidth = maxImgWidth;
+            let imgHeight = imgWidth / aspectRatio;
+            
+            // If height is still too large, constrain by height
+            if (imgHeight > maxHeightForTwoStepsPerPage) {
+              imgHeight = maxHeightForTwoStepsPerPage;
+              imgWidth = imgHeight * aspectRatio;
+            }
             
             // Center the image horizontally
             const imageX = (width - imgWidth) / 2;
