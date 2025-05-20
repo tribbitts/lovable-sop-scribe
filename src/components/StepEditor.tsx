@@ -1,4 +1,3 @@
-
 import React, { useRef, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -230,7 +229,6 @@ const StepEditor: React.FC<StepEditorProps> = ({ step, index }) => {
                   <motion.div
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: 'auto' }}
-                    exit={{ opacity: 0, height: 0 }}
                     className="bg-zinc-800 rounded-lg p-4 border border-zinc-700"
                   >
                     <div className="flex flex-wrap items-center gap-4">

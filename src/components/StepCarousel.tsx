@@ -11,7 +11,6 @@ import {
   CarouselPrevious,
   CarouselNext,
 } from "@/components/ui/carousel";
-import { useCarousel } from "@/components/ui/carousel";
 import StepEditor from "@/components/StepEditor";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";

@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { useState } from "react";
 import { toast } from "@/hooks/use-toast";
 import { generatePDF } from "@/lib/pdf-generator";
-import { Plus, Settings, Download, Upload, FileJson, FilePdf } from "lucide-react";
+import { Plus, Settings, Download, Upload, FileJson, FileText } from "lucide-react";
 
 const Toolbar = () => {
   const { addStep, saveDocumentToJSON, loadDocumentFromJSON } = useSopContext();
@@ -155,7 +155,7 @@ const Toolbar = () => {
           variant="default" 
           className="bg-[#007AFF] hover:bg-[#0069D9] text-white shadow-md transition-all flex gap-2"
         >
-          <FilePdf className="h-4 w-4" /> Export as PDF
+          <FileText className="h-4 w-4" /> Export as PDF
         </Button>
       </div>
     </div>
