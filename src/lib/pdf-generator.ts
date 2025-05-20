@@ -1,4 +1,3 @@
-
 import { jsPDF } from "jspdf";
 import { SopDocument, SopStep } from "../types/sop";
 import html2canvas from "html2canvas";
@@ -33,25 +32,26 @@ export async function generatePDF(sopDocument: SopDocument): Promise<void> {
   const topicY = titleY + 8;
   pdf.text(`Topic: ${sopDocument.topic}`, margin, topicY);
   
-  // Date (right-aligned)
-  const dateWidth = pdf.getStringUnitWidth(sopDocument.date) * 12 / pdf.internal.scaleFactor;
-  pdf.text(sopDocument.date, width - margin - dateWidth, topicY);
-  
-  // Logo
+  // Logo (positioned in upper right corner)
   if (sopDocument.logo) {
     try {
+      const logoSize = 15;
       pdf.addImage(
         sopDocument.logo, 
         "PNG", 
-        margin, 
+        width - margin - logoSize, 
         margin - 5, 
-        20, 
-        20
+        logoSize, 
+        logoSize
       );
     } catch(e) {
       console.error("Error adding logo to PDF", e);
     }
   }
+  
+  // Date (right-aligned, smaller font, positioned below the logo)
+  pdf.setFontSize(10);
+  pdf.text(sopDocument.date, width - margin - 25, margin + 15);
   
   // Draw a light gray line below the header
   pdf.setDrawColor(200, 200, 200);

@@ -4,9 +4,11 @@ import SopCreator from "./SopCreator";
 
 const Index = () => {
   return (
-    <SopProvider>
-      <SopCreator />
-    </SopProvider>
+    <div className="min-h-screen bg-zinc-900 text-zinc-100">
+      <SopProvider>
+        <SopCreator />
+      </SopProvider>
+    </div>
   );
 };
 

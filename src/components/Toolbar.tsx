@@ -106,27 +106,28 @@ const Toolbar = () => {
   return (
     <div className="flex flex-wrap justify-between items-center mb-6 gap-2">
       <div className="flex flex-wrap gap-2">
-        <Button onClick={addStep}>Add Step</Button>
+        <Button onClick={addStep} className="bg-zinc-800 border border-zinc-700 hover:bg-zinc-700 text-white">Add Step</Button>
         
         <Dialog>
           <DialogTrigger asChild>
-            <Button variant="outline">Settings</Button>
+            <Button variant="outline" className="border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-white">Settings</Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="bg-zinc-900 border-zinc-800">
             <DialogHeader>
-              <DialogTitle>SOP Settings</DialogTitle>
+              <DialogTitle className="text-white">SOP Settings</DialogTitle>
             </DialogHeader>
             <div className="space-y-4 pt-4">
               <div className="space-y-2">
-                <Label htmlFor="company-name">Company Name</Label>
+                <Label htmlFor="company-name" className="text-zinc-300">Company Name</Label>
                 <Input
                   id="company-name"
                   value={companyNameInput}
                   onChange={(e) => setCompanyNameInput(e.target.value)}
                   placeholder="Enter company name"
+                  className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-500"
                 />
               </div>
-              <Button onClick={handleSaveSettings} className="w-full">Save Settings</Button>
+              <Button onClick={handleSaveSettings} className="w-full bg-zinc-800 border border-zinc-700 hover:bg-zinc-700">Save Settings</Button>
             </div>
           </DialogContent>
         </Dialog>
@@ -135,27 +136,28 @@ const Toolbar = () => {
       <div className="flex flex-wrap gap-2">
         <Dialog>
           <DialogTrigger asChild>
-            <Button variant="outline">Save/Load</Button>
+            <Button variant="outline" className="border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-white">Save/Load</Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="bg-zinc-900 border-zinc-800">
             <DialogHeader>
-              <DialogTitle>Save or Load SOP</DialogTitle>
+              <DialogTitle className="text-white">Save or Load SOP</DialogTitle>
             </DialogHeader>
             <div className="space-y-4 pt-4">
-              <Button onClick={saveDocumentToJSON} className="w-full">
+              <Button onClick={saveDocumentToJSON} className="w-full bg-zinc-800 border border-zinc-700 hover:bg-zinc-700">
                 Download as JSON
               </Button>
               
               <div className="space-y-2">
-                <Label htmlFor="json-file">Load from JSON</Label>
+                <Label htmlFor="json-file" className="text-zinc-300">Load from JSON</Label>
                 <div className="flex gap-2">
                   <Input
                     id="json-file"
                     type="file"
                     accept=".json"
                     onChange={handleFileChange}
+                    className="bg-zinc-800 border-zinc-700 text-white"
                   />
-                  <Button onClick={handleFileUpload} disabled={!jsonFile}>
+                  <Button onClick={handleFileUpload} disabled={!jsonFile} className="bg-zinc-800 border border-zinc-700 hover:bg-zinc-700 disabled:bg-zinc-900 disabled:text-zinc-600">
                     Load
                   </Button>
                 </div>
@@ -164,7 +166,7 @@ const Toolbar = () => {
           </DialogContent>
         </Dialog>
         
-        <Button onClick={handleExport} variant="default">
+        <Button onClick={handleExport} variant="default" className="bg-zinc-800 border border-zinc-700 hover:bg-zinc-700">
           Export as PDF
         </Button>
       </div>
