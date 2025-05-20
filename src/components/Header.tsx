@@ -58,15 +58,26 @@ const Header = () => {
                 className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-500"
               />
             </div>
+            
+            <div>
+              <Label htmlFor="sop-date" className="mb-1 block text-zinc-400 text-xs">Date</Label>
+              <Input 
+                id="sop-date" 
+                type="date" 
+                value={sopDocument.date} 
+                onChange={(e) => setSopDate(e.target.value)}
+                className="bg-zinc-800 border-zinc-700 text-white text-sm h-8"
+              />
+            </div>
           </div>
 
           <div className="flex flex-col md:items-end justify-start space-y-4 order-1 md:order-2">
             {logoPreview ? (
-              <div className="relative w-32 h-32 mb-2">
+              <div className="relative w-40 h-40 mb-2">
                 <img 
                   src={logoPreview} 
                   alt="Company Logo" 
-                  className="w-32 h-32 object-contain border border-zinc-700 rounded-md bg-zinc-800"
+                  className="w-40 h-40 object-contain border border-zinc-700 rounded-md bg-zinc-800"
                 />
                 <Button 
                   variant="destructive" 
@@ -78,7 +89,7 @@ const Header = () => {
                 </Button>
               </div>
             ) : (
-              <div className="w-32 h-32 border border-dashed border-zinc-600 rounded-md flex items-center justify-center bg-zinc-800 mb-2">
+              <div className="w-40 h-40 border border-dashed border-zinc-600 rounded-md flex items-center justify-center bg-zinc-800 mb-2">
                 <span className="text-sm text-zinc-500">LOGO</span>
               </div>
             )}
@@ -93,17 +104,6 @@ const Header = () => {
                 onChange={handleLogoChange}
               />
             </Label>
-
-            <div className="mt-2">
-              <Label htmlFor="sop-date" className="mb-1 block text-zinc-400 text-xs">Date</Label>
-              <Input 
-                id="sop-date" 
-                type="date" 
-                value={sopDocument.date} 
-                onChange={(e) => setSopDate(e.target.value)}
-                className="bg-zinc-800 border-zinc-700 text-white text-sm h-8"
-              />
-            </div>
           </div>
         </div>
       </CardContent>
