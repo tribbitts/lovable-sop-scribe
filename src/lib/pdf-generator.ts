@@ -23,9 +23,9 @@ export async function generatePDF(sopDocument: SopDocument): Promise<void> {
       const width = pdf.internal.pageSize.getWidth();
       const height = pdf.internal.pageSize.getHeight();
       
-      // Set better margins (Apple-inspired spacious design)
+      // Adjust top margin to be smaller to utilize more vertical space
       const margin = {
-        top: 30,
+        top: 20,
         right: 25,
         bottom: 30,
         left: 25

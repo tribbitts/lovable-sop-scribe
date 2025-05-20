@@ -12,18 +12,21 @@ export async function renderSteps(
   contentWidth: number,
   addContentPageDesign: Function
 ) {
+  // Move up the starting position to better utilize page space
+  let currentY = margin.top;
+  
   // Steps title
   pdf.setFont("helvetica", "bold");
   pdf.setFontSize(18);
   pdf.setTextColor(44, 44, 46); // Charcoal gray
-  pdf.text("Steps", margin.left, margin.top + 15);
+  pdf.text("Steps", margin.left, currentY);
   
   // Add thin accent divider below title
   pdf.setDrawColor(0, 122, 255); // Apple Blue
   pdf.setLineWidth(0.5);
-  pdf.line(margin.left, margin.top + 20, margin.left + 30, margin.top + 20);
+  pdf.line(margin.left, currentY + 5, margin.left + 30, currentY + 5);
   
-  let currentY = margin.top + 40;
+  currentY += 25; // Reduced spacing to start steps content earlier
   
   // Steps content with better formatting
   for (let i = 0; i < steps.length; i++) {
@@ -33,7 +36,7 @@ export async function renderSteps(
     if (currentY > height - margin.bottom - 80) {
       pdf.addPage();
       addContentPageDesign(pdf, width, height, margin);
-      currentY = margin.top + 20;
+      currentY = margin.top;
     }
     
     // Style the step (number, description, separator)
@@ -54,14 +57,14 @@ export async function renderSteps(
       );
     }
     
-    // Add more space between steps
-    currentY += 15;
+    // Add space between steps (slightly reduced)
+    currentY += 10;
     
     // Check if we need a new page for the next step
     if (i < steps.length - 1 && currentY > height - margin.bottom - 60) {
       pdf.addPage();
       addContentPageDesign(pdf, width, height, margin);
-      currentY = margin.top + 20;
+      currentY = margin.top;
     }
   }
 }

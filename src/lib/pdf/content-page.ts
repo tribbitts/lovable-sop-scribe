@@ -1,15 +1,12 @@
-
 import { SopDocument } from "@/types/sop";
 
 export function addContentPageDesign(pdf: any, width: number, height: number, margin: any) {
-  // Subtle background elements
-  // Light circle in bottom left
+  // Keep the design minimal at the top to allow content to start higher
+  // Light circle in bottom left only
   pdf.setFillColor(245, 245, 247); // Very light gray
   pdf.circle(margin.left, height - margin.bottom, 60, 'F');
   
-  // Light accent bar at top
-  pdf.setFillColor(245, 245, 247); // Very light blue-gray
-  pdf.rect(margin.left - 5, margin.top - 10, width - margin.left - margin.right + 10, 20, 'F');
+  // Remove the top accent bar to save vertical space
 }
 
 export function addPageFooters(pdf: any, sopDocument: SopDocument, width: number, height: number, margin: any) {
