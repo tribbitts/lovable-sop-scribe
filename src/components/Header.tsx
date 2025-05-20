@@ -31,7 +31,7 @@ const Header = () => {
   };
 
   return (
-    <Card className="mb-6 bg-card border-zinc-800">
+    <Card className="mb-6 bg-[#1E1E1E] border-zinc-800 rounded-2xl overflow-hidden">
       <CardContent className="pt-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="flex flex-col space-y-4 md:col-span-2 order-2 md:order-1">
@@ -43,7 +43,7 @@ const Header = () => {
                 onChange={(e) => setSopTitle(e.target.value)}
                 placeholder="Enter SOP Title"
                 required
-                className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-500"
+                className="bg-[#2C2C2E] border-zinc-700 text-white placeholder:text-zinc-500 rounded-xl"
               />
             </div>
             
@@ -55,7 +55,7 @@ const Header = () => {
                 onChange={(e) => setSopTopic(e.target.value)}
                 placeholder="Enter Topic"
                 required
-                className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-500"
+                className="bg-[#2C2C2E] border-zinc-700 text-white placeholder:text-zinc-500 rounded-xl"
               />
             </div>
             
@@ -66,7 +66,7 @@ const Header = () => {
                 type="date" 
                 value={sopDocument.date} 
                 onChange={(e) => setSopDate(e.target.value)}
-                className="bg-zinc-800 border-zinc-700 text-white text-sm h-8"
+                className="bg-[#2C2C2E] border-zinc-700 text-white text-sm h-8 rounded-xl"
               />
             </div>
           </div>
@@ -77,7 +77,7 @@ const Header = () => {
                 <img 
                   src={logoPreview} 
                   alt="Company Logo" 
-                  className="w-40 h-40 object-contain border border-zinc-700 rounded-md bg-zinc-800"
+                  className="w-40 h-40 object-contain border border-zinc-700 rounded-xl bg-[#2C2C2E]"
                 />
                 <Button 
                   variant="destructive" 
@@ -89,12 +89,12 @@ const Header = () => {
                 </Button>
               </div>
             ) : (
-              <div className="w-40 h-40 border border-dashed border-zinc-600 rounded-md flex items-center justify-center bg-zinc-800 mb-2">
+              <div className="w-40 h-40 border border-dashed border-zinc-600 rounded-xl flex items-center justify-center bg-[#2C2C2E] mb-2">
                 <span className="text-sm text-zinc-500">LOGO</span>
               </div>
             )}
             
-            <Label htmlFor="logo-upload" className="cursor-pointer text-sm text-primary">
+            <Label htmlFor="logo-upload" className="cursor-pointer text-sm text-[#007AFF]">
               {logoPreview ? "Change Logo" : "Upload Logo"}
               <Input 
                 id="logo-upload" 
