@@ -93,25 +93,32 @@ export async function addScreenshot(
             const imgData = paddedCanvas.toDataURL('image/jpeg', 0.92);
             
             // Calculate optimal image dimensions based on available space and aspect ratio
-            // Target height that would allow approximately 2 steps per page
-            const maxHeightForTwoStepsPerPage = (height - margin.top - margin.bottom - 100) / 2;
-            
-            // Ensure image fits width while maintaining aspect ratio
-            const maxImgWidth = contentWidth - 20; // Leave a bit of margin
+            // Allow for larger images by using more of the page height
+            const maxImgWidth = contentWidth - 10; // Use almost full content width
             const aspectRatio = paddedCanvas.width / paddedCanvas.height;
+            
+            // Calculate available height (accounting for caption)
+            const availableHeight = height - currentY - margin.bottom - 20;
             
             // Start with width constraint
             let imgWidth = maxImgWidth;
             let imgHeight = imgWidth / aspectRatio;
             
-            // If height is still too large, constrain by height
-            if (imgHeight > maxHeightForTwoStepsPerPage) {
-              imgHeight = maxHeightForTwoStepsPerPage;
+            // If height exceeds available space, constrain by height
+            if (imgHeight > availableHeight) {
+              imgHeight = availableHeight;
               imgWidth = imgHeight * aspectRatio;
             }
             
             // Center the image horizontally
             const imageX = (width - imgWidth) / 2;
+            
+            // Check if we need a new page for this image
+            if (currentY + imgHeight > height - margin.bottom - 20) {
+              pdf.addPage();
+              addContentPageDesign(pdf, width, height, margin);
+              currentY = margin.top;
+            }
             
             // Add the image to PDF
             pdf.addImage(
@@ -135,7 +142,7 @@ export async function addScreenshot(
               currentY + imgHeight + 5
             );
             
-            currentY += imgHeight + 15;
+            currentY += imgHeight + 10;
           }
           resolve();
         };
@@ -143,7 +150,7 @@ export async function addScreenshot(
     }
   } catch (e) {
     console.error("Error adding screenshot to PDF", e);
-    currentY += 10;
+    currentY += 5; // Small space if image fails
   }
   return currentY;
 }

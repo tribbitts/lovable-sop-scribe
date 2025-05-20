@@ -20,23 +20,23 @@ export function styleStep(
   // Format step number with leading zero for single digits
   const stepNumber = (index + 1).toString().padStart(2, '0');
   
-  // Draw a light gray header background with rounded corners
+  // Draw a light gray header background with rounded corners (reduced height)
   pdf.setFillColor(242, 242, 247); // Light gray background
-  pdf.roundedRect(margin.left - 10, currentY - 10, width - margin.left - margin.right + 20, 30, 5, 5, 'F');
+  pdf.roundedRect(margin.left - 10, currentY - 8, width - margin.left - margin.right + 20, 20, 5, 5, 'F');
   
-  // Add step number and description inline in the header area
-  pdf.text(stepNumber, margin.left, currentY + 5);
+  // Add step number and description inline in the header area (vertically centered)
+  pdf.text(stepNumber, margin.left, currentY + 4);
   
   // Step title/description
   pdf.setFont("helvetica", "semibold");
   pdf.setFontSize(14);
   pdf.setTextColor(44, 44, 46); // Dark gray
   
-  // Add step description with indent in the header
-  pdf.text(step.description, margin.left + 20, currentY + 5);
+  // Add step description with indent in the header (vertically centered)
+  pdf.text(step.description, margin.left + 20, currentY + 4);
   
-  // Move currentY below the header
-  currentY += 25;
+  // Move currentY below the header (reduced spacing)
+  currentY += 20;
   
   return currentY;
 }

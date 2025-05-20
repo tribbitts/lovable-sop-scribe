@@ -12,7 +12,7 @@ export async function renderSteps(
   contentWidth: number,
   addContentPageDesign: Function
 ) {
-  // Move up the starting position to better utilize page space
+  // Start at the very top of the page with minimal spacing
   let currentY = margin.top;
   
   // Steps title
@@ -26,7 +26,7 @@ export async function renderSteps(
   pdf.setLineWidth(0.5);
   pdf.line(margin.left, currentY + 5, margin.left + 30, currentY + 5);
   
-  currentY += 25; // Reduced spacing to start steps content earlier
+  currentY += 20; // Minimal spacing to start steps content earlier
   
   // Steps content with better formatting
   for (let i = 0; i < steps.length; i++) {
@@ -57,8 +57,8 @@ export async function renderSteps(
       );
     }
     
-    // Add space between steps (slightly reduced)
-    currentY += 10;
+    // Add minimal space between steps
+    currentY += 8;
     
     // Check if we need a new page for the next step
     if (i < steps.length - 1 && currentY > height - margin.bottom - 60) {
