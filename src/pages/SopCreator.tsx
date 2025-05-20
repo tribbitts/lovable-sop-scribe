@@ -2,10 +2,13 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { useSopContext } from "@/context/SopContext";
 import Header from "@/components/Header";
-import StepEditor from "@/components/StepEditor";
 import Footer from "@/components/Footer";
 import Toolbar from "@/components/Toolbar";
 import { motion } from "@/components/MotionWrapper";
+import { ArrowLeft, ArrowRight, Circle } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import StepCarousel from "@/components/StepCarousel";
+import OrganizationHeader from "@/components/OrganizationHeader";
 
 const SopCreator = () => {
   const { sopDocument } = useSopContext();
@@ -33,6 +36,14 @@ const SopCreator = () => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.1 }}
       >
+        <OrganizationHeader />
+      </motion.div>
+
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.2 }}
+      >
         <Toolbar />
       </motion.div>
 
@@ -40,7 +51,7 @@ const SopCreator = () => {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
+          transition={{ duration: 0.5, delay: 0.3 }}
         >
           <Header />
         </motion.div>
@@ -48,28 +59,16 @@ const SopCreator = () => {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.3 }}
+          transition={{ duration: 0.5, delay: 0.4 }}
+          className="relative"
         >
-          <h2 className="text-xl font-semibold mb-4 text-white">Steps</h2>
-          {sopDocument.steps.length === 0 ? (
-            <Card className="bg-[#1E1E1E] border-zinc-800 rounded-2xl">
-              <CardContent className="pt-6">
-                <p className="text-center text-zinc-500 py-8">
-                  No steps added yet. Click "Add Step" to get started.
-                </p>
-              </CardContent>
-            </Card>
-          ) : (
-            sopDocument.steps.map((step, index) => (
-              <StepEditor key={step.id} step={step} index={index} />
-            ))
-          )}
+          <StepCarousel />
         </motion.div>
         
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.4 }}
+          transition={{ duration: 0.5, delay: 0.5 }}
         >
           <Footer />
         </motion.div>
