@@ -2,49 +2,60 @@
 import { SopDocument } from "@/types/sop";
 
 // Helper function to compress images before adding to PDF
-// Reduced quality to improve performance, and reduced max dimension
-export function compressImage(dataUrl: string, quality = 0.7): Promise<string> {
+// Further reduced quality and dimensions to improve performance
+export function compressImage(dataUrl: string, quality = 0.5): Promise<string> {
   return new Promise((resolve) => {
+    if (!dataUrl) {
+      console.error("Empty dataUrl provided to compressImage");
+      resolve("");
+      return;
+    }
+
     const img = new Image();
-    img.src = dataUrl;
-    img.onload = () => {
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-      
-      // Calculate new dimensions while maintaining aspect ratio
-      // Using a more conservative max width
-      const maxWidth = 600; 
-      const scaleFactor = maxWidth / Math.max(1, img.width);
-      canvas.width = Math.min(maxWidth, img.width);
-      canvas.height = img.height * scaleFactor;
-      
-      if (ctx) {
-        // Apply image smoothing for better quality at reduced size
-        ctx.imageSmoothingEnabled = true;
-        ctx.imageSmoothingQuality = 'high';
-        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-        
-        try {
-          // Convert to compressed JPEG with better quality
-          const compressed = canvas.toDataURL('image/jpeg', quality);
-          resolve(compressed);
-        } catch (err) {
-          console.error("Error compressing image:", err);
-          // If compression fails, return original
-          resolve(dataUrl);
-        }
-      } else {
-        // If can't compress, use the original
-        resolve(dataUrl); 
-      }
-    };
+    img.crossOrigin = "anonymous";
     
-    // Add error handling for image loading
-    img.onerror = () => {
-      console.error("Error loading image for compression");
+    // Set up error handling first
+    img.onerror = (e) => {
+      console.error("Error loading image for compression:", e);
       // Return original if we can't process it
       resolve(dataUrl);
     };
+    
+    img.onload = () => {
+      try {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        if (!ctx) {
+          console.error("Couldn't get 2d context for image compression");
+          resolve(dataUrl);
+          return;
+        }
+        
+        // Calculate new dimensions while maintaining aspect ratio
+        // Using a more conservative max width
+        const maxWidth = 500; // Further reduced for performance
+        const scaleFactor = maxWidth / Math.max(1, img.width);
+        canvas.width = Math.min(maxWidth, img.width);
+        canvas.height = img.height * scaleFactor;
+        
+        // Apply image smoothing for better quality at reduced size
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'medium'; // Changed to medium for better performance
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        
+        // Convert to compressed JPEG with reduced quality
+        const compressed = canvas.toDataURL('image/jpeg', quality);
+        resolve(compressed);
+      } catch (err) {
+        console.error("Error compressing image:", err);
+        // If compression fails, return original
+        resolve(dataUrl);
+      }
+    };
+    
+    // Start loading the image
+    img.src = dataUrl;
   });
 }
 

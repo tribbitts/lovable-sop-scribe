@@ -35,44 +35,48 @@ export async function generatePDF(sopDocument: SopDocument): Promise<void> {
       
       console.log("Creating cover page");
       
-      // Create cover page
-      addCoverPage(pdf, sopDocument, width, height, margin);
-      console.log("Cover page created successfully");
-      
-      // Add new page for steps content
-      pdf.addPage();
-      addContentPageDesign(pdf, width, height, margin);
-      
-      console.log(`Rendering ${sopDocument.steps.length} steps`);
-      
-      // Render all steps
-      renderSteps(
-        pdf, 
-        sopDocument.steps, 
-        width, 
-        height, 
-        margin, 
-        contentWidth,
-        addContentPageDesign
-      ).then(() => {
-        console.log("Steps rendered successfully");
+      // Create cover page with better error handling
+      addCoverPage(pdf, sopDocument, width, height, margin)
+        .then(() => {
+          console.log("Cover page created successfully");
+          
+          // Add new page for steps content
+          pdf.addPage();
+          addContentPageDesign(pdf, width, height, margin);
+          
+          console.log(`Rendering ${sopDocument.steps.length} steps`);
+          
+          // Render all steps with better error handling
+          return renderSteps(
+            pdf, 
+            sopDocument.steps, 
+            width, 
+            height, 
+            margin, 
+            contentWidth,
+            addContentPageDesign
+          );
+        })
+        .then(() => {
+          console.log("Steps rendered successfully");
+          
+          // Add page footers
+          addPageFooters(pdf, sopDocument, width, height, margin);
+          
+          // Save the PDF with a standardized filename
+          const filename = generatePdfFilename(sopDocument);
+          console.log(`Saving PDF as: ${filename}`);
+          
+          pdf.save(filename);
+          console.log("PDF saved successfully");
+          
+          resolve();
+        })
+        .catch((error) => {
+          console.error("PDF generation error:", error);
+          reject(error);
+        });
         
-        // Add page footers
-        addPageFooters(pdf, sopDocument, width, height, margin);
-        
-        // Save the PDF with a standardized filename
-        const filename = generatePdfFilename(sopDocument);
-        console.log(`Saving PDF as: ${filename}`);
-        
-        pdf.save(filename);
-        console.log("PDF saved successfully");
-        
-        resolve();
-      }).catch((error) => {
-        console.error("Error rendering steps:", error);
-        reject(error);
-      });
-      
     } catch (error) {
       console.error("PDF generation error:", error);
       reject(error);

@@ -15,8 +15,6 @@ const Toolbar = () => {
   const [isExporting, setIsExporting] = useState(false);
   
   const handleExport = async () => {
-    const { sopDocument } = useSopContext();
-    
     if (!sopDocument.title) {
       toast({
         title: "SOP Title Required",
