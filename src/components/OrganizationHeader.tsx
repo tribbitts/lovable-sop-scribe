@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useSopContext } from "@/context/SopContext";
 import { Button } from "@/components/ui/button";
-import { X } from "lucide-react";
+import { X, Upload } from "lucide-react";
 
 const OrganizationHeader = () => {
   const { sopDocument, setCompanyName, setLogo } = useSopContext();
@@ -70,18 +70,28 @@ const OrganizationHeader = () => {
                   </Button>
                 </div>
               ) : (
-                <Input
-                  id="logo"
-                  type="file"
-                  onChange={handleLogoChange}
-                  className="bg-zinc-800 border-zinc-700 hover:border-zinc-600 focus:border-[#007AFF] transition-all text-white"
-                  accept="image/*"
-                />
+                <div className="w-full">
+                  <label htmlFor="logo-upload" className="cursor-pointer">
+                    <div className="flex items-center justify-center w-full h-16 bg-zinc-800 border border-zinc-700 hover:border-zinc-600 rounded-lg transition-all">
+                      <div className="flex flex-col items-center gap-1">
+                        <Upload className="h-5 w-5 text-zinc-400" />
+                        <span className="text-xs text-zinc-400">Upload Logo</span>
+                      </div>
+                    </div>
+                    <Input
+                      id="logo-upload"
+                      type="file"
+                      onChange={handleLogoChange}
+                      className="hidden"
+                      accept="image/*"
+                    />
+                  </label>
+                  <p className="text-xs text-zinc-500 mt-1">
+                    Recommended: square image, max 400x400px
+                  </p>
+                </div>
               )}
             </div>
-            <p className="text-xs text-zinc-500">
-              Recommended: square image, max 400x400px
-            </p>
           </div>
         </div>
       </CardContent>

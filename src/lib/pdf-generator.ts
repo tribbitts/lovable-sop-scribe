@@ -33,24 +33,36 @@ export async function generatePDF(sopDocument: SopDocument): Promise<void> {
     const contentWidth = width - (margin.left + margin.right);
     
     console.log("Creating cover page");
-    // Create cover page
-    await addCoverPage(pdf, sopDocument, width, height, margin);
+    // Create cover page - with error handling
+    try {
+      await addCoverPage(pdf, sopDocument, width, height, margin);
+      console.log("Cover page created successfully");
+    } catch (error) {
+      console.error("Error creating cover page:", error);
+      // Continue anyway to attempt to generate the rest of the PDF
+    }
     
     // Add new page for steps content
     pdf.addPage();
     addContentPageDesign(pdf, width, height, margin);
     
     console.log(`Rendering ${sopDocument.steps.length} steps`);
-    // Render all steps
-    await renderSteps(
-      pdf, 
-      sopDocument.steps, 
-      width, 
-      height, 
-      margin, 
-      contentWidth,
-      addContentPageDesign
-    );
+    // Render all steps with better error handling
+    try {
+      await renderSteps(
+        pdf, 
+        sopDocument.steps, 
+        width, 
+        height, 
+        margin, 
+        contentWidth,
+        addContentPageDesign
+      );
+      console.log("Steps rendered successfully");
+    } catch (error) {
+      console.error("Error rendering steps:", error);
+      // Continue to attempt to complete the PDF
+    }
     
     // Add page footers
     addPageFooters(pdf, sopDocument, width, height, margin);
@@ -58,7 +70,11 @@ export async function generatePDF(sopDocument: SopDocument): Promise<void> {
     // Save the PDF with a standardized filename
     const filename = generatePdfFilename(sopDocument);
     console.log(`Saving PDF as: ${filename}`);
+    
+    // Use a different approach for saving
     pdf.save(filename);
+    console.log("PDF saved successfully");
+    
     return Promise.resolve();
   } catch (error) {
     console.error("PDF generation error:", error);

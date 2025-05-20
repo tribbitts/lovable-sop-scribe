@@ -10,8 +10,9 @@ import { generatePDF } from "@/lib/pdf-generator";
 import { Download, Upload, FileJson, FileText } from "lucide-react";
 
 const Toolbar = () => {
-  const { saveDocumentToJSON, loadDocumentFromJSON } = useSopContext();
+  const { saveDocumentToJSON, loadDocumentFromJSON, sopDocument } = useSopContext();
   const [jsonFile, setJsonFile] = useState<File | null>(null);
+  const [isExporting, setIsExporting] = useState(false);
   
   const handleExport = async () => {
     const { sopDocument } = useSopContext();
@@ -34,7 +35,7 @@ const Toolbar = () => {
       return;
     }
 
-    // Validate that all steps have descriptions and screenshots
+    // Validate that all steps have descriptions
     for (let i = 0; i < sopDocument.steps.length; i++) {
       const step = sopDocument.steps[i];
       if (!step.description) {
@@ -45,25 +46,26 @@ const Toolbar = () => {
         });
         return;
       }
-      if (!step.screenshot) {
-        toast({
-          title: "Screenshot Required",
-          description: `Please add a screenshot for step ${i + 1}.`,
-          variant: "destructive"
-        });
-        return;
-      }
     }
 
     try {
+      setIsExporting(true);
+      toast({
+        title: "Creating PDF",
+        description: "Please wait while your PDF is being generated..."
+      });
+      
       console.log("Starting PDF export");
       await generatePDF(sopDocument);
+      
+      setIsExporting(false);
       toast({
         title: "PDF Generated",
         description: "Your SOP has been successfully generated and downloaded."
       });
     } catch (error) {
       console.error("PDF generation error:", error);
+      setIsExporting(false);
       toast({
         title: "Error",
         description: "Failed to generate PDF. Please try again.",
@@ -145,9 +147,11 @@ const Toolbar = () => {
         <Button 
           onClick={handleExport} 
           variant="default" 
+          disabled={isExporting || sopDocument.steps.length === 0}
           className="bg-[#007AFF] hover:bg-[#0069D9] text-white shadow-md transition-all flex gap-2"
         >
-          <FileText className="h-4 w-4" /> Export as PDF
+          <FileText className="h-4 w-4" /> 
+          {isExporting ? "Creating PDF..." : "Export as PDF"}
         </Button>
       </div>
     </div>
