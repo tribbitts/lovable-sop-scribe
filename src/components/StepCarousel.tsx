@@ -1,9 +1,9 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useSopContext } from "@/context/SopContext";
-import { ArrowLeft, ArrowRight, Plus, Circle } from "lucide-react";
+import { Plus, Circle } from "lucide-react";
 import {
   Carousel,
   CarouselContent,
@@ -19,12 +19,21 @@ import { motion } from "@/components/MotionWrapper";
 const StepCarousel = () => {
   const { sopDocument, addStep } = useSopContext();
   const [activeStep, setActiveStep] = useState(0);
+  const carouselApiRef = useRef<any>(null);
 
   const handleAddStep = () => {
+    const currentStepCount = sopDocument.steps.length;
+    
     addStep();
+    
     // Set active step to the newly added step
     setTimeout(() => {
-      setActiveStep(sopDocument.steps.length);
+      setActiveStep(currentStepCount);
+      
+      // Scroll to the new step if we have the API reference
+      if (carouselApiRef.current) {
+        carouselApiRef.current.scrollTo(currentStepCount);
+      }
     }, 100);
     
     toast({
@@ -78,6 +87,7 @@ const StepCarousel = () => {
             opts={{ loop: false }}
             className="w-full"
             setApi={(api) => {
+              carouselApiRef.current = api;
               if (!api) return;
               api.on("select", () => {
                 setActiveStep(api.selectedScrollSnap());
@@ -111,6 +121,9 @@ const StepCarousel = () => {
                 )}
                 onClick={() => {
                   setActiveStep(index);
+                  if (carouselApiRef.current) {
+                    carouselApiRef.current.scrollTo(index);
+                  }
                 }}
                 aria-label={`Go to step ${index + 1}`}
               ></button>

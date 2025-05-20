@@ -3,7 +3,7 @@ import { SopDocument } from "@/types/sop";
 
 // Helper function to compress images before adding to PDF
 // Reduced quality to improve performance, and reduced max dimension
-export function compressImage(dataUrl: string, quality = 0.5): Promise<string> {
+export function compressImage(dataUrl: string, quality = 0.7): Promise<string> {
   return new Promise((resolve) => {
     const img = new Image();
     img.src = dataUrl;
@@ -12,10 +12,10 @@ export function compressImage(dataUrl: string, quality = 0.5): Promise<string> {
       const ctx = canvas.getContext('2d');
       
       // Calculate new dimensions while maintaining aspect ratio
-      // Reducing max width for better performance
-      const maxWidth = 800; // Reduced from 1200
-      const scaleFactor = maxWidth / img.width;
-      canvas.width = maxWidth;
+      // Using a more conservative max width
+      const maxWidth = 600; 
+      const scaleFactor = maxWidth / Math.max(1, img.width);
+      canvas.width = Math.min(maxWidth, img.width);
       canvas.height = img.height * scaleFactor;
       
       if (ctx) {
@@ -24,10 +24,17 @@ export function compressImage(dataUrl: string, quality = 0.5): Promise<string> {
         ctx.imageSmoothingQuality = 'high';
         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
         
-        // Convert to compressed JPEG with reduced quality
-        resolve(canvas.toDataURL('image/jpeg', quality));
+        try {
+          // Convert to compressed JPEG with better quality
+          const compressed = canvas.toDataURL('image/jpeg', quality);
+          resolve(compressed);
+        } catch (err) {
+          console.error("Error compressing image:", err);
+          // If compression fails, return original
+          resolve(dataUrl);
+        }
       } else {
-        // If can't compress, use a scaled-down version of original
+        // If can't compress, use the original
         resolve(dataUrl); 
       }
     };

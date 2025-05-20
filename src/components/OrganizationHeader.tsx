@@ -36,8 +36,8 @@ const OrganizationHeader = () => {
   return (
     <Card className="mb-6 bg-[#1E1E1E] border-zinc-800 overflow-hidden rounded-2xl">
       <CardContent className="p-6">
-        <div className="flex flex-col space-y-4 sm:flex-row sm:space-y-0 sm:space-x-4 items-start">
-          <div className="w-full sm:w-1/2 space-y-2">
+        <div className="flex flex-col space-y-4 sm:space-y-0 sm:space-x-4 sm:flex-row items-center">
+          <div className="w-full sm:w-3/4 space-y-2">
             <Label htmlFor="company-name" className="text-zinc-300">Organization Name</Label>
             <div className="relative group">
               <Input
@@ -52,46 +52,35 @@ const OrganizationHeader = () => {
             </div>
           </div>
           
-          <div className="w-full sm:w-1/2 space-y-2">
-            <Label htmlFor="logo" className="text-zinc-300">Organization Logo</Label>
-            <div className="relative flex items-center gap-4">
-              {sopDocument.logo ? (
-                <div className="flex items-center gap-4 w-full">
-                  <div className="w-16 h-16 bg-zinc-800 rounded-lg overflow-hidden flex items-center justify-center border border-zinc-700">
-                    <img src={sopDocument.logo} alt="Logo" className="max-w-full max-h-full object-contain" />
-                  </div>
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    onClick={handleRemoveLogo}
-                    className="h-8 w-8 rounded-full p-0"
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
+          <div className="w-full sm:w-1/4 flex items-center justify-end">
+            {sopDocument.logo ? (
+              <div className="flex items-center gap-2">
+                <div className="w-12 h-12 bg-zinc-800 rounded-lg overflow-hidden flex items-center justify-center border border-zinc-700">
+                  <img src={sopDocument.logo} alt="Logo" className="max-w-full max-h-full object-contain" />
                 </div>
-              ) : (
-                <div className="w-full">
-                  <label htmlFor="logo-upload" className="cursor-pointer">
-                    <div className="flex items-center justify-center w-full h-16 bg-zinc-800 border border-zinc-700 hover:border-zinc-600 rounded-lg transition-all">
-                      <div className="flex flex-col items-center gap-1">
-                        <Upload className="h-5 w-5 text-zinc-400" />
-                        <span className="text-xs text-zinc-400">Upload Logo</span>
-                      </div>
-                    </div>
-                    <Input
-                      id="logo-upload"
-                      type="file"
-                      onChange={handleLogoChange}
-                      className="hidden"
-                      accept="image/*"
-                    />
-                  </label>
-                  <p className="text-xs text-zinc-500 mt-1">
-                    Recommended: square image, max 400x400px
-                  </p>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={handleRemoveLogo}
+                  className="h-8 w-8 rounded-full p-0"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            ) : (
+              <label htmlFor="logo-upload" className="cursor-pointer">
+                <div className="flex items-center justify-center w-12 h-12 bg-zinc-800 border border-zinc-700 hover:border-zinc-600 rounded-lg transition-all">
+                  <Upload className="h-5 w-5 text-zinc-400" />
                 </div>
-              )}
-            </div>
+                <Input
+                  id="logo-upload"
+                  type="file"
+                  onChange={handleLogoChange}
+                  className="hidden"
+                  accept="image/*"
+                />
+              </label>
+            )}
           </div>
         </div>
       </CardContent>
