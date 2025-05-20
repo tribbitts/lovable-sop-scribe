@@ -2,9 +2,14 @@
 import { SopDocument } from "@/types/sop";
 import { compressImage } from "./utils";
 
-export function addCoverPage(pdf: any, sopDocument: SopDocument, width: number, height: number, margin: any) {
+export async function addCoverPage(pdf: any, sopDocument: SopDocument, width: number, height: number, margin: any) {
   // Add decorative background elements (Apple-inspired)
   addCoverPageDesign(pdf, width, height, margin);
+  
+  // Add logo to the cover page (moved before title to ensure it appears at the top)
+  if (sopDocument.logo) {
+    await addLogoToCover(pdf, sopDocument, width, height);
+  }
   
   // Center-aligned title (large and bold)
   pdf.setFont("helvetica", "bold");
@@ -23,9 +28,6 @@ export function addCoverPage(pdf: any, sopDocument: SopDocument, width: number, 
   const subtitle = `Topic: ${sopDocument.topic} · ${sopDocument.date}`;
   const subtitleWidth = pdf.getStringUnitWidth(subtitle) * 12 / pdf.internal.scaleFactor;
   pdf.text(subtitle, (width - subtitleWidth) / 2, height / 3 + 15);
-  
-  // Add logo to cover page if available
-  addLogoToCover(pdf, sopDocument, width, height);
   
   // Add footer to cover page
   addCoverPageFooter(pdf, sopDocument, width, height, margin);
@@ -58,14 +60,15 @@ async function addLogoToCover(pdf: any, sopDocument: SopDocument, width: number,
       // Make the logo larger and centered at the top
       const logoSize = 40; // Larger size
       
-      // Center horizontally
+      // Center horizontally and position higher on the page
       const logoX = (width - logoSize) / 2;
+      const logoY = height / 6 - logoSize / 2; // Position higher on the page
       
       pdf.addImage(
         compressedLogoUrl, 
         "JPEG", 
         logoX,
-        height / 4 - logoSize,
+        logoY,
         logoSize, 
         logoSize
       );
@@ -81,7 +84,7 @@ function addCoverPageFooter(pdf: any, sopDocument: SopDocument, width: number, h
   pdf.setFontSize(8);
   pdf.setTextColor(150, 150, 150); // Light gray
   
-  const footerText = `For internal use only | © 2025 | ${sopDocument.companyName}`;
+  const footerText = `For internal use only | © ${new Date().getFullYear()} | ${sopDocument.companyName}`;
   const footerWidth = pdf.getStringUnitWidth(footerText) * 8 / pdf.internal.scaleFactor;
   pdf.text(
     footerText,

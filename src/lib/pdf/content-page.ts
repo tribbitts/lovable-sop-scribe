@@ -1,4 +1,6 @@
 
+import { SopDocument } from "@/types/sop";
+
 export function addContentPageDesign(pdf: any, width: number, height: number, margin: any) {
   // Subtle background elements
   // Light circle in bottom left
@@ -36,8 +38,8 @@ export function addPageFooters(pdf: any, sopDocument: SopDocument, width: number
       );
     }
     
-    // Center: Company name
-    const companyText = sopDocument.companyName;
+    // Center: Company name with copyright symbol
+    const companyText = `© ${sopDocument.companyName}`;
     const companyTextWidth = pdf.getStringUnitWidth(companyText) * 8 / pdf.internal.scaleFactor;
     pdf.text(
       companyText,
