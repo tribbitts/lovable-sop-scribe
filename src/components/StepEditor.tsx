@@ -6,18 +6,10 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useSopContext } from "@/context/SopContext";
-import { SopStep, Callout, CalloutShape } from "@/types/sop";
-import { ArrowDown, ArrowUp, X, Circle, Square, ImagePlus, Move } from "lucide-react";
+import { SopStep, Callout } from "@/types/sop";
+import { ArrowDown, ArrowUp, X, Circle, ImagePlus } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { motion } from "@/components/MotionWrapper";
-import { 
-  Drawer,
-  DrawerContent,
-  DrawerHeader,
-  DrawerTitle,
-  DrawerTrigger,
-  DrawerFooter
-} from "@/components/ui/drawer";
 
 interface StepEditorProps {
   step: SopStep;
@@ -36,29 +28,12 @@ const StepEditor: React.FC<StepEditorProps> = ({ step, index }) => {
     deleteCallout,
   } = useSopContext();
 
-  const [activeCallout, setActiveCallout] = useState<string | null>(null);
-  const [calloutColor, setCalloutColor] = useState<string>("#FF719A");
-  const [calloutShape, setCalloutShape] = useState<CalloutShape>("circle");
   const [isEditingCallouts, setIsEditingCallouts] = useState(false);
-  const [isDragging, setIsDragging] = useState(false);
+  const [calloutColor, setCalloutColor] = useState<string>("#FF719A");
+  const [showCalloutCursor, setShowCalloutCursor] = useState(false);
+  const [cursorPosition, setCursorPosition] = useState({ x: 0, y: 0 });
   
   const screenshotRef = useRef<HTMLDivElement>(null);
-
-  // Prevent click events when dragging completes
-  useEffect(() => {
-    const handleMouseUp = () => {
-      if (isDragging) {
-        setIsDragging(false);
-        // Add a small delay to ensure click events aren't triggered immediately
-        setTimeout(() => {
-          setActiveCallout(null);
-        }, 100);
-      }
-    };
-
-    document.addEventListener('mouseup', handleMouseUp);
-    return () => document.removeEventListener('mouseup', handleMouseUp);
-  }, [isDragging]);
 
   const handleScreenshotUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -71,70 +46,49 @@ const StepEditor: React.FC<StepEditorProps> = ({ step, index }) => {
     }
   };
 
+  const handleScreenshotMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!isEditingCallouts || !screenshotRef.current) return;
+    
+    const rect = screenshotRef.current.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 100;
+    const y = ((e.clientY - rect.top) / rect.height) * 100;
+    
+    setCursorPosition({ x, y });
+  };
+
+  const handleScreenshotMouseEnter = () => {
+    if (isEditingCallouts) {
+      setShowCalloutCursor(true);
+    }
+  };
+
+  const handleScreenshotMouseLeave = () => {
+    setShowCalloutCursor(false);
+  };
+
   const handleScreenshotClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!step.screenshot || !screenshotRef.current || !isEditingCallouts || isDragging) return;
+    if (!step.screenshot || !screenshotRef.current || !isEditingCallouts) return;
 
     const rect = screenshotRef.current.getBoundingClientRect();
     const x = ((e.clientX - rect.left) / rect.width) * 100;
     const y = ((e.clientY - rect.top) / rect.height) * 100;
 
-    // Default sizes in percentage of parent container
-    const width = calloutShape === "circle" ? 10 : 20;
-    const height = calloutShape === "circle" ? 10 : 15;
+    // Fixed size of 8% for all callouts (circle)
+    const calloutSize = 8;
 
     addCallout(step.id, {
-      shape: calloutShape,
+      shape: "circle",
       color: calloutColor,
-      x,
-      y,
-      width,
-      height,
+      x: Math.max(0, Math.min(100 - calloutSize, x - calloutSize/2)),
+      y: Math.max(0, Math.min(100 - calloutSize, y - calloutSize/2)),
+      width: calloutSize,
+      height: calloutSize,
     });
 
     toast({
       title: "Callout Added",
-      description: "Click and drag to resize or reposition"
+      description: "Click on the callout to remove it if needed"
     });
-  };
-
-  const handleCalloutDragStart = (
-    e: React.MouseEvent<HTMLDivElement>,
-    calloutId: string
-  ) => {
-    if (!isEditingCallouts) return;
-    e.stopPropagation();
-    setActiveCallout(calloutId);
-    setIsDragging(true);
-  };
-
-  const handleCalloutDrag = (
-    e: React.MouseEvent<HTMLDivElement>,
-    callout: Callout
-  ) => {
-    if (!isEditingCallouts || activeCallout !== callout.id || !screenshotRef.current) return;
-    e.stopPropagation();
-
-    const rect = screenshotRef.current.getBoundingClientRect();
-    const x = ((e.clientX - rect.left) / rect.width) * 100;
-    const y = ((e.clientY - rect.top) / rect.height) * 100;
-
-    // Ensure the callout stays within bounds
-    const boundedX = Math.max(0, Math.min(100 - callout.width, x));
-    const boundedY = Math.max(0, Math.min(100 - callout.height, y));
-
-    updateCallout(step.id, {
-      ...callout,
-      x: boundedX,
-      y: boundedY,
-    });
-  };
-
-  const handleCalloutDragEnd = () => {
-    setIsDragging(false);
-    // Use timeout to prevent accidental click events immediately after drag
-    setTimeout(() => {
-      setActiveCallout(null);
-    }, 100);
   };
 
   const toggleEditMode = () => {
@@ -142,7 +96,7 @@ const StepEditor: React.FC<StepEditorProps> = ({ step, index }) => {
     if (!isEditingCallouts) {
       toast({
         title: "Editing Mode Enabled",
-        description: "Click on the image to add callouts or drag existing ones"
+        description: "Click on the image to add callout markers"
       });
     }
   };
@@ -216,7 +170,7 @@ const StepEditor: React.FC<StepEditorProps> = ({ step, index }) => {
                   className={`text-xs border-zinc-700 hover:bg-zinc-800 ${isEditingCallouts ? 'bg-zinc-700 text-white' : 'text-zinc-300'}`}
                   onClick={toggleEditMode}
                 >
-                  {isEditingCallouts ? 'Done Editing' : 'Edit Callouts'}
+                  {isEditingCallouts ? 'Done Editing' : 'Add Callouts'}
                 </Button>
               )}
             </div>
@@ -255,36 +209,8 @@ const StepEditor: React.FC<StepEditorProps> = ({ step, index }) => {
                   >
                     <div className="flex flex-wrap items-center gap-4">
                       <div className="flex gap-2 items-center">
-                        <Label htmlFor={`callout-shape-${step.id}`} className="text-sm text-zinc-300">
-                          Shape:
-                        </Label>
-                        <div className="flex border rounded-md border-zinc-700">
-                          <Button
-                            type="button"
-                            size="sm"
-                            variant={calloutShape === "circle" ? "default" : "ghost"}
-                            className={`h-8 px-3 rounded-r-none ${calloutShape === "circle" ? "bg-[#007AFF] hover:bg-[#0069D9]" : ""}`}
-                            onClick={() => setCalloutShape("circle")}
-                          >
-                            <Circle className="h-4 w-4 mr-1" />
-                            Circle
-                          </Button>
-                          <Button
-                            type="button"
-                            size="sm"
-                            variant={calloutShape === "rectangle" ? "default" : "ghost"}
-                            className={`h-8 px-3 rounded-l-none ${calloutShape === "rectangle" ? "bg-[#007AFF] hover:bg-[#0069D9]" : ""}`}
-                            onClick={() => setCalloutShape("rectangle")}
-                          >
-                            <Square className="h-4 w-4 mr-1" />
-                            Rectangle
-                          </Button>
-                        </div>
-                      </div>
-
-                      <div className="flex gap-2 items-center">
                         <Label htmlFor={`callout-color-${step.id}`} className="text-sm text-zinc-300">
-                          Color:
+                          Callout Color:
                         </Label>
                         <Input
                           id={`callout-color-${step.id}`}
@@ -296,7 +222,7 @@ const StepEditor: React.FC<StepEditorProps> = ({ step, index }) => {
                       </div>
                       
                       <p className="text-xs text-zinc-400 flex-1">
-                        Click on the image to add callouts
+                        Move the cursor over the image and click to add a callout marker
                       </p>
                     </div>
                   </motion.div>
@@ -325,14 +251,34 @@ const StepEditor: React.FC<StepEditorProps> = ({ step, index }) => {
                   >
                     <div
                       ref={screenshotRef}
-                      className={`relative ${isEditingCallouts ? 'cursor-crosshair' : 'cursor-default'}`}
+                      className={`relative ${isEditingCallouts ? 'cursor-none' : 'cursor-default'}`}
                       onClick={handleScreenshotClick}
+                      onMouseMove={handleScreenshotMouseMove}
+                      onMouseEnter={handleScreenshotMouseEnter}
+                      onMouseLeave={handleScreenshotMouseLeave}
                     >
                       <img
                         src={step.screenshot.dataUrl}
                         alt={`Screenshot for step ${index + 1}`}
                         className="w-full h-auto"
                       />
+
+                      {/* Custom cursor when in editing mode */}
+                      {showCalloutCursor && (
+                        <div
+                          className="absolute pointer-events-none transform -translate-x-1/2 -translate-y-1/2 z-10"
+                          style={{
+                            left: `${cursorPosition.x}%`,
+                            top: `${cursorPosition.y}%`,
+                            width: '30px',
+                            height: '30px',
+                            borderRadius: '50%',
+                            border: `2px solid ${calloutColor}`,
+                            boxShadow: `0 0 10px ${calloutColor}80`,
+                            backgroundColor: `${calloutColor}20`,
+                          }}
+                        />
+                      )}
 
                       {step.screenshot.callouts.map((callout) => (
                         <div
@@ -343,36 +289,24 @@ const StepEditor: React.FC<StepEditorProps> = ({ step, index }) => {
                             top: `${callout.y}%`,
                             width: `${callout.width}%`,
                             height: `${callout.height}%`,
-                            border: `2px solid ${callout.color}`,
+                            borderRadius: "50%",
+                            border: `3px solid ${callout.color}`,
+                            boxShadow: `0 0 8px ${callout.color}80`,
                             backgroundColor: `${callout.color}20`,
-                            borderRadius: callout.shape === "circle" ? "50%" : "0",
-                            cursor: isEditingCallouts ? "move" : "default",
-                            boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
+                            cursor: isEditingCallouts ? "pointer" : "default",
                           }}
-                          onMouseDown={(e) => handleCalloutDragStart(e, callout.id)}
-                          onMouseMove={(e) => handleCalloutDrag(e, callout)}
-                          onMouseUp={handleCalloutDragEnd}
-                          onMouseLeave={handleCalloutDragEnd}
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          {isEditingCallouts && (
-                            <button
-                              type="button"
-                              className="absolute -top-3 -right-3 bg-white rounded-full border border-gray-200 w-6 h-6 flex items-center justify-center shadow-md"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                deleteCallout(step.id, callout.id);
-                              }}
-                            >
-                              <X className="h-3 w-3" />
-                            </button>
-                          )}
-                        </div>
+                          onClick={(e) => {
+                            if (isEditingCallouts) {
+                              e.stopPropagation();
+                              deleteCallout(step.id, callout.id);
+                            }
+                          }}
+                        />
                       ))}
                     </div>
                     {isEditingCallouts && (
                       <div className="bg-zinc-800 p-2 text-xs text-center text-zinc-400">
-                        Click on the image to add callouts. Click and drag callouts to move them.
+                        Click to place a callout. Click on an existing callout to remove it.
                       </div>
                     )}
                   </div>

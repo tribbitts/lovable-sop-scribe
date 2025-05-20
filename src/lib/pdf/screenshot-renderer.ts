@@ -18,7 +18,7 @@ export async function addScreenshot(
 ): Promise<number> {
   try {
     // Compress and prepare the screenshot image
-    const compressedImageUrl = await compressImage(step.screenshot!.dataUrl, 0.75);
+    const compressedImageUrl = await compressImage(step.screenshot!.dataUrl, 0.85);
     
     // Create a canvas element to render the screenshot with callouts
     const canvas = document.createElement('canvas');
@@ -79,7 +79,7 @@ export async function addScreenshot(
             renderCallouts(paddedCtx, step, canvas.width, canvas.height, paddingSize);
             
             // Use the padded canvas with rounded corners for PDF
-            const imgData = paddedCanvas.toDataURL('image/jpeg', 0.85);
+            const imgData = paddedCanvas.toDataURL('image/jpeg', 0.92);
             
             // Calculate image dimensions to fit within margins while preserving aspect ratio
             const maxImgWidth = contentWidth - 20; // Leave a bit of margin
@@ -141,31 +141,32 @@ function renderCallouts(
     const width = (callout.width / 100) * canvasWidth;
     const height = (callout.height / 100) * canvasHeight;
     
+    // Ensure all callouts are circles with glow effect
+    const radius = Math.max(width, height) / 2;
+    const centerX = x + width / 2;
+    const centerY = y + height / 2;
+    
+    // First draw glow (shadow)
+    ctx.shadowColor = callout.color;
+    ctx.shadowBlur = 10;
+    ctx.shadowOffsetX = 0;
+    ctx.shadowOffsetY = 0;
+    
+    // Draw semi-transparent background (very light)
+    ctx.fillStyle = callout.color.replace(')', ', 0.1)').replace('rgb', 'rgba');
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
+    ctx.fill();
+    
+    // Remove shadow for the border
+    ctx.shadowColor = "transparent";
+    ctx.shadowBlur = 0;
+    
+    // Draw thick border
     ctx.strokeStyle = callout.color;
     ctx.lineWidth = 3;
-    // Make the fill semi-transparent using rgba
-    // Set a lower opacity (0.15 instead of 0.2) to avoid solid appearance in PDF
-    ctx.fillStyle = callout.color.replace(')', ', 0.15)').replace('rgb', 'rgba');
-    
-    if (callout.shape === "circle") {
-      const radius = Math.max(width, height) / 2;
-      ctx.beginPath();
-      ctx.ellipse(
-        x + width / 2,
-        y + height / 2,
-        radius,
-        radius,
-        0,
-        0,
-        2 * Math.PI
-      );
-      ctx.fill();
-      ctx.stroke();
-    } else {
-      ctx.beginPath();
-      ctx.rect(x, y, width, height);
-      ctx.fill();
-      ctx.stroke();
-    }
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
+    ctx.stroke();
   });
 }
