@@ -39,7 +39,7 @@ export async function addScreenshot(
           ctx.save();
           
           const cornerRadius = 12; // Rounded corner radius
-          const paddingSize = 15; // Increased padding between image and border
+          const paddingSize = 15; // Padding between image and border
           
           // Expand canvas for padding
           const paddedWidth = canvas.width + (paddingSize * 2);
@@ -92,12 +92,17 @@ export async function addScreenshot(
             // Use the padded canvas with rounded corners for PDF
             const imgData = paddedCanvas.toDataURL('image/jpeg', 0.92);
             
-            // Calculate optimal image dimensions based on available space and aspect ratio
-            // Allow for larger images by using more of the page height
+            // Global storage for image dimensions used by renderSteps
+            // This helps maintain consistent sizing across steps
+            if (!pdf.sopImageDimensions) {
+              pdf.sopImageDimensions = [];
+            }
+            
+            // Calculate optimal image dimensions based on available space
             const maxImgWidth = contentWidth - 10; // Use almost full content width
             const aspectRatio = paddedCanvas.width / paddedCanvas.height;
             
-            // Calculate available height (accounting for caption)
+            // Calculate available height for this step
             const availableHeight = height - currentY - margin.bottom - 20;
             
             // Start with width constraint
@@ -110,6 +115,21 @@ export async function addScreenshot(
               imgWidth = imgHeight * aspectRatio;
             }
             
+            // Store dimensions for consistency checks
+            pdf.sopImageDimensions.push({
+              width: imgWidth,
+              height: imgHeight,
+              aspectRatio: aspectRatio
+            });
+            
+            // If this is the second image on a page, try to make it consistent with the first
+            if (pdf.sopImageDimensions.length > 1 && pdf.sopLastPageImages 
+                && pdf.sopLastPageImages.length > 0 && pdf.sopCurrentPage === pdf.internal.getCurrentPageInfo().pageNumber) {
+              // Adjust to match the width of the first image on this page
+              imgWidth = Math.min(imgWidth, pdf.sopLastPageImages[0].width);
+              imgHeight = imgWidth / aspectRatio;
+            }
+            
             // Center the image horizontally
             const imageX = (width - imgWidth) / 2;
             
@@ -118,7 +138,20 @@ export async function addScreenshot(
               pdf.addPage();
               addContentPageDesign(pdf, width, height, margin);
               currentY = margin.top;
+              // Reset page image tracking
+              pdf.sopLastPageImages = [];
+              pdf.sopCurrentPage = pdf.internal.getCurrentPageInfo().pageNumber;
             }
+            
+            // Track images on this page for consistent sizing
+            if (!pdf.sopLastPageImages) {
+              pdf.sopLastPageImages = [];
+            }
+            pdf.sopLastPageImages.push({
+              width: imgWidth,
+              height: imgHeight
+            });
+            pdf.sopCurrentPage = pdf.internal.getCurrentPageInfo().pageNumber;
             
             // Add the image to PDF
             pdf.addImage(
@@ -142,7 +175,8 @@ export async function addScreenshot(
               currentY + imgHeight + 5
             );
             
-            currentY += imgHeight + 10;
+            // Add minimal space after images
+            currentY += imgHeight + 8;
           }
           resolve();
         };

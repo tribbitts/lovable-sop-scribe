@@ -12,6 +12,11 @@ export async function renderSteps(
   contentWidth: number,
   addContentPageDesign: Function
 ) {
+  // Reset any image tracking information
+  pdf.sopImageDimensions = [];
+  pdf.sopLastPageImages = [];
+  pdf.sopCurrentPage = 1;
+  
   // Start at the very top of the page with minimal spacing
   let currentY = margin.top;
   
@@ -26,17 +31,20 @@ export async function renderSteps(
   pdf.setLineWidth(0.5);
   pdf.line(margin.left, currentY + 5, margin.left + 30, currentY + 5);
   
-  currentY += 20; // Minimal spacing to start steps content earlier
+  currentY += 15; // Minimal spacing to start steps content earlier
   
-  // Steps content with better formatting
+  // Steps content with better formatting and consistent image sizing
   for (let i = 0; i < steps.length; i++) {
     const step = steps[i];
     
     // Check if we need a new page
-    if (currentY > height - margin.bottom - 80) {
+    if (currentY > height - margin.bottom - 60) {
       pdf.addPage();
       addContentPageDesign(pdf, width, height, margin);
       currentY = margin.top;
+      // Reset page image tracking
+      pdf.sopLastPageImages = [];
+      pdf.sopCurrentPage = pdf.internal.getCurrentPageInfo().pageNumber;
     }
     
     // Style the step (number, description, separator)
@@ -58,13 +66,16 @@ export async function renderSteps(
     }
     
     // Add minimal space between steps
-    currentY += 8;
+    currentY += 5;
     
     // Check if we need a new page for the next step
-    if (i < steps.length - 1 && currentY > height - margin.bottom - 60) {
+    if (i < steps.length - 1 && currentY > height - margin.bottom - 50) {
       pdf.addPage();
       addContentPageDesign(pdf, width, height, margin);
       currentY = margin.top;
+      // Reset page image tracking
+      pdf.sopLastPageImages = [];
+      pdf.sopCurrentPage = pdf.internal.getCurrentPageInfo().pageNumber;
     }
   }
 }
