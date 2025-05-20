@@ -52,9 +52,20 @@ export async function addScreenshot(
           const paddedCtx = paddedCanvas.getContext('2d');
           
           if (paddedCtx) {
-            // Fill the background with light gray (border color)
+            // Draw rounded rectangle for the background (shadow)
             paddedCtx.fillStyle = '#F2F2F7'; // Light background border (Apple light gray)
-            paddedCtx.fillRect(0, 0, paddedWidth, paddedHeight);
+            paddedCtx.beginPath();
+            paddedCtx.moveTo(cornerRadius, 0);
+            paddedCtx.lineTo(paddedWidth - cornerRadius, 0);
+            paddedCtx.quadraticCurveTo(paddedWidth, 0, paddedWidth, cornerRadius);
+            paddedCtx.lineTo(paddedWidth, paddedHeight - cornerRadius);
+            paddedCtx.quadraticCurveTo(paddedWidth, paddedHeight, paddedWidth - cornerRadius, paddedHeight);
+            paddedCtx.lineTo(cornerRadius, paddedHeight);
+            paddedCtx.quadraticCurveTo(0, paddedHeight, 0, paddedHeight - cornerRadius);
+            paddedCtx.lineTo(0, cornerRadius);
+            paddedCtx.quadraticCurveTo(0, 0, cornerRadius, 0);
+            paddedCtx.closePath();
+            paddedCtx.fill();
             
             // Create rounded rectangle for the image
             paddedCtx.save();
