@@ -66,10 +66,9 @@ export async function generatePDF(sopDocument: SopDocument): Promise<void> {
     pdf.roundedRect(margin - 5, margin - 5, width - (margin * 2) + 10, 40, 5, 5, 'F');
     
     // Add subtle accent circle in bottom left
-    pdf.setGlobalAlpha(0.1); // Make it subtle
-    pdf.setFillColor(180, 180, 195);
+    // Use a very light color instead of alpha
+    pdf.setFillColor(230, 230, 240); // Light color instead of using alpha
     pdf.circle(margin, height - margin, 40, 'F');
-    pdf.setGlobalAlpha(1); // Reset alpha
     
     // Add thin decorative line at the bottom
     pdf.setDrawColor(200, 200, 210);
@@ -211,7 +210,8 @@ export async function generatePDF(sopDocument: SopDocument): Promise<void> {
                   
                   paddedCtx.strokeStyle = callout.color;
                   paddedCtx.lineWidth = 3;
-                  paddedCtx.fillStyle = `${callout.color}20`;
+                  // Make the fill semi-transparent using rgba directly
+                  paddedCtx.fillStyle = callout.color.replace(')', ', 0.2)').replace('rgb', 'rgba');
                   
                   if (callout.shape === "circle") {
                     const radius = Math.max(width, height) / 2;
