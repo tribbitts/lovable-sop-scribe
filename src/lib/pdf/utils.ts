@@ -2,8 +2,8 @@
 import { SopDocument } from "@/types/sop";
 
 // Helper function to compress images before adding to PDF
-// Further reduced quality and dimensions to improve performance
-export function compressImage(dataUrl: string, quality = 0.5): Promise<string> {
+// Increased quality and dimensions for better readability
+export function compressImage(dataUrl: string, quality = 0.75): Promise<string> {
   return new Promise((resolve) => {
     if (!dataUrl) {
       console.error("Empty dataUrl provided to compressImage");
@@ -33,18 +33,18 @@ export function compressImage(dataUrl: string, quality = 0.5): Promise<string> {
         }
         
         // Calculate new dimensions while maintaining aspect ratio
-        // Using a more conservative max width
-        const maxWidth = 500; // Further reduced for performance
+        // Using a higher max width for better readability
+        const maxWidth = 800; // Increased for better quality
         const scaleFactor = maxWidth / Math.max(1, img.width);
         canvas.width = Math.min(maxWidth, img.width);
         canvas.height = img.height * scaleFactor;
         
         // Apply image smoothing for better quality at reduced size
         ctx.imageSmoothingEnabled = true;
-        ctx.imageSmoothingQuality = 'medium'; // Changed to medium for better performance
+        ctx.imageSmoothingQuality = 'high'; // Changed to high for better quality
         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
         
-        // Convert to compressed JPEG with reduced quality
+        // Convert to compressed JPEG with higher quality
         const compressed = canvas.toDataURL('image/jpeg', quality);
         resolve(compressed);
       } catch (err) {

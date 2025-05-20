@@ -16,6 +16,7 @@ export async function generatePDF(sopDocument: SopDocument): Promise<void> {
         orientation: "portrait",
         unit: "mm",
         format: "a4",
+        compress: true,
       });
       
       // Get PDF dimensions
@@ -66,6 +67,12 @@ export async function generatePDF(sopDocument: SopDocument): Promise<void> {
           // Save the PDF with a standardized filename
           const filename = generatePdfFilename(sopDocument);
           console.log(`Saving PDF as: ${filename}`);
+          
+          // Use higher quality settings for better output
+          const options = {
+            quality: 0.95,
+            compression: 'MEDIUM'
+          };
           
           pdf.save(filename);
           console.log("PDF saved successfully");

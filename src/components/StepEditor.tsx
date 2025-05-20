@@ -1,4 +1,5 @@
-import React, { useRef, useState } from "react";
+
+import React, { useRef, useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -39,8 +40,25 @@ const StepEditor: React.FC<StepEditorProps> = ({ step, index }) => {
   const [calloutColor, setCalloutColor] = useState<string>("#FF719A");
   const [calloutShape, setCalloutShape] = useState<CalloutShape>("circle");
   const [isEditingCallouts, setIsEditingCallouts] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
   
   const screenshotRef = useRef<HTMLDivElement>(null);
+
+  // Prevent click events when dragging completes
+  useEffect(() => {
+    const handleMouseUp = () => {
+      if (isDragging) {
+        setIsDragging(false);
+        // Add a small delay to ensure click events aren't triggered immediately
+        setTimeout(() => {
+          setActiveCallout(null);
+        }, 100);
+      }
+    };
+
+    document.addEventListener('mouseup', handleMouseUp);
+    return () => document.removeEventListener('mouseup', handleMouseUp);
+  }, [isDragging]);
 
   const handleScreenshotUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -54,7 +72,7 @@ const StepEditor: React.FC<StepEditorProps> = ({ step, index }) => {
   };
 
   const handleScreenshotClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!step.screenshot || !screenshotRef.current || !isEditingCallouts) return;
+    if (!step.screenshot || !screenshotRef.current || !isEditingCallouts || isDragging) return;
 
     const rect = screenshotRef.current.getBoundingClientRect();
     const x = ((e.clientX - rect.left) / rect.width) * 100;
@@ -86,15 +104,15 @@ const StepEditor: React.FC<StepEditorProps> = ({ step, index }) => {
     if (!isEditingCallouts) return;
     e.stopPropagation();
     setActiveCallout(calloutId);
+    setIsDragging(true);
   };
 
   const handleCalloutDrag = (
     e: React.MouseEvent<HTMLDivElement>,
     callout: Callout
   ) => {
-    if (!isEditingCallouts) return;
+    if (!isEditingCallouts || activeCallout !== callout.id || !screenshotRef.current) return;
     e.stopPropagation();
-    if (activeCallout !== callout.id || !screenshotRef.current) return;
 
     const rect = screenshotRef.current.getBoundingClientRect();
     const x = ((e.clientX - rect.left) / rect.width) * 100;
@@ -112,7 +130,11 @@ const StepEditor: React.FC<StepEditorProps> = ({ step, index }) => {
   };
 
   const handleCalloutDragEnd = () => {
-    setActiveCallout(null);
+    setIsDragging(false);
+    // Use timeout to prevent accidental click events immediately after drag
+    setTimeout(() => {
+      setActiveCallout(null);
+    }, 100);
   };
 
   const toggleEditMode = () => {

@@ -18,7 +18,7 @@ export async function addScreenshot(
 ): Promise<number> {
   try {
     // Compress and prepare the screenshot image
-    const compressedImageUrl = await compressImage(step.screenshot!.dataUrl, 0.7);
+    const compressedImageUrl = await compressImage(step.screenshot!.dataUrl, 0.75);
     
     // Create a canvas element to render the screenshot with callouts
     const canvas = document.createElement('canvas');
@@ -79,7 +79,7 @@ export async function addScreenshot(
             renderCallouts(paddedCtx, step, canvas.width, canvas.height, paddingSize);
             
             // Use the padded canvas with rounded corners for PDF
-            const imgData = paddedCanvas.toDataURL('image/jpeg', 0.8);
+            const imgData = paddedCanvas.toDataURL('image/jpeg', 0.85);
             
             // Calculate image dimensions to fit within margins while preserving aspect ratio
             const maxImgWidth = contentWidth - 20; // Leave a bit of margin
@@ -143,8 +143,9 @@ function renderCallouts(
     
     ctx.strokeStyle = callout.color;
     ctx.lineWidth = 3;
-    // Make the fill semi-transparent using rgba directly
-    ctx.fillStyle = callout.color.replace(')', ', 0.2)').replace('rgb', 'rgba');
+    // Make the fill semi-transparent using rgba
+    // Set a lower opacity (0.15 instead of 0.2) to avoid solid appearance in PDF
+    ctx.fillStyle = callout.color.replace(')', ', 0.15)').replace('rgb', 'rgba');
     
     if (callout.shape === "circle") {
       const radius = Math.max(width, height) / 2;
