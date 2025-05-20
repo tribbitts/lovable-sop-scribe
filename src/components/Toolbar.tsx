@@ -7,10 +7,10 @@ import { Label } from "@/components/ui/label";
 import { useState } from "react";
 import { toast } from "@/hooks/use-toast";
 import { generatePDF } from "@/lib/pdf-generator";
-import { Plus, Settings, Download, Upload, FileJson, FileText } from "lucide-react";
+import { Download, Upload, FileJson, FileText } from "lucide-react";
 
 const Toolbar = () => {
-  const { addStep, saveDocumentToJSON, loadDocumentFromJSON } = useSopContext();
+  const { saveDocumentToJSON, loadDocumentFromJSON } = useSopContext();
   const [jsonFile, setJsonFile] = useState<File | null>(null);
   
   const handleExport = async () => {
@@ -56,6 +56,7 @@ const Toolbar = () => {
     }
 
     try {
+      console.log("Starting PDF export");
       await generatePDF(sopDocument);
       toast({
         title: "PDF Generated",
@@ -98,16 +99,7 @@ const Toolbar = () => {
   };
 
   return (
-    <div className="flex flex-wrap justify-between items-center mb-6 gap-2">
-      <div className="flex flex-wrap gap-2">
-        <Button 
-          onClick={addStep} 
-          className="bg-[#007AFF] hover:bg-[#0069D9] text-white shadow-md transition-all"
-        >
-          <Plus className="h-4 w-4 mr-2" /> Add Step
-        </Button>
-      </div>
-      
+    <div className="flex flex-wrap justify-end items-center mb-6 gap-2">
       <div className="flex flex-wrap gap-2">
         <Dialog>
           <DialogTrigger asChild>

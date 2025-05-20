@@ -78,11 +78,11 @@ const StepCarousel = () => {
             opts={{ loop: false }}
             className="w-full"
             setApi={(api) => {
-              api?.on("select", () => {
+              if (!api) return;
+              api.on("select", () => {
                 setActiveStep(api.selectedScrollSnap());
               });
             }}
-            onSelect={() => {}}
           >
             <CarouselContent>
               {sopDocument.steps.map((step, index) => (
