@@ -1,23 +1,23 @@
-
 import { useState } from "react";
 import { SopProvider } from "@/context/SopContext";
 import SopCreator from "./SopCreator";
 import { MoonIcon, SunIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/hooks/useTheme";
-
 const Index = () => {
-  const { theme, toggleTheme } = useTheme();
+  const {
+    theme,
+    toggleTheme
+  } = useTheme();
   const [showDemo, setShowDemo] = useState(false);
-
-  return (
-    <div className="min-h-screen bg-[#121212] text-[#F1F1F1] dark">
+  return <div className="min-h-screen bg-[#121212] text-[#F1F1F1] dark">
       {/* Header */}
       <header className="fixed top-0 left-0 right-0 z-50 backdrop-blur-lg bg-[#121212]/80 border-b border-zinc-800">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           <div className="flex items-center gap-1">
             <span className="text-2xl font-medium tracking-tight text-white">SOP</span>
-            <span className="text-2xl font-light tracking-tight text-[#007AFF]">Scribe</span>
+            <span className="text-2xl font-light tracking-tight text-[#007AFF]">ify
+          </span>
           </div>
           
           <div className="hidden md:flex items-center space-x-6">
@@ -29,18 +29,8 @@ const Index = () => {
           </div>
           
           <div className="flex items-center gap-3">
-            <Button 
-              variant="ghost"
-              size="icon"
-              onClick={toggleTheme}
-              className="rounded-full"
-              aria-label="Toggle theme"
-            >
-              {theme === "dark" ? (
-                <SunIcon className="h-[1.2rem] w-[1.2rem] text-zinc-400" />
-              ) : (
-                <MoonIcon className="h-[1.2rem] w-[1.2rem] text-zinc-400" />
-              )}
+            <Button variant="ghost" size="icon" onClick={toggleTheme} className="rounded-full" aria-label="Toggle theme">
+              {theme === "dark" ? <SunIcon className="h-[1.2rem] w-[1.2rem] text-zinc-400" /> : <MoonIcon className="h-[1.2rem] w-[1.2rem] text-zinc-400" />}
             </Button>
             <Button className="bg-[#007AFF] text-white hover:bg-[#0062CC] rounded-xl">
               Start Now
@@ -60,16 +50,10 @@ const Index = () => {
             All data stays in your browser for privacy.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Button 
-              className="bg-[#007AFF] text-white hover:bg-[#0062CC] rounded-xl px-8 py-6 text-base w-full sm:w-auto"
-              onClick={() => setShowDemo(true)}
-            >
+            <Button className="bg-[#007AFF] text-white hover:bg-[#0062CC] rounded-xl px-8 py-6 text-base w-full sm:w-auto" onClick={() => setShowDemo(true)}>
               Start for Free
             </Button>
-            <Button 
-              variant="outline" 
-              className="border-zinc-700 text-zinc-300 hover:bg-zinc-800 rounded-xl px-8 py-6 text-base w-full sm:w-auto"
-            >
+            <Button variant="outline" className="border-zinc-700 text-zinc-300 hover:bg-zinc-800 rounded-xl px-8 py-6 text-base w-full sm:w-auto">
               View Demo
             </Button>
           </div>
@@ -283,8 +267,6 @@ const Index = () => {
           </div>
         </div>
       </footer>
-    </div>
-  );
+    </div>;
 };
-
 export default Index;
