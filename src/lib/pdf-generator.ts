@@ -35,115 +35,180 @@ function compressImage(dataUrl: string, quality = 0.7): Promise<string> {
 }
 
 export async function generatePDF(sopDocument: SopDocument): Promise<void> {
+  // Create a new PDF with better initial settings
   const pdf = new jsPDF({
     orientation: "portrait",
     unit: "mm",
     format: "a4",
   });
   
+  // Get PDF dimensions
   const width = pdf.internal.pageSize.getWidth();
   const height = pdf.internal.pageSize.getHeight();
-  const margin = 15;
-  const contentWidth = width - margin * 2;
   
-  // Helper function to add text with word wrapping
+  // Set better margins (Apple-inspired spacious design)
+  const margin = {
+    top: 30,
+    right: 25,
+    bottom: 30,
+    left: 25
+  };
+  
+  // Calculate content width
+  const contentWidth = width - (margin.left + margin.right);
+  
+  // Helper function for text wrapping
   function addWrappedText(text: string, x: number, y: number, maxWidth: number, lineHeight: number): number {
     const lines = pdf.splitTextToSize(text, maxWidth);
     pdf.text(lines, x, y);
     return y + lineHeight * lines.length;
   }
   
-  // Add decorative background (Apple-inspired)
-  function addBackgroundDesign() {
-    // Gradient background effect
-    const gradColors = {
-      light: [240, 240, 245],  // Light blue-gray
-      accent: [220, 220, 230],  // Medium blue-gray
-    };
+  // Add decorative background elements (Apple-inspired)
+  function addCoverPageDesign() {
+    // Subtle background shapes
+    // Light circle in top right
+    pdf.setFillColor(245, 245, 247); // Very light blue-gray
+    pdf.circle(width - margin.right - 40, margin.top + 20, 80, 'F');
     
-    // Add subtle rounded rectangle in the background
-    pdf.setFillColor(gradColors.accent[0], gradColors.accent[1], gradColors.accent[2]);
-    pdf.roundedRect(margin - 5, margin - 5, width - (margin * 2) + 10, 40, 5, 5, 'F');
+    // Light rectangle along bottom
+    pdf.setFillColor(245, 245, 247); // Very light blue-gray
+    pdf.rect(margin.left - 5, height - margin.bottom - 40, width - margin.left - margin.right + 10, 50, 'F');
     
-    // Add subtle accent circle in bottom left
-    // Use a very light color instead of alpha
-    pdf.setFillColor(230, 230, 240); // Light color instead of using alpha
-    pdf.circle(margin, height - margin, 40, 'F');
-    
-    // Add thin decorative line at the bottom
-    pdf.setDrawColor(200, 200, 210);
+    // Add thin accent divider
+    pdf.setDrawColor(0, 122, 255); // Apple Blue
     pdf.setLineWidth(0.5);
-    pdf.line(margin, height - margin * 2, width - margin, height - margin * 2);
+    pdf.line(margin.left + 40, margin.top + 90, width - margin.right - 40, margin.top + 90);
   }
   
-  // Add background design to the first page
-  addBackgroundDesign();
+  // Add cover page design
+  function addContentPageDesign() {
+    // Subtle background elements
+    // Light circle in bottom left
+    pdf.setFillColor(245, 245, 247); // Very light gray
+    pdf.circle(margin.left, height - margin.bottom, 60, 'F');
+    
+    // Light accent bar at top
+    pdf.setFillColor(245, 245, 247); // Very light blue-gray
+    pdf.rect(margin.left - 5, margin.top - 10, width - margin.left - margin.right + 10, 20, 'F');
+  }
   
-  // Header section
-  pdf.setFontSize(20);
+  // Create cover page
+  addCoverPageDesign();
+  
+  // Center-aligned title (large and bold)
   pdf.setFont("helvetica", "bold");
-  const titleY = margin + 10;
-  pdf.text(sopDocument.title, margin, titleY);
+  pdf.setFontSize(24);
+  pdf.setTextColor(40, 40, 40); // Dark charcoal
   
-  // Topic and Date (reposition below title)
-  pdf.setFontSize(12);
+  const title = sopDocument.title;
+  const titleWidth = pdf.getStringUnitWidth(title) * 24 / pdf.internal.scaleFactor;
+  pdf.text(title, (width - titleWidth) / 2, height / 3);
+  
+  // Subtitle with topic and date
   pdf.setFont("helvetica", "normal");
-  const topicY = titleY + 8;
-  pdf.text(`Topic: ${sopDocument.topic}`, margin, topicY);
+  pdf.setFontSize(12);
+  pdf.setTextColor(60, 60, 60); // Medium gray
   
-  pdf.setFontSize(10);
-  pdf.text(`Date: ${sopDocument.date}`, margin, topicY + 6);
+  const subtitle = `Topic: ${sopDocument.topic} · ${sopDocument.date}`;
+  const subtitleWidth = pdf.getStringUnitWidth(subtitle) * 12 / pdf.internal.scaleFactor;
+  pdf.text(subtitle, (width - subtitleWidth) / 2, height / 3 + 15);
   
-  // Logo (positioned in upper right corner, larger size)
+  // Add logo to cover page if available
   if (sopDocument.logo) {
     try {
-      const logoSize = 20; // Larger size
+      // Compress and center the logo
+      const compressedLogoUrl = await compressImage(sopDocument.logo, 0.8);
+      
+      // Make the logo larger and centered at the top
+      const logoSize = 40; // Larger size
+      
+      // Center horizontally
+      const logoX = (width - logoSize) / 2;
+      
       pdf.addImage(
-        sopDocument.logo, 
-        "PNG", 
-        width - margin - logoSize, 
-        margin - 5, 
+        compressedLogoUrl, 
+        "JPEG", 
+        logoX,
+        height / 4 - logoSize,
         logoSize, 
         logoSize
       );
     } catch(e) {
-      console.error("Error adding logo to PDF", e);
+      console.error("Error adding logo to cover page", e);
     }
   }
   
-  // Draw a light gray line below the header
-  pdf.setDrawColor(200, 200, 200);
-  pdf.line(margin, topicY + 15, width - margin, topicY + 15);
+  // Add footer to cover page
+  pdf.setFont("helvetica", "normal");
+  pdf.setFontSize(8);
+  pdf.setTextColor(150, 150, 150); // Light gray
+  
+  const footerText = `For internal use only | © 2025 | ${sopDocument.companyName}`;
+  const footerWidth = pdf.getStringUnitWidth(footerText) * 8 / pdf.internal.scaleFactor;
+  pdf.text(
+    footerText,
+    (width - footerWidth) / 2,
+    height - 20
+  );
+  
+  // Add new page for steps content
+  pdf.addPage();
+  addContentPageDesign();
   
   // Steps title
   pdf.setFont("helvetica", "bold");
-  pdf.setFontSize(16);
-  let currentY = topicY + 25;
-  pdf.text("Steps", margin, currentY);
-  currentY += 10;
+  pdf.setFontSize(18);
+  pdf.setTextColor(44, 44, 46); // Charcoal gray
+  pdf.text("Steps", margin.left, margin.top + 15);
   
-  // Steps content
+  // Add thin accent divider below title
+  pdf.setDrawColor(0, 122, 255); // Apple Blue
+  pdf.setLineWidth(0.5);
+  pdf.line(margin.left, margin.top + 20, margin.left + 30, margin.top + 20);
+  
+  let currentY = margin.top + 40;
+  
+  // Steps content with better formatting
   for (let i = 0; i < sopDocument.steps.length; i++) {
     const step = sopDocument.steps[i];
     
     // Check if we need a new page
-    if (currentY > height - margin - 60) {
+    if (currentY > height - margin.bottom - 80) {
       pdf.addPage();
-      addBackgroundDesign(); // Add background to new page
-      currentY = margin + 10;
+      addContentPageDesign();
+      currentY = margin.top + 20;
     }
     
-    // Step number and description
+    // Add stylized step number (Apple-inspired)
     pdf.setFont("helvetica", "bold");
-    pdf.setFontSize(12);
-    pdf.text(`${i + 1}. ${step.description}`, margin, currentY);
-    currentY += 8;
+    pdf.setTextColor(0, 122, 255); // Apple Blue
+    pdf.setFontSize(18);
     
-    // Add the screenshot with callouts if available
+    // Format step number with leading zero for single digits
+    const stepNumber = (i + 1).toString().padStart(2, '0');
+    pdf.text(stepNumber, margin.left, currentY);
+    
+    // Step title/description
+    pdf.setFont("helvetica", "semibold");
+    pdf.setFontSize(14);
+    pdf.setTextColor(44, 44, 46); // Dark gray
+    
+    // Add step description with indent
+    pdf.text(step.description, margin.left + 15, currentY);
+    currentY += 10;
+    
+    // Add a light gray separator line
+    pdf.setDrawColor(230, 230, 230);
+    pdf.setLineWidth(0.2);
+    pdf.line(margin.left, currentY, width - margin.right, currentY);
+    currentY += 10;
+    
+    // Add the screenshot with improved styling
     if (step.screenshot) {
       try {
         // Compress and prepare the screenshot image
-        const compressedImageUrl = await compressImage(step.screenshot.dataUrl);
+        const compressedImageUrl = await compressImage(step.screenshot.dataUrl, 0.7);
         
         // Create a canvas element to render the screenshot with callouts
         const canvas = document.createElement('canvas');
@@ -164,7 +229,7 @@ export async function generatePDF(sopDocument: SopDocument): Promise<void> {
               ctx.save();
               
               const cornerRadius = 12; // Rounded corner radius
-              const paddingSize = 10; // Padding between image and border
+              const paddingSize = 15; // Increased padding between image and border
               
               // Expand canvas for padding
               const paddedWidth = canvas.width + (paddingSize * 2);
@@ -178,7 +243,7 @@ export async function generatePDF(sopDocument: SopDocument): Promise<void> {
               
               if (paddedCtx) {
                 // Fill the background with light gray (border color)
-                paddedCtx.fillStyle = '#EAEAEA';
+                paddedCtx.fillStyle = '#F2F2F7'; // Light background border (Apple light gray)
                 paddedCtx.fillRect(0, 0, paddedWidth, paddedHeight);
                 
                 // Create rounded rectangle for the image
@@ -238,16 +303,50 @@ export async function generatePDF(sopDocument: SopDocument): Promise<void> {
                 // Use the padded canvas with rounded corners for PDF
                 const imgData = paddedCanvas.toDataURL('image/jpeg', 0.8);
                 
-                const imgWidth = Math.min(contentWidth, paddedCanvas.width * 0.4);
+                // Calculate image dimensions to fit within margins while preserving aspect ratio
+                const maxImgWidth = contentWidth - 20; // Leave a bit of margin
+                const imgWidth = Math.min(maxImgWidth, paddedCanvas.width * 0.5);
                 const imgHeight = (paddedCanvas.height * imgWidth) / paddedCanvas.width;
                 
-                // Add image with drop shadow effect
-                pdf.setDrawColor(200, 200, 200);
+                // Add subtle drop shadow effect (visually, not with PDF setGlobalAlpha)
+                pdf.setDrawColor(220, 220, 220);
                 pdf.setFillColor(240, 240, 240);
-                pdf.roundedRect(margin + 1.5, currentY + 1.5, imgWidth, imgHeight, 2, 2, 'F');
-                pdf.addImage(imgData, 'JPEG', margin, currentY, imgWidth, imgHeight);
+                pdf.roundedRect(
+                  margin.left + 10 + 2, 
+                  currentY + 2, 
+                  imgWidth, 
+                  imgHeight, 
+                  3, 
+                  3, 
+                  'F'
+                );
                 
-                currentY += imgHeight + 10;
+                // Center the image horizontally
+                const imageX = (width - imgWidth) / 2;
+                
+                // Add the image to PDF
+                pdf.addImage(
+                  imgData, 
+                  'JPEG', 
+                  imageX, 
+                  currentY, 
+                  imgWidth, 
+                  imgHeight
+                );
+                
+                // Add caption under image
+                pdf.setFont("helvetica", "italic");
+                pdf.setFontSize(8);
+                pdf.setTextColor(160, 160, 160);
+                const caption = `Step ${i + 1} Screenshot`;
+                const captionWidth = pdf.getStringUnitWidth(caption) * 8 / pdf.internal.scaleFactor;
+                pdf.text(
+                  caption,
+                  (width - captionWidth) / 2,
+                  currentY + imgHeight + 5
+                );
+                
+                currentY += imgHeight + 15;
               }
               resolve();
             };
@@ -259,34 +358,53 @@ export async function generatePDF(sopDocument: SopDocument): Promise<void> {
       }
     }
     
-    // Add some space before the next step
-    currentY += 10;
+    // Add more space between steps
+    currentY += 15;
     
     // Check if we need a new page for the next step
-    if (i < sopDocument.steps.length - 1 && currentY > height - margin - 40) {
+    if (i < sopDocument.steps.length - 1 && currentY > height - margin.bottom - 60) {
       pdf.addPage();
-      addBackgroundDesign(); // Add background to new page
-      currentY = margin + 10;
+      addContentPageDesign();
+      currentY = margin.top + 20;
     }
   }
   
-  // Add the footer on each page
+  // Add stylized footers on each page
   const pageCount = pdf.getNumberOfPages();
   for (let i = 1; i <= pageCount; i++) {
     pdf.setPage(i);
     pdf.setFont("helvetica", "normal");
     pdf.setFontSize(8);
-    pdf.setTextColor(100, 100, 100);
+    pdf.setTextColor(161, 161, 166); // Apple light gray
     
-    const footerText = `For internal use only | © 2025 | ${sopDocument.companyName}`;
-    const footerWidth = pdf.getStringUnitWidth(footerText) * 8 / pdf.internal.scaleFactor;
+    // Left side: For internal use only
     pdf.text(
-      footerText,
-      (width - footerWidth) / 2,
-      height - margin / 2
+      "For internal use only",
+      margin.left,
+      height - 15
+    );
+    
+    if (i > 1) { // Don't show page numbers on cover
+      // Right side: Page number
+      const pageText = `Page ${i} of ${pageCount}`;
+      pdf.text(
+        pageText,
+        width - margin.right - (pdf.getStringUnitWidth(pageText) * 8 / pdf.internal.scaleFactor),
+        height - 15
+      );
+    }
+    
+    // Center: Company name
+    const companyText = sopDocument.companyName;
+    const companyTextWidth = pdf.getStringUnitWidth(companyText) * 8 / pdf.internal.scaleFactor;
+    pdf.text(
+      companyText,
+      (width - companyTextWidth) / 2,
+      height - 15
     );
   }
   
-  // Save the PDF
-  pdf.save(`${sopDocument.title.replace(/\s+/g, '_')}_SOP.pdf`);
+  // Save with better filename format
+  const filename = `${sopDocument.title.replace(/\s+/g, '_')}_SOP_${sopDocument.date.replace(/-/g, '')}.pdf`;
+  pdf.save(filename);
 }
