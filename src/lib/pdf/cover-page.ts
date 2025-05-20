@@ -57,21 +57,45 @@ async function addLogoToCover(pdf: any, sopDocument: SopDocument, width: number,
       // Compress and center the logo
       const compressedLogoUrl = await compressImage(sopDocument.logo, 0.8);
       
-      // Make the logo larger and centered at the top
-      const logoSize = 40; // Larger size
+      // Create a temporary image to get the natural dimensions
+      const img = new Image();
+      img.src = compressedLogoUrl;
       
-      // Center horizontally and position higher on the page
-      const logoX = (width - logoSize) / 2;
-      const logoY = height / 6 - logoSize / 2; // Position higher on the page
-      
-      pdf.addImage(
-        compressedLogoUrl, 
-        "JPEG", 
-        logoX,
-        logoY,
-        logoSize, 
-        logoSize
-      );
+      await new Promise<void>((resolve) => {
+        img.onload = () => {
+          // Maximum dimensions to prevent oversized logos
+          const maxLogoWidth = width * 0.25;  // 25% of page width
+          const maxLogoHeight = height * 0.1; // 10% of page height
+          
+          // Calculate scaled dimensions while preserving aspect ratio
+          let logoWidth, logoHeight;
+          const imgAspectRatio = img.width / img.height;
+          
+          if (img.width / maxLogoWidth > img.height / maxLogoHeight) {
+            // Width is the limiting factor
+            logoWidth = maxLogoWidth;
+            logoHeight = logoWidth / imgAspectRatio;
+          } else {
+            // Height is the limiting factor
+            logoHeight = maxLogoHeight;
+            logoWidth = logoHeight * imgAspectRatio;
+          }
+          
+          // Center horizontally and position higher on the page
+          const logoX = (width - logoWidth) / 2;
+          const logoY = height / 6 - logoHeight / 2; // Position higher on the page
+          
+          pdf.addImage(
+            compressedLogoUrl, 
+            "JPEG", 
+            logoX,
+            logoY,
+            logoWidth, 
+            logoHeight
+          );
+          resolve();
+        };
+      });
     } catch(e) {
       console.error("Error adding logo to cover page", e);
     }

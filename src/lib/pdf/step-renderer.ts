@@ -189,23 +189,10 @@ async function addScreenshot(
             const imgWidth = Math.min(maxImgWidth, paddedCanvas.width * 0.5);
             const imgHeight = (paddedCanvas.height * imgWidth) / paddedCanvas.width;
             
-            // Add subtle drop shadow effect
-            pdf.setDrawColor(220, 220, 220);
-            pdf.setFillColor(240, 240, 240);
-            pdf.roundedRect(
-              margin.left + 10 + 2, 
-              currentY + 2, 
-              imgWidth, 
-              imgHeight, 
-              3, 
-              3, 
-              'F'
-            );
-            
             // Center the image horizontally
             const imageX = (width - imgWidth) / 2;
             
-            // Add the image to PDF
+            // Add the image to PDF - removed the extra gray box here
             pdf.addImage(
               imgData, 
               'JPEG', 
