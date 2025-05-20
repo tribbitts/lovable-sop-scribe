@@ -1,10 +1,11 @@
+
 import { SopDocument } from "@/types/sop";
 
 export function addContentPageDesign(pdf: any, width: number, height: number, margin: any) {
   // Keep the design extremely minimal to maximize content space
   // Just a small light circle in bottom left corner
-  pdf.setFillColor(245, 245, 247); // Very light gray
-  pdf.circle(margin.left, height - margin.bottom, 40, 'F');
+  pdf.setFillColor(245, 245, 247, 0.5); // Very light gray with transparency
+  pdf.circle(margin.left, height - margin.bottom, 30, 'F');
 }
 
 export function addPageFooters(pdf: any, sopDocument: SopDocument, width: number, height: number, margin: any) {
@@ -20,7 +21,7 @@ export function addPageFooters(pdf: any, sopDocument: SopDocument, width: number
     pdf.text(
       "For internal use only",
       margin.left,
-      height - 15
+      height - 10
     );
     
     if (i > 1) { // Don't show page numbers on cover
@@ -29,7 +30,7 @@ export function addPageFooters(pdf: any, sopDocument: SopDocument, width: number
       pdf.text(
         pageText,
         width - margin.right - (pdf.getStringUnitWidth(pageText) * 8 / pdf.internal.scaleFactor),
-        height - 15
+        height - 10
       );
     }
     
@@ -39,7 +40,7 @@ export function addPageFooters(pdf: any, sopDocument: SopDocument, width: number
     pdf.text(
       companyText,
       (width - companyTextWidth) / 2,
-      height - 15
+      height - 10
     );
   }
 }

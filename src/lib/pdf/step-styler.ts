@@ -22,10 +22,10 @@ export function styleStep(
   
   // Draw a light gray header background with minimal height
   pdf.setFillColor(242, 242, 247); // Light gray background
-  pdf.roundedRect(margin.left - 10, currentY - 5, width - margin.left - margin.right + 20, 16, 5, 5, 'F');
+  pdf.roundedRect(margin.left - 10, currentY - 5, width - margin.left - margin.right + 20, 14, 5, 5, 'F');
   
   // Add step number and description inline in the header area
-  pdf.text(stepNumber, margin.left, currentY + 3);
+  pdf.text(stepNumber, margin.left, currentY + 2);
   
   // Step title/description
   pdf.setFont("helvetica", "semibold");
@@ -33,10 +33,10 @@ export function styleStep(
   pdf.setTextColor(44, 44, 46); // Dark gray
   
   // Add step description with indent in the header
-  pdf.text(step.description, margin.left + 20, currentY + 3);
+  pdf.text(step.description, margin.left + 20, currentY + 2);
   
   // Move currentY below the header (minimal spacing)
-  currentY += 16;
+  currentY += 14;
   
   return currentY;
 }

@@ -5,8 +5,6 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import Toolbar from "@/components/Toolbar";
 import { motion } from "@/components/MotionWrapper";
-import { ArrowLeft, ArrowRight, Circle } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import StepCarousel from "@/components/StepCarousel";
 import OrganizationHeader from "@/components/OrganizationHeader";
 
@@ -27,6 +25,13 @@ const SopCreator = () => {
               Create professional Standard Operating Procedures with step-by-step 
               instructions and annotated screenshots. All data stays in your browser for privacy.
             </p>
+            <div className="mt-4 flex items-center text-sm text-zinc-500">
+              <span className="inline-flex items-center px-2 py-1 rounded-full bg-zinc-800 text-zinc-300 mr-2">
+                <span className="w-2 h-2 bg-amber-400 rounded-full mr-1"></span>
+                Not signed in
+              </span>
+              <span>SOPs are saved locally. Sign in to save to your account.</span>
+            </div>
           </CardContent>
         </Card>
       </motion.div>
