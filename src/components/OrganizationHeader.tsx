@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useSopContext } from "@/context/SopContext";
 import { Button } from "@/components/ui/button";
-import { X, Upload } from "lucide-react";
+import { X, Upload, Building } from "lucide-react";
 
 const OrganizationHeader = () => {
   const { sopDocument, setCompanyName, setLogo } = useSopContext();
@@ -36,9 +36,12 @@ const OrganizationHeader = () => {
   return (
     <Card className="mb-6 bg-[#1E1E1E] border-zinc-800 overflow-hidden rounded-2xl">
       <CardContent className="p-6">
-        <div className="flex flex-col space-y-4 sm:space-y-0 sm:space-x-4 sm:flex-row items-center">
-          <div className="w-full sm:w-3/4 space-y-2">
-            <Label htmlFor="company-name" className="text-zinc-300">Organization Name</Label>
+        <div className="flex flex-col space-y-4 sm:space-y-0 sm:flex-row sm:items-center sm:space-x-4">
+          <div className="w-full sm:w-3/4">
+            <Label htmlFor="company-name" className="text-zinc-300 flex items-center gap-2 mb-2">
+              <Building className="h-4 w-4" /> 
+              Organization Name <span className="text-zinc-500 text-xs">(appears in PDF footer)</span>
+            </Label>
             <div className="relative group">
               <Input
                 id="company-name"
@@ -52,7 +55,10 @@ const OrganizationHeader = () => {
             </div>
           </div>
           
-          <div className="w-full sm:w-1/4 flex items-center justify-end">
+          <div className="w-full sm:w-1/4 flex flex-col sm:items-end">
+            <Label className="text-zinc-300 flex items-center gap-2 mb-2 sm:justify-end">
+              <Upload className="h-4 w-4" /> Logo
+            </Label>
             {sopDocument.logo ? (
               <div className="flex items-center gap-2">
                 <div className="w-12 h-12 bg-zinc-800 rounded-lg overflow-hidden flex items-center justify-center border border-zinc-700">
@@ -69,7 +75,7 @@ const OrganizationHeader = () => {
               </div>
             ) : (
               <label htmlFor="logo-upload" className="cursor-pointer">
-                <div className="flex items-center justify-center w-12 h-12 bg-zinc-800 border border-zinc-700 hover:border-zinc-600 rounded-lg transition-all">
+                <div className="flex items-center justify-center w-12 h-12 bg-zinc-800 border border-dashed border-zinc-700 hover:border-zinc-600 rounded-lg transition-all">
                   <Upload className="h-5 w-5 text-zinc-400" />
                 </div>
                 <Input

@@ -11,24 +11,26 @@ export async function generatePDF(sopDocument: SopDocument): Promise<void> {
     try {
       console.log("Starting PDF generation process");
       
-      // Create a new PDF with better initial settings
+      // Create a new PDF with optimal settings
       const pdf = new jsPDF({
         orientation: "portrait",
         unit: "mm",
         format: "a4",
         compress: true,
+        putOnlyUsedFonts: true, // Optimize file size
+        floatPrecision: "smart" // Better handling of floating point numbers
       });
       
       // Get PDF dimensions
       const width = pdf.internal.pageSize.getWidth();
       const height = pdf.internal.pageSize.getHeight();
       
-      // Adjust top margin to be smaller to utilize more vertical space
+      // Adjust margins for better layout
       const margin = {
-        top: 20,
-        right: 25,
-        bottom: 30,
-        left: 25
+        top: 25,
+        right: 20,
+        bottom: 25,
+        left: 20
       };
       
       // Calculate content width
@@ -36,7 +38,7 @@ export async function generatePDF(sopDocument: SopDocument): Promise<void> {
       
       console.log("Creating cover page");
       
-      // Create cover page with better error handling
+      // Create elegant cover page
       addCoverPage(pdf, sopDocument, width, height, margin)
         .then(() => {
           console.log("Cover page created successfully");
@@ -47,7 +49,7 @@ export async function generatePDF(sopDocument: SopDocument): Promise<void> {
           
           console.log(`Rendering ${sopDocument.steps.length} steps`);
           
-          // Render all steps with better error handling
+          // Render all steps with consistent styling
           return renderSteps(
             pdf, 
             sopDocument.steps, 
@@ -61,17 +63,17 @@ export async function generatePDF(sopDocument: SopDocument): Promise<void> {
         .then(() => {
           console.log("Steps rendered successfully");
           
-          // Add page footers
+          // Add single consistent footer on each page
           addPageFooters(pdf, sopDocument, width, height, margin);
           
           // Save the PDF with a standardized filename
           const filename = generatePdfFilename(sopDocument);
           console.log(`Saving PDF as: ${filename}`);
           
-          // Use higher quality settings for better output
+          // Use high quality settings for better output
           const options = {
-            quality: 0.95,
-            compression: 'MEDIUM'
+            quality: 0.98,
+            compression: 'FAST'
           };
           
           pdf.save(filename);

@@ -7,12 +7,13 @@ import { Label } from "@/components/ui/label";
 import { useState } from "react";
 import { toast } from "@/hooks/use-toast";
 import { generatePDF } from "@/lib/pdf-generator";
-import { Download, Upload, FileJson, FileText } from "lucide-react";
+import { Download, Upload, FileJson, FileText, Eye } from "lucide-react";
 
 const Toolbar = () => {
   const { saveDocumentToJSON, loadDocumentFromJSON, sopDocument } = useSopContext();
   const [jsonFile, setJsonFile] = useState<File | null>(null);
   const [isExporting, setIsExporting] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
   
   const handleExport = async () => {
     if (!sopDocument.title) {
@@ -98,6 +99,14 @@ const Toolbar = () => {
     reader.readAsText(jsonFile);
   };
 
+  const handlePreview = async () => {
+    // In the future, this could show a PDF preview modal
+    toast({
+      title: "Preview",
+      description: "PDF preview is coming soon. For now, use Export to generate the PDF."
+    });
+  };
+
   return (
     <div className="flex flex-wrap justify-end items-center mb-6 gap-2">
       <div className="flex flex-wrap gap-2">
@@ -141,6 +150,15 @@ const Toolbar = () => {
             </div>
           </DialogContent>
         </Dialog>
+
+        <Button
+          onClick={handlePreview}
+          variant="outline"
+          disabled={sopDocument.steps.length === 0}
+          className="border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-white flex gap-2"
+        >
+          <Eye className="h-4 w-4" /> Preview
+        </Button>
         
         <Button 
           onClick={handleExport} 

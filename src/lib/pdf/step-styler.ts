@@ -12,31 +12,51 @@ export function styleStep(
   margin: any,
   width: number
 ): number {
-  // Add stylized step number (Apple-inspired) inside the header area
+  // Add clean Apple-inspired styling for step number
   pdf.setFont("helvetica", "bold");
-  pdf.setTextColor(0, 122, 255); // Apple Blue
-  pdf.setFontSize(18);
   
-  // Format step number with leading zero for single digits
-  const stepNumber = (index + 1).toString().padStart(2, '0');
+  // Create a clean circular step number indicator
+  const circleRadius = 8;
+  const circleX = margin.left + circleRadius;
+  const circleY = currentY + circleRadius;
   
-  // Draw a light gray header background with minimal height
-  pdf.setFillColor(242, 242, 247); // Light gray background
-  pdf.roundedRect(margin.left - 10, currentY - 5, width - margin.left - margin.right + 20, 14, 5, 5, 'F');
+  // Draw circle with Apple Blue
+  pdf.setFillColor(0, 122, 255); // Apple Blue #007AFF
+  pdf.circle(circleX, circleY, circleRadius, 'F');
   
-  // Add step number and description inline in the header area
-  pdf.text(stepNumber, margin.left, currentY + 2);
+  // Add step number in white text
+  pdf.setTextColor(255, 255, 255); // White text
+  pdf.setFontSize(14);
+  
+  // Center the number in the circle
+  const stepNumber = (index + 1).toString();
+  const textWidth = pdf.getStringUnitWidth(stepNumber) * 14 / pdf.internal.scaleFactor;
+  pdf.text(stepNumber, circleX - (textWidth / 2), circleY + 5);
   
   // Step title/description
-  pdf.setFont("helvetica", "semibold");
+  pdf.setFont("helvetica", "bold");
   pdf.setFontSize(14);
-  pdf.setTextColor(44, 44, 46); // Dark gray
+  pdf.setTextColor(44, 44, 46); // Dark gray (Apple-style)
   
-  // Add step description with indent in the header
-  pdf.text(step.description, margin.left + 20, currentY + 2);
+  // Add step description with proper indent
+  pdf.text(step.description, margin.left + (circleRadius * 2) + 10, currentY + circleRadius);
   
-  // Move currentY below the header (minimal spacing)
-  currentY += 14;
+  // Add subtle separator line under step description
+  const descWidth = Math.min(
+    pdf.getStringUnitWidth(step.description) * 14 / pdf.internal.scaleFactor,
+    width - margin.left - margin.right - 40
+  );
+  pdf.setDrawColor(200, 200, 200); // Light gray
+  pdf.setLineWidth(0.5);
+  pdf.line(
+    margin.left + (circleRadius * 2) + 10,
+    currentY + (circleRadius * 2) + 5,
+    margin.left + (circleRadius * 2) + 10 + descWidth,
+    currentY + (circleRadius * 2) + 5
+  );
+  
+  // Move currentY below the step header with appropriate spacing
+  currentY += (circleRadius * 2) + 15;
   
   return currentY;
 }

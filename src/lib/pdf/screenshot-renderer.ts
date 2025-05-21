@@ -17,8 +17,12 @@ export async function addScreenshot(
   addContentPageDesign: Function
 ): Promise<number> {
   try {
+    if (!step.screenshot || !step.screenshot.dataUrl) {
+      return currentY;
+    }
+    
     // Compress and prepare the screenshot image
-    const compressedImageUrl = await compressImage(step.screenshot!.dataUrl, 0.85);
+    const compressedImageUrl = await compressImage(step.screenshot.dataUrl, 0.92);
     
     // Create a canvas element to render the screenshot with callouts
     const canvas = document.createElement('canvas');
@@ -35,11 +39,11 @@ export async function addScreenshot(
           canvas.width = img.width;
           canvas.height = img.height;
           
-          // Create rounded corners and padding effect
+          // Create modern styling with rounded corners
           ctx.save();
           
-          const cornerRadius = 12; // Rounded corner radius
-          const paddingSize = 15; // Padding between image and border
+          const cornerRadius = 8; // Subtle rounded corner radius
+          const paddingSize = 10; // Minimal padding between image and border
           
           // Expand canvas for padding
           const paddedWidth = canvas.width + (paddingSize * 2);
@@ -52,8 +56,8 @@ export async function addScreenshot(
           const paddedCtx = paddedCanvas.getContext('2d');
           
           if (paddedCtx) {
-            // Draw rounded rectangle for the background (shadow)
-            paddedCtx.fillStyle = '#F2F2F7'; // Light background border (Apple light gray)
+            // Draw rounded rectangle for the background (slight shadow effect)
+            paddedCtx.fillStyle = '#FFFFFF'; // Clean white background
             paddedCtx.beginPath();
             paddedCtx.moveTo(cornerRadius, 0);
             paddedCtx.lineTo(paddedWidth - cornerRadius, 0);
@@ -67,8 +71,13 @@ export async function addScreenshot(
             paddedCtx.closePath();
             paddedCtx.fill();
             
+            // Add subtle shadow effect
+            paddedCtx.shadowColor = 'rgba(0, 0, 0, 0.1)';
+            paddedCtx.shadowBlur = 8;
+            paddedCtx.shadowOffsetX = 0;
+            paddedCtx.shadowOffsetY = 2;
+            
             // Create rounded rectangle for the image
-            paddedCtx.save();
             paddedCtx.beginPath();
             paddedCtx.moveTo(paddingSize + cornerRadius, paddingSize);
             paddedCtx.lineTo(paddingSize + canvas.width - cornerRadius, paddingSize);
@@ -81,6 +90,12 @@ export async function addScreenshot(
             paddedCtx.arcTo(paddingSize, paddingSize, paddingSize + cornerRadius, paddingSize, cornerRadius);
             paddedCtx.closePath();
             
+            // Reset shadow for the image itself
+            paddedCtx.shadowColor = 'transparent';
+            paddedCtx.shadowBlur = 0;
+            paddedCtx.shadowOffsetX = 0;
+            paddedCtx.shadowOffsetY = 0;
+            
             // Draw the image within the rounded rectangle area
             paddedCtx.clip();
             paddedCtx.drawImage(img, paddingSize, paddingSize, canvas.width, canvas.height);
@@ -90,20 +105,14 @@ export async function addScreenshot(
             renderCallouts(paddedCtx, step, canvas.width, canvas.height, paddingSize);
             
             // Use the padded canvas with rounded corners for PDF
-            const imgData = paddedCanvas.toDataURL('image/jpeg', 0.92);
+            const imgData = paddedCanvas.toDataURL('image/jpeg', 0.95);
             
-            // Global storage for image dimensions used by renderSteps
-            // This helps maintain consistent sizing across steps
-            if (!pdf.sopImageDimensions) {
-              pdf.sopImageDimensions = [];
-            }
-            
-            // Calculate optimal image dimensions based on available space
-            const maxImgWidth = contentWidth - 10; // Use almost full content width
+            // Calculate optimal image dimensions
+            const maxImgWidth = contentWidth * 0.9; // 90% of content width
             const aspectRatio = paddedCanvas.width / paddedCanvas.height;
             
             // Calculate available height for this step
-            const availableHeight = height - currentY - margin.bottom - 20;
+            const availableHeight = height - currentY - margin.bottom - 30;
             
             // Start with width constraint
             let imgWidth = maxImgWidth;
@@ -115,43 +124,25 @@ export async function addScreenshot(
               imgWidth = imgHeight * aspectRatio;
             }
             
-            // Store dimensions for consistency checks
-            pdf.sopImageDimensions.push({
+            // Store this image's dimensions
+            if (!pdf.stepImages) {
+              pdf.stepImages = [];
+            }
+            pdf.stepImages.push({
               width: imgWidth,
               height: imgHeight,
               aspectRatio: aspectRatio
             });
-            
-            // If this is the second image on a page, try to make it consistent with the first
-            if (pdf.sopImageDimensions.length > 1 && pdf.sopLastPageImages 
-                && pdf.sopLastPageImages.length > 0 && pdf.sopCurrentPage === pdf.internal.getCurrentPageInfo().pageNumber) {
-              // Adjust to match the width of the first image on this page
-              imgWidth = Math.min(imgWidth, pdf.sopLastPageImages[0].width);
-              imgHeight = imgWidth / aspectRatio;
-            }
-            
-            // Center the image horizontally
-            const imageX = (width - imgWidth) / 2;
             
             // Check if we need a new page for this image
             if (currentY + imgHeight > height - margin.bottom - 20) {
               pdf.addPage();
               addContentPageDesign(pdf, width, height, margin);
               currentY = margin.top;
-              // Reset page image tracking
-              pdf.sopLastPageImages = [];
-              pdf.sopCurrentPage = pdf.internal.getCurrentPageInfo().pageNumber;
             }
             
-            // Track images on this page for consistent sizing
-            if (!pdf.sopLastPageImages) {
-              pdf.sopLastPageImages = [];
-            }
-            pdf.sopLastPageImages.push({
-              width: imgWidth,
-              height: imgHeight
-            });
-            pdf.sopCurrentPage = pdf.internal.getCurrentPageInfo().pageNumber;
+            // Center the image horizontally
+            const imageX = (width - imgWidth) / 2;
             
             // Add the image to PDF
             pdf.addImage(
@@ -163,20 +154,8 @@ export async function addScreenshot(
               imgHeight
             );
             
-            // Add caption under image
-            pdf.setFont("helvetica", "italic");
-            pdf.setFontSize(8);
-            pdf.setTextColor(160, 160, 160);
-            const caption = `Step ${stepIndex + 1} Screenshot`;
-            const captionWidth = pdf.getStringUnitWidth(caption) * 8 / pdf.internal.scaleFactor;
-            pdf.text(
-              caption,
-              (width - captionWidth) / 2,
-              currentY + imgHeight + 5
-            );
-            
-            // Add minimal space after images
-            currentY += imgHeight + 8;
+            // Update current Y position
+            currentY += imgHeight + 10;
           }
           resolve();
         };
@@ -206,20 +185,20 @@ function renderCallouts(
     const width = (callout.width / 100) * canvasWidth;
     const height = (callout.height / 100) * canvasHeight;
     
-    // Ensure all callouts are circles with glow effect
+    // Ensure all callouts are circles with subtle glow effect
     const radius = Math.max(width, height) / 2;
     const centerX = x + width / 2;
     const centerY = y + height / 2;
     
-    // Draw glow effect first (outer shadow)
+    // Draw subtle glow effect
     ctx.shadowColor = callout.color;
-    ctx.shadowBlur = 10;
+    ctx.shadowBlur = 8;
     ctx.shadowOffsetX = 0;
     ctx.shadowOffsetY = 0;
     
-    // Draw thick border with completely transparent fill
+    // Draw thin border with transparent fill
     ctx.strokeStyle = callout.color;
-    ctx.lineWidth = 3;
+    ctx.lineWidth = 2.5;
     ctx.beginPath();
     ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
     ctx.stroke();
