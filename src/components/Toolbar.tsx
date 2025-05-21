@@ -7,16 +7,40 @@ import { Label } from "@/components/ui/label";
 import { useState } from "react";
 import { toast } from "@/hooks/use-toast";
 import { generatePDF } from "@/lib/pdf-generator";
-import { Download, Upload, FileJson, FileText, Eye } from "lucide-react";
+import { Download, Upload, FileJson, FileText, Eye, Lock } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
+import { useSubscription } from "@/context/SubscriptionContext";
+import { createPdfUsageRecord } from "@/lib/supabase";
 
 const Toolbar = () => {
   const { saveDocumentToJSON, loadDocumentFromJSON, sopDocument } = useSopContext();
+  const { user } = useAuth();
+  const { canGeneratePdf, incrementPdfCount, tier, refreshSubscription } = useSubscription();
+  
   const [jsonFile, setJsonFile] = useState<File | null>(null);
   const [isExporting, setIsExporting] = useState(false);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [pdfPreviewUrl, setPdfPreviewUrl] = useState<string | null>(null);
   
   const handleExport = async () => {
+    if (!user) {
+      toast({
+        title: "Authentication Required",
+        description: "Please sign in to export PDFs.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (!canGeneratePdf) {
+      toast({
+        title: "Daily Limit Reached",
+        description: "You've reached your daily PDF export limit. Upgrade to Pro for unlimited exports.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     if (!sopDocument.title) {
       toast({
         title: "SOP Title Required",
@@ -57,6 +81,17 @@ const Toolbar = () => {
       
       console.log("Starting PDF export");
       await generatePDF(sopDocument);
+      
+      // Record PDF usage in database
+      if (user) {
+        try {
+          await createPdfUsageRecord(user.id);
+          incrementPdfCount();
+          await refreshSubscription();
+        } catch (err) {
+          console.error("Error recording PDF usage:", err);
+        }
+      }
       
       setIsExporting(false);
       toast({
@@ -212,11 +247,20 @@ const Toolbar = () => {
         <Button 
           onClick={handleExport} 
           variant="default" 
-          disabled={isExporting || sopDocument.steps.length === 0}
-          className="bg-[#007AFF] hover:bg-[#0069D9] text-white shadow-md transition-all flex gap-2"
+          disabled={isExporting || sopDocument.steps.length === 0 || !canGeneratePdf}
+          className={`${canGeneratePdf ? 'bg-[#007AFF] hover:bg-[#0069D9]' : 'bg-zinc-700'} text-white shadow-md transition-all flex gap-2`}
         >
-          <FileText className="h-4 w-4" /> 
-          {isExporting ? "Creating PDF..." : "Export as PDF"}
+          {!canGeneratePdf ? (
+            <>
+              <Lock className="h-4 w-4" />
+              {tier === "free" ? "Daily Limit Reached" : "Export as PDF"}
+            </>
+          ) : (
+            <>
+              <FileText className="h-4 w-4" />
+              {isExporting ? "Creating PDF..." : "Export as PDF"}
+            </>
+          )}
         </Button>
       </div>
     </div>

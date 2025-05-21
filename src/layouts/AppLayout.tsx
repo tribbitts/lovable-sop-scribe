@@ -3,7 +3,9 @@ import { ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/hooks/useTheme";
-import { MoonIcon, SunIcon, Home, LogOut } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
+import { useSubscription } from "@/context/SubscriptionContext";
+import { MoonIcon, SunIcon, Home, LogOut, User } from "lucide-react";
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -11,6 +13,8 @@ interface AppLayoutProps {
 
 const AppLayout = ({ children }: AppLayoutProps) => {
   const { theme, toggleTheme } = useTheme();
+  const { user, signOut } = useAuth();
+  const { tier, pdfCount, pdfLimit } = useSubscription();
   
   return (
     <div className="min-h-screen bg-[#121212] text-[#F1F1F1] dark">
@@ -28,31 +32,50 @@ const AppLayout = ({ children }: AppLayoutProps) => {
               <span className="hidden md:inline">Home</span>
             </Link>
             
-            {/* Placeholder for auth - will connect to Supabase later */}
-            <div className="flex items-center gap-3">
-              <Button 
-                variant="outline" 
-                className="border-zinc-700 text-zinc-300 hover:bg-zinc-800 rounded-xl text-sm flex items-center gap-2"
-                onClick={() => console.log("Logout clicked - will integrate with Supabase")}
-              >
-                <LogOut className="h-4 w-4" />
-                <span className="hidden md:inline">Log Out</span>
-              </Button>
-              
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                onClick={toggleTheme} 
-                className="rounded-full" 
-                aria-label="Toggle theme"
-              >
-                {theme === "dark" ? (
-                  <SunIcon className="h-[1.2rem] w-[1.2rem] text-zinc-400" />
-                ) : (
-                  <MoonIcon className="h-[1.2rem] w-[1.2rem] text-zinc-400" />
-                )}
-              </Button>
-            </div>
+            {/* User info and subscription status */}
+            {user && (
+              <div className="flex items-center gap-3">
+                <div className="hidden md:flex items-center px-3 py-1 rounded-full bg-zinc-800 text-xs">
+                  <span className={`w-2 h-2 rounded-full mr-1.5 ${tier === "pro" ? "bg-green-500" : "bg-amber-400"}`}></span>
+                  <span className="mr-1.5 text-zinc-300">{tier === "pro" ? "Pro" : "Free"}</span>
+                  {tier !== "pro" && (
+                    <span className="text-zinc-400">
+                      {pdfCount}/{pdfLimit} PDFs today
+                    </span>
+                  )}
+                </div>
+                
+                <div className="flex items-center gap-1 text-sm text-zinc-400">
+                  <User className="h-3 w-3" />
+                  <span className="hidden md:inline truncate max-w-[120px]">
+                    {user.email?.split('@')[0]}
+                  </span>
+                </div>
+                
+                <Button 
+                  variant="outline" 
+                  className="border-zinc-700 text-zinc-300 hover:bg-zinc-800 rounded-xl text-sm flex items-center gap-2"
+                  onClick={() => signOut()}
+                >
+                  <LogOut className="h-4 w-4" />
+                  <span className="hidden md:inline">Log Out</span>
+                </Button>
+                
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  onClick={toggleTheme} 
+                  className="rounded-full" 
+                  aria-label="Toggle theme"
+                >
+                  {theme === "dark" ? (
+                    <SunIcon className="h-[1.2rem] w-[1.2rem] text-zinc-400" />
+                  ) : (
+                    <MoonIcon className="h-[1.2rem] w-[1.2rem] text-zinc-400" />
+                  )}
+                </Button>
+              </div>
+            )}
           </div>
         </div>
       </header>
