@@ -1,7 +1,7 @@
 
 import { createContext, useContext, useEffect, useState } from "react";
 import { useAuth } from "./AuthContext";
-import { getUserSubscription } from "@/lib/supabase";
+import { getUserSubscription, supabase } from "@/lib/supabase";
 import { toast } from "@/hooks/use-toast";
 
 type SubscriptionTier = "free" | "pro" | null;
@@ -114,3 +114,4 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
     </SubscriptionContext.Provider>
   );
 };
+
