@@ -15,6 +15,8 @@ export interface ScreenshotData {
   id: string;
   dataUrl: string;
   callouts: Callout[];
+  secondaryDataUrl?: string;
+  secondaryCallouts?: Callout[];
 }
 
 export interface SopStep {
@@ -28,6 +30,7 @@ export interface SopDocument {
   topic: string;
   date: string;
   logo: string | null;
+  backgroundImage?: string | null;
   steps: SopStep[];
   companyName: string;
 }

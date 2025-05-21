@@ -13,7 +13,8 @@ const Toolbar = () => {
   const { saveDocumentToJSON, loadDocumentFromJSON, sopDocument } = useSopContext();
   const [jsonFile, setJsonFile] = useState<File | null>(null);
   const [isExporting, setIsExporting] = useState(false);
-  const [showPreview, setShowPreview] = useState(false);
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const [pdfPreviewUrl, setPdfPreviewUrl] = useState<string | null>(null);
   
   const handleExport = async () => {
     if (!sopDocument.title) {
@@ -100,11 +101,41 @@ const Toolbar = () => {
   };
 
   const handlePreview = async () => {
-    // In the future, this could show a PDF preview modal
-    toast({
-      title: "Preview",
-      description: "PDF preview is coming soon. For now, use Export to generate the PDF."
-    });
+    if (!sopDocument.title || !sopDocument.topic) {
+      toast({
+        title: "Missing Information",
+        description: "Please provide a title and topic before previewing.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    try {
+      // Show loading toast
+      toast({
+        title: "Generating Preview",
+        description: "Creating PDF preview..."
+      });
+      
+      // Generate PDF and get base64 data URL
+      const pdfDataUrl = await generatePDF(sopDocument);
+      
+      // Set the preview URL and open modal
+      setPdfPreviewUrl(pdfDataUrl);
+      setIsPreviewOpen(true);
+      
+      toast({
+        title: "Preview Ready",
+        description: "PDF preview has been generated."
+      });
+    } catch (error) {
+      console.error("PDF preview error:", error);
+      toast({
+        title: "Error",
+        description: "Failed to generate PDF preview. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
 
   return (
@@ -151,14 +182,32 @@ const Toolbar = () => {
           </DialogContent>
         </Dialog>
 
-        <Button
-          onClick={handlePreview}
-          variant="outline"
-          disabled={sopDocument.steps.length === 0}
-          className="border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-white flex gap-2"
-        >
-          <Eye className="h-4 w-4" /> Preview
-        </Button>
+        {/* PDF Preview Dialog */}
+        <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
+          <Button
+            onClick={handlePreview}
+            variant="outline"
+            disabled={sopDocument.steps.length === 0}
+            className="border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-white flex gap-2"
+          >
+            <Eye className="h-4 w-4" /> Preview
+          </Button>
+          
+          <DialogContent className="bg-zinc-900 border-zinc-800 max-w-4xl w-[90vw] h-[80vh]">
+            <DialogHeader>
+              <DialogTitle className="text-white">PDF Preview</DialogTitle>
+            </DialogHeader>
+            <div className="w-full h-full overflow-hidden rounded-lg mt-4">
+              {pdfPreviewUrl && (
+                <iframe
+                  src={pdfPreviewUrl}
+                  className="w-full h-full border-0 rounded"
+                  title="PDF Preview"
+                />
+              )}
+            </div>
+          </DialogContent>
+        </Dialog>
         
         <Button 
           onClick={handleExport} 

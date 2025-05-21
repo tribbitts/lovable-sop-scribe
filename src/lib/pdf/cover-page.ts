@@ -6,7 +6,7 @@ export async function addCoverPage(pdf: any, sopDocument: SopDocument, width: nu
   // Add minimal, elegant background elements
   addCoverPageDesign(pdf, width, height, margin);
   
-  // Add logo to the cover page with proper aspect ratio
+  // Add logo to the cover page with proper aspect ratio and positioning
   if (sopDocument.logo) {
     await addLogoToCover(pdf, sopDocument, width, height);
   }
@@ -18,7 +18,7 @@ export async function addCoverPage(pdf: any, sopDocument: SopDocument, width: nu
   
   const title = sopDocument.title;
   const titleWidth = pdf.getStringUnitWidth(title) * 28 / pdf.internal.scaleFactor;
-  pdf.text(title, (width - titleWidth) / 2, height / 2.5);
+  pdf.text(title, (width - titleWidth) / 2, height / 2);
   
   // Subtitle with topic and date in small caps
   pdf.setFont("helvetica", "normal");
@@ -27,16 +27,13 @@ export async function addCoverPage(pdf: any, sopDocument: SopDocument, width: nu
   
   const subtitle = `${sopDocument.topic.toUpperCase()} · ${sopDocument.date}`;
   const subtitleWidth = pdf.getStringUnitWidth(subtitle) * 12 / pdf.internal.scaleFactor;
-  pdf.text(subtitle, (width - subtitleWidth) / 2, height / 2.5 + 15);
+  pdf.text(subtitle, (width - subtitleWidth) / 2, height / 2 + 15);
   
   // Add subtle divider line
   pdf.setDrawColor(0, 122, 255); // Apple Blue
   pdf.setLineWidth(0.5);
   const lineWidth = Math.min(120, width / 3);
-  pdf.line((width - lineWidth) / 2, height / 2.5 + 25, (width + lineWidth) / 2, height / 2.5 + 25);
-  
-  // Add single footer to cover page
-  addCoverPageFooter(pdf, sopDocument, width, height, margin);
+  pdf.line((width - lineWidth) / 2, height / 2 + 25, (width + lineWidth) / 2, height / 2 + 25);
 }
 
 // Add minimal background elements for the cover page
@@ -59,8 +56,8 @@ async function addLogoToCover(pdf: any, sopDocument: SopDocument, width: number,
       
       await new Promise<void>((resolve) => {
         img.onload = () => {
-          // Maximum dimensions to prevent oversized logos
-          const maxLogoWidth = width * 0.4;  // 40% of page width
+          // Maximum width limited to 300px as specified
+          const maxLogoWidth = Math.min(300, width * 0.5);
           const maxLogoHeight = height * 0.15; // 15% of page height
           
           // Calculate scaled dimensions while preserving aspect ratio
@@ -97,20 +94,4 @@ async function addLogoToCover(pdf: any, sopDocument: SopDocument, width: number,
       console.error("Error adding logo to cover page", e);
     }
   }
-}
-
-// Add clean, minimal footer to the cover page
-function addCoverPageFooter(pdf: any, sopDocument: SopDocument, width: number, height: number, margin: any) {
-  pdf.setFont("helvetica", "normal");
-  pdf.setFontSize(9);
-  pdf.setTextColor(140, 140, 140); // Light gray
-  
-  const currentYear = new Date().getFullYear();
-  const footerText = `For internal use only | © ${currentYear} ${sopDocument.companyName}`;
-  const footerWidth = pdf.getStringUnitWidth(footerText) * 9 / pdf.internal.scaleFactor;
-  pdf.text(
-    footerText,
-    (width - footerWidth) / 2,
-    height - margin.bottom
-  );
 }

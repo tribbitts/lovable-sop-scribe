@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useContext, ReactNode } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { SopDocument, SopStep, ScreenshotData, Callout } from "../types/sop";
@@ -11,6 +10,7 @@ interface SopContextType {
   setSopTopic: (topic: string) => void;
   setSopDate: (date: string) => void;
   setLogo: (logo: string | null) => void;
+  setBackgroundImage: (image: string | null) => void;
   setCompanyName: (name: string) => void;
   addStep: () => void;
   updateStep: (stepId: string, description: string) => void;
@@ -18,12 +18,17 @@ interface SopContextType {
   moveStepDown: (stepId: string) => void;
   deleteStep: (stepId: string) => void;
   setStepScreenshot: (stepId: string, dataUrl: string) => void;
+  setStepSecondaryScreenshot: (stepId: string, dataUrl: string) => void;
   addCallout: (stepId: string, callout: Omit<Callout, "id">) => void;
   updateCallout: (stepId: string, callout: Callout) => void;
   deleteCallout: (stepId: string, calloutId: string) => void;
+  addSecondaryCallout: (stepId: string, callout: Omit<Callout, "id">) => void;
+  updateSecondaryCallout: (stepId: string, callout: Callout) => void;
+  deleteSecondaryCallout: (stepId: string, calloutId: string) => void;
   saveDocumentToJSON: () => void;
   loadDocumentFromJSON: (jsonData: string) => void;
   resetDocument: () => void;
+  getPdfPreview: () => Promise<string>;
 }
 
 const defaultSopDocument: SopDocument = {
@@ -31,6 +36,7 @@ const defaultSopDocument: SopDocument = {
   topic: "",
   date: new Date().toISOString().split("T")[0],
   logo: null,
+  backgroundImage: null,
   steps: [],
   companyName: "Company Name"
 };
@@ -56,6 +62,10 @@ export const SopProvider = ({ children }: { children: ReactNode }) => {
 
   const setLogo = (logo: string | null) => {
     setSopDocument((prev) => ({ ...prev, logo }));
+  };
+  
+  const setBackgroundImage = (image: string | null) => {
+    setSopDocument((prev) => ({ ...prev, backgroundImage: image }));
   };
 
   const setCompanyName = (companyName: string) => {
@@ -129,7 +139,30 @@ export const SopProvider = ({ children }: { children: ReactNode }) => {
             screenshot: {
               id: uuidv4(),
               dataUrl,
-              callouts: [],
+              callouts: step.screenshot?.callouts || [],
+              secondaryDataUrl: step.screenshot?.secondaryDataUrl,
+              secondaryCallouts: step.screenshot?.secondaryCallouts || [],
+            },
+          };
+        }
+        return step;
+      }),
+    }));
+  };
+  
+  const setStepSecondaryScreenshot = (stepId: string, dataUrl: string) => {
+    setSopDocument((prev) => ({
+      ...prev,
+      steps: prev.steps.map((step) => {
+        if (step.id === stepId) {
+          return {
+            ...step,
+            screenshot: {
+              id: step.screenshot?.id || uuidv4(),
+              dataUrl: step.screenshot?.dataUrl || '',
+              callouts: step.screenshot?.callouts || [],
+              secondaryDataUrl: dataUrl,
+              secondaryCallouts: step.screenshot?.secondaryCallouts || [],
             },
           };
         }
@@ -196,6 +229,66 @@ export const SopProvider = ({ children }: { children: ReactNode }) => {
       }),
     }));
   };
+  
+  // Secondary screenshot callout functions
+  const addSecondaryCallout = (stepId: string, callout: Omit<Callout, "id">) => {
+    setSopDocument((prev) => ({
+      ...prev,
+      steps: prev.steps.map((step) => {
+        if (step.id === stepId && step.screenshot && step.screenshot.secondaryDataUrl) {
+          return {
+            ...step,
+            screenshot: {
+              ...step.screenshot,
+              secondaryCallouts: [
+                ...(step.screenshot.secondaryCallouts || []),
+                { ...callout, id: uuidv4() },
+              ],
+            },
+          };
+        }
+        return step;
+      }),
+    }));
+  };
+
+  const updateSecondaryCallout = (stepId: string, callout: Callout) => {
+    setSopDocument((prev) => ({
+      ...prev,
+      steps: prev.steps.map((step) => {
+        if (step.id === stepId && step.screenshot && step.screenshot.secondaryCallouts) {
+          return {
+            ...step,
+            screenshot: {
+              ...step.screenshot,
+              secondaryCallouts: step.screenshot.secondaryCallouts.map((c) =>
+                c.id === callout.id ? callout : c
+              ),
+            },
+          };
+        }
+        return step;
+      }),
+    }));
+  };
+
+  const deleteSecondaryCallout = (stepId: string, calloutId: string) => {
+    setSopDocument((prev) => ({
+      ...prev,
+      steps: prev.steps.map((step) => {
+        if (step.id === stepId && step.screenshot && step.screenshot.secondaryCallouts) {
+          return {
+            ...step,
+            screenshot: {
+              ...step.screenshot,
+              secondaryCallouts: step.screenshot.secondaryCallouts.filter((c) => c.id !== calloutId),
+            },
+          };
+        }
+        return step;
+      }),
+    }));
+  };
 
   const saveDocumentToJSON = () => {
     try {
@@ -238,6 +331,13 @@ export const SopProvider = ({ children }: { children: ReactNode }) => {
   const resetDocument = () => {
     setSopDocument(defaultSopDocument);
   };
+  
+  // Import generatePDF from the correct location
+  const getPdfPreview = async (): Promise<string> => {
+    // This function will be implemented later
+    // For now it's a placeholder that returns an empty string
+    return '';
+  };
 
   return (
     <SopContext.Provider
@@ -247,6 +347,7 @@ export const SopProvider = ({ children }: { children: ReactNode }) => {
         setSopTopic,
         setSopDate,
         setLogo,
+        setBackgroundImage,
         setCompanyName,
         addStep,
         updateStep,
@@ -254,12 +355,17 @@ export const SopProvider = ({ children }: { children: ReactNode }) => {
         moveStepDown,
         deleteStep,
         setStepScreenshot,
+        setStepSecondaryScreenshot,
         addCallout,
         updateCallout,
         deleteCallout,
+        addSecondaryCallout,
+        updateSecondaryCallout,
+        deleteSecondaryCallout,
         saveDocumentToJSON,
         loadDocumentFromJSON,
-        resetDocument
+        resetDocument,
+        getPdfPreview
       }}
     >
       {children}
