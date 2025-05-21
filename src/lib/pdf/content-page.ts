@@ -5,8 +5,8 @@ export function addContentPageDesign(pdf: any, width: number, height: number, ma
   // If there's a background image, add it first (so it's behind everything)
   if (pdf.backgroundImage) {
     try {
-      // Add the background image to fill the entire page
-      // We don't restrict size - it will naturally bleed off the page if too large
+      // Add the background image without trying to fit it to the page
+      // Let it naturally bleed off the page edges if too large
       pdf.addImage(
         pdf.backgroundImage,
         'PNG',
@@ -33,7 +33,7 @@ export function addPageFooters(pdf: any, sopDocument: SopDocument, width: number
 
   for (let i = 1; i <= pageCount; i++) {
     pdf.setPage(i);
-    pdf.setFont("Inter", "normal"); // Use Inter font
+    pdf.setFont("helvetica", "normal"); // Use helvetica font for reliability
     pdf.setFontSize(9);
     pdf.setTextColor(100, 100, 100); // Medium gray
 
@@ -45,9 +45,17 @@ export function addPageFooters(pdf: any, sopDocument: SopDocument, width: number
       footerText += ` | Page ${i - 1} of ${pageCount - 1}`;
     }
 
-    // Center the footer
-    const fontSize = pdf.getFontSize();
-    const footerWidth = pdf.getStringUnitWidth(footerText) * fontSize / pdf.internal.scaleFactor;
+    // Center the footer - handle font measurement safely
+    let footerWidth;
+    try {
+      const fontSize = pdf.getFontSize();
+      footerWidth = pdf.getStringUnitWidth(footerText) * fontSize / pdf.internal.scaleFactor;
+    } catch (e) {
+      console.log("Font measurement error, using estimate:", e);
+      // Use an estimated width if font measurement fails
+      footerWidth = footerText.length * 1.5;
+    }
+    
     pdf.text(
       footerText,
       (width - footerWidth) / 2,

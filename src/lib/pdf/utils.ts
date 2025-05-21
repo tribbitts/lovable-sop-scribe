@@ -1,3 +1,4 @@
+
 import { SopDocument } from "@/types/sop";
 import { jsPDF } from 'jspdf';
 
@@ -98,40 +99,52 @@ export function addWrappedText(pdf: any, text: string, x: number, y: number, max
 }
 
 async function fetchFontAsBase64(url: string): Promise<string> {
-  const response = await fetch(url);
-  if (!response.ok) {
-    throw new Error(`Failed to fetch font ${url}: ${response.statusText}`);
+  try {
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch font ${url}: ${response.statusText}`);
+    }
+    const blob = await response.blob();
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        if (reader.result) {
+          resolve((reader.result as string).split(',')[1]); // Get Base64 part
+        } else {
+          reject(new Error('File reading resulted in null.'));
+        }
+      };
+      reader.onerror = (error) => reject(new Error(`FileReader error: ${error.target?.error?.message || 'unknown error'}`));
+      reader.readAsDataURL(blob);
+    });
+  } catch (error) {
+    console.error(`Error fetching font: ${url}`, error);
+    throw error;
   }
-  const blob = await response.blob();
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      if (reader.result) {
-        resolve((reader.result as string).split(',')[1]); // Get Base64 part
-      } else {
-        reject(new Error('File reading resulted in null.'));
-      }
-    };
-    reader.onerror = (error) => reject(new Error(`FileReader error: ${error.target?.error?.message || 'unknown error'}`));
-    reader.readAsDataURL(blob);
-  });
 }
 
 export async function registerInterFont(pdf: jsPDF) {
   try {
     console.log("Attempting to register Inter font...");
-    const interRegularBase64 = await fetchFontAsBase64('/fonts/Inter-Regular.ttf');
-    const interBoldBase64 = await fetchFontAsBase64('/fonts/Inter-Bold.ttf');
+    
+    try {
+      const interRegularBase64 = await fetchFontAsBase64('/fonts/Inter-Regular.ttf');
+      const interBoldBase64 = await fetchFontAsBase64('/fonts/Inter-Bold.ttf');
 
-    pdf.addFileToVFS('Inter-Regular.ttf', interRegularBase64);
-    pdf.addFont('Inter-Regular.ttf', 'Inter', 'normal');
+      pdf.addFileToVFS('Inter-Regular.ttf', interRegularBase64);
+      pdf.addFont('Inter-Regular.ttf', 'Inter', 'normal');
 
-    pdf.addFileToVFS('Inter-Bold.ttf', interBoldBase64);
-    pdf.addFont('Inter-Bold.ttf', 'Inter', 'bold');
+      pdf.addFileToVFS('Inter-Bold.ttf', interBoldBase64);
+      pdf.addFont('Inter-Bold.ttf', 'Inter', 'bold');
 
-    console.log("Inter font registered successfully.");
+      console.log("Inter font registered successfully.");
+    } catch (error) {
+      console.error("Failed to load or register Inter font:", error);
+      console.warn("Falling back to Helvetica due to font loading error.");
+      throw error; // Re-throw to trigger fallback
+    }
   } catch (error) {
-    console.error("Failed to load or register Inter font:", error);
-    console.warn("Falling back to Helvetica due to font loading error. Ensure Inter-Regular.ttf and Inter-Bold.ttf are in the public/fonts/ directory.");
+    // No additional handling needed, we're already logging the error
+    // and the code will naturally fall back to the default fonts
   }
 }

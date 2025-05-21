@@ -11,22 +11,42 @@ export async function addCoverPage(pdf: any, sopDocument: SopDocument, width: nu
     await addLogoToCover(pdf, sopDocument, width, height);
   }
   
-  // Center-aligned title (large and bold)
-  pdf.setFont("Inter", "bold");
+  // Set a default font first in case custom font fails
+  pdf.setFont("helvetica", "bold");
   pdf.setFontSize(28);
   pdf.setTextColor(40, 40, 40); // Dark charcoal
   
-  const title = sopDocument.title;
-  const titleWidth = pdf.getStringUnitWidth(title) * 28 / pdf.internal.scaleFactor;
+  const title = sopDocument.title || "Untitled SOP";
+  
+  // Calculate title positioning - handle font measurement safely
+  let titleWidth;
+  try {
+    titleWidth = pdf.getStringUnitWidth(title) * 28 / pdf.internal.scaleFactor;
+  } catch (e) {
+    console.log("Font measurement error, using estimate:", e);
+    // Use an estimated width if font measurement fails
+    titleWidth = title.length * 4;
+  }
+  
   pdf.text(title, (width - titleWidth) / 2, height / 2);
   
   // Subtitle with topic and date in small caps
-  pdf.setFont("Inter", "normal");
+  pdf.setFont("helvetica", "normal");
   pdf.setFontSize(12);
   pdf.setTextColor(100, 100, 100); // Medium gray
   
-  const subtitle = `${sopDocument.topic.toUpperCase()} · ${sopDocument.date}`;
-  const subtitleWidth = pdf.getStringUnitWidth(subtitle) * 12 / pdf.internal.scaleFactor;
+  const subtitle = `${sopDocument.topic ? sopDocument.topic.toUpperCase() : 'STANDARD OPERATING PROCEDURE'} · ${sopDocument.date}`;
+  
+  // Handle subtitle positioning safely
+  let subtitleWidth;
+  try {
+    subtitleWidth = pdf.getStringUnitWidth(subtitle) * 12 / pdf.internal.scaleFactor;
+  } catch (e) {
+    console.log("Font measurement error, using estimate:", e);
+    // Use an estimated width if font measurement fails
+    subtitleWidth = subtitle.length * 1.5;
+  }
+  
   pdf.text(subtitle, (width - subtitleWidth) / 2, height / 2 + 15);
   
   // Add subtle divider line
@@ -41,6 +61,24 @@ function addCoverPageDesign(pdf: any, width: number, height: number, margin: any
   // Very subtle light gray background
   pdf.setFillColor(248, 248, 248); // Almost white
   pdf.rect(0, 0, width, height, 'F');
+  
+  // If there's a background image, add it without resizing
+  if (pdf.backgroundImage) {
+    try {
+      // Add the background image using natural dimensions
+      // Let it bleed off the page if too large - no fitting
+      pdf.addImage(
+        pdf.backgroundImage,
+        'PNG',
+        0,
+        0,
+        width,
+        height
+      );
+    } catch (error) {
+      console.error("Error adding background image to cover:", error);
+    }
+  }
 }
 
 // Add logo to the cover page with proper aspect ratio
@@ -88,6 +126,12 @@ async function addLogoToCover(pdf: any, sopDocument: SopDocument, width: number,
             logoHeight
           );
           resolve();
+        };
+        
+        // Add error handling for the image load
+        img.onerror = () => {
+          console.error("Failed to load logo image");
+          resolve(); // Continue without the logo
         };
       });
     } catch(e) {
