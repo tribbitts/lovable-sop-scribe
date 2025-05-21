@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
@@ -33,13 +32,14 @@ const Auth = () => {
       try {
         setDevLoading(true);
         
-        // Check if dev account exists first
-        const { data: userExists } = await supabase.auth.admin
-          .getUserByEmail('dev@example.com')
-          .catch(() => ({ data: null }));
+        // Check if dev account exists using signIn attempt
+        const { data: signInCheck, error: signInError } = await supabase.auth.signInWithPassword({
+          email: 'dev@example.com',
+          password: 'password123',
+        });
         
-        // If user doesn't exist, create it first
-        if (!userExists) {
+        // If sign-in fails with invalid credentials, we need to create the account
+        if (signInError && signInError.message.includes('Invalid login credentials')) {
           // Try to create the development account
           const { error: signUpError } = await supabase.auth.signUp({
             email: 'dev@example.com',
@@ -50,30 +50,26 @@ const Auth = () => {
           });
           
           if (signUpError) {
-            // If sign-up fails, try direct sign-in
-            console.log('Failed to create dev account, attempting login:', signUpError);
+            console.log('Failed to create dev account:', signUpError);
+            toast({
+              title: "Development Account Error",
+              description: "Could not create development account: " + signUpError.message,
+              variant: "destructive",
+            });
           } else {
             toast({
               title: "Dev Account Created",
               description: "Created development account automatically",
             });
             
-            // Auto-confirm the user for development purposes
-            try {
-              // This is admin functionality that might not be available
-              await supabase.auth.admin.updateUserById(
-                'dev@example.com',
-                { email_confirm: true }
-              ).catch(() => console.log('Unable to auto-confirm user - this is expected'));
-            } catch (err) {
-              console.log('Unable to auto-confirm user:', err);
-            }
+            // After creating account, attempt to sign in
+            await signIn('dev@example.com', 'password123');
+            navigate('/app');
           }
+        } else if (signInCheck?.user) {
+          // User already exists and sign-in succeeded
+          navigate('/app');
         }
-        
-        // Attempt to sign in with dev credentials
-        await signIn('dev@example.com', 'password123');
-        navigate('/app');
       } catch (error) {
         console.error('Development login failed:', error);
         toast({
