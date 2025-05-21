@@ -1,13 +1,13 @@
 
 import { jsPDF } from "jspdf";
 import { SopDocument } from "@/types/sop";
-import { generatePdfFilename } from "@/lib/pdf/utils";
+import { generatePdfFilename, registerInterFont } from "@/lib/pdf/utils";
 import { addCoverPage } from "@/lib/pdf/cover-page";
 import { addContentPageDesign, addPageFooters } from "@/lib/pdf/content-page";
 import { renderSteps } from "@/lib/pdf/step-renderer";
 
 export async function generatePDF(sopDocument: SopDocument): Promise<string> {
-  return new Promise((resolve, reject) => {
+  return new Promise(async (resolve, reject) => {
     try {
       console.log("Starting PDF generation process");
       
@@ -17,9 +17,12 @@ export async function generatePDF(sopDocument: SopDocument): Promise<string> {
         unit: "mm",
         format: "a4",
         compress: true,
-        putOnlyUsedFonts: true, // Optimize file size
-        floatPrecision: "smart" // Better handling of floating point numbers
+        putOnlyUsedFonts: true, 
+        floatPrecision: "smart"
       });
+
+      // Register custom fonts
+      await registerInterFont(pdf);
       
       // Get PDF dimensions
       const width = pdf.internal.pageSize.getWidth();

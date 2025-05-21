@@ -12,7 +12,7 @@ export async function addCoverPage(pdf: any, sopDocument: SopDocument, width: nu
   }
   
   // Center-aligned title (large and bold)
-  pdf.setFont("helvetica", "bold");
+  pdf.setFont("Inter", "bold");
   pdf.setFontSize(28);
   pdf.setTextColor(40, 40, 40); // Dark charcoal
   
@@ -21,7 +21,7 @@ export async function addCoverPage(pdf: any, sopDocument: SopDocument, width: nu
   pdf.text(title, (width - titleWidth) / 2, height / 2);
   
   // Subtitle with topic and date in small caps
-  pdf.setFont("helvetica", "normal");
+  pdf.setFont("Inter", "normal");
   pdf.setFontSize(12);
   pdf.setTextColor(100, 100, 100); // Medium gray
   
