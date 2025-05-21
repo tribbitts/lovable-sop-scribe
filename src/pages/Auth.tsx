@@ -89,11 +89,9 @@ const Auth = () => {
   };
   
   useEffect(() => {
-    // Check if the admin configuration mode is enabled via URL parameter
+    // Check if the admin configuration mode is enabled via URL parameter ONLY
     const configMode = searchParams.get('config') === 'true';
-    if (configMode) {
-      setShowConfig(true);
-    }
+    setShowConfig(configMode);
 
     // If user is already authenticated, redirect to app
     if (user) {
