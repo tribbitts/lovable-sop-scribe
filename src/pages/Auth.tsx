@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
@@ -17,6 +18,10 @@ const Auth = () => {
   const [isDev] = useState(() => import.meta.env.MODE === 'development');
   const [devLoading, setDevLoading] = useState(false);
   
+  // Valid development email that will pass validation
+  const devEmail = "developer@example.com";
+  const devPassword = "password123";
+  
   // Check if Supabase credentials are missing
   const isMissingCredentials = () => {
     const url = localStorage.getItem('supabase_url');
@@ -34,16 +39,16 @@ const Auth = () => {
         
         // Check if dev account exists using signIn attempt
         const { data: signInCheck, error: signInError } = await supabase.auth.signInWithPassword({
-          email: 'dev@example.com',
-          password: 'password123',
+          email: devEmail,
+          password: devPassword,
         });
         
         // If sign-in fails with invalid credentials, we need to create the account
         if (signInError && signInError.message.includes('Invalid login credentials')) {
           // Try to create the development account
           const { error: signUpError } = await supabase.auth.signUp({
-            email: 'dev@example.com',
-            password: 'password123',
+            email: devEmail,
+            password: devPassword,
             options: {
               data: { role: 'developer' }
             }
@@ -63,7 +68,7 @@ const Auth = () => {
             });
             
             // After creating account, attempt to sign in
-            await signIn('dev@example.com', 'password123');
+            await signIn(devEmail, devPassword);
             navigate('/app');
           }
         } else if (signInCheck?.user) {

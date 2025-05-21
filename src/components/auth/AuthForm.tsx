@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -25,6 +24,7 @@ const AuthForm = () => {
   const [connectionError, setConnectionError] = useState<string | null>(null);
   const [signupSuccess, setSignupSuccess] = useState<boolean>(false);
   const [isDev] = useState(() => import.meta.env.MODE === 'development');
+  const devEmail = "developer@example.com";
   
   const form = useForm<AuthFormValues>({
     resolver: zodResolver(authSchema),

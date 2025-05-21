@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase, testSupabaseConnection } from '@/lib/supabase';
@@ -33,6 +32,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [error, setError] = useState<string | null>(null);
   const [isConnected, setIsConnected] = useState(true);
   const [isDev] = useState(() => import.meta.env.MODE === 'development');
+  const devEmail = "developer@example.com";
 
   useEffect(() => {
     // Check Supabase connection first
@@ -86,10 +86,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setError(errorMessage);
       
       // Special case for development mode
-      if (isDev && errorMessage.includes('Invalid login credentials') && email === 'dev@example.com') {
+      if (isDev && errorMessage.includes('Invalid login credentials') && email === devEmail) {
         toast({
           title: "Development Account",
-          description: "Please create the dev account first by signing up with dev@example.com and password123",
+          description: "Please create the dev account first by signing up with developer@example.com and password123",
           variant: "destructive",
         });
       } else {
