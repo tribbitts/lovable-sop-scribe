@@ -1,6 +1,6 @@
 
 import { SopStep } from "@/types/sop";
-import { addScreenshot } from "./screenshot-renderer";
+import { addScreenshot } from "./screenshot-placement";
 import { styleStep } from "./step-styler";
 
 export async function renderSteps(
