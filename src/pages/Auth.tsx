@@ -1,6 +1,6 @@
 
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import AuthForm from "@/components/auth/AuthForm";
 import SupabaseConfig from "@/components/auth/SupabaseConfig";
@@ -11,6 +11,7 @@ import { storeSupabaseCredentials } from "@/lib/supabase";
 const Auth = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [showConfig, setShowConfig] = useState(false);
   
   // Check if Supabase credentials are missing
@@ -23,6 +24,12 @@ const Auth = () => {
   };
   
   useEffect(() => {
+    // Check if the admin configuration mode is enabled via URL parameter
+    const configMode = searchParams.get('config') === 'true';
+    if (configMode) {
+      setShowConfig(true);
+    }
+
     // If user is already authenticated, redirect to app
     if (user) {
       navigate("/app");
@@ -36,7 +43,7 @@ const Auth = () => {
       );
       // The page will reload from the storeSupabaseCredentials function
     }
-  }, [user, navigate]);
+  }, [user, navigate, searchParams]);
   
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#121212] px-4">
@@ -72,15 +79,6 @@ const Auth = () => {
                 <AuthForm />
               </CardContent>
             </Card>
-            <div className="mt-4 text-center">
-              <Button 
-                variant="ghost" 
-                className="text-zinc-400 hover:text-white"
-                onClick={() => setShowConfig(true)}
-              >
-                Need to configure Supabase?
-              </Button>
-            </div>
           </>
         )}
       </div>
