@@ -1,7 +1,9 @@
+
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { Session, User } from '@supabase/supabase-js';
-import { supabase, testSupabaseConnection } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import { testSupabaseConnection } from '@/lib/supabase';
 
 type AuthContextType = {
   session: Session | null;
@@ -32,7 +34,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [error, setError] = useState<string | null>(null);
   const [isConnected, setIsConnected] = useState(true);
   const [isDev] = useState(() => import.meta.env.MODE === 'development');
-  const devEmail = "developer@example.com";
 
   useEffect(() => {
     // Check Supabase connection first
@@ -85,20 +86,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const errorMessage = error.message || "Error signing in";
       setError(errorMessage);
       
-      // Special case for development mode
-      if (isDev && errorMessage.includes('Invalid login credentials') && email === devEmail) {
-        toast({
-          title: "Development Account",
-          description: "Please create the dev account first by signing up with developer@example.com and password123",
-          variant: "destructive",
-        });
-      } else {
-        toast({
-          title: "Error signing in",
-          description: errorMessage,
-          variant: "destructive",
-        });
-      }
+      toast({
+        title: "Error signing in",
+        description: errorMessage,
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
