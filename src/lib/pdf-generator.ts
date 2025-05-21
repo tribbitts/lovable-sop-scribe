@@ -25,7 +25,7 @@ export async function generatePDF(sopDocument: SopDocument): Promise<string> {
       try {
         await registerInterFont(pdf);
       } catch (error) {
-        console.warn("Using system fonts instead of custom fonts due to error:", error);
+        console.error("Using system fonts instead of custom fonts due to error:", error);
       }
       
       // Get PDF dimensions
@@ -92,10 +92,15 @@ export async function generatePDF(sopDocument: SopDocument): Promise<string> {
           compression: 'FAST'
         };
         
-        pdf.save(filename);
-        console.log("PDF saved successfully");
-        
-        resolve(pdfBase64);
+        try {
+          pdf.save(filename);
+          console.log("PDF saved successfully");
+          resolve(pdfBase64);
+        } catch (saveError) {
+          console.error("Error saving PDF:", saveError);
+          // Even if saving fails, try to return the base64 for preview
+          resolve(pdfBase64);
+        }
       } catch (error) {
         console.error("Error in PDF creation process:", error);
         reject(error);

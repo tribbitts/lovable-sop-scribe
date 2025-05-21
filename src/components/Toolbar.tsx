@@ -21,6 +21,7 @@ const Toolbar = () => {
   const [isExporting, setIsExporting] = useState(false);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [pdfPreviewUrl, setPdfPreviewUrl] = useState<string | null>(null);
+  const [exportError, setExportError] = useState<string | null>(null);
   
   const handleExport = async () => {
     if (!user) {
@@ -41,6 +42,7 @@ const Toolbar = () => {
       return;
     }
 
+    // Validate document before starting
     if (!sopDocument.title) {
       toast({
         title: "SOP Title Required",
@@ -72,6 +74,9 @@ const Toolbar = () => {
       }
     }
 
+    // Clear previous errors
+    setExportError(null);
+    
     try {
       setIsExporting(true);
       toast({
@@ -80,7 +85,11 @@ const Toolbar = () => {
       });
       
       console.log("Starting PDF export");
-      await generatePDF(sopDocument);
+      const pdfDataUrl = await generatePDF(sopDocument);
+      
+      if (!pdfDataUrl) {
+        throw new Error("PDF generation returned empty result");
+      }
       
       // Record PDF usage in database
       if (user) {
@@ -90,22 +99,26 @@ const Toolbar = () => {
           await refreshSubscription();
         } catch (err) {
           console.error("Error recording PDF usage:", err);
+          // Continue even if usage recording fails
         }
       }
       
-      setIsExporting(false);
       toast({
         title: "PDF Generated",
         description: "Your SOP has been successfully generated and downloaded."
       });
     } catch (error) {
       console.error("PDF generation error:", error);
-      setIsExporting(false);
+      setExportError(error instanceof Error ? error.message : "Unknown error");
       toast({
         title: "Error",
-        description: "Failed to generate PDF. Please try again.",
+        description: error instanceof Error 
+          ? `Failed to generate PDF: ${error.message}` 
+          : "Failed to generate PDF. Check console for details.",
         variant: "destructive"
       });
+    } finally {
+      setIsExporting(false);
     }
   };
 
@@ -145,6 +158,9 @@ const Toolbar = () => {
       return;
     }
     
+    // Clear previous errors
+    setExportError(null);
+    
     try {
       // Show loading toast
       toast({
@@ -154,6 +170,10 @@ const Toolbar = () => {
       
       // Generate PDF and get base64 data URL
       const pdfDataUrl = await generatePDF(sopDocument);
+      
+      if (!pdfDataUrl) {
+        throw new Error("PDF preview generation returned empty result");
+      }
       
       // Set the preview URL and open modal
       setPdfPreviewUrl(pdfDataUrl);
@@ -165,9 +185,12 @@ const Toolbar = () => {
       });
     } catch (error) {
       console.error("PDF preview error:", error);
+      setExportError(error instanceof Error ? error.message : "Unknown error");
       toast({
         title: "Error",
-        description: "Failed to generate PDF preview. Please try again.",
+        description: error instanceof Error 
+          ? `Failed to generate PDF preview: ${error.message}` 
+          : "Failed to generate PDF preview. Check console for details.",
         variant: "destructive"
       });
     }
@@ -240,6 +263,11 @@ const Toolbar = () => {
                   title="PDF Preview"
                 />
               )}
+              {!pdfPreviewUrl && exportError && (
+                <div className="w-full h-full flex items-center justify-center bg-zinc-800 text-red-400 p-4 text-center">
+                  <p>Error generating PDF: {exportError}</p>
+                </div>
+              )}
             </div>
           </DialogContent>
         </Dialog>
@@ -262,6 +290,12 @@ const Toolbar = () => {
             </>
           )}
         </Button>
+        
+        {exportError && (
+          <div className="w-full mt-2 text-sm text-red-400">
+            Error: {exportError}. Check browser console for details.
+          </div>
+        )}
       </div>
     </div>
   );

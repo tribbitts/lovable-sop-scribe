@@ -6,50 +6,81 @@ import { renderCallouts } from "./callout-renderer";
  * Prepares a screenshot image for the PDF
  */
 export async function prepareScreenshotImage(dataUrl: string, quality: number): Promise<string> {
-  return compressImage(dataUrl, quality);
+  try {
+    if (!dataUrl || typeof dataUrl !== 'string') {
+      console.error("Invalid image data provided to prepareScreenshotImage");
+      throw new Error("Invalid image data");
+    }
+    
+    return await compressImage(dataUrl, quality);
+  } catch (error) {
+    console.error("Error preparing screenshot image:", error);
+    throw error; // Re-throw for proper error handling upstream
+  }
 }
 
 /**
  * Creates a styled image with callouts and formatting
  */
 export async function createImageWithStyling(imageUrl: string, callouts: any[] = []): Promise<{imageData: string, aspectRatio: number}> {
+  // Validate input
+  if (!imageUrl || typeof imageUrl !== 'string') {
+    console.error("Invalid image URL provided to createImageWithStyling");
+    throw new Error("Invalid image URL");
+  }
+  
   // Create a canvas element to render the screenshot with callouts
   const canvas = document.createElement('canvas');
   const ctx = canvas.getContext('2d');
   
   if (!ctx) {
+    console.error("Failed to get canvas context");
     return { imageData: imageUrl, aspectRatio: 1 };
   }
   
-  return new Promise<{imageData: string, aspectRatio: number}>(async (resolve) => {
+  return new Promise<{imageData: string, aspectRatio: number}>(async (resolve, reject) => {
     // Create image element to load the screenshot
     const img = new Image();
-    img.src = imageUrl;
+    
+    // Set error handler first
+    img.onerror = (error) => {
+      console.error("Error loading image:", error);
+      reject(new Error("Failed to load image"));
+    };
     
     img.onload = () => {
-      // Set canvas dimensions to match the image
-      canvas.width = img.width;
-      canvas.height = img.height;
-      
-      const aspectRatio = img.width / img.height;
-      
-      // Create modern styling with rounded corners
-      ctx.save();
-      
-      const cornerRadius = 8; // Reduced corner radius for more compact look
-      const paddingSize = 10; // Reduced padding for more compact images
-      
-      // Expand canvas for padding
-      const paddedWidth = canvas.width + (paddingSize * 2);
-      const paddedHeight = canvas.height + (paddingSize * 2);
-      
-      // Create a new canvas with padding
-      const paddedCanvas = document.createElement('canvas');
-      paddedCanvas.width = paddedWidth;
-      paddedCanvas.height = paddedHeight;
-      const paddedCtx = paddedCanvas.getContext('2d');
-      
-      if (paddedCtx) {
+      try {
+        // Set canvas dimensions to match the image
+        canvas.width = img.width || 800; // Fallback width if image dimensions are 0
+        canvas.height = img.height || 600; // Fallback height
+        
+        if (canvas.width <= 0 || canvas.height <= 0) {
+          console.error("Invalid canvas dimensions:", canvas.width, canvas.height);
+          throw new Error("Invalid canvas dimensions");
+        }
+        
+        const aspectRatio = canvas.width / canvas.height;
+        
+        // Create modern styling with rounded corners
+        ctx.save();
+        
+        const cornerRadius = 8; // Reduced corner radius for more compact look
+        const paddingSize = 10; // Reduced padding for more compact images
+        
+        // Expand canvas for padding
+        const paddedWidth = canvas.width + (paddingSize * 2);
+        const paddedHeight = canvas.height + (paddingSize * 2);
+        
+        // Create a new canvas with padding
+        const paddedCanvas = document.createElement('canvas');
+        paddedCanvas.width = paddedWidth;
+        paddedCanvas.height = paddedHeight;
+        const paddedCtx = paddedCanvas.getContext('2d');
+        
+        if (!paddedCtx) {
+          throw new Error("Failed to get padded canvas context");
+        }
+        
         // Draw white background
         paddedCtx.fillStyle = '#FFFFFF';
         paddedCtx.fillRect(0, 0, paddedWidth, paddedHeight);
@@ -96,32 +127,50 @@ export async function createImageWithStyling(imageUrl: string, callouts: any[] =
         
         // Draw the image within the rounded rectangle area
         paddedCtx.clip();
-        paddedCtx.drawImage(img, paddingSize, paddingSize, canvas.width, canvas.height);
+        
+        try {
+          paddedCtx.drawImage(img, paddingSize, paddingSize, canvas.width, canvas.height);
+        } catch (drawError) {
+          console.error("Error drawing image on canvas:", drawError);
+          throw drawError;
+        }
+        
         paddedCtx.restore();
         
-        // Draw the callouts
-        renderCallouts(paddedCtx, callouts, canvas.width, canvas.height, paddingSize);
+        // Draw the callouts with error handling
+        try {
+          if (Array.isArray(callouts) && callouts.length > 0) {
+            renderCallouts(paddedCtx, callouts, canvas.width, canvas.height, paddingSize);
+          }
+        } catch (calloutError) {
+          console.error("Error rendering callouts:", calloutError);
+          // Continue without callouts
+        }
         
         // Return the padded canvas with rounded corners
-        const imgData = paddedCanvas.toDataURL('image/jpeg', 0.95);
-        resolve({ 
-          imageData: imgData, 
-          aspectRatio: aspectRatio 
-        });
-      } else {
-        // Fallback if context isn't available
-        resolve({ 
-          imageData: imageUrl, 
-          aspectRatio: aspectRatio 
-        });
+        try {
+          const imgData = paddedCanvas.toDataURL('image/jpeg', 0.95);
+          resolve({ 
+            imageData: imgData, 
+            aspectRatio: aspectRatio 
+          });
+        } catch (dataUrlError) {
+          console.error("Error generating image data URL:", dataUrlError);
+          throw dataUrlError;
+        }
+      } catch (processError) {
+        console.error("Error processing image:", processError);
+        reject(processError);
       }
     };
     
-    img.onerror = () => {
-      resolve({ 
-        imageData: imageUrl, 
-        aspectRatio: 1 
-      });
-    };
+    // Set the source to start loading
+    try {
+      img.crossOrigin = "anonymous";
+      img.src = imageUrl;
+    } catch (srcError) {
+      console.error("Error setting image source:", srcError);
+      reject(srcError);
+    }
   });
 }

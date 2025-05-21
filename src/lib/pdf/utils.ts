@@ -5,10 +5,11 @@ import { jsPDF } from 'jspdf';
 // Helper function to compress images before adding to PDF
 // Higher quality settings for better readability
 export function compressImage(dataUrl: string, quality = 0.92): Promise<string> {
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     if (!dataUrl) {
-      console.error("Empty dataUrl provided to compressImage");
-      resolve("");
+      const error = new Error("Empty dataUrl provided to compressImage");
+      console.error(error);
+      reject(error);
       return;
     }
 
@@ -17,13 +18,21 @@ export function compressImage(dataUrl: string, quality = 0.92): Promise<string> 
     
     // Set up error handling first
     img.onerror = (e) => {
-      console.error("Error loading image for compression:", e);
+      const error = new Error("Error loading image for compression");
+      console.error(error, e);
       // Return original if we can't process it
       resolve(dataUrl);
     };
     
     img.onload = () => {
       try {
+        // Check if image dimensions are valid
+        if (img.width <= 0 || img.height <= 0) {
+          console.error("Invalid image dimensions:", img.width, img.height);
+          resolve(dataUrl);
+          return;
+        }
+        
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
         
@@ -43,11 +52,23 @@ export function compressImage(dataUrl: string, quality = 0.92): Promise<string> 
         // Apply image smoothing for better quality at reduced size
         ctx.imageSmoothingEnabled = true;
         ctx.imageSmoothingQuality = 'high'; // High quality
-        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        
+        try {
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        } catch (drawError) {
+          console.error("Error drawing image to canvas:", drawError);
+          resolve(dataUrl);
+          return;
+        }
         
         // Convert to compressed JPEG with higher quality
-        const compressed = canvas.toDataURL('image/jpeg', quality);
-        resolve(compressed);
+        try {
+          const compressed = canvas.toDataURL('image/jpeg', quality);
+          resolve(compressed);
+        } catch (encodingError) {
+          console.error("Error encoding compressed image:", encodingError);
+          resolve(dataUrl);
+        }
       } catch (err) {
         console.error("Error compressing image:", err);
         // If compression fails, return original
@@ -56,16 +77,26 @@ export function compressImage(dataUrl: string, quality = 0.92): Promise<string> 
     };
     
     // Start loading the image
-    img.src = dataUrl;
+    try {
+      img.src = dataUrl;
+    } catch (srcError) {
+      console.error("Error setting image source:", srcError);
+      resolve(dataUrl);
+    }
   });
 }
 
 // Generate a standardized filename based on document properties
 export function generatePdfFilename(sopDocument: SopDocument): string {
-  let title = sopDocument.title || "Untitled";
-  // Sanitize filename to avoid special characters
-  title = title.replace(/[^a-z0-9]/gi, '_').replace(/_+/g, '_');
-  return `${title}_SOP_${sopDocument.date.replace(/-/g, '')}.pdf`;
+  try {
+    let title = sopDocument.title || "Untitled";
+    // Sanitize filename to avoid special characters
+    title = title.replace(/[^a-z0-9]/gi, '_').replace(/_+/g, '_');
+    return `${title}_SOP_${sopDocument.date.replace(/-/g, '')}.pdf`;
+  } catch (error) {
+    console.error("Error generating PDF filename:", error);
+    return `SOP_${new Date().toISOString().split('T')[0].replace(/-/g, '')}.pdf`;
+  }
 }
 
 // Improved helper function for text wrapping
