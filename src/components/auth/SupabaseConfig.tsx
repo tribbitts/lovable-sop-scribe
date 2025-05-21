@@ -19,11 +19,12 @@ type ConfigFormValues = z.infer<typeof configSchema>;
 const SupabaseConfig = () => {
   const [saving, setSaving] = useState(false);
   
+  // Initialize with the provided credentials
   const form = useForm<ConfigFormValues>({
     resolver: zodResolver(configSchema),
     defaultValues: {
-      projectUrl: localStorage.getItem('supabase_url') || "",
-      anonKey: localStorage.getItem('supabase_anon_key') || "",
+      projectUrl: localStorage.getItem('supabase_url') || "https://tdgslnywgmwrovzulvno.supabase.co",
+      anonKey: localStorage.getItem('supabase_anon_key') || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRkZ3Nsbnl3Z213cm92enVsdm5vIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc4NDk5MzEsImV4cCI6MjA2MzQyNTkzMX0.T2rlM7e2JV_tPREEJFzeRj-BULyR2Mw32rIRFMmWAe0",
     },
   });
 
@@ -44,7 +45,7 @@ const SupabaseConfig = () => {
       <CardHeader>
         <CardTitle className="text-center text-white">Supabase Configuration</CardTitle>
         <CardDescription className="text-center text-zinc-400">
-          Enter your Supabase project URL and anonymous key
+          Verify your Supabase project URL and anonymous key
         </CardDescription>
       </CardHeader>
       <CardContent>

@@ -5,6 +5,12 @@ import { createClient } from '@supabase/supabase-js';
 let supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 let supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
+// Default to provided credentials
+if (!supabaseUrl || !supabaseAnonKey) {
+  supabaseUrl = "https://tdgslnywgmwrovzulvno.supabase.co";
+  supabaseAnonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRkZ3Nsbnl3Z213cm92enVsdm5vIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc4NDk5MzEsImV4cCI6MjA2MzQyNTkzMX0.T2rlM7e2JV_tPREEJFzeRj-BULyR2Mw32rIRFMmWAe0";
+}
+
 // Check localStorage for stored credentials
 const storedUrl = localStorage.getItem('supabase_url');
 const storedKey = localStorage.getItem('supabase_anon_key');
@@ -15,13 +21,6 @@ if (storedUrl && storedKey) {
   supabaseAnonKey = storedKey;
 }
 
-// Verify that the required variables are defined
-if (!supabaseUrl || !supabaseAnonKey || 
-    supabaseUrl === 'https://placeholder-url.supabase.co' || 
-    supabaseAnonKey === 'placeholder-key') {
-  console.error('Missing or invalid Supabase credentials. Please configure them in the settings.');
-}
-
 // Store the credentials in localStorage
 export const storeSupabaseCredentials = (url: string, key: string): void => {
   localStorage.setItem('supabase_url', url);
@@ -30,17 +29,13 @@ export const storeSupabaseCredentials = (url: string, key: string): void => {
 };
 
 // Initialize Supabase client with more detailed error handling
-export const supabase = createClient(
-  supabaseUrl || 'https://placeholder-url.supabase.co',
-  supabaseAnonKey || 'placeholder-key',
-  {
-    auth: {
-      persistSession: true,
-      autoRefreshToken: true,
-      detectSessionInUrl: true
-    }
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    persistSession: true,
+    autoRefreshToken: true,
+    detectSessionInUrl: true
   }
-);
+});
 
 // Check if Supabase connection is working
 export const testSupabaseConnection = async () => {

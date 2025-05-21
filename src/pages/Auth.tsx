@@ -6,6 +6,7 @@ import AuthForm from "@/components/auth/AuthForm";
 import SupabaseConfig from "@/components/auth/SupabaseConfig";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { storeSupabaseCredentials } from "@/lib/supabase";
 
 const Auth = () => {
   const { user } = useAuth();
@@ -27,9 +28,13 @@ const Auth = () => {
       navigate("/app");
     }
     
-    // Show config by default if credentials are missing
+    // Auto-store provided credentials if none exist yet
     if (isMissingCredentials()) {
-      setShowConfig(true);
+      storeSupabaseCredentials(
+        "https://tdgslnywgmwrovzulvno.supabase.co", 
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRkZ3Nsbnl3Z213cm92enVsdm5vIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc4NDk5MzEsImV4cCI6MjA2MzQyNTkzMX0.T2rlM7e2JV_tPREEJFzeRj-BULyR2Mw32rIRFMmWAe0"
+      );
+      // The page will reload from the storeSupabaseCredentials function
     }
   }, [user, navigate]);
   
