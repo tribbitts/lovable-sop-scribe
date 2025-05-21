@@ -4,11 +4,12 @@ import { useAuth } from "./AuthContext";
 import { getUserSubscription, supabase } from "@/lib/supabase";
 import { toast } from "@/hooks/use-toast";
 
-type SubscriptionTier = "free" | "pro" | null;
+type SubscriptionTier = "free" | "pro" | "admin" | null;
 
 interface SubscriptionContextType {
   tier: SubscriptionTier;
   isPro: boolean;
+  isAdmin: boolean;
   loading: boolean;
   pdfCount: number;
   pdfLimit: number;
@@ -20,6 +21,7 @@ interface SubscriptionContextType {
 const SubscriptionContext = createContext<SubscriptionContextType>({
   tier: null,
   isPro: false,
+  isAdmin: false,
   loading: true,
   pdfCount: 0,
   pdfLimit: 0,
@@ -38,9 +40,10 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const [supabaseConnected, setSupabaseConnected] = useState<boolean>(true);
   
   // PDF limits based on tier
-  const pdfLimit = tier === "pro" ? Infinity : 1;
-  const isPro = tier === "pro";
-  const canGeneratePdf = tier === "pro" || pdfCount < pdfLimit;
+  const pdfLimit = tier === "pro" || tier === "admin" ? Infinity : 1;
+  const isPro = tier === "pro" || tier === "admin";
+  const isAdmin = tier === "admin";
+  const canGeneratePdf = tier === "pro" || tier === "admin" || pdfCount < pdfLimit;
   
   // Check if Supabase is properly connected
   useEffect(() => {
@@ -107,28 +110,37 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
         
         setTier("free");
       } else {
-        // Check if user has an active pro subscription
+        // Check if user has an active pro or admin subscription
         console.log("Found subscription:", subscription);
-        if (subscription.status === "active" && subscription.tier === "pro") {
-          setTier("pro");
+        if (subscription.status === "active") {
+          if (subscription.tier === "admin") {
+            setTier("admin");
+          } else if (subscription.tier === "pro") {
+            setTier("pro");
+          } else {
+            setTier("free");
+          }
+          
+          // If free tier, get today's usage count
+          if (subscription.tier === "free") {
+            // Get today's usage count for free tier
+            const today = new Date().toISOString().split('T')[0];
+            try {
+              const { count } = await supabase
+                .from('pdf_usage')
+                .select('*', { count: 'exact' })
+                .eq('user_id', user.id)
+                .gte('created_at', `${today}T00:00:00`)
+                .lt('created_at', `${today}T23:59:59`);
+                
+              setPdfCount(count || 0);
+            } catch (error) {
+              console.error("Error fetching PDF usage count:", error);
+              setPdfCount(0);
+            }
+          }
         } else {
           setTier("free");
-          
-          // Get today's usage count for free tier
-          const today = new Date().toISOString().split('T')[0];
-          try {
-            const { count } = await supabase
-              .from('pdf_usage')
-              .select('*', { count: 'exact' })
-              .eq('user_id', user.id)
-              .gte('created_at', `${today}T00:00:00`)
-              .lt('created_at', `${today}T23:59:59`);
-              
-            setPdfCount(count || 0);
-          } catch (error) {
-            console.error("Error fetching PDF usage count:", error);
-            setPdfCount(0);
-          }
         }
       }
     } catch (error: any) {
@@ -167,6 +179,7 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const value = {
     tier,
     isPro,
+    isAdmin,
     loading,
     pdfCount,
     pdfLimit,
@@ -183,4 +196,3 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
 };
 
 export default SubscriptionContext;
-// Removing duplicate export here - this was causing the error
