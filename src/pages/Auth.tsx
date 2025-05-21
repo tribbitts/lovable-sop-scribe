@@ -7,6 +7,8 @@ import SupabaseConfig from "@/components/auth/SupabaseConfig";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { storeSupabaseCredentials } from "@/lib/supabase";
+import { toast } from "@/hooks/use-toast";
+import { supabase } from "@/lib/supabase";
 
 const Auth = () => {
   const { user, signIn } = useAuth();
@@ -14,6 +16,7 @@ const Auth = () => {
   const [searchParams] = useSearchParams();
   const [showConfig, setShowConfig] = useState(false);
   const [isDev] = useState(() => import.meta.env.MODE === 'development');
+  const [devLoading, setDevLoading] = useState(false);
   
   // Check if Supabase credentials are missing
   const isMissingCredentials = () => {
@@ -28,10 +31,58 @@ const Auth = () => {
   const handleDevLogin = async () => {
     if (isDev) {
       try {
+        setDevLoading(true);
+        
+        // Check if dev account exists first
+        const { data: userExists } = await supabase.auth.admin
+          .getUserByEmail('dev@example.com')
+          .catch(() => ({ data: null }));
+        
+        // If user doesn't exist, create it first
+        if (!userExists) {
+          // Try to create the development account
+          const { error: signUpError } = await supabase.auth.signUp({
+            email: 'dev@example.com',
+            password: 'password123',
+            options: {
+              data: { role: 'developer' }
+            }
+          });
+          
+          if (signUpError) {
+            // If sign-up fails, try direct sign-in
+            console.log('Failed to create dev account, attempting login:', signUpError);
+          } else {
+            toast({
+              title: "Dev Account Created",
+              description: "Created development account automatically",
+            });
+            
+            // Auto-confirm the user for development purposes
+            try {
+              // This is admin functionality that might not be available
+              await supabase.auth.admin.updateUserById(
+                'dev@example.com',
+                { email_confirm: true }
+              ).catch(() => console.log('Unable to auto-confirm user - this is expected'));
+            } catch (err) {
+              console.log('Unable to auto-confirm user:', err);
+            }
+          }
+        }
+        
+        // Attempt to sign in with dev credentials
         await signIn('dev@example.com', 'password123');
         navigate('/app');
       } catch (error) {
         console.error('Development login failed:', error);
+        toast({
+          title: "Development Login Failed",
+          description: "Please create a user account manually or check Supabase configuration",
+          variant: "destructive",
+        });
+      } finally {
+        setDevLoading(false);
       }
     }
   };
@@ -99,8 +150,14 @@ const Auth = () => {
                       variant="outline" 
                       className="w-full border-amber-600 text-amber-400 hover:bg-amber-950/30"
                       onClick={handleDevLogin}
+                      disabled={devLoading}
                     >
-                      Developer Quick Access
+                      {devLoading ? (
+                        <>
+                          <div className="h-4 w-4 border-t-2 border-r-2 border-amber-400 rounded-full animate-spin mr-2" />
+                          Setting Up Dev Access...
+                        </>
+                      ) : "Developer Quick Access"}
                     </Button>
                   </div>
                 )}

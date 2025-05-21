@@ -32,6 +32,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isConnected, setIsConnected] = useState(true);
+  const [isDev] = useState(() => import.meta.env.MODE === 'development');
 
   useEffect(() => {
     // Check Supabase connection first
@@ -84,11 +85,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const errorMessage = error.message || "Error signing in";
       setError(errorMessage);
       
-      toast({
-        title: "Error signing in",
-        description: errorMessage,
-        variant: "destructive",
-      });
+      // Special case for development mode
+      if (isDev && errorMessage.includes('Invalid login credentials') && email === 'dev@example.com') {
+        toast({
+          title: "Development Account",
+          description: "Please create the dev account first by signing up with dev@example.com and password123",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Error signing in",
+          description: errorMessage,
+          variant: "destructive",
+        });
+      }
     } finally {
       setLoading(false);
     }
@@ -103,12 +113,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         throw new Error("Unable to connect to authentication service. Please check your network connection.");
       }
       
-      const { error } = await supabase.auth.signUp({ email, password });
+      // In development mode, use auto-confirm for easier testing
+      let options = {};
+      if (isDev) {
+        options = { emailRedirectTo: window.location.origin + '/app' };
+      }
+      
+      const { error } = await supabase.auth.signUp({ 
+        email, 
+        password,
+        options
+      });
+      
       if (error) throw error;
       
       toast({
         title: "Account created",
-        description: "Please check your email for the confirmation link.",
+        description: isDev 
+          ? "Development account created. You can now sign in." 
+          : "Please check your email for the confirmation link.",
       });
     } catch (error: any) {
       const errorMessage = error.message || "Error creating account";
