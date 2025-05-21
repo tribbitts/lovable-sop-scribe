@@ -8,7 +8,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Loader2 } from "lucide-react";
+import { Loader2, AlertCircle } from "lucide-react";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import { testSupabaseConnection } from "@/lib/supabase";
 
 const authSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email address" }),
@@ -19,7 +21,8 @@ type AuthFormValues = z.infer<typeof authSchema>;
 
 const AuthForm = () => {
   const [activeTab, setActiveTab] = useState<string>("signin");
-  const { signIn, signUp, loading } = useAuth();
+  const { signIn, signUp, loading, error: authError } = useAuth();
+  const [connectionError, setConnectionError] = useState<string | null>(null);
   
   const form = useForm<AuthFormValues>({
     resolver: zodResolver(authSchema),
@@ -30,6 +33,16 @@ const AuthForm = () => {
   });
 
   const onSubmit = async (data: AuthFormValues) => {
+    // First test the connection to Supabase
+    const isConnected = await testSupabaseConnection();
+    
+    if (!isConnected) {
+      setConnectionError("Unable to connect to the server. Please check your network connection and try again.");
+      return;
+    }
+    
+    setConnectionError(null);
+    
     if (activeTab === "signin") {
       await signIn(data.email, data.password);
     } else {
@@ -44,6 +57,16 @@ const AuthForm = () => {
           <TabsTrigger value="signin">Sign In</TabsTrigger>
           <TabsTrigger value="signup">Sign Up</TabsTrigger>
         </TabsList>
+        
+        {(authError || connectionError) && (
+          <Alert variant="destructive" className="mt-4">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Error</AlertTitle>
+            <AlertDescription>
+              {connectionError || authError}
+            </AlertDescription>
+          </Alert>
+        )}
         
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 mt-4">

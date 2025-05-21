@@ -9,11 +9,30 @@ if (!supabaseUrl || !supabaseAnonKey) {
   console.error('Missing Supabase environment variables.');
 }
 
-// Initialize Supabase client with default fallbacks for development
+// Initialize Supabase client with more detailed error handling
 export const supabase = createClient(
   supabaseUrl || 'https://placeholder-url.supabase.co',
-  supabaseAnonKey || 'placeholder-key'
+  supabaseAnonKey || 'placeholder-key',
+  {
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: true
+    }
+  }
 );
+
+// Check if Supabase connection is working
+export const testSupabaseConnection = async () => {
+  try {
+    // Simple ping to verify connection
+    const { error } = await supabase.from('pdf_usage').select('count', { count: 'exact', head: true });
+    return error === null || error.message !== 'FetchError: fetch failed';
+  } catch (error) {
+    console.error("Supabase connection test failed:", error);
+    return false;
+  }
+};
 
 // Create a subscription client that will be used to track PDF usage
 export const createPdfUsageRecord = async (userId: string) => {
@@ -74,4 +93,3 @@ export const getUserSubscription = async (userId: string) => {
     return null;
   }
 };
-
