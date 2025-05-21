@@ -1,3 +1,4 @@
+
 import { SopDocument } from "@/types/sop";
 
 export function addContentPageDesign(pdf: any, width: number, height: number, margin: any) {
@@ -5,6 +6,7 @@ export function addContentPageDesign(pdf: any, width: number, height: number, ma
   if (pdf.backgroundImage) {
     try {
       // Add the background image to fill the entire page
+      // We don't restrict size - it will naturally bleed off the page if too large
       pdf.addImage(
         pdf.backgroundImage,
         'PNG',

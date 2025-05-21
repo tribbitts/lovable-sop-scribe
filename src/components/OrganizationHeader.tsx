@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { useSopContext } from "@/context/SopContext";
 import { Button } from "@/components/ui/button";
 import { X, Upload, Building, Image } from "lucide-react";
+import { toast } from "@/hooks/use-toast";
 
 const OrganizationHeader = () => {
   const { sopDocument, setCompanyName, setLogo, setBackgroundImage } = useSopContext();
@@ -33,25 +34,24 @@ const OrganizationHeader = () => {
     const file = e.target.files?.[0];
     
     if (file) {
-      // Check if image is the right size (A4 dimensions at 72dpi: 595x842px)
-      const img = document.createElement('img');
-      img.onload = () => {
-        // Allow some flexibility in dimensions
-        const isAcceptableSize = 
-          (img.width >= 590 && img.width <= 600) && 
-          (img.height >= 837 && img.height <= 847);
-        
-        if (isAcceptableSize) {
-          setBackgroundImage(reader.result as string);
-        } else {
-          alert("Background image should be approximately 595x842px (A4 size at 72dpi)");
-        }
-      };
+      // Check file size (5MB limit)
+      if (file.size > 5 * 1024 * 1024) {
+        toast({
+          title: "File too large",
+          description: "Background image must be less than 5MB",
+          variant: "destructive"
+        });
+        return;
+      }
       
       const reader = new FileReader();
       reader.onload = (event) => {
         if (event.target?.result) {
-          img.src = event.target.result as string;
+          setBackgroundImage(event.target.result as string);
+          toast({
+            title: "Background Added",
+            description: "Background image has been added to your SOP."
+          });
         }
       };
       reader.readAsDataURL(file);
@@ -155,7 +155,7 @@ const OrganizationHeader = () => {
                     className="hidden"
                     accept="image/*"
                   />
-                  <span className="text-xs text-zinc-500 mt-1 block">A4 (595×842)</span>
+                  <span className="text-xs text-zinc-500 mt-1 block">Under 5MB</span>
                 </label>
               )}
             </div>

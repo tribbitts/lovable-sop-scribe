@@ -35,22 +35,26 @@ export async function renderSteps(
   for (let i = 0; i < steps.length; i++) {
     const step = steps[i];
     
-    // Check if we need a new page
-    if (currentY > height - margin.bottom - 60) {
+    // First, calculate the space needed for this step
+    const stepContentHeight = calculateStepHeight(pdf, step, contentWidth);
+    
+    // Check if we need a new page for this step
+    // Ensure the entire step (including screenshot) will fit on the page
+    if (currentY + stepContentHeight > height - margin.bottom - 40) {
       pdf.addPage();
       addContentPageDesign(pdf, width, height, margin);
       currentY = margin.top;
     }
     
     // Style the step (number, description, separator)
-    currentY = styleStep(pdf, step, i, currentY, margin, width);
+    const descriptionY = styleStep(pdf, step, i, currentY, margin, width);
     
-    // Add the screenshot if available
+    // Add the screenshot if available (on the same page)
     if (step.screenshot) {
       currentY = await addScreenshot(
         pdf, 
         step, 
-        currentY, 
+        descriptionY, 
         margin, 
         contentWidth, 
         width, 
@@ -58,16 +62,32 @@ export async function renderSteps(
         i, 
         addContentPageDesign
       );
+    } else {
+      // If no screenshot, just add some spacing after the description
+      currentY = descriptionY + 15;
     }
     
     // Add consistent spacing between steps
     currentY += 15;
-    
-    // Check if we need a new page for the next step
-    if (i < steps.length - 1 && currentY > height - margin.bottom - 60) {
-      pdf.addPage();
-      addContentPageDesign(pdf, width, height, margin);
-      currentY = margin.top;
-    }
   }
+}
+
+// Helper function to calculate the total height a step will take on the page
+function calculateStepHeight(pdf: any, step: SopStep, contentWidth: number): number {
+  // Start with the basic height of the step number and description
+  let totalHeight = 45; // Base height for step number, description and spacing
+  
+  // Add height for screenshot(s) if present
+  if (step.screenshot) {
+    // Calculate image height based on aspect ratio
+    // For simplicity, we'll use an estimated height
+    // In a real implementation, you might want to get the actual aspect ratio
+    const estimatedImgHeight = step.screenshot.secondaryDataUrl 
+      ? contentWidth * 0.7  // Two images might need more space
+      : contentWidth * 0.5; // Single image
+      
+    totalHeight += estimatedImgHeight + 30; // Add spacing around the image
+  }
+  
+  return totalHeight;
 }
