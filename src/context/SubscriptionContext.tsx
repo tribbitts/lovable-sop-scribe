@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useEffect, useState } from "react";
 import { useAuth } from "./AuthContext";
 import { getUserSubscription, supabase } from "@/lib/supabase";
@@ -64,7 +63,7 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
     checkSupabaseConnection();
   }, []);
   
-  // Fetch user's subscription data
+  // Fetch user's subscription data with proper error handling
   const fetchSubscription = async () => {
     try {
       if (!user || !supabaseConnected) {
@@ -74,32 +73,65 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
       }
       
       setLoading(true);
-      const subscription = await getUserSubscription(user.id);
+      console.log("Fetching subscription for user:", user.id);
       
-      // Check if user has an active pro subscription
-      if (subscription && subscription.status === "active") {
-        setTier("pro");
-      } else {
-        setTier("free");
+      // First check if user has a subscription record
+      const { data: subscription, error } = await supabase
+        .from('subscriptions')
+        .select('*')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      
+      if (error) {
+        console.error("Error fetching subscription:", error);
+        throw error;
+      }
+      
+      // If no subscription record found, create a free tier one
+      if (!subscription) {
+        console.log("No subscription found, creating free tier record");
+        const { error: insertError } = await supabase
+          .from('subscriptions')
+          .insert({
+            user_id: user.id,
+            tier: 'free',
+            status: 'active',
+            updated_at: new Date().toISOString()
+          });
+          
+        if (insertError) {
+          console.error("Error creating subscription record:", insertError);
+          throw insertError;
+        }
         
-        // Get today's usage count for free tier
-        const today = new Date().toISOString().split('T')[0];
-        try {
-          const { count } = await supabase
-            .from('pdf_usage')
-            .select('*', { count: 'exact' })
-            .eq('user_id', user.id)
-            .gte('created_at', `${today}T00:00:00`)
-            .lt('created_at', `${today}T23:59:59`);
-            
-          setPdfCount(count || 0);
-        } catch (error) {
-          console.error("Error fetching PDF usage count:", error);
-          setPdfCount(0);
+        setTier("free");
+      } else {
+        // Check if user has an active pro subscription
+        console.log("Found subscription:", subscription);
+        if (subscription.status === "active" && subscription.tier === "pro") {
+          setTier("pro");
+        } else {
+          setTier("free");
+          
+          // Get today's usage count for free tier
+          const today = new Date().toISOString().split('T')[0];
+          try {
+            const { count } = await supabase
+              .from('pdf_usage')
+              .select('*', { count: 'exact' })
+              .eq('user_id', user.id)
+              .gte('created_at', `${today}T00:00:00`)
+              .lt('created_at', `${today}T23:59:59`);
+              
+            setPdfCount(count || 0);
+          } catch (error) {
+            console.error("Error fetching PDF usage count:", error);
+            setPdfCount(0);
+          }
         }
       }
     } catch (error: any) {
-      console.error("Error fetching subscription:", error);
+      console.error("Error in fetchSubscription:", error);
       toast({
         title: "Error",
         description: "Failed to load your subscription information",
@@ -123,7 +155,12 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
   
   // Fetch subscription when user changes
   useEffect(() => {
-    fetchSubscription();
+    if (user) {
+      fetchSubscription();
+    } else {
+      setTier(null);
+      setPdfCount(0);
+    }
   }, [user, supabaseConnected]);
   
   const value = {
@@ -143,3 +180,6 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
     </SubscriptionContext.Provider>
   );
 };
+
+export default SubscriptionContext;
+export { SubscriptionProvider };

@@ -1,8 +1,3 @@
-
-// Follow this setup guide to integrate the Deno language server with your editor:
-// https://deno.land/manual/getting_started/setup_your_environment
-// This enables autocomplete, go to definition, etc.
-
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import Stripe from "https://esm.sh/stripe@14.21.0";
@@ -75,12 +70,11 @@ serve(async (req) => {
       // Save the customer ID
       await supabaseClient
         .from("subscriptions")
-        .upsert({
-          user_id: user.id,
+        .update({
           stripe_customer_id: customerId,
-          status: "inactive",
           updated_at: new Date().toISOString(),
-        });
+        })
+        .eq("user_id", user.id);
     }
 
     // Create checkout session
@@ -88,7 +82,7 @@ serve(async (req) => {
       customer: customerId,
       line_items: [
         {
-          price: Deno.env.get("STRIPE_PRICE_ID") || "price_1234567890", // Replace with actual price ID
+          price: Deno.env.get("STRIPE_PRICE_ID") || "price_1234567890", // Use environment variable
           quantity: 1,
         },
       ],
@@ -103,6 +97,7 @@ serve(async (req) => {
       { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
     );
   } catch (error) {
+    console.error("Error creating checkout session:", error);
     return new Response(
       JSON.stringify({ error: error.message }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
