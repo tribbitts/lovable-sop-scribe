@@ -1,12 +1,12 @@
 
 import { jsPDF } from "jspdf";
-import { SopDocument } from "../types/sop";
-import { generatePdfFilename } from "./pdf/utils";
-import { addCoverPage } from "./pdf/cover-page";
-import { addContentPageDesign, addPageFooters } from "./pdf/content-page";
-import { renderSteps } from "./pdf/step-renderer";
+import { SopDocument } from "@/types/sop";
+import { generatePdfFilename } from "@/lib/pdf/utils";
+import { addCoverPage } from "@/lib/pdf/cover-page";
+import { addContentPageDesign, addPageFooters } from "@/lib/pdf/content-page";
+import { renderSteps } from "@/lib/pdf/step-renderer";
 
-export async function generatePDF(sopDocument: SopDocument): Promise<void> {
+export async function generatePDF(sopDocument: SopDocument): Promise<string> {
   return new Promise((resolve, reject) => {
     try {
       console.log("Starting PDF generation process");
@@ -35,6 +35,13 @@ export async function generatePDF(sopDocument: SopDocument): Promise<void> {
       
       // Calculate content width
       const contentWidth = width - (margin.left + margin.right);
+      
+      // Set background image if available
+      if (sopDocument.backgroundImage) {
+        // Use a custom property to store the background image
+        // @ts-ignore - Add custom property to pdf object
+        pdf.backgroundImage = sopDocument.backgroundImage;
+      }
       
       console.log("Creating cover page");
       
@@ -66,6 +73,9 @@ export async function generatePDF(sopDocument: SopDocument): Promise<void> {
           // Add single consistent footer on each page
           addPageFooters(pdf, sopDocument, width, height, margin);
           
+          // Generate base64 string for preview
+          const pdfBase64 = pdf.output('datauristring');
+          
           // Save the PDF with a standardized filename
           const filename = generatePdfFilename(sopDocument);
           console.log(`Saving PDF as: ${filename}`);
@@ -79,7 +89,7 @@ export async function generatePDF(sopDocument: SopDocument): Promise<void> {
           pdf.save(filename);
           console.log("PDF saved successfully");
           
-          resolve();
+          resolve(pdfBase64);
         })
         .catch((error) => {
           console.error("PDF generation error:", error);

@@ -34,7 +34,7 @@ const OrganizationHeader = () => {
     
     if (file) {
       // Check if image is the right size (A4 dimensions at 72dpi: 595x842px)
-      const img = new Image();
+      const img = document.createElement('img');
       img.onload = () => {
         // Allow some flexibility in dimensions
         const isAcceptableSize = 
