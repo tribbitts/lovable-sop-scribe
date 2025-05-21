@@ -20,7 +20,7 @@ export async function renderSteps(
   
   // Steps title with Apple-inspired styling
   pdf.setFont("helvetica", "bold");
-  pdf.setFontSize(18);
+  pdf.setFontSize(16); // Reduced from 18pt
   pdf.setTextColor(44, 44, 46); // Apple dark gray
   pdf.text("Steps", margin.left, currentY);
   

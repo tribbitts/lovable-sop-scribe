@@ -1,21 +1,26 @@
 import { SopDocument } from "@/types/sop";
 
 export function addContentPageDesign(pdf: any, width: number, height: number, margin: any) {
-  // Keep the design extremely minimal to maximize content space
-  // Just a small light circle in bottom left corner
-  pdf.setFillColor(245, 245, 247, 0.5); // Very light gray with transparency
-  pdf.circle(margin.left, height - margin.bottom, 30, 'F');
-  
-  // If there's a background image, add it (will be implemented later)
+  // If there's a background image, add it first (so it's behind everything)
   if (pdf.backgroundImage) {
-    pdf.addImage(
-      pdf.backgroundImage,
-      'PNG',
-      0,
-      0,
-      width,
-      height
-    );
+    try {
+      // Add the background image to fill the entire page
+      pdf.addImage(
+        pdf.backgroundImage,
+        'PNG',
+        0,
+        0,
+        width,
+        height
+      );
+    } catch (error) {
+      console.error("Error adding background image:", error);
+    }
+  } else {
+    // Keep the design extremely minimal to maximize content space
+    // Just a small light circle in bottom left corner
+    pdf.setFillColor(245, 245, 247, 0.5); // Very light gray with transparency
+    pdf.circle(margin.left, height - margin.bottom, 30, 'F');
   }
 }
 

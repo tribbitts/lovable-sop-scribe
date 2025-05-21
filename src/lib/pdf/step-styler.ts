@@ -1,5 +1,6 @@
 
 import { SopStep } from "@/types/sop";
+import { addWrappedText } from "./utils";
 
 /**
  * Adds Apple-inspired styling for a step in the PDF
@@ -26,43 +27,49 @@ export function styleStep(
   
   // Add step number in white text (centered in circle)
   pdf.setTextColor(255, 255, 255); // White text
-  pdf.setFontSize(14);
+  pdf.setFontSize(12); // Smaller font for better centering
   
-  // Center the number in the circle
+  // Better center the number in the circle
   const stepNumber = (index + 1).toString();
-  const textWidth = pdf.getStringUnitWidth(stepNumber) * 14 / pdf.internal.scaleFactor;
-  pdf.text(stepNumber, circleX - (textWidth / 2), circleY + 5);
+  const textWidth = pdf.getStringUnitWidth(stepNumber) * 12 / pdf.internal.scaleFactor;
+  const textHeight = 12 / pdf.internal.scaleFactor;
+  pdf.text(stepNumber, circleX - (textWidth / 2), circleY + (textHeight / 2));
   
-  // Step title/description - using 18pt as specified
+  // Step description - using smaller 14pt font for better readability
   pdf.setFont("helvetica", "bold");
-  pdf.setFontSize(18);
+  pdf.setFontSize(14); // Reduced from 18pt to 14pt
   pdf.setTextColor(44, 44, 46); // Dark gray (Apple-style)
   
-  // Add step description with proper indent
-  const stepText = pdf.text(
-    step.description, 
-    margin.left + (circleRadius * 2) + 10, 
-    currentY + circleRadius
+  // Add step description with proper indent and text wrapping
+  const descriptionX = margin.left + (circleRadius * 2) + 10;
+  const availableWidth = width - margin.left - margin.right - 60; // Ensure description fits
+  currentY = addWrappedText(
+    pdf,
+    step.description,
+    descriptionX,
+    currentY + circleRadius,
+    availableWidth,
+    7 // Line height
   );
   
-  // Get width of step description text for the line
+  // Get width of step description text for the line (capped by available width)
   const descWidth = Math.min(
-    pdf.getStringUnitWidth(step.description) * 18 / pdf.internal.scaleFactor,
-    width - margin.left - margin.right - 60
+    pdf.getStringUnitWidth(step.description) * 14 / pdf.internal.scaleFactor,
+    availableWidth
   );
   
   // Add subtle separator line under step description (thin black line)
   pdf.setDrawColor(44, 44, 46); // Dark gray/black
   pdf.setLineWidth(0.5);
   pdf.line(
-    margin.left + (circleRadius * 2) + 10,
-    currentY + (circleRadius * 2) + 5,
-    margin.left + (circleRadius * 2) + 10 + descWidth,
-    currentY + (circleRadius * 2) + 5
+    descriptionX,
+    currentY + 5, // Add line below the text with spacing
+    descriptionX + descWidth,
+    currentY + 5
   );
   
   // Move currentY below the step header with appropriate spacing
-  currentY += (circleRadius * 2) + 25;
+  currentY += 15;
   
   return currentY;
 }

@@ -67,7 +67,7 @@ export function generatePdfFilename(sopDocument: SopDocument): string {
   return `${title}_SOP_${sopDocument.date.replace(/-/g, '')}.pdf`;
 }
 
-// Helper function for text wrapping
+// Improved helper function for text wrapping
 export function addWrappedText(pdf: any, text: string, x: number, y: number, maxWidth: number, lineHeight: number): number {
   // Handle empty or undefined text
   if (!text) {
@@ -75,9 +75,16 @@ export function addWrappedText(pdf: any, text: string, x: number, y: number, max
   }
   
   try {
+    // Split text into lines that fit within maxWidth
     const lines = pdf.splitTextToSize(text, maxWidth);
-    pdf.text(lines, x, y);
-    return y + lineHeight * lines.length;
+    
+    // Draw each line at the correct position
+    for (let i = 0; i < lines.length; i++) {
+      pdf.text(lines[i], x, y + (i * lineHeight));
+    }
+    
+    // Return the Y position after the text block
+    return y + (lineHeight * lines.length);
   } catch (error) {
     console.error("Error in text wrapping:", error);
     // Try a basic fallback
