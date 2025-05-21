@@ -1,4 +1,6 @@
 
+import React from 'react';
+
 const TestimonialCard = ({ 
   gradientClasses, 
   content, 
@@ -24,21 +26,21 @@ const Testimonials = () => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         <TestimonialCard 
           gradientClasses="bg-gradient-to-br from-[#007AFF] to-purple-500" 
-          content=""This app has completely transformed how we create and share procedures at our company."" 
+          content="This app has completely transformed how we create and share procedures at our company." 
           author="Alex Chen"
           role="Operations Manager"
         />
         
         <TestimonialCard 
           gradientClasses="bg-gradient-to-br from-green-400 to-[#007AFF]" 
-          content=""The simplicity and clean design make creating SOPs a breeze. Highly recommended!"" 
+          content="The simplicity and clean design make creating SOPs a breeze. Highly recommended!" 
           author="Sarah Johnson"
           role="CEO"
         />
         
         <TestimonialCard 
           gradientClasses="bg-gradient-to-br from-amber-500 to-red-500" 
-          content=""I love how I can create professional-looking documentation in minutes rather than hours."" 
+          content="I love how I can create professional-looking documentation in minutes rather than hours." 
           author="Michael Torres"
           role="Team Lead"
         />
