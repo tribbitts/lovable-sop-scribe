@@ -1,4 +1,3 @@
-
 import { SopStep } from "@/types/sop";
 import { compressImage } from "./utils";
 
@@ -32,7 +31,7 @@ export async function addScreenshot(
     const isWideLayout = contentWidth >= 350; // Minimum width for side-by-side
     const layout = hasSecondImage && isWideLayout ? 'side-by-side' : 'stacked';
     
-    // Calculate image dimensions
+    // Calculate image dimensions - use smaller image sizes to fit more content
     let imgWidth, imgHeight, secondaryImgWidth, secondaryImgHeight;
     
     if (layout === 'side-by-side' && hasSecondImage) {
@@ -40,8 +39,8 @@ export async function addScreenshot(
       imgWidth = (contentWidth * 0.95) / 2;
       secondaryImgWidth = imgWidth;
     } else {
-      // Stacked layout or single image
-      imgWidth = contentWidth * 0.95;
+      // Stacked layout or single image - reduce image size to 85% of content width
+      imgWidth = contentWidth * 0.85;
       secondaryImgWidth = imgWidth;
     }
     
@@ -51,13 +50,6 @@ export async function addScreenshot(
     
     // Calculate heights based on aspect ratio
     imgHeight = imgWidth / mainAspectRatio;
-    
-    // Check if we need a new page for this image
-    if (currentY + imgHeight > height - margin.bottom - 20) {
-      pdf.addPage();
-      addContentPageDesign(pdf, width, height, margin);
-      currentY = margin.top;
-    }
     
     // Center the image horizontally
     const firstImageX = layout === 'side-by-side' && hasSecondImage
@@ -98,7 +90,7 @@ export async function addScreenshot(
         );
         
         // Move Y position below both images
-        currentY += Math.max(imgHeight, secondaryImgHeight) + 15;
+        currentY += Math.max(imgHeight, secondaryImgHeight) + 10; // Reduced spacing
       } else {
         // Stacked layout - add second image below first
         secondaryImgHeight = secondaryImgWidth / secondaryAspectRatio;
@@ -108,17 +100,17 @@ export async function addScreenshot(
           secondaryImageData,
           'JPEG',
           (width - secondaryImgWidth) / 2,
-          currentY + imgHeight + 10, // 10px spacing
+          currentY + imgHeight + 8, // Reduced spacing between images
           secondaryImgWidth,
           secondaryImgHeight
         );
         
         // Move Y position below both images
-        currentY += imgHeight + secondaryImgHeight + 25;
+        currentY += imgHeight + secondaryImgHeight + 15; // Reduced spacing
       }
     } else {
       // Only one image, move Y below it
-      currentY += imgHeight + 15;
+      currentY += imgHeight + 10; // Reduced spacing
     }
   } catch (e) {
     console.error("Error adding screenshot to PDF", e);
@@ -162,8 +154,8 @@ async function createImageWithStyling(imageUrl: string, callouts: any[] = []): P
       // Create modern styling with rounded corners
       ctx.save();
       
-      const cornerRadius = 12; // Rounded corner radius
-      const paddingSize = 15; // Padding between image and border
+      const cornerRadius = 8; // Reduced corner radius for more compact look
+      const paddingSize = 10; // Reduced padding for more compact images
       
       // Expand canvas for padding
       const paddedWidth = canvas.width + (paddingSize * 2);
@@ -195,11 +187,11 @@ async function createImageWithStyling(imageUrl: string, callouts: any[] = []): P
         paddedCtx.closePath();
         paddedCtx.fill();
         
-        // Add Apple-style soft shadow
-        paddedCtx.shadowColor = 'rgba(0, 0, 0, 0.1)';
-        paddedCtx.shadowBlur = 8;
+        // Add Apple-style soft shadow (reduced shadow for more compact layout)
+        paddedCtx.shadowColor = 'rgba(0, 0, 0, 0.08)';
+        paddedCtx.shadowBlur = 6;
         paddedCtx.shadowOffsetX = 0;
-        paddedCtx.shadowOffsetY = 2;
+        paddedCtx.shadowOffsetY = 1;
         
         // Create rounded rectangle for the image
         paddedCtx.beginPath();

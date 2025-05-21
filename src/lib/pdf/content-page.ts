@@ -34,7 +34,7 @@ export function addPageFooters(pdf: any, sopDocument: SopDocument, width: number
   for (let i = 1; i <= pageCount; i++) {
     pdf.setPage(i);
     pdf.setFont("helvetica", "normal"); // Use helvetica font for reliability
-    pdf.setFontSize(9);
+    pdf.setFontSize(8); // Reduced font size to save space
     pdf.setTextColor(100, 100, 100); // Medium gray
 
     // Construct footer text
@@ -59,7 +59,7 @@ export function addPageFooters(pdf: any, sopDocument: SopDocument, width: number
     pdf.text(
       footerText,
       (width - footerWidth) / 2,
-      height - 10 // 10mm from the bottom of the page
+      height - 8 // Moved closer to the bottom to save space
     );
   }
 }
