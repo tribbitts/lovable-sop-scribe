@@ -9,10 +9,11 @@ import { Button } from "@/components/ui/button";
 import { storeSupabaseCredentials } from "@/lib/supabase";
 
 const Auth = () => {
-  const { user } = useAuth();
+  const { user, signIn } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [showConfig, setShowConfig] = useState(false);
+  const [isDev] = useState(() => import.meta.env.MODE === 'development');
   
   // Check if Supabase credentials are missing
   const isMissingCredentials = () => {
@@ -21,6 +22,18 @@ const Auth = () => {
     return !url || !key || 
            url === 'https://placeholder-url.supabase.co' || 
            key === 'placeholder-key';
+  };
+  
+  // Development-only quick login handler
+  const handleDevLogin = async () => {
+    if (isDev) {
+      try {
+        await signIn('dev@example.com', 'password123');
+        navigate('/app');
+      } catch (error) {
+        console.error('Development login failed:', error);
+      }
+    }
   };
   
   useEffect(() => {
@@ -43,7 +56,7 @@ const Auth = () => {
       );
       // The page will reload from the storeSupabaseCredentials function
     }
-  }, [user, navigate, searchParams]);
+  }, [user, navigate, searchParams, signIn]);
   
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#121212] px-4">
@@ -77,6 +90,20 @@ const Auth = () => {
               </CardHeader>
               <CardContent>
                 <AuthForm />
+                
+                {/* Developer quick access - only visible in development mode */}
+                {isDev && (
+                  <div className="mt-6 pt-4 border-t border-zinc-700">
+                    <p className="text-amber-400 text-xs mb-2">Development Mode Only</p>
+                    <Button 
+                      variant="outline" 
+                      className="w-full border-amber-600 text-amber-400 hover:bg-amber-950/30"
+                      onClick={handleDevLogin}
+                    >
+                      Developer Quick Access
+                    </Button>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </>

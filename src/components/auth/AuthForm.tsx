@@ -8,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Loader2, AlertCircle } from "lucide-react";
+import { Loader2, AlertCircle, Info } from "lucide-react";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { testSupabaseConnection } from "@/lib/supabase";
 
@@ -23,6 +23,7 @@ const AuthForm = () => {
   const [activeTab, setActiveTab] = useState<string>("signin");
   const { signIn, signUp, loading, error: authError } = useAuth();
   const [connectionError, setConnectionError] = useState<string | null>(null);
+  const [signupSuccess, setSignupSuccess] = useState<boolean>(false);
   
   const form = useForm<AuthFormValues>({
     resolver: zodResolver(authSchema),
@@ -47,12 +48,18 @@ const AuthForm = () => {
       await signIn(data.email, data.password);
     } else {
       await signUp(data.email, data.password);
+      setSignupSuccess(true);
+      // Reset the form after successful signup
+      form.reset();
     }
   };
 
   return (
     <div className="w-full max-w-md mx-auto">
-      <Tabs defaultValue="signin" value={activeTab} onValueChange={setActiveTab}>
+      <Tabs defaultValue="signin" value={activeTab} onValueChange={(value) => {
+        setActiveTab(value);
+        setSignupSuccess(false);
+      }}>
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="signin">Sign In</TabsTrigger>
           <TabsTrigger value="signup">Sign Up</TabsTrigger>
@@ -64,6 +71,16 @@ const AuthForm = () => {
             <AlertTitle>Error</AlertTitle>
             <AlertDescription>
               {connectionError || authError}
+            </AlertDescription>
+          </Alert>
+        )}
+        
+        {signupSuccess && (
+          <Alert className="mt-4 bg-green-950/60 border-green-700 text-green-300">
+            <Info className="h-4 w-4" />
+            <AlertTitle>Account Created</AlertTitle>
+            <AlertDescription>
+              Please check your email for a confirmation link to verify your account. Once verified, you can sign in.
             </AlertDescription>
           </Alert>
         )}
