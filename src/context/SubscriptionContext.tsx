@@ -1,3 +1,4 @@
+
 import { createContext, useContext, useEffect, useState } from "react";
 import { useAuth } from "./AuthContext";
 import { getUserSubscription, supabase } from "@/lib/supabase";
@@ -182,4 +183,4 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
 };
 
 export default SubscriptionContext;
-export { SubscriptionProvider };
+// Removing duplicate export here - this was causing the error
