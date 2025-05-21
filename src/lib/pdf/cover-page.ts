@@ -8,11 +8,24 @@ export async function addCoverPage(pdf: any, sopDocument: SopDocument, width: nu
   
   // Add logo to the cover page with proper aspect ratio and positioning
   if (sopDocument.logo) {
-    await addLogoToCover(pdf, sopDocument, width, height);
+    try {
+      console.log("Adding logo to cover page");
+      await addLogoToCover(pdf, sopDocument, width, height);
+      console.log("Logo added successfully");
+    } catch (logoError) {
+      console.error("Failed to add logo to cover page:", logoError);
+      // Continue without logo
+    }
   }
   
   // Set a default font first in case custom font fails
-  pdf.setFont("helvetica", "bold");
+  try {
+    pdf.setFont("Inter", "bold");
+  } catch (fontError) {
+    console.warn("Using fallback font due to error:", fontError);
+    pdf.setFont("helvetica", "bold");
+  }
+  
   pdf.setFontSize(28);
   pdf.setTextColor(40, 40, 40); // Dark charcoal
   
@@ -31,7 +44,13 @@ export async function addCoverPage(pdf: any, sopDocument: SopDocument, width: nu
   pdf.text(title, (width - titleWidth) / 2, height / 2);
   
   // Subtitle with topic and date in small caps
-  pdf.setFont("helvetica", "normal");
+  try {
+    pdf.setFont("Inter", "normal");
+  } catch (fontError) {
+    console.warn("Using fallback font due to error:", fontError);
+    pdf.setFont("helvetica", "normal");
+  }
+  
   pdf.setFontSize(12);
   pdf.setTextColor(100, 100, 100); // Medium gray
   
@@ -65,6 +84,12 @@ function addCoverPageDesign(pdf: any, width: number, height: number, margin: any
   // If there's a background image, add it without resizing
   if (pdf.backgroundImage) {
     try {
+      // Validate image format before adding
+      if (typeof pdf.backgroundImage !== 'string' || !pdf.backgroundImage.startsWith('data:')) {
+        console.error("Invalid background image format, skipping");
+        return;
+      }
+      
       // Add the background image using natural dimensions
       // Let it bleed off the page if too large - no fitting
       pdf.addImage(
@@ -75,25 +100,49 @@ function addCoverPageDesign(pdf: any, width: number, height: number, margin: any
         width,
         height
       );
+      console.log("Background image added to cover design successfully");
     } catch (error) {
       console.error("Error adding background image to cover:", error);
+      // Continue without the background image
     }
   }
 }
 
 // Add logo to the cover page with proper aspect ratio
 async function addLogoToCover(pdf: any, sopDocument: SopDocument, width: number, height: number) {
-  if (sopDocument.logo) {
-    try {
-      // Preserve original logo without compression
-      const logoUrl = sopDocument.logo;
+  if (!sopDocument.logo) {
+    return; // No logo to add
+  }
+  
+  // Validate logo data
+  if (typeof sopDocument.logo !== 'string' || !sopDocument.logo.startsWith('data:')) {
+    console.error("Invalid logo data format, skipping logo");
+    return;
+  }
+  
+  try {
+    // Preserve original logo without compression
+    const logoUrl = sopDocument.logo;
+    
+    // Create a temporary image to get the natural dimensions
+    const img = new Image();
+    
+    await new Promise<void>((resolve, reject) => {
+      // Set error handler first
+      img.onerror = (error) => {
+        console.error("Failed to load logo image:", error);
+        reject(new Error("Failed to load logo image"));
+      };
       
-      // Create a temporary image to get the natural dimensions
-      const img = new Image();
-      img.src = logoUrl;
-      
-      await new Promise<void>((resolve) => {
-        img.onload = () => {
+      img.onload = () => {
+        try {
+          // Check for valid dimensions
+          if (img.width <= 0 || img.height <= 0) {
+            console.error("Invalid logo dimensions:", img.width, img.height);
+            reject(new Error("Invalid logo dimensions"));
+            return;
+          }
+          
           // Maximum width limited to 300px as specified
           const maxLogoWidth = Math.min(300, width * 0.5);
           const maxLogoHeight = height * 0.15; // 15% of page height
@@ -125,17 +174,21 @@ async function addLogoToCover(pdf: any, sopDocument: SopDocument, width: number,
             logoWidth, 
             logoHeight
           );
+          console.log("Logo added successfully with dimensions:", logoWidth, "x", logoHeight);
           resolve();
-        };
-        
-        // Add error handling for the image load
-        img.onerror = () => {
-          console.error("Failed to load logo image");
-          resolve(); // Continue without the logo
-        };
-      });
-    } catch(e) {
-      console.error("Error adding logo to cover page", e);
-    }
+        } catch (error) {
+          console.error("Error processing logo dimensions:", error);
+          reject(error);
+        }
+      };
+      
+      // Set img.src to start loading the image
+      img.src = logoUrl;
+      // Set crossOrigin for CORS issues
+      img.crossOrigin = "anonymous";
+    });
+  } catch(e) {
+    console.error("Error adding logo to cover page", e);
+    throw e; // Re-throw to allow proper error handling upstream
   }
 }

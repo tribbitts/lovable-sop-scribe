@@ -13,6 +13,14 @@ export function compressImage(dataUrl: string, quality = 0.92): Promise<string> 
       return;
     }
 
+    // Validate data URL format
+    if (!dataUrl.startsWith('data:')) {
+      const error = new Error("Invalid data URL format in compressImage");
+      console.error(error);
+      reject(error);
+      return;
+    }
+
     const img = new Image();
     img.crossOrigin = "anonymous";
     
@@ -131,6 +139,7 @@ export function addWrappedText(pdf: any, text: string, x: number, y: number, max
 
 async function fetchFontAsBase64(url: string): Promise<string> {
   try {
+    console.log(`Fetching font from: ${url}`);
     const response = await fetch(url);
     if (!response.ok) {
       throw new Error(`Failed to fetch font ${url}: ${response.statusText}`);
@@ -159,6 +168,14 @@ export async function registerInterFont(pdf: jsPDF) {
     console.log("Attempting to register Inter font...");
     
     try {
+      console.log("Checking if fonts are already available in the VFS");
+      // Check if fonts are already registered to avoid duplicate registration
+      const fontList = pdf.getFontList();
+      if (fontList['Inter'] && fontList['Inter'].indexOf('normal') >= 0) {
+        console.log("Inter font already registered, skipping registration");
+        return;
+      }
+      
       const interRegularBase64 = await fetchFontAsBase64('/fonts/Inter-Regular.ttf');
       const interBoldBase64 = await fetchFontAsBase64('/fonts/Inter-Bold.ttf');
 

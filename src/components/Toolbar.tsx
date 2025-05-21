@@ -7,10 +7,11 @@ import { Label } from "@/components/ui/label";
 import { useState } from "react";
 import { toast } from "@/hooks/use-toast";
 import { generatePDF } from "@/lib/pdf-generator";
-import { Download, Upload, FileJson, FileText, Eye, Lock } from "lucide-react";
+import { Download, Upload, FileJson, FileText, Eye, Lock, AlertCircle } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useSubscription } from "@/context/SubscriptionContext";
 import { createPdfUsageRecord } from "@/lib/supabase";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 
 const Toolbar = () => {
   const { saveDocumentToJSON, loadDocumentFromJSON, sopDocument } = useSopContext();
@@ -19,6 +20,7 @@ const Toolbar = () => {
   
   const [jsonFile, setJsonFile] = useState<File | null>(null);
   const [isExporting, setIsExporting] = useState(false);
+  const [exportProgress, setExportProgress] = useState<string | null>(null);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [pdfPreviewUrl, setPdfPreviewUrl] = useState<string | null>(null);
   const [exportError, setExportError] = useState<string | null>(null);
@@ -42,6 +44,10 @@ const Toolbar = () => {
       return;
     }
 
+    // Clear previous errors and progress
+    setExportError(null);
+    setExportProgress(null);
+    
     // Validate document before starting
     if (!sopDocument.title) {
       toast({
@@ -61,6 +67,16 @@ const Toolbar = () => {
       return;
     }
 
+    // Validate that at least one step exists
+    if (sopDocument.steps.length === 0) {
+      toast({
+        title: "No Steps Found",
+        description: "Please add at least one step to your SOP document.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     // Validate that all steps have descriptions
     for (let i = 0; i < sopDocument.steps.length; i++) {
       const step = sopDocument.steps[i];
@@ -73,23 +89,43 @@ const Toolbar = () => {
         return;
       }
     }
-
-    // Clear previous errors
-    setExportError(null);
     
     try {
       setIsExporting(true);
+      setExportProgress("Preparing document...");
+      
       toast({
         title: "Creating PDF",
         description: "Please wait while your PDF is being generated..."
       });
       
       console.log("Starting PDF export");
+      
+      // Track progress with console logs
+      const originalConsoleLog = console.log;
+      console.log = (message, ...args) => {
+        originalConsoleLog(message, ...args);
+        if (typeof message === 'string') {
+          if (message.includes("Creating cover page")) {
+            setExportProgress("Creating cover page...");
+          } else if (message.includes("Rendering")) {
+            setExportProgress("Rendering steps...");
+          } else if (message.includes("Steps rendered")) {
+            setExportProgress("Finalizing document...");
+          }
+        }
+      };
+      
       const pdfDataUrl = await generatePDF(sopDocument);
+      
+      // Restore console.log
+      console.log = originalConsoleLog;
       
       if (!pdfDataUrl) {
         throw new Error("PDF generation returned empty result");
       }
+      
+      setExportProgress("Recording usage...");
       
       // Record PDF usage in database
       if (user) {
@@ -103,6 +139,7 @@ const Toolbar = () => {
         }
       }
       
+      setExportProgress(null);
       toast({
         title: "PDF Generated",
         description: "Your SOP has been successfully generated and downloaded."
@@ -119,6 +156,7 @@ const Toolbar = () => {
       });
     } finally {
       setIsExporting(false);
+      setExportProgress(null);
     }
   };
 
@@ -158,8 +196,10 @@ const Toolbar = () => {
       return;
     }
     
-    // Clear previous errors
+    // Clear previous errors and progress
     setExportError(null);
+    setExportProgress(null);
+    setPdfPreviewUrl(null);
     
     try {
       // Show loading toast
@@ -168,8 +208,29 @@ const Toolbar = () => {
         description: "Creating PDF preview..."
       });
       
+      setIsExporting(true);
+      setExportProgress("Preparing preview...");
+      
+      // Track progress with console logs for preview too
+      const originalConsoleLog = console.log;
+      console.log = (message, ...args) => {
+        originalConsoleLog(message, ...args);
+        if (typeof message === 'string') {
+          if (message.includes("Creating cover page")) {
+            setExportProgress("Creating cover page...");
+          } else if (message.includes("Rendering")) {
+            setExportProgress("Rendering steps...");
+          } else if (message.includes("Steps rendered")) {
+            setExportProgress("Finalizing preview...");
+          }
+        }
+      };
+      
       // Generate PDF and get base64 data URL
       const pdfDataUrl = await generatePDF(sopDocument);
+      
+      // Restore console.log
+      console.log = originalConsoleLog;
       
       if (!pdfDataUrl) {
         throw new Error("PDF preview generation returned empty result");
@@ -178,6 +239,7 @@ const Toolbar = () => {
       // Set the preview URL and open modal
       setPdfPreviewUrl(pdfDataUrl);
       setIsPreviewOpen(true);
+      setExportProgress(null);
       
       toast({
         title: "Preview Ready",
@@ -193,6 +255,9 @@ const Toolbar = () => {
           : "Failed to generate PDF preview. Check console for details.",
         variant: "destructive"
       });
+    } finally {
+      setIsExporting(false);
+      setExportProgress(null);
     }
   };
 
@@ -245,10 +310,10 @@ const Toolbar = () => {
           <Button
             onClick={handlePreview}
             variant="outline"
-            disabled={sopDocument.steps.length === 0}
+            disabled={isExporting || sopDocument.steps.length === 0}
             className="border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-white flex gap-2"
           >
-            <Eye className="h-4 w-4" /> Preview
+            <Eye className="h-4 w-4" /> {isExporting && exportProgress === "Preparing preview..." ? "Creating Preview..." : "Preview"}
           </Button>
           
           <DialogContent className="bg-zinc-900 border-zinc-800 max-w-4xl w-[90vw] h-[80vh]">
@@ -256,16 +321,35 @@ const Toolbar = () => {
               <DialogTitle className="text-white">PDF Preview</DialogTitle>
             </DialogHeader>
             <div className="w-full h-full overflow-hidden rounded-lg mt-4">
-              {pdfPreviewUrl && (
+              {isExporting && exportProgress && (
+                <div className="w-full h-full flex flex-col items-center justify-center bg-zinc-800 p-4">
+                  <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#007AFF] mb-4"></div>
+                  <p className="text-white text-lg">{exportProgress}</p>
+                </div>
+              )}
+              {!isExporting && pdfPreviewUrl && (
                 <iframe
                   src={pdfPreviewUrl}
                   className="w-full h-full border-0 rounded"
                   title="PDF Preview"
                 />
               )}
-              {!pdfPreviewUrl && exportError && (
-                <div className="w-full h-full flex items-center justify-center bg-zinc-800 text-red-400 p-4 text-center">
-                  <p>Error generating PDF: {exportError}</p>
+              {!isExporting && !pdfPreviewUrl && exportError && (
+                <div className="w-full h-full flex flex-col items-center justify-center bg-zinc-800 p-8 text-center">
+                  <AlertCircle className="h-12 w-12 text-red-400 mb-4" />
+                  <h3 className="text-xl font-semibold text-red-400 mb-2">PDF Generation Failed</h3>
+                  <p className="text-red-400 mb-4">Error: {exportError}</p>
+                  <Alert variant="destructive" className="max-w-md">
+                    <AlertTitle>Troubleshooting Tips</AlertTitle>
+                    <AlertDescription>
+                      <ul className="list-disc pl-4 space-y-1 mt-2">
+                        <li>Check that all images are valid and properly formatted</li>
+                        <li>Try removing complex images or screenshots</li>
+                        <li>Make sure all steps have descriptions</li>
+                        <li>Try refreshing the browser and trying again</li>
+                      </ul>
+                    </AlertDescription>
+                  </Alert>
                 </div>
               )}
             </div>
@@ -283,18 +367,27 @@ const Toolbar = () => {
               <Lock className="h-4 w-4" />
               {tier === "free" ? "Daily Limit Reached" : "Export as PDF"}
             </>
+          ) : isExporting ? (
+            <>
+              <span className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full mr-1"></span>
+              {exportProgress || "Creating PDF..."}
+            </>
           ) : (
             <>
               <FileText className="h-4 w-4" />
-              {isExporting ? "Creating PDF..." : "Export as PDF"}
+              Export as PDF
             </>
           )}
         </Button>
         
-        {exportError && (
-          <div className="w-full mt-2 text-sm text-red-400">
-            Error: {exportError}. Check browser console for details.
-          </div>
+        {exportError && !isPreviewOpen && (
+          <Alert variant="destructive" className="w-full mt-2">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Error generating PDF</AlertTitle>
+            <AlertDescription className="text-sm">
+              {exportError}. Check browser console for details.
+            </AlertDescription>
+          </Alert>
         )}
       </div>
     </div>

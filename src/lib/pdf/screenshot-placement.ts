@@ -18,7 +18,9 @@ export async function addScreenshot(
   addContentPageDesign: Function
 ): Promise<number> {
   try {
+    // Skip if no screenshot data
     if (!step.screenshot || !step.screenshot.dataUrl) {
+      console.log(`No screenshot for step ${stepIndex + 1}, skipping`);
       return currentY;
     }
     
@@ -28,8 +30,11 @@ export async function addScreenshot(
       return currentY + 10; // Skip and add some space
     }
     
+    console.log(`Processing screenshot for step ${stepIndex + 1}`);
+    
     // Handle main screenshot with additional error handling
     try {
+      // Preprocess the image to ensure it's in the right format
       const mainImage = await prepareScreenshotImage(step.screenshot.dataUrl, 0.92);
       
       // Check if there's a second image (for future implementation)
@@ -54,6 +59,7 @@ export async function addScreenshot(
         secondaryImgWidth = imgWidth;
       }
       
+      console.log(`Creating main image with styling for step ${stepIndex + 1}`);
       // Create first image with error catching
       const { imageData: mainImageData, aspectRatio: mainAspectRatio } = 
         await createImageWithStyling(mainImage, step.screenshot.callouts);
@@ -72,6 +78,7 @@ export async function addScreenshot(
       
       // Add the main image to PDF with error handling
       try {
+        console.log(`Adding main image to PDF for step ${stepIndex + 1} at position (${firstImageX}, ${currentY})`);
         pdf.addImage(
           mainImageData, 
           'JPEG', 
@@ -89,6 +96,7 @@ export async function addScreenshot(
       // If there's a secondary image, add it
       if (hasSecondImage && step.screenshot.secondaryDataUrl) {
         try {
+          console.log(`Processing secondary image for step ${stepIndex + 1}`);
           const secondaryImage = await prepareScreenshotImage(step.screenshot.secondaryDataUrl, 0.92);
           
           const { imageData: secondaryImageData, aspectRatio: secondaryAspectRatio } = 
@@ -105,6 +113,7 @@ export async function addScreenshot(
             secondaryImgWidth = secondaryImgHeight * secondaryAspectRatio;
             
             // Add second image next to the first
+            console.log(`Adding secondary image side-by-side for step ${stepIndex + 1}`);
             pdf.addImage(
               secondaryImageData,
               'JPEG',
@@ -121,6 +130,7 @@ export async function addScreenshot(
             secondaryImgHeight = secondaryImgWidth / secondaryAspectRatio;
             
             // Add the second image below the first
+            console.log(`Adding secondary image stacked for step ${stepIndex + 1}`);
             pdf.addImage(
               secondaryImageData,
               'JPEG',

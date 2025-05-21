@@ -24,8 +24,11 @@ export async function generatePDF(sopDocument: SopDocument): Promise<string> {
       // Try to register custom fonts but fallback gracefully to system fonts
       try {
         await registerInterFont(pdf);
+        console.log("Custom fonts registered successfully");
       } catch (error) {
         console.error("Using system fonts instead of custom fonts due to error:", error);
+        // Explicitly set a system font to ensure we have a font to use
+        pdf.setFont("helvetica", "normal");
       }
       
       // Get PDF dimensions
@@ -43,11 +46,23 @@ export async function generatePDF(sopDocument: SopDocument): Promise<string> {
       // Calculate content width
       const contentWidth = width - (margin.left + margin.right);
       
-      // Set background image if available
+      // Set background image if available and valid
       if (sopDocument.backgroundImage) {
-        // Use a custom property to store the background image
-        // @ts-ignore - Add custom property to pdf object
-        pdf.backgroundImage = sopDocument.backgroundImage;
+        try {
+          // Validate background image format
+          if (typeof sopDocument.backgroundImage === 'string' && 
+              sopDocument.backgroundImage.startsWith('data:')) {
+            // @ts-ignore - Add custom property to pdf object
+            pdf.backgroundImage = sopDocument.backgroundImage;
+            console.log("Background image set successfully");
+          } else {
+            console.warn("Invalid background image format, skipping", 
+                        typeof sopDocument.backgroundImage);
+          }
+        } catch (bgError) {
+          console.error("Error setting background image:", bgError);
+          // Continue without background image
+        }
       }
       
       console.log("Creating cover page");

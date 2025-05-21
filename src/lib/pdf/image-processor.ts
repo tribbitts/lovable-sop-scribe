@@ -12,6 +12,17 @@ export async function prepareScreenshotImage(dataUrl: string, quality: number): 
       throw new Error("Invalid image data");
     }
     
+    // Validate data URL format
+    if (!dataUrl.startsWith('data:')) {
+      console.error("Invalid data URL format:", dataUrl.substring(0, 20) + "...");
+      throw new Error("Invalid data URL format");
+    }
+    
+    // Check if image is already in JPEG format to avoid double compression
+    if (dataUrl.startsWith('data:image/jpeg')) {
+      return dataUrl; // Return as-is if already JPEG
+    }
+    
     return await compressImage(dataUrl, quality);
   } catch (error) {
     console.error("Error preparing screenshot image:", error);
@@ -29,13 +40,19 @@ export async function createImageWithStyling(imageUrl: string, callouts: any[] =
     throw new Error("Invalid image URL");
   }
   
+  // Validate data URL format
+  if (!imageUrl.startsWith('data:')) {
+    console.error("Invalid data URL format:", imageUrl.substring(0, 20) + "...");
+    throw new Error("Invalid data URL format");
+  }
+  
   // Create a canvas element to render the screenshot with callouts
   const canvas = document.createElement('canvas');
   const ctx = canvas.getContext('2d');
   
   if (!ctx) {
     console.error("Failed to get canvas context");
-    return { imageData: imageUrl, aspectRatio: 1 };
+    throw new Error("Failed to get canvas context");
   }
   
   return new Promise<{imageData: string, aspectRatio: number}>(async (resolve, reject) => {
@@ -50,6 +67,13 @@ export async function createImageWithStyling(imageUrl: string, callouts: any[] =
     
     img.onload = () => {
       try {
+        // Check for valid dimensions
+        if (img.width <= 0 || img.height <= 0) {
+          console.error("Invalid image dimensions:", img.width, "x", img.height);
+          reject(new Error("Invalid image dimensions"));
+          return;
+        }
+        
         // Set canvas dimensions to match the image
         canvas.width = img.width || 800; // Fallback width if image dimensions are 0
         canvas.height = img.height || 600; // Fallback height
