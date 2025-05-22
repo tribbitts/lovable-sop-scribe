@@ -1,6 +1,4 @@
 
-import { SopDocument } from "@/types/sop";
-
 export function addContentPageDesign(
   pdf: any, 
   width: number, 
@@ -11,6 +9,8 @@ export function addContentPageDesign(
   // If there's a background image, add it first (so it's behind everything)
   if (backgroundImage) {
     try {
+      console.log("Applying background image to PDF page");
+      
       // Add the background image to the full page
       pdf.addImage(
         backgroundImage,
@@ -22,6 +22,10 @@ export function addContentPageDesign(
         undefined, // No alias needed
         'FAST'   // Use fast compression for better performance
       );
+      
+      // Add a very slight overlay to ensure text readability if background is too bright
+      pdf.setFillColor(255, 255, 255, 0.1); // Very subtle white overlay with 10% opacity
+      pdf.rect(0, 0, width, height, 'F');
       
       console.log("Background image applied to PDF page");
     } catch (error) {

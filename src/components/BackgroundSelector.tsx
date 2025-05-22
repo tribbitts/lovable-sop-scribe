@@ -59,7 +59,9 @@ const BackgroundSelector = ({
   currentBackground 
 }: BackgroundSelectorProps) => {
   const { isPro } = useSubscription();
-  const [selectedOption, setSelectedOption] = useState<string | null>(null);
+  const [selectedOption, setSelectedOption] = useState<string | null>(
+    currentBackground ? "custom" : null
+  );
 
   const handleSelect = (value: string) => {
     setSelectedOption(value);
@@ -142,6 +144,12 @@ const BackgroundSelector = ({
           />
         </div>
       )}
+
+      <div className="text-xs text-zinc-500 mt-2">
+        {selectedOption === "custom" ? 
+          "For best results, use a subtle, light-colored image." :
+          "Need a custom background? Select 'Custom Upload' option."}
+      </div>
     </div>
   );
 };

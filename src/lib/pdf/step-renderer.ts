@@ -1,4 +1,7 @@
+
 import { SopStep } from "@/types/sop";
+import { styleStep } from "./step-styler";
+import { addScreenshot } from "./screenshot-placement";
 
 export async function renderSteps(
   pdf: any,
@@ -7,73 +10,61 @@ export async function renderSteps(
   height: number,
   margin: any,
   contentWidth: number,
-  addPageDesignFn: (pdf: any, width: number, height: number, margin: any) => void
+  addPageDesignFn: (pdf: any, width: number, height: number, margin: any, backgroundImage: string | null) => void,
+  backgroundImage: string | null = null
 ) {
   let currentY = margin.top;
-  const lineHeight = 7;
-  const horizontalPadding = 5;
-  const screenshotWidth = contentWidth;
-  const screenshotHeight = 80; // Fixed height for screenshots
+  let pageNumber = 1; // Track which page we're on
 
-  for (const step of steps) {
+  for (let i = 0; i < steps.length; i++) {
+    const step = steps[i];
     try {
-      // Calculate the height required for the step description
-      const textLines = pdf.splitTextToSize(step.description, contentWidth - 2 * horizontalPadding);
-      const textHeight = textLines.length * lineHeight;
-      const stepHeight = textHeight + screenshotHeight + 20; // 20 for spacing
-
-      // Calculate remaining space on the current page
-      const remainingY = height - currentY - margin.bottom;
+      // Style the step header with improved design
+      currentY = styleStep(pdf, step, i, currentY, margin, width);
       
-      // If we need a new page, add it and apply the page design
-      if (remainingY < stepHeight) {
+      // Calculate space needed for screenshot
+      const screenshotEstimatedHeight = 
+        step.screenshot ? (step.screenshot.secondaryDataUrl ? 200 : 120) : 10;
+      
+      // Check if we need a new page based on remaining space
+      const remainingSpace = height - currentY - margin.bottom;
+      if (remainingSpace < (screenshotEstimatedHeight + 10)) {
         pdf.addPage();
+        pageNumber++;
         if (addPageDesignFn) {
-          addPageDesignFn(pdf, width, height, margin);
+          addPageDesignFn(pdf, width, height, margin, backgroundImage);
         }
         currentY = margin.top;
       }
       
-      // Step Description
-      pdf.setFontSize(10);
-      pdf.setFillColor(0);
-      pdf.setTextColor(50);
-      pdf.rect(margin.left, currentY, contentWidth, textHeight + 10, 'F');
-      pdf.setTextColor(255);
-      pdf.setFont('helvetica', 'normal');
-      pdf.text(textLines, margin.left + horizontalPadding, currentY + 5 + lineHeight, {
-        maxWidth: contentWidth - 2 * horizontalPadding,
-        lineHeightFactor: 1
-      });
-
-      currentY += textHeight + 10;
-
-      // Screenshot rendering
-      if (step.screenshot && step.screenshot.dataUrl) {
-        try {
-          pdf.addImage(
-            step.screenshot.dataUrl,
-            'JPEG',
-            margin.left,
-            currentY,
-            screenshotWidth,
-            screenshotHeight
-          );
-        } catch (imageError) {
-          console.error("Error adding image:", imageError);
-          pdf.text(`Error rendering screenshot for step ${step.id}`, margin.left, currentY + 10);
-        }
-        currentY += screenshotHeight + 10;
+      // Add the screenshot with the improved layout
+      if (step.screenshot) {
+        // isFirstOrSecondPage helps with sizing images differently on first pages
+        const isFirstOrSecondPage = pageNumber <= 2; 
+        currentY = await addScreenshot(
+          pdf, 
+          step, 
+          currentY, 
+          margin, 
+          contentWidth, 
+          width, 
+          height, 
+          i,
+          addPageDesignFn,
+          isFirstOrSecondPage
+        );
       } else {
-        pdf.setFontSize(9);
-        pdf.setTextColor(100);
-        pdf.text(`No screenshot for step ${step.id}`, margin.left, currentY + 10);
-        currentY += 20;
+        // Add spacing if no screenshot
+        currentY += 10;
       }
-
+      
+      // Add spacing between steps
+      currentY += 15;
+      
     } catch (error) {
-      console.error(`Error rendering step ${step.id}:`, error);
-      // Continue to next step even if this one fails
+      console.error(`Error rendering step ${i + 1}:`, error);
+      // Continue with next step even if this one fails
+      currentY += 20;
     }
   }
 }

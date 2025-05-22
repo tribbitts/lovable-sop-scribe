@@ -3,7 +3,7 @@ import { SopStep } from "@/types/sop";
 import { addWrappedText } from "./utils";
 
 /**
- * Adds Apple-inspired styling for a step in the PDF
+ * Adds a professional, clean styling for a step in the PDF
  */
 export function styleStep(
   pdf: any,
@@ -13,57 +13,58 @@ export function styleStep(
   margin: any,
   width: number
 ): number {
-  // Add clean Apple-inspired styling for step number
+  const stepNumber = index + 1;
+  const contentWidth = width - margin.left - margin.right;
+  
+  // Add a subtle gradient background for the step header
+  pdf.setFillColor(248, 249, 250); // Very light gray background
+  pdf.rect(
+    margin.left, 
+    currentY, 
+    contentWidth, 
+    10, // Height of the header
+    'F'
+  );
+  
+  // Draw a small accent line on the left
+  pdf.setFillColor(0, 122, 255); // Apple Blue
+  pdf.rect(
+    margin.left, 
+    currentY, 
+    3, // Width of the accent line
+    10, // Height matching the header
+    'F'
+  );
+  
+  // Add step number with professional styling
   pdf.setFont("helvetica", "bold");
+  pdf.setFontSize(9);
+  pdf.setTextColor(70, 70, 70); // Dark gray text
+  pdf.text(
+    `STEP ${stepNumber}`, 
+    margin.left + 7, // Indented after the accent line
+    currentY + 6.5 // Vertically centered
+  );
   
-  // Create a smaller circular step number indicator
-  const circleRadius = 6; // Reduced from 8 to 6 for even more compact layout
-  const circleX = margin.left + circleRadius;
-  const circleY = currentY + circleRadius;
+  // Add the step description
+  pdf.setFont("helvetica", "normal");
+  pdf.setFontSize(10);
+  pdf.setTextColor(44, 44, 46); // Dark gray text for description
   
-  // Draw circle with Apple Blue
-  pdf.setFillColor(0, 122, 255); // Apple Blue #007AFF
-  pdf.circle(circleX, circleY, circleRadius, 'F');
+  // Calculate new Y position after the header
+  currentY += 12;
   
-  // Add step number in white text (centered in circle)
-  pdf.setTextColor(255, 255, 255); // White text
-  pdf.setFontSize(8); // Smaller font for better centering in smaller circle
-  
-  // Better center the number in the circle
-  const stepNumber = (index + 1).toString();
-  const textWidth = pdf.getStringUnitWidth(stepNumber) * 8 / pdf.internal.scaleFactor;
-  const textHeight = 8 / pdf.internal.scaleFactor;
-  pdf.text(stepNumber, circleX - (textWidth / 2), circleY + (textHeight / 2));
-  
-  // Step description - using smaller 12pt font for better readability
-  pdf.setFont("helvetica", "bold");
-  pdf.setFontSize(11); // Further reduced from 12pt to 11pt for space efficiency
-  pdf.setTextColor(44, 44, 46); // Dark gray (Apple-style)
-  
-  // Add step description with proper indent and text wrapping
-  const descriptionX = margin.left + (circleRadius * 2) + 6; // Reduced spacing
-  const availableWidth = width - margin.left - margin.right - 30; // Ensure description fits
+  // Add description text with proper wrapping
+  const descriptionX = margin.left + 2;
+  const availableWidth = contentWidth - 4;
   currentY = addWrappedText(
     pdf,
     step.description,
     descriptionX,
-    currentY + circleRadius - 1, // Slightly raise text for better alignment with smaller circle
+    currentY,
     availableWidth,
-    5 // Reduced line height for more compact text
+    5 // Line height
   );
   
-  // Add subtle separator line under step description
-  pdf.setDrawColor(44, 44, 46); // Dark gray/black
-  pdf.setLineWidth(0.3); // Thinner line
-  pdf.line(
-    descriptionX,
-    currentY + 2, // Reduced spacing after text
-    descriptionX + availableWidth * 0.8, // Shorter line
-    currentY + 2
-  );
-  
-  // Move currentY below the step header with minimal spacing
-  currentY += 6; // Further reduced from 8 to 6
-  
-  return currentY;
+  return currentY + 2; // Small spacing after text
 }

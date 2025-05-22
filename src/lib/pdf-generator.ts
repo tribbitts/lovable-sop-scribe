@@ -46,7 +46,7 @@ export async function generatePDF(sopDocument: SopDocument): Promise<string> {
       // Calculate content width
       const contentWidth = width - (margin.left + margin.right);
       
-      // Store background image as a local variable instead of attaching to pdf object
+      // Get background image
       const backgroundImage = sopDocument.backgroundImage || null;
       
       console.log("Creating cover page");
@@ -70,7 +70,8 @@ export async function generatePDF(sopDocument: SopDocument): Promise<string> {
           height, 
           margin, 
           contentWidth,
-          (pdf, width, height, margin) => addContentPageDesign(pdf, width, height, margin, backgroundImage)
+          (pdf, width, height, margin, bgImage) => addContentPageDesign(pdf, width, height, margin, bgImage),
+          backgroundImage
         );
         
         console.log("Steps rendered successfully");
