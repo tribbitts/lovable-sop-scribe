@@ -1,10 +1,9 @@
-
 import { SopStep } from "@/types/sop";
 import { prepareScreenshotImage, createImageWithStyling } from "./image-processor";
 
 /**
  * Adds screenshots with callouts to the PDF
- * Handles one image per page with consistent sizing
+ * Handles two images per page with consistent sizing
  */
 export async function addScreenshot(
   pdf: any, 
@@ -43,8 +42,9 @@ export async function addScreenshot(
       // Preprocess the image with higher quality setting
       const mainImage = await prepareScreenshotImage(step.screenshot.dataUrl, 0.95);
       
-      // Calculate maximum image width (80% of content width for single images)
-      const maxImageWidth = contentWidth * 0.8;
+      // Calculate maximum image width - smaller for the two-per-page layout
+      // Use 70% of content width for single images, 80% for paired images
+      const maxImageWidth = contentWidth * (imageLayoutMode === 'single' ? 0.70 : 0.80);
       
       console.log(`[addScreenshot] Step ${stepIndex + 1}: maxImageWidth = ${maxImageWidth}`);
       
@@ -63,7 +63,16 @@ export async function addScreenshot(
       let imgHeight = imgWidth / mainAspectRatio;
       
       // Check if the image is too tall for the page
-      const maxAvailableHeight = height - currentY - margin.bottom - 20; // 20px buffer
+      // Adjust the available height based on whether this is a first or second image in a pair
+      let maxAvailableHeight;
+      if (imageLayoutMode === 'single') {
+        maxAvailableHeight = height - currentY - margin.bottom - 20; // 20px buffer for single image
+      } else if (imageLayoutMode === 'firstOfPair') {
+        maxAvailableHeight = (height - margin.top - margin.bottom - 40) / 2; // First image gets ~50% of page minus spacing
+      } else { // secondOfPair
+        maxAvailableHeight = height - currentY - margin.bottom - 15; // Second image gets remaining space minus buffer
+      }
+
       if (imgHeight > maxAvailableHeight) {
         console.log(`[addScreenshot] Step ${stepIndex + 1}: Image too tall (imgHeight: ${imgHeight} > maxAvailableHeight: ${maxAvailableHeight}). Scaling down.`);
         imgHeight = maxAvailableHeight;
@@ -91,7 +100,9 @@ export async function addScreenshot(
         imageId = `step_${stepIndex}_main`;
         
         // Advance Y position
-        currentY += imgHeight + 15; // 15mm padding after image
+        // Add less padding after the first image in a pair
+        const yPadding = imageLayoutMode === 'firstOfPair' ? 8 : 15;
+        currentY += imgHeight + yPadding;
       } catch (imageError) {
         console.error(`[addScreenshot] Step ${stepIndex + 1}: Error adding main image to PDF:`, imageError);
         return { y: currentY + 10, imageId: null };
