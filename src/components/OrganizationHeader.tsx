@@ -7,9 +7,12 @@ import { useSopContext } from "@/context/SopContext";
 import { Button } from "@/components/ui/button";
 import { X, Upload, Building, Image } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { useSubscription } from "@/context/SubscriptionContext";
+import BackgroundSelector from "./BackgroundSelector";
 
 const OrganizationHeader = () => {
   const { sopDocument, setCompanyName, setLogo, setBackgroundImage } = useSopContext();
+  const { isPro } = useSubscription();
   const [companyNameInput, setCompanyNameInput] = useState(sopDocument.companyName);
   
   useEffect(() => {
@@ -31,6 +34,15 @@ const OrganizationHeader = () => {
   };
 
   const handleBackgroundChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!isPro) {
+      toast({
+        title: "Pro Feature",
+        description: "Custom backgrounds are only available with a Pro subscription.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     const file = e.target.files?.[0];
     
     if (file) {
@@ -50,7 +62,7 @@ const OrganizationHeader = () => {
           setBackgroundImage(event.target.result as string);
           toast({
             title: "Background Added",
-            description: "Background image has been added to your SOP."
+            description: "Custom background image has been added to your SOP."
           });
         }
       };
@@ -124,15 +136,16 @@ const OrganizationHeader = () => {
               )}
             </div>
             
-            {/* Background upload */}
+            {/* Background selector */}
             <div className="flex flex-col">
               <Label className="text-zinc-300 flex items-center gap-2 mb-2">
                 <Image className="h-4 w-4" /> PDF Background
               </Label>
+              
               {sopDocument.backgroundImage ? (
                 <div className="flex items-center gap-2">
                   <div className="w-12 h-12 bg-zinc-800 rounded-lg overflow-hidden flex items-center justify-center border border-zinc-700">
-                    <img src={sopDocument.backgroundImage} alt="Background" className="max-w-full max-h-full object-contain" />
+                    <img src={sopDocument.backgroundImage} alt="Background" className="max-w-full max-h-full object-cover" />
                   </div>
                   <Button
                     variant="destructive"
@@ -144,19 +157,11 @@ const OrganizationHeader = () => {
                   </Button>
                 </div>
               ) : (
-                <label htmlFor="background-upload" className="cursor-pointer">
-                  <div className="flex items-center justify-center w-12 h-12 bg-zinc-800 border border-dashed border-zinc-700 hover:border-zinc-600 rounded-lg transition-all">
-                    <Image className="h-5 w-5 text-zinc-400" />
-                  </div>
-                  <Input
-                    id="background-upload"
-                    type="file"
-                    onChange={handleBackgroundChange}
-                    className="hidden"
-                    accept="image/*"
-                  />
-                  <span className="text-xs text-zinc-500 mt-1 block">Under 5MB</span>
-                </label>
+                <BackgroundSelector
+                  onSelectBackground={setBackgroundImage}
+                  onCustomUpload={handleBackgroundChange}
+                  currentBackground={sopDocument.backgroundImage}
+                />
               )}
             </div>
           </div>

@@ -12,13 +12,15 @@ import { createPdfUsageRecord } from "@/lib/supabase";
  */
 export function usePdfExport() {
   const { user } = useAuth();
-  const { canGeneratePdf, incrementPdfCount, refreshSubscription } = useSubscription();
+  const { canGeneratePdf, incrementPdfCount, refreshSubscription, isPro } = useSubscription();
   
   const [isExporting, setIsExporting] = useState(false);
   const [exportProgress, setExportProgress] = useState<string | null>(null);
   const [pdfPreviewUrl, setPdfPreviewUrl] = useState<string | null>(null);
   const [exportError, setExportError] = useState<string | null>(null);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  
+  // Document validation functions
   
   /**
    * Validates SOP document before export
@@ -27,6 +29,16 @@ export function usePdfExport() {
     if (!validateTitle(sopDocument)) return false;
     if (!validateTopic(sopDocument)) return false;
     if (!validateSteps(sopDocument)) return false;
+    
+    // Verify Pro status for background image
+    if (sopDocument.backgroundImage && !isPro) {
+      showValidationError(
+        "Pro Feature Required", 
+        "Custom backgrounds are only available with a Pro subscription."
+      );
+      return false;
+    }
+    
     return true;
   };
   
@@ -88,6 +100,8 @@ export function usePdfExport() {
     });
   };
   
+  // Permission and usage handling
+  
   /**
    * Checks if user can export PDF
    */
@@ -129,6 +143,8 @@ export function usePdfExport() {
     }
   };
   
+  // Progress tracking
+  
   /**
    * Sets up progress tracking via console.log
    */
@@ -149,6 +165,25 @@ export function usePdfExport() {
     
     return originalConsoleLog;
   };
+  
+  // Error handling
+  
+  /**
+   * Handles export errors
+   */
+  const handleExportError = (error: unknown, isPreview = false) => {
+    console.error(`PDF ${isPreview ? 'preview' : 'generation'} error:`, error);
+    setExportError(error instanceof Error ? error.message : "Unknown error");
+    toast({
+      title: "Error",
+      description: error instanceof Error 
+        ? `Failed to generate PDF ${isPreview ? 'preview' : ''}: ${error.message}` 
+        : `Failed to generate PDF ${isPreview ? 'preview' : ''}. Check console for details.`,
+      variant: "destructive"
+    });
+  };
+  
+  // Core export functions
   
   /**
    * Handles PDF export
@@ -218,6 +253,16 @@ export function usePdfExport() {
       return;
     }
     
+    // Verify Pro status for background image
+    if (sopDocument.backgroundImage && !isPro) {
+      toast({
+        title: "Pro Feature Required",
+        description: "Custom backgrounds are only available with a Pro subscription.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     // Clear previous errors and progress
     setExportError(null);
     setExportProgress(null);
@@ -261,21 +306,6 @@ export function usePdfExport() {
       setIsExporting(false);
       setExportProgress(null);
     }
-  };
-  
-  /**
-   * Handles export errors
-   */
-  const handleExportError = (error: unknown, isPreview = false) => {
-    console.error(`PDF ${isPreview ? 'preview' : 'generation'} error:`, error);
-    setExportError(error instanceof Error ? error.message : "Unknown error");
-    toast({
-      title: "Error",
-      description: error instanceof Error 
-        ? `Failed to generate PDF ${isPreview ? 'preview' : ''}: ${error.message}` 
-        : `Failed to generate PDF ${isPreview ? 'preview' : ''}. Check console for details.`,
-      variant: "destructive"
-    });
   };
 
   return {
