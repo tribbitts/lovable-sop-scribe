@@ -5,16 +5,19 @@ export function addContentPageDesign(pdf: any, width: number, height: number, ma
   // If there's a background image, add it first (so it's behind everything)
   if (pdf.backgroundImage) {
     try {
-      // Add the background image without trying to fit it to the page
-      // Let it naturally bleed off the page edges if too large
+      // Add the background image to the full page
       pdf.addImage(
         pdf.backgroundImage,
-        'PNG',
-        0,
-        0,
-        width,
-        height
+        'JPEG',  // Use JPEG format for better compatibility
+        0,       // X position (0 = left edge)
+        0,       // Y position (0 = top edge)
+        width,   // Full page width
+        height,  // Full page height
+        undefined, // No alias needed
+        'FAST'   // Use fast compression for better performance
       );
+      
+      console.log("Background image applied to PDF page");
     } catch (error) {
       console.error("Error adding background image:", error);
     }

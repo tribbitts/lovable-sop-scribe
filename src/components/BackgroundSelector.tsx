@@ -24,32 +24,32 @@ interface BackgroundSelectorProps {
   currentBackground: string | null;
 }
 
-// Premium background options
+// Premium background options - minimalist business-focused designs
 const backgroundOptions: BackgroundOption[] = [
   { 
-    id: "laptop-code", 
-    name: "Laptop Code", 
-    url: "https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&w=1280&q=75" 
+    id: "gradient-blue", 
+    name: "Blue Gradient", 
+    url: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIHZpZXdCb3g9IjAgMCAxIDEiIHByZXNlcnZlQXNwZWN0UmF0aW89Im5vbmUiPjxsaW5lYXJHcmFkaWVudCBpZD0iZzk0OCIgZ3JhZGllbnRVbml0cz0idXNlclNwYWNlT25Vc2UiIHgxPSIwJSIgeTE9IjAlIiB4Mj0iMTAwJSIgeTI9IjEwMCUiPjxzdG9wIHN0b3AtY29sb3I9IiNmMGY5ZmYiIG9mZnNldD0iMCIvPjxzdG9wIHN0b3AtY29sb3I9IiM4YmQwZmIiIG9mZnNldD0iMSIvPjwvbGluZWFyR3JhZGllbnQ+PHJlY3QgeD0iMCIgeT0iMCIgd2lkdGg9IjEiIGhlaWdodD0iMSIgZmlsbD0idXJsKCNnOTQ4KSIgLz48L3N2Zz4=" 
   },
   { 
-    id: "starry-night", 
-    name: "Starry Night", 
-    url: "https://images.unsplash.com/photo-1470813740244-df37b8c1edcb?auto=format&w=1280&q=75" 
+    id: "subtle-dots", 
+    name: "Subtle Dots", 
+    url: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCI+PGNpcmNsZSBjeD0iMiIgY3k9IjIiIHI9IjEiIGZpbGw9IiNlNmU2ZTYiLz48L3N2Zz4=" 
   },
   { 
-    id: "workspace", 
-    name: "Workspace", 
-    url: "https://images.unsplash.com/photo-1649972904349-6e44c42644a7?auto=format&w=1280&q=75" 
+    id: "grey-geometric", 
+    name: "Grey Geometric", 
+    url: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI1MCIgaGVpZ2h0PSI1MCI+PHBhdGggZD0iTTAgMGg1MHY1MEgwVjB6bTEgMXY0OGg0OFYxSDEiIGZpbGw9IiNmYWZhZmEiLz48cGF0aCBkPSJNMSAxaDQ4djQ4SDFWMXptMSAxdjQ2aDQ2VjJIMiIgZmlsbD0iI2Y1ZjVmNSIvPjwvc3ZnPg==" 
   },
   { 
-    id: "living-room", 
-    name: "Living Room", 
-    url: "https://images.unsplash.com/photo-1721322800607-8c38375eef04?auto=format&w=1280&q=75" 
+    id: "light-paper", 
+    name: "Light Paper", 
+    url: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0IiBoZWlnaHQ9IjQiPjxwYXRoIGQ9Ik0wIDBoMXYxSDB6TTIgMmgxdjFIMnoiIGZpbGw9IiNmNWY1ZjUiIG9wYWNpdHk9IjAuNCIvPjwvc3ZnPg==" 
   },
   { 
-    id: "blue-laptop", 
-    name: "Blue Laptop", 
-    url: "https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?auto=format&w=1280&q=75" 
+    id: "clean-lines", 
+    name: "Clean Lines", 
+    url: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCI+PHBhdGggZD0iTTYwIDYwSDBWMGg2MHYzMHoiIGZpbGw9IiNmZmZmZmYiLz48cGF0aCBkPSJNMzAgMzBoMzB2MzBIMHoiIGZpbGw9IiNmOWY5ZjkiLz48L3N2Zz4=" 
   }
 ];
 

@@ -46,22 +46,14 @@ export async function generatePDF(sopDocument: SopDocument): Promise<string> {
       // Calculate content width
       const contentWidth = width - (margin.left + margin.right);
       
-      // Set background image if available and valid
+      // Set background image if available
       if (sopDocument.backgroundImage) {
         try {
-          // Validate background image format
-          if (typeof sopDocument.backgroundImage === 'string' && 
-              sopDocument.backgroundImage.startsWith('data:')) {
-            // @ts-ignore - Add custom property to pdf object
-            pdf.backgroundImage = sopDocument.backgroundImage;
-            console.log("Background image set successfully");
-          } else {
-            console.warn("Invalid background image format, skipping", 
-                        typeof sopDocument.backgroundImage);
-          }
+          // Store the background image for use in content pages
+          pdf.backgroundImage = sopDocument.backgroundImage;
+          console.log("Background image stored for PDF pages");
         } catch (bgError) {
-          console.error("Error setting background image:", bgError);
-          // Continue without background image
+          console.error("Error storing background image:", bgError);
         }
       }
       
