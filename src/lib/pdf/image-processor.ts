@@ -161,7 +161,7 @@ export async function createImageWithStyling(imageUrl: string, callouts: any[] =
           const imgData = paddedCanvas.toDataURL('image/png');
           resolve({ 
             imageData: imgData, 
-            aspectRatio: aspectRatio 
+            aspectRatio: paddedCanvas.width / paddedCanvas.height
           });
         } catch (dataUrlError) {
           console.error("Error generating image data URL:", dataUrlError);
