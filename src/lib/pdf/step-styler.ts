@@ -3,7 +3,7 @@ import { SopStep } from "@/types/sop";
 
 /**
  * Styles a step header with an improved, more compact design
- * Uses a blue bar for 10% of the width and white for 90%
+ * Uses a blue pill for the step number and clean black text for the description
  */
 export function styleStep(
   pdf: any,
@@ -22,60 +22,57 @@ export function styleStep(
     
     // Color definitions
     const blueColor = [0, 122, 255]; // #007AFF
-    const whiteColor = [255, 255, 255];
     const blackTextColor = [0, 0, 0];
     
-    // Step bar dimensions - more compact
-    const barHeight = 8; // Compact height for the bar
-    const barPadding = 8; // Padding around text
-    const textY = currentY + barPadding; // Text Y position
-    
-    // Calculate text width and full bar width
+    // More compact step styling
+    pdf.setFontSize(11);
     pdf.setFont("helvetica", "bold");
-    pdf.setFontSize(10);
+
+    // Calculate text dimensions
+    const stepTextWidth = pdf.getStringUnitWidth(stepText) * 11 / pdf.internal.scaleFactor;
+    const numberWidth = pdf.getStringUnitWidth(stepNumberStr) * 11 / pdf.internal.scaleFactor;
     
-    // Blue section width - 10% of the content width
-    const blueWidth = contentWidth * 0.1; 
+    // Vertical spacing
+    const textPadding = 3;
+    const verticalPadding = 4;
+    const totalHeight = 11 / pdf.internal.scaleFactor + (verticalPadding * 2); // text height + padding
     
-    // Draw the blue part (10%)
+    // Draw blue pill for step number - tight around the text
+    const pillWidth = numberWidth + (textPadding * 2);
+    const pillHeight = totalHeight;
+    const pillRadius = pillHeight / 2;
+    
     pdf.setFillColor(...blueColor);
-    pdf.rect(margin.left, currentY, blueWidth, barHeight + (barPadding * 2), "F");
     
-    // Draw the white part (90%)
-    pdf.setFillColor(...whiteColor);
-    pdf.rect(margin.left + blueWidth, currentY, contentWidth - blueWidth, barHeight + (barPadding * 2), "F");
+    // Draw rounded rectangle for number
+    pdf.roundedRect(
+      margin.left, 
+      currentY, 
+      pillWidth, 
+      pillHeight, 
+      pillRadius, 
+      pillRadius, 
+      'F'
+    );
     
-    // Add step number (centered in the blue part)
-    pdf.setTextColor(255, 255, 255); // White text for step number
-    pdf.setFontSize(10);
+    // Add step number text in white
+    pdf.setTextColor(255, 255, 255);
+    pdf.text(
+      stepNumberStr, 
+      margin.left + textPadding, 
+      currentY + verticalPadding + (11 / pdf.internal.scaleFactor)
+    );
     
-    const stepNumberWidth = pdf.getStringUnitWidth(stepNumberStr) * 10 / pdf.internal.scaleFactor;
-    const stepNumberX = margin.left + (blueWidth - stepNumberWidth) / 2;
-    
-    pdf.text(stepNumberStr, stepNumberX, textY);
-    
-    // Add step description
-    pdf.setTextColor(...blackTextColor); // Black text for description
-    const stepTextX = margin.left + blueWidth + barPadding;
-    
-    // Check if text would overflow
-    const maxStepTextWidth = contentWidth - blueWidth - (barPadding * 2);
-    const stepTextWidth = pdf.getStringUnitWidth(stepText) * 10 / pdf.internal.scaleFactor;
-    
-    if (stepTextWidth > maxStepTextWidth) {
-      // Text would overflow, truncate and add ellipsis
-      let truncatedText = stepText;
-      while (pdf.getStringUnitWidth(truncatedText + "...") * 10 / pdf.internal.scaleFactor > maxStepTextWidth && truncatedText.length > 0) {
-        truncatedText = truncatedText.slice(0, -1);
-      }
-      truncatedText += "...";
-      pdf.text(truncatedText, stepTextX, textY);
-    } else {
-      pdf.text(stepText, stepTextX, textY);
-    }
+    // Add step description text in black, positioned after the pill
+    pdf.setTextColor(...blackTextColor);
+    pdf.text(
+      stepText, 
+      margin.left + pillWidth + (textPadding * 2), 
+      currentY + verticalPadding + (11 / pdf.internal.scaleFactor)
+    );
     
     // Return the new Y position
-    return currentY + barHeight + (barPadding * 2);
+    return currentY + pillHeight + 2; // Add a little extra space after the step header
   } catch (error) {
     console.error("Error styling step:", error);
     return currentY + 15; // Return a default value to continue

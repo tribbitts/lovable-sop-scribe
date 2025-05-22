@@ -21,11 +21,11 @@ export async function renderSteps(
     const isLastStep = i === steps.length - 1;
 
     try {
-      // Style the step header with improved design
+      // Style the step header with improved design - compact pill style
       currentY = styleStep(pdf, step, i, currentY, margin, width);
       
-      // Add spacing between step header and content
-      currentY += 5;
+      // Add minimal spacing between step header and content
+      currentY += 3;
       
       const screenshotYStart = currentY;
 
@@ -52,7 +52,7 @@ export async function renderSteps(
         currentY = result.y; // Update Y position after screenshot
       } else {
         console.log(`[renderSteps] Step ${i+1}: No screenshot or no dataUrl.`);
-        currentY += 10; // Default spacing if no screenshot
+        currentY += 5; // Minimal spacing if no screenshot
       }
       
       // Always start a new page for the next step (unless this is the last step)
