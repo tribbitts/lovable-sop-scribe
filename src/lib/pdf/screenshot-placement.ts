@@ -187,3 +187,79 @@ export async function addScreenshot(
   console.log(`[addScreenshot] Step ${stepIndex + 1}: Returning y = ${currentY}`);
   return { y: currentY, imageId };
 }
+
+// Temporary simplified version for debugging
+export async function addScreenshotDebug(
+  pdf: any, 
+  step: SopStep, 
+  currentY: number, 
+  margin: any, 
+  contentWidth: number, 
+  width: number, 
+  height: number, 
+  stepIndex: number,
+  addContentPageDesign: Function,
+  isFirstOrSecondPage: boolean = false,
+  imageLayoutMode: 'single' | 'firstOfPair' | 'secondOfPair' 
+): Promise<{y: number, imageId: string | null}> { 
+  console.log(`[addScreenshot DEBUG] Called for step ${stepIndex + 1}, currentY: ${currentY}`);
+  // ONLY ATTEMPT TO DRAW THE FIRST STEP'S SCREENSHOT FOR DEBUGGING
+  if (stepIndex !== 0) {
+    console.log(`[addScreenshot DEBUG] Step ${stepIndex + 1}: Skipping for debug (only processing step 0).`);
+    return { y: currentY, imageId: null };
+  }
+
+  try {
+    if (!step.screenshot || !step.screenshot.dataUrl) {
+      console.error(`[addScreenshot DEBUG] Step ${stepIndex + 1}: No screenshot data or dataUrl.`);
+      return { y: currentY, imageId: null };
+    }
+    if (!step.screenshot.dataUrl.startsWith('data:')) {
+      console.error(`[addScreenshot DEBUG] Step ${stepIndex + 1}: Invalid dataUrl format.`);
+      return { y: currentY, imageId: null };
+    }
+    console.log(`[addScreenshot DEBUG] Step ${stepIndex + 1}: Processing image. DataUrl (start): ${step.screenshot.dataUrl.substring(0,50)}`);
+
+    const mainImage = await prepareScreenshotImage(step.screenshot.dataUrl, 0.95);
+    if (!mainImage) {
+      console.error("[addScreenshot DEBUG] prepareScreenshotImage failed to return mainImage.");
+      return { y: currentY, imageId: null };
+    }
+
+    const { imageData: mainImageData, aspectRatio: mainAspectRatio } = 
+      await createImageWithStyling(mainImage, step.screenshot.callouts);
+
+    if (!mainImageData) {
+      console.error("[addScreenshot DEBUG] createImageWithStyling failed to return mainImageData.");
+      return { y: currentY, imageId: null };
+    }
+    console.log("[addScreenshot DEBUG] Image processed successfully by createImageWithStyling.");
+
+    const debugImgWidth = 50; // Fixed width for debugging
+    const debugImgHeight = (mainAspectRatio && mainAspectRatio > 0 && mainAspectRatio !== Infinity) ? debugImgWidth / mainAspectRatio : 50;
+    const debugImgX = margin.left + 10;
+    const debugImgY = currentY + 10; // Place it a bit below the header
+
+    console.log(`[addScreenshot DEBUG] Attempting pdf.addImage with: X=${debugImgX}, Y=${debugImgY}, W=${debugImgWidth}, H=${debugImgHeight}`);
+    try {
+      pdf.addImage(
+        mainImageData, 
+        'JPEG', // Assuming JPEG
+        debugImgX, 
+        debugImgY, 
+        debugImgWidth, 
+        debugImgHeight
+      );
+      console.log("[addScreenshot DEBUG] pdf.addImage call completed.");
+      currentY = debugImgY + debugImgHeight + 15;
+      return { y: currentY, imageId: `step_${stepIndex}_debug` };
+    } catch (e) {
+      console.error("[addScreenshot DEBUG] Error during pdf.addImage:", e);
+      return { y: currentY, imageId: null }; // Return original Y if addImage fails
+    }
+
+  } catch (e) {
+    console.error(`[addScreenshot DEBUG] General error for step ${stepIndex + 1}:`, e);
+    return { y: currentY, imageId: null };
+  }
+}
