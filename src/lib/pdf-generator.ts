@@ -53,7 +53,7 @@ export async function generatePDF(sopDocument: SopDocument): Promise<string> {
       
       try {
         // Create elegant cover page with error handling
-        await addCoverPage(pdf, sopDocument, width, height, margin);
+        await addCoverPage(pdf, sopDocument, width, height, margin, backgroundImage);
         console.log("Cover page created successfully");
         
         // Add new page for steps content
@@ -113,3 +113,4 @@ export async function generatePDF(sopDocument: SopDocument): Promise<string> {
     }
   });
 }
+

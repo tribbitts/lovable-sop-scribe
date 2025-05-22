@@ -1,10 +1,16 @@
-
 import { SopDocument } from "@/types/sop";
 import { compressImage } from "./utils";
 
-export async function addCoverPage(pdf: any, sopDocument: SopDocument, width: number, height: number, margin: any) {
+export async function addCoverPage(
+  pdf: any,
+  sopDocument: SopDocument, 
+  width: number, 
+  height: number, 
+  margin: any,
+  backgroundImage: string | null = null
+) {
   // Add minimal, elegant background elements
-  addCoverPageDesign(pdf, width, height, margin);
+  addCoverPageDesign(pdf, width, height, margin, backgroundImage || sopDocument.backgroundImage);
   
   // Add logo to the cover page with proper aspect ratio and positioning
   if (sopDocument.logo) {
@@ -76,30 +82,47 @@ export async function addCoverPage(pdf: any, sopDocument: SopDocument, width: nu
 }
 
 // Add minimal background elements for the cover page
-function addCoverPageDesign(pdf: any, width: number, height: number, margin: any) {
+function addCoverPageDesign(
+  pdf: any, 
+  width: number, 
+  height: number, 
+  margin: any,
+  backgroundImage: string | null = null
+) {
   // Very subtle light gray background
   pdf.setFillColor(248, 248, 248); // Almost white
   pdf.rect(0, 0, width, height, 'F');
   
   // If there's a background image, add it without resizing
-  if (pdf.backgroundImage) {
+  if (backgroundImage) {
     try {
       // Validate image format before adding
-      if (typeof pdf.backgroundImage !== 'string' || !pdf.backgroundImage.startsWith('data:')) {
+      if (typeof backgroundImage !== 'string' || !backgroundImage.startsWith('data:')) {
         console.error("Invalid background image format, skipping");
         return;
       }
       
+      console.log("Adding background image to cover page");
+      
       // Add the background image using natural dimensions
       // Let it bleed off the page if too large - no fitting
-      pdf.addImage(
-        pdf.backgroundImage,
-        'PNG',
-        0,
-        0,
-        width,
-        height
-      );
+      pdf.addImage({
+        imageData: backgroundImage,
+        format: 'JPEG',  // Use JPEG format for better compatibility
+        x: 0,       // X position (0 = left edge)
+        y: 0,       // Y position (0 = top edge)
+        width: width,   // Full page width
+        height: height,  // Full page height
+        compression: 'FAST',   // Use fast compression for better performance
+        rotation: 0      // No rotation
+      });
+      
+      // Add a very slight overlay to ensure text readability if background is too bright
+      pdf.setFillColor(255, 255, 255);
+      pdf.setGState(new pdf.GState({ opacity: 0.1 })); // 10% opacity white overlay
+      pdf.rect(0, 0, width, height, 'F');
+      pdf.setGState(new pdf.GState({ opacity: 1 })); // Reset opacity
+      
       console.log("Background image added to cover design successfully");
     } catch (error) {
       console.error("Error adding background image to cover:", error);
