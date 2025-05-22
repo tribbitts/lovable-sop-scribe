@@ -1,4 +1,3 @@
-
 import { compressImage } from "./utils";
 import { renderCallouts } from "./callout-renderer";
 
@@ -99,37 +98,64 @@ export async function createImageWithStyling(imageUrl: string, callouts: any[] =
           console.error("Error rendering callouts:", calloutError);
         }
         
-        // Create a new canvas for the final image with shadow
+        // Create a new canvas for the final image with shadow and rounded corners
+        const shadowOffset = 5; // How much the shadow is offset Y
+        const shadowBlurAmount = 10; // How much blur for the shadow
+        const padding = shadowBlurAmount + shadowOffset; // Padding around the image for shadow and blur
+        const borderRadius = 8; // Radius for the image corners
+
         const paddedCanvas = document.createElement('canvas');
-        const shadowSize = 15; // Shadow size in pixels
-        paddedCanvas.width = canvas.width + (shadowSize * 2);
-        paddedCanvas.height = canvas.height + (shadowSize * 2);
+        paddedCanvas.width = canvas.width + padding * 2;
+        paddedCanvas.height = canvas.height + padding * 2;
         const paddedCtx = paddedCanvas.getContext('2d');
         
         if (!paddedCtx) {
           throw new Error("Failed to get padded canvas context");
         }
-        
-        // Draw shadow
-        paddedCtx.shadowColor = 'rgba(0, 0, 0, 0.35)';
-        paddedCtx.shadowBlur = 15;
+
+        // Draw the shadow by first drawing a rounded rectangle that will cast the shadow
+        paddedCtx.save();
+        paddedCtx.beginPath();
+        paddedCtx.moveTo(padding + borderRadius, padding); // Start path for rounded rect
+        paddedCtx.lineTo(padding + canvas.width - borderRadius, padding);
+        paddedCtx.arcTo(padding + canvas.width, padding, padding + canvas.width, padding + borderRadius, borderRadius);
+        paddedCtx.lineTo(padding + canvas.width, padding + canvas.height - borderRadius);
+        paddedCtx.arcTo(padding + canvas.width, padding + canvas.height, padding + canvas.width - borderRadius, padding + canvas.height, borderRadius);
+        paddedCtx.lineTo(padding + borderRadius, padding + canvas.height);
+        paddedCtx.arcTo(padding, padding + canvas.height, padding, padding + canvas.height - borderRadius, borderRadius);
+        paddedCtx.lineTo(padding, padding + borderRadius);
+        paddedCtx.arcTo(padding, padding, padding + borderRadius, padding, borderRadius);
+        paddedCtx.closePath();
+
+        paddedCtx.shadowColor = 'rgba(0, 0, 0, 0.3)';
+        paddedCtx.shadowBlur = shadowBlurAmount;
         paddedCtx.shadowOffsetX = 0;
-        paddedCtx.shadowOffsetY = 5;
+        paddedCtx.shadowOffsetY = shadowOffset;
+        paddedCtx.fillStyle = 'rgba(255,255,255,1)'; // Temporary fill for the shape that casts shadow
+        paddedCtx.fill(); // This fill casts the shadow
+        paddedCtx.restore(); // Restore to state before shadow drawing
         
-        // Create a rectangle with the image dimensions
-        paddedCtx.fillStyle = '#ffffff';
-        paddedCtx.fillRect(shadowSize, shadowSize, canvas.width, canvas.height);
+        // Now, clip to the rounded rectangle area and draw the actual image (canvas)
+        // The clipping path is the same as the one used for the shadow caster
+        paddedCtx.save();
+        paddedCtx.beginPath(); // Re-define path for clipping
+        paddedCtx.moveTo(padding + borderRadius, padding);
+        paddedCtx.lineTo(padding + canvas.width - borderRadius, padding);
+        paddedCtx.arcTo(padding + canvas.width, padding, padding + canvas.width, padding + borderRadius, borderRadius);
+        paddedCtx.lineTo(padding + canvas.width, padding + canvas.height - borderRadius);
+        paddedCtx.arcTo(padding + canvas.width, padding + canvas.height, padding + canvas.width - borderRadius, padding + canvas.height, borderRadius);
+        paddedCtx.lineTo(padding + borderRadius, padding + canvas.height);
+        paddedCtx.arcTo(padding, padding + canvas.height, padding, padding + canvas.height - borderRadius, borderRadius);
+        paddedCtx.lineTo(padding, padding + borderRadius);
+        paddedCtx.arcTo(padding, padding, padding + borderRadius, padding, borderRadius);
+        paddedCtx.closePath();
+        paddedCtx.clip();
         
-        // Reset shadow
-        paddedCtx.shadowColor = 'transparent';
-        paddedCtx.shadowBlur = 0;
-        paddedCtx.shadowOffsetX = 0;
-        paddedCtx.shadowOffsetY = 0;
+        // Draw the original image (from the first canvas, which includes callouts) into the clipped rounded area
+        paddedCtx.drawImage(canvas, padding, padding, canvas.width, canvas.height);
+        paddedCtx.restore(); // Remove clipping path for any future drawings on this context (if any)
         
-        // Draw the image on top of the shadow
-        paddedCtx.drawImage(canvas, shadowSize, shadowSize);
-        
-        // Return the final image with shadow
+        // Return the final image
         try {
           // Use high quality JPEG output
           const imgData = paddedCanvas.toDataURL('image/jpeg', 0.95);

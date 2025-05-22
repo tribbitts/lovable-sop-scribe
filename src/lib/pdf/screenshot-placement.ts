@@ -79,17 +79,6 @@ export async function addScreenshot(
           imgHeight
         );
 
-        const borderRadius = 3;
-        const borderWidth = 0.5;
-        const dashPattern: number[] = [1, 1]; // Explicitly type dashPattern
-        const borderColor = [150, 150, 150];
-
-        pdf.setLineWidth(borderWidth);
-        pdf.setDrawColor(...borderColor);
-        pdf.setLineDashPattern(dashPattern, 0); 
-        pdf.roundedRect(imageX, currentY, imgWidth, imgHeight, borderRadius, borderRadius, 'S'); 
-        pdf.setLineDashPattern([], 0); // Reset dash pattern
-
         imageId = `step_${stepIndex}_main`;
         const yPadding = imageLayoutMode === 'firstOfPair' ? 8 : 15;
         currentY += imgHeight + yPadding;
@@ -135,18 +124,6 @@ export async function addScreenshot(
             secondaryImgWidth, 
             secondaryImgHeight
           );
-
-          // Re-define/Re-set border style for secondary image explicitly for clarity and safety
-          const secBorderRadius = 3;
-          const secBorderWidth = 0.5;
-          const secDashPattern: number[] = [1, 1];
-          const secBorderColor = [150, 150, 150];
-
-          pdf.setLineWidth(secBorderWidth);
-          pdf.setDrawColor(...secBorderColor); 
-          pdf.setLineDashPattern(secDashPattern, 0); 
-          pdf.roundedRect(secondaryImageX, secondaryCurrentY, secondaryImgWidth, secondaryImgHeight, secBorderRadius, secBorderRadius, 'S');
-          pdf.setLineDashPattern([], 0); // Reset dash pattern
 
           secondaryCurrentY += secondaryImgHeight + 15;
         } catch (secondaryImgError) {
