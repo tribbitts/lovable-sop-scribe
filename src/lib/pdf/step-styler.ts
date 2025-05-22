@@ -29,19 +29,29 @@ export function styleStep(
     pdf.setFont("helvetica", "bold");
 
     // Calculate text dimensions
+    const stepLabelText = "Step ";
+    const stepLabelWidth = pdf.getStringUnitWidth(stepLabelText) * 11 / pdf.internal.scaleFactor;
+    const stepNumberWidth = pdf.getStringUnitWidth(stepNumberStr) * 11 / pdf.internal.scaleFactor;
     const stepTextWidth = pdf.getStringUnitWidth(stepText) * 11 / pdf.internal.scaleFactor;
-    const numberWidth = pdf.getStringUnitWidth(stepNumberStr) * 11 / pdf.internal.scaleFactor;
     
     // Vertical spacing
     const textPadding = 3;
     const verticalPadding = 4;
     const totalHeight = 11 / pdf.internal.scaleFactor + (verticalPadding * 2); // text height + padding
     
+    // Add "Step" text in black
+    pdf.setTextColor(...blackTextColor);
+    pdf.text(
+      stepLabelText, 
+      margin.left, 
+      currentY + verticalPadding + (11 / pdf.internal.scaleFactor)
+    );
+    
     // Add step number text in blue
     pdf.setTextColor(...blueColor);
     pdf.text(
       stepNumberStr, 
-      margin.left, 
+      margin.left + stepLabelWidth, 
       currentY + verticalPadding + (11 / pdf.internal.scaleFactor)
     );
     
@@ -49,7 +59,7 @@ export function styleStep(
     pdf.setTextColor(...blackTextColor);
     pdf.text(
       stepText, 
-      margin.left + numberWidth + textPadding, 
+      margin.left + stepLabelWidth + stepNumberWidth + textPadding, 
       currentY + verticalPadding + (11 / pdf.internal.scaleFactor)
     );
     
@@ -60,3 +70,4 @@ export function styleStep(
     return currentY + 15; // Return a default value to continue
   }
 }
+
