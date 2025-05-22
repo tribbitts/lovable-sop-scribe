@@ -16,39 +16,51 @@ export function styleStep(
   const stepNumber = index + 1;
   const contentWidth = width - margin.left - margin.right;
   
-  // Add a subtle gradient background for the step header
+  // Blue 10%, White 90% gradient background for the step header
+  // First, create the blue section (10% of width)
+  const blueWidth = contentWidth * 0.1;
   pdf.setFillColor(0, 122, 255); // Apple Blue background
   pdf.rect(
     margin.left, 
     currentY, 
-    contentWidth, 
+    blueWidth, 
     10, // Height of the header
     'F'
   );
   
-  // Add step number with professional styling
+  // Then create the white section (90% of width)
+  pdf.setFillColor(255, 255, 255); // White background
+  pdf.rect(
+    margin.left + blueWidth, 
+    currentY, 
+    contentWidth - blueWidth, 
+    10, // Height of the header
+    'F'
+  );
+  
+  // Add step number with professional styling in the blue section
   pdf.setFont("helvetica", "bold");
   pdf.setFontSize(9);
-  pdf.setTextColor(255, 255, 255); // White text for better contrast
+  pdf.setTextColor(255, 255, 255); // White text for better contrast on blue
   const stepText = `STEP ${stepNumber}`;
   pdf.text(
     stepText, 
-    margin.left + 7, // Indented after the accent line
+    margin.left + 4, // Centered in blue section
     currentY + 6.5 // Vertically centered
   );
   
-  // Calculate the width of the step text to position the description
+  // Calculate the width of the step text
   const stepTextWidth = pdf.getStringUnitWidth(stepText) * 9 / pdf.internal.scaleFactor;
   
-  // Add the step description on the same line as step number
+  // Add the step description in the white section with black text
   pdf.setFont("helvetica", "normal");
   pdf.setFontSize(9);
-  pdf.setTextColor(255, 255, 255); // Keep white text for description in the header
+  pdf.setTextColor(0, 0, 0); // Black text for description
   
-  // Position the description text after the step number with some padding
-  const descriptionX = margin.left + stepTextWidth + 15; // Add padding after step number
+  // Position the description text in the white section
+  const descriptionX = margin.left + blueWidth + 5; // Add padding from blue section
   const descriptionY = currentY + 6.5; // Same vertical alignment as step number
-  const availableWidth = contentWidth - stepTextWidth - 20; // Adjusted width for description
+  const availableWidth = contentWidth - blueWidth - 10; // Adjusted width for description
   
   // Only add the first line of description in the header
   let descriptionFirstLine = step.description;

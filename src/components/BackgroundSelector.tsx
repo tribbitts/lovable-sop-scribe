@@ -12,46 +12,11 @@ import { Button } from "@/components/ui/button";
 import { Upload, Lock } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
-interface BackgroundOption {
-  id: string;
-  name: string;
-  url: string;
-}
-
 interface BackgroundSelectorProps {
   onSelectBackground: (url: string | null) => void;
   onCustomUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
   currentBackground: string | null;
 }
-
-// Premium background options - minimalist business-focused designs
-const backgroundOptions: BackgroundOption[] = [
-  { 
-    id: "gradient-blue", 
-    name: "Blue Gradient", 
-    url: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIHZpZXdCb3g9IjAgMCAxIDEiIHByZXNlcnZlQXNwZWN0UmF0aW89Im5vbmUiPjxsaW5lYXJHcmFkaWVudCBpZD0iZzk0OCIgZ3JhZGllbnRVbml0cz0idXNlclNwYWNlT25Vc2UiIHgxPSIwJSIgeTE9IjAlIiB4Mj0iMTAwJSIgeTI9IjEwMCUiPjxzdG9wIHN0b3AtY29sb3I9IiNmMGY5ZmYiIG9mZnNldD0iMCIvPjxzdG9wIHN0b3AtY29sb3I9IiM4YmQwZmIiIG9mZnNldD0iMSIvPjwvbGluZWFyR3JhZGllbnQ+PHJlY3QgeD0iMCIgeT0iMCIgd2lkdGg9IjEiIGhlaWdodD0iMSIgZmlsbD0idXJsKCNnOTQ4KSIgLz48L3N2Zz4=" 
-  },
-  { 
-    id: "subtle-dots", 
-    name: "Subtle Dots", 
-    url: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCI+PGNpcmNsZSBjeD0iMiIgY3k9IjIiIHI9IjEiIGZpbGw9IiNlNmU2ZTYiLz48L3N2Zz4=" 
-  },
-  { 
-    id: "grey-geometric", 
-    name: "Grey Geometric", 
-    url: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI1MCIgaGVpZ2h0PSI1MCI+PHBhdGggZD0iTTAgMGg1MHY1MEgwVjB6bTEgMXY0OGg0OFYxSDEiIGZpbGw9IiNmYWZhZmEiLz48cGF0aCBkPSJNMSAxaDQ4djQ4SDFWMXptMSAxdjQ2aDQ2VjJIMiIgZmlsbD0iI2Y1ZjVmNSIvPjwvc3ZnPg==" 
-  },
-  { 
-    id: "light-paper", 
-    name: "Light Paper", 
-    url: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0IiBoZWlnaHQ9IjQiPjxwYXRoIGQ9Ik0wIDBoMXYxSDB6TTIgMmgxdjFIMnoiIGZpbGw9IiNmNWY1ZjUiIG9wYWNpdHk9IjAuNCIvPjwvc3ZnPg==" 
-  },
-  { 
-    id: "clean-lines", 
-    name: "Clean Lines", 
-    url: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCI+PHBhdGggZD0iTTYwIDYwSDBWMGg2MHYzMHoiIGZpbGw9IiNmZmZmZmYiLz48cGF0aCBkPSJNMzAgMzBoMzB2MzBIMHoiIGZpbGw9IiNmOWY5ZjkiLz48L3N2Zz4=" 
-  }
-];
 
 const BackgroundSelector = ({ 
   onSelectBackground, 
@@ -70,15 +35,6 @@ const BackgroundSelector = ({
       onSelectBackground(null);
     } else if (value === "custom") {
       // Do nothing - will handle via file upload
-    } else {
-      const option = backgroundOptions.find(bg => bg.id === value);
-      if (option) {
-        onSelectBackground(option.url);
-        toast({
-          title: "Background Selected",
-          description: `${option.name} background applied to your SOP.`
-        });
-      }
     }
   };
 
@@ -108,11 +64,6 @@ const BackgroundSelector = ({
           </SelectTrigger>
           <SelectContent className="bg-zinc-800 border-zinc-700 text-zinc-300">
             <SelectItem value="none">No Background</SelectItem>
-            {backgroundOptions.map(option => (
-              <SelectItem key={option.id} value={option.id}>
-                {option.name}
-              </SelectItem>
-            ))}
             <SelectItem value="custom">Custom Upload</SelectItem>
           </SelectContent>
         </Select>
@@ -148,7 +99,7 @@ const BackgroundSelector = ({
       <div className="text-xs text-zinc-500 mt-2">
         {selectedOption === "custom" ? 
           "For best results, use a subtle, light-colored image." :
-          "Need a custom background? Select 'Custom Upload' option."}
+          "Upload a custom background by selecting 'Custom Upload'."}
       </div>
     </div>
   );
