@@ -16,6 +16,7 @@ interface SubscriptionContextType {
   canGeneratePdf: boolean;
   refreshSubscription: () => Promise<void>;
   incrementPdfCount: () => void;
+  showUpgradePrompt: () => void;
 }
 
 const SubscriptionContext = createContext<SubscriptionContextType>({
@@ -28,6 +29,7 @@ const SubscriptionContext = createContext<SubscriptionContextType>({
   canGeneratePdf: false,
   refreshSubscription: async () => {},
   incrementPdfCount: () => {},
+  showUpgradePrompt: () => {},
 });
 
 export const useSubscription = () => useContext(SubscriptionContext);
@@ -39,11 +41,33 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const [pdfCount, setPdfCount] = useState<number>(0);
   const [supabaseConnected, setSupabaseConnected] = useState<boolean>(true);
   
-  // PDF limits based on tier
+  // PDF limits based on tier - strictly enforce 1 per day for free tier
   const pdfLimit = tier === "pro" || tier === "admin" ? Infinity : 1;
   const isPro = tier === "pro" || tier === "admin";
   const isAdmin = tier === "admin";
   const canGeneratePdf = tier === "pro" || tier === "admin" || pdfCount < pdfLimit;
+  
+  // Show upgrade prompt when limit is reached
+  const showUpgradePrompt = () => {
+    toast({
+      title: "Daily PDF Limit Reached",
+      description: "Upgrade to Pro for unlimited PDF exports.",
+      variant: "destructive",
+      action: (
+        <a 
+          href="#pricing" 
+          className="bg-[#007AFF] hover:bg-[#0069D9] text-white px-3 py-2 rounded-md text-xs"
+          onClick={() => {
+            // If on home page anchor to pricing, otherwise navigate to home page
+            if (!window.location.pathname.includes('/app')) return;
+            window.location.href = '/#pricing';
+          }}
+        >
+          Upgrade to Pro
+        </a>
+      ),
+    });
+  };
   
   // Check if Supabase is properly connected
   useEffect(() => {
@@ -134,6 +158,7 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
                 .lt('created_at', `${today}T23:59:59`);
                 
               setPdfCount(count || 0);
+              console.log(`User has created ${count} PDFs today (limit: ${pdfLimit})`);
             } catch (error) {
               console.error("Error fetching PDF usage count:", error);
               setPdfCount(0);
@@ -186,6 +211,7 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
     canGeneratePdf,
     refreshSubscription,
     incrementPdfCount,
+    showUpgradePrompt,
   };
   
   return (

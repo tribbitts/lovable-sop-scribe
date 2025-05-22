@@ -12,7 +12,13 @@ import { createPdfUsageRecord } from "@/lib/supabase";
  */
 export function usePdfExport() {
   const { user } = useAuth();
-  const { canGeneratePdf, incrementPdfCount, refreshSubscription, isPro } = useSubscription();
+  const { 
+    canGeneratePdf, 
+    incrementPdfCount, 
+    refreshSubscription, 
+    isPro,
+    showUpgradePrompt
+  } = useSubscription();
   
   const [isExporting, setIsExporting] = useState(false);
   const [exportProgress, setExportProgress] = useState<string | null>(null);
@@ -116,11 +122,8 @@ export function usePdfExport() {
     }
 
     if (!canGeneratePdf) {
-      toast({
-        title: "Daily Limit Reached",
-        description: "You've reached your daily PDF export limit. Upgrade to Pro for unlimited exports.",
-        variant: "destructive"
-      });
+      // Show upgrade prompt with link to subscription options
+      showUpgradePrompt();
       return false;
     }
     
@@ -244,6 +247,8 @@ export function usePdfExport() {
    * Handles PDF preview generation
    */
   const handlePreview = async (sopDocument: SopDocument) => {
+    if (!checkUserPermissions()) return;
+    
     if (!sopDocument.title || !sopDocument.topic) {
       toast({
         title: "Missing Information",
