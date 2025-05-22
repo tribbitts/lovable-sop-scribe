@@ -32,6 +32,7 @@ export async function prepareScreenshotImage(dataUrl: string, quality: number): 
 
 /**
  * Creates a styled image with callouts and formatting
+ * Optimized version with minimal padding for larger screenshots
  */
 export async function createImageWithStyling(imageUrl: string, callouts: any[] = []): Promise<{imageData: string, aspectRatio: number}> {
   // Validate input
@@ -83,26 +84,11 @@ export async function createImageWithStyling(imageUrl: string, callouts: any[] =
         
         const aspectRatio = canvas.width / canvas.height;
         
-        // Create modern styling with shadow effect
-        ctx.save();
-        
-        // Draw the original image first
-        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-        
-        // Draw callouts if available
-        try {
-          if (Array.isArray(callouts) && callouts.length > 0) {
-            renderCallouts(ctx, callouts, canvas.width, canvas.height, 0);
-          }
-        } catch (calloutError) {
-          console.error("Error rendering callouts:", calloutError);
-        }
-        
-        // Create a new canvas for the final image with shadow and rounded corners
-        const shadowOffset = 8; // How much the shadow is offset Y (increased)
-        const shadowBlurAmount = 12; // How much blur for the shadow (increased)
-        const padding = shadowBlurAmount + shadowOffset; // Padding around the image for shadow and blur
-        const borderRadius = 8; // Radius for the image corners
+        // Minimal shadow and rounded corners with very little padding
+        const shadowOffset = 3; // Reduced shadow offset
+        const shadowBlurAmount = 6; // Reduced shadow blur
+        const padding = 4; // Minimal padding - just enough for shadow
+        const borderRadius = 8; // Keep nice rounded corners
 
         const paddedCanvas = document.createElement('canvas');
         paddedCanvas.width = canvas.width + padding * 2;
@@ -113,10 +99,18 @@ export async function createImageWithStyling(imageUrl: string, callouts: any[] =
           throw new Error("Failed to get padded canvas context");
         }
 
-        // Draw the shadow by first drawing a rounded rectangle that will cast the shadow
+        // Create modern styling with shadow effect
         paddedCtx.save();
+        
+        // Draw subtle shadow
+        paddedCtx.shadowColor = 'rgba(0, 0, 0, 0.15)'; // Much lighter shadow
+        paddedCtx.shadowBlur = shadowBlurAmount;
+        paddedCtx.shadowOffsetX = 0;
+        paddedCtx.shadowOffsetY = shadowOffset;
+        
+        // Draw rounded rectangle background for shadow
         paddedCtx.beginPath();
-        paddedCtx.moveTo(padding + borderRadius, padding); // Start path for rounded rect
+        paddedCtx.moveTo(padding + borderRadius, padding);
         paddedCtx.lineTo(padding + canvas.width - borderRadius, padding);
         paddedCtx.arcTo(padding + canvas.width, padding, padding + canvas.width, padding + borderRadius, borderRadius);
         paddedCtx.lineTo(padding + canvas.width, padding + canvas.height - borderRadius);
@@ -126,19 +120,14 @@ export async function createImageWithStyling(imageUrl: string, callouts: any[] =
         paddedCtx.lineTo(padding, padding + borderRadius);
         paddedCtx.arcTo(padding, padding, padding + borderRadius, padding, borderRadius);
         paddedCtx.closePath();
-
-        paddedCtx.shadowColor = 'rgba(0, 0, 0, 0.45)'; // Darker shadow
-        paddedCtx.shadowBlur = shadowBlurAmount;
-        paddedCtx.shadowOffsetX = 0;
-        paddedCtx.shadowOffsetY = shadowOffset;
-        paddedCtx.fillStyle = 'rgba(255,255,255,1)'; // Temporary fill for the shape that casts shadow
-        paddedCtx.fill(); // This fill casts the shadow
-        paddedCtx.restore(); // Restore to state before shadow drawing
+        paddedCtx.fillStyle = 'white';
+        paddedCtx.fill();
         
-        // Now, clip to the rounded rectangle area and draw the actual image (canvas)
-        // The clipping path is the same as the one used for the shadow caster
+        paddedCtx.restore();
+        
+        // Now clip to rounded rectangle and draw the actual image
         paddedCtx.save();
-        paddedCtx.beginPath(); // Re-define path for clipping
+        paddedCtx.beginPath();
         paddedCtx.moveTo(padding + borderRadius, padding);
         paddedCtx.lineTo(padding + canvas.width - borderRadius, padding);
         paddedCtx.arcTo(padding + canvas.width, padding, padding + canvas.width, padding + borderRadius, borderRadius);
@@ -151,9 +140,19 @@ export async function createImageWithStyling(imageUrl: string, callouts: any[] =
         paddedCtx.closePath();
         paddedCtx.clip();
         
-        // Draw the original image (from the first canvas, which includes callouts) into the clipped rounded area
-        paddedCtx.drawImage(canvas, padding, padding, canvas.width, canvas.height);
-        paddedCtx.restore(); // Remove clipping path for any future drawings on this context (if any)
+        // Draw the original image
+        paddedCtx.drawImage(img, padding, padding, canvas.width, canvas.height);
+        
+        // Draw callouts if available (after clipping so they appear on the image)
+        try {
+          if (Array.isArray(callouts) && callouts.length > 0) {
+            renderCallouts(paddedCtx, callouts, canvas.width, canvas.height, padding);
+          }
+        } catch (calloutError) {
+          console.error("Error rendering callouts:", calloutError);
+        }
+        
+        paddedCtx.restore();
         
         // Return the final image
         try {
