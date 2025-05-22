@@ -1,6 +1,13 @@
 
 import React, { useState, useRef } from "react";
-import ReactCrop, { Crop, PercentCrop, centerCrop, makeAspectCrop } from "react-image-crop";
+import ReactCrop, { 
+  Crop, 
+  PixelCrop, 
+  PercentCrop, 
+  centerCrop, 
+  makeAspectCrop,
+  convertToPercentCrop 
+} from "react-image-crop";
 import "react-image-crop/dist/ReactCrop.css";
 import {
   Dialog,
@@ -139,10 +146,12 @@ const CropDialog: React.FC<CropDialogProps> = ({
           <ReactCrop
             crop={crop}
             onChange={(c) => setCrop(c)}
-            onComplete={(c) => {
-              // Ensure we're setting a PercentCrop by checking if unit is "%"
-              if (c.unit === "%") {
-                setCompletedCrop(c);
+            onComplete={(pixelCrop: PixelCrop) => {
+              // Convert PixelCrop to PercentCrop
+              if (imageRef.current) {
+                const { width, height } = imageRef.current;
+                const percentCrop = convertToPercentCrop(pixelCrop, width, height);
+                setCompletedCrop(percentCrop);
               }
             }}
             aspect={aspect}
