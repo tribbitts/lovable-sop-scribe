@@ -18,15 +18,16 @@ export async function prepareScreenshotImage(dataUrl: string, quality: number): 
       throw new Error("Invalid data URL format");
     }
     
-    // Check if image is already in JPEG format to avoid double compression
+    // Skip compression for JPEG images to preserve quality
     if (dataUrl.startsWith('data:image/jpeg')) {
       return dataUrl; // Return as-is if already JPEG
     }
     
+    // Use higher quality compression
     return await compressImage(dataUrl, quality);
   } catch (error) {
     console.error("Error preparing screenshot image:", error);
-    throw error; // Re-throw for proper error handling upstream
+    throw error;
   }
 }
 
@@ -40,7 +41,6 @@ export async function createImageWithStyling(imageUrl: string, callouts: any[] =
     throw new Error("Invalid image URL");
   }
   
-  // Validate data URL format
   if (!imageUrl.startsWith('data:')) {
     console.error("Invalid data URL format:", imageUrl.substring(0, 20) + "...");
     throw new Error("Invalid data URL format");
@@ -59,7 +59,6 @@ export async function createImageWithStyling(imageUrl: string, callouts: any[] =
     // Create image element to load the screenshot
     const img = new Image();
     
-    // Set error handler first
     img.onerror = (error) => {
       console.error("Error loading image:", error);
       reject(new Error("Failed to load image"));
@@ -75,8 +74,8 @@ export async function createImageWithStyling(imageUrl: string, callouts: any[] =
         }
         
         // Set canvas dimensions to match the image
-        canvas.width = img.width || 800; // Fallback width if image dimensions are 0
-        canvas.height = img.height || 600; // Fallback height
+        canvas.width = img.width || 800;
+        canvas.height = img.height || 600;
         
         if (canvas.width <= 0 || canvas.height <= 0) {
           console.error("Invalid canvas dimensions:", canvas.width, canvas.height);
@@ -88,8 +87,8 @@ export async function createImageWithStyling(imageUrl: string, callouts: any[] =
         // Create modern styling with rounded corners
         ctx.save();
         
-        const cornerRadius = 8; // Reduced corner radius for more compact look
-        const paddingSize = 10; // Reduced padding for more compact images
+        const cornerRadius = 6; // Reduced corner radius for more compact look
+        const paddingSize = 8; // Reduced padding for more compact images
         
         // Expand canvas for padding
         const paddedWidth = canvas.width + (paddingSize * 2);
@@ -124,9 +123,9 @@ export async function createImageWithStyling(imageUrl: string, callouts: any[] =
         paddedCtx.closePath();
         paddedCtx.fill();
         
-        // Add Apple-style soft shadow (reduced shadow for more compact layout)
+        // Add subtle shadow
         paddedCtx.shadowColor = 'rgba(0, 0, 0, 0.08)';
-        paddedCtx.shadowBlur = 6;
+        paddedCtx.shadowBlur = 4;
         paddedCtx.shadowOffsetX = 0;
         paddedCtx.shadowOffsetY = 1;
         
@@ -168,12 +167,12 @@ export async function createImageWithStyling(imageUrl: string, callouts: any[] =
           }
         } catch (calloutError) {
           console.error("Error rendering callouts:", calloutError);
-          // Continue without callouts
         }
         
         // Return the padded canvas with rounded corners
         try {
-          const imgData = paddedCanvas.toDataURL('image/jpeg', 0.95);
+          // Use higher quality JPEG output (0.98 instead of 0.95)
+          const imgData = paddedCanvas.toDataURL('image/jpeg', 0.98);
           resolve({ 
             imageData: imgData, 
             aspectRatio: aspectRatio 
