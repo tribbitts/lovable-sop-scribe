@@ -97,6 +97,11 @@ export async function addScreenshot(
           imgHeight
         );
         console.log(`[addScreenshot] Step ${stepIndex + 1}: pdf.addImage() successful.`);
+
+        // Add border around the screenshot
+        pdf.setDrawColor(200, 200, 200); // Light grey border #C8C8C8
+        pdf.rect(imageX, currentY, imgWidth, imgHeight, 'S'); // 'S' for stroke
+
         imageId = `step_${stepIndex}_main`;
         
         // Advance Y position
@@ -152,6 +157,10 @@ export async function addScreenshot(
             secondaryImgWidth, 
             secondaryImgHeight
           );
+          // Add border around the secondary screenshot
+          pdf.setDrawColor(200, 200, 200); // Light grey border
+          pdf.rect(secondaryImageX, secondaryCurrentY, secondaryImgWidth, secondaryImgHeight, 'S');
+
           console.log(`[addScreenshot] Step ${stepIndex + 1}: Secondary image added successfully.`);
           
           secondaryCurrentY += secondaryImgHeight + 15;
