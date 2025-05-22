@@ -44,6 +44,10 @@ const StepEditor: React.FC<StepEditorProps> = ({ step, index }) => {
     }
   };
 
+  const handleUpdateScreenshot = (dataUrl: string) => {
+    setStepScreenshot(step.id, dataUrl);
+  };
+
   const handleScreenshotMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!isEditingCallouts || !e.currentTarget) return;
 
@@ -178,6 +182,7 @@ const StepEditor: React.FC<StepEditorProps> = ({ step, index }) => {
                   handleScreenshotMouseMove={handleScreenshotMouseMove}
                   handleScreenshotMouseEnter={handleScreenshotMouseEnter}
                   handleScreenshotMouseLeave={handleScreenshotMouseLeave}
+                  onUpdateScreenshot={handleUpdateScreenshot}
                 />
               </div>
             )}

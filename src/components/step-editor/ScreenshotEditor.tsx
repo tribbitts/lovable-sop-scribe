@@ -1,8 +1,10 @@
 
-import React, { useRef } from "react";
+import React, { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Callout } from "@/types/sop";
+import { Crop } from "lucide-react";
+import CropDialog from "./CropDialog";
 
 interface ScreenshotEditorProps {
   stepId: string;
@@ -20,6 +22,7 @@ interface ScreenshotEditorProps {
   handleScreenshotMouseMove: (e: React.MouseEvent<HTMLDivElement>) => void;
   handleScreenshotMouseEnter: () => void;
   handleScreenshotMouseLeave: () => void;
+  onUpdateScreenshot: (dataUrl: string) => void;
 }
 
 const ScreenshotEditor: React.FC<ScreenshotEditorProps> = ({
@@ -35,12 +38,23 @@ const ScreenshotEditor: React.FC<ScreenshotEditorProps> = ({
   handleScreenshotMouseMove,
   handleScreenshotMouseEnter,
   handleScreenshotMouseLeave,
+  onUpdateScreenshot,
 }) => {
   const screenshotRef = useRef<HTMLDivElement>(null);
+  const [isCropDialogOpen, setIsCropDialogOpen] = useState(false);
 
   return (
     <div className="relative">
       <div className="absolute right-3 top-3 z-10 flex gap-2">
+        <Button
+          size="sm"
+          variant="outline"
+          className="bg-zinc-800/80 backdrop-blur-sm border-zinc-700 text-zinc-300 hover:bg-zinc-700 flex items-center gap-1"
+          onClick={() => setIsCropDialogOpen(true)}
+        >
+          <Crop className="h-4 w-4" />
+          Crop
+        </Button>
         <Button
           size="sm"
           variant="outline"
@@ -124,6 +138,13 @@ const ScreenshotEditor: React.FC<ScreenshotEditorProps> = ({
           </div>
         )}
       </div>
+      
+      <CropDialog
+        open={isCropDialogOpen}
+        onOpenChange={setIsCropDialogOpen}
+        imageUrl={screenshot.dataUrl}
+        onCropComplete={onUpdateScreenshot}
+      />
     </div>
   );
 };
