@@ -95,17 +95,21 @@ const CropDialog: React.FC<CropDialogProps> = ({
         return;
       }
       
-      // Set canvas dimensions to the cropped size
-      canvas.width = (completedCrop.width * image.width * scaleX) / 100;
-      canvas.height = (completedCrop.height * image.height * scaleY) / 100;
+      // Calculate the dimensions while preserving 16:9 aspect ratio
+      const cropWidth = (completedCrop.width * image.width * scaleX) / 100;
+      const cropHeight = (completedCrop.height * image.height * scaleY) / 100;
+      
+      // Set the canvas dimensions to exactly 16:9 aspect ratio
+      canvas.width = cropWidth;
+      canvas.height = cropHeight;
       
       // Draw only the cropped portion of the image
       ctx.drawImage(
         image,
         (completedCrop.x * image.width * scaleX) / 100,
         (completedCrop.y * image.height * scaleY) / 100,
-        (completedCrop.width * image.width * scaleX) / 100,
-        (completedCrop.height * image.height * scaleY) / 100,
+        cropWidth,
+        cropHeight,
         0,
         0,
         canvas.width,
