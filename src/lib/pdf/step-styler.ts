@@ -16,6 +16,9 @@ export function styleStep(
   const stepNumber = index + 1;
   const contentWidth = width - margin.left - margin.right;
   
+  // Set the header height to be more compact - 10px tall instead of previous height
+  const headerHeight = 8; // Reduced height for more compact look
+  
   // Blue 10%, White 90% gradient background for the step header
   // First, create the blue section (10% of width)
   const blueWidth = contentWidth * 0.1;
@@ -24,7 +27,7 @@ export function styleStep(
     margin.left, 
     currentY, 
     blueWidth, 
-    10, // Height of the header
+    headerHeight,
     'F'
   );
   
@@ -34,7 +37,7 @@ export function styleStep(
     margin.left + blueWidth, 
     currentY, 
     contentWidth - blueWidth, 
-    10, // Height of the header
+    headerHeight,
     'F'
   );
   
@@ -46,11 +49,8 @@ export function styleStep(
   pdf.text(
     stepText, 
     margin.left + 4, // Centered in blue section
-    currentY + 6.5 // Vertically centered
+    currentY + headerHeight/2 + 3 // Vertically centered
   );
-  
-  // Calculate the width of the step text
-  const stepTextWidth = pdf.getStringUnitWidth(stepText) * 9 / pdf.internal.scaleFactor;
   
   // Add the step description in the white section with black text
   pdf.setFont("helvetica", "normal");
@@ -59,7 +59,7 @@ export function styleStep(
   
   // Position the description text in the white section
   const descriptionX = margin.left + blueWidth + 5; // Add padding from blue section
-  const descriptionY = currentY + 6.5; // Same vertical alignment as step number
+  const descriptionY = currentY + headerHeight/2 + 3; // Same vertical alignment as step number
   const availableWidth = contentWidth - blueWidth - 10; // Adjusted width for description
   
   // Only add the first line of description in the header
@@ -71,5 +71,5 @@ export function styleStep(
   pdf.text(descriptionFirstLine, descriptionX, descriptionY);
   
   // Return the Y position after the header
-  return currentY + 12; // Small spacing after header
+  return currentY + headerHeight + 4; // Small spacing after header
 }

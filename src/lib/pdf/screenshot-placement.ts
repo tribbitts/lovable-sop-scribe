@@ -4,7 +4,7 @@ import { prepareScreenshotImage, createImageWithStyling } from "./image-processo
 
 /**
  * Adds screenshots with callouts to the PDF
- * Handles up to 2 images per step with consistent sizing
+ * Handles one image per page with consistent sizing
  */
 export async function addScreenshot(
   pdf: any, 
@@ -38,27 +38,22 @@ export async function addScreenshot(
       // Preprocess the image with higher quality setting
       const mainImage = await prepareScreenshotImage(step.screenshot.dataUrl, 0.95);
       
+      // Always start a new page for each screenshot
+      // Exception: if we're already at the top of a page and it's the first screenshot
+      const isAtTopOfPage = currentY <= margin.top + 5;
+      if (!isAtTopOfPage) {
+        pdf.addPage();
+        addContentPageDesign(pdf, width, height, margin, null); // Add design to the new page
+        currentY = margin.top;
+      }
+      
       // Check if there's a second image
       const hasSecondImage = step.screenshot.secondaryDataUrl !== undefined && 
                            step.screenshot.secondaryDataUrl !== null &&
                            step.screenshot.secondaryDataUrl.startsWith('data:');
       
-      // Always use side-by-side layout when there are two images
-      const layout = hasSecondImage ? 'side-by-side' : 'stacked';
-      
-      // Calculate image dimensions for better page utilization
-      let imgWidth, imgHeight, secondaryImgWidth, secondaryImgHeight;
-      
-      // Adjust image sizes to ensure two screenshots can fit per page
-      if (layout === 'side-by-side' && hasSecondImage) {
-        // Two images side by side - each takes ~45% of content width with spacing
-        imgWidth = (contentWidth * 0.45);
-      } else {
-        // Single image - takes up to 70% of content width
-        imgWidth = contentWidth * 0.7;
-      }
-      
-      secondaryImgWidth = imgWidth;
+      // Calculate image dimensions for optimal page utilization
+      const maxImageWidth = contentWidth * 0.8; // Use 80% of content width
       
       console.log(`Creating main image with styling for step ${stepIndex + 1}`);
       // Create first image with improved quality
@@ -69,21 +64,20 @@ export async function addScreenshot(
         throw new Error(`Failed to process main image for step ${stepIndex + 1}`);
       }
       
-      // Calculate heights based on aspect ratio
-      imgHeight = imgWidth / mainAspectRatio;
+      // Calculate dimensions while preserving aspect ratio and limiting width
+      let imgWidth = maxImageWidth;
+      let imgHeight = imgWidth / mainAspectRatio;
       
-      // Check if the image height would exceed the remaining page space
-      const remainingSpace = height - currentY - margin.bottom;
-      if (imgHeight > remainingSpace * 0.9) {
-        // If image is too tall, reduce height to fit 90% of remaining space
-        imgHeight = remainingSpace * 0.9;
+      // Check if the image is too tall for the page
+      const maxAvailableHeight = height - currentY - margin.bottom - 20; // 20px buffer
+      if (imgHeight > maxAvailableHeight) {
+        // Scale down to fit available height
+        imgHeight = maxAvailableHeight;
         imgWidth = imgHeight * mainAspectRatio;
       }
       
-      // Center the image horizontally, unless side-by-side
-      const firstImageX = layout === 'side-by-side' && hasSecondImage
-        ? margin.left
-        : (width - imgWidth) / 2;
+      // Center the image horizontally
+      const firstImageX = (width - imgWidth) / 2;
       
       // Add the main image to PDF with error handling
       try {
@@ -96,15 +90,23 @@ export async function addScreenshot(
           imgWidth, 
           imgHeight
         );
+        
+        // Move Y position below the first image
+        currentY += imgHeight + 15;
       } catch (imageError) {
         console.error(`Error adding main image to PDF for step ${stepIndex + 1}:`, imageError);
         return currentY + 10;
       }
       
-      // If there's a secondary image, add it
+      // If there's a secondary image, add it on a new page
       if (hasSecondImage && step.screenshot.secondaryDataUrl) {
         try {
           console.log(`Processing secondary image for step ${stepIndex + 1}`);
+          // Always add a new page for the secondary image
+          pdf.addPage();
+          addContentPageDesign(pdf, width, height, margin, null);
+          currentY = margin.top;
+          
           // Use higher quality for secondary image too
           const secondaryImage = await prepareScreenshotImage(step.screenshot.secondaryDataUrl, 0.95);
           
@@ -115,63 +117,37 @@ export async function addScreenshot(
             throw new Error(`Failed to process secondary image for step ${stepIndex + 1}`);
           }
           
-          // For side-by-side layout, ensure both images have the same height
-          if (layout === 'side-by-side') {
-            // Calculate dimensions that maintain aspect ratio
-            secondaryImgHeight = imgHeight;
+          // Calculate dimensions for secondary image
+          let secondaryImgWidth = maxImageWidth;
+          let secondaryImgHeight = secondaryImgWidth / secondaryAspectRatio;
+          
+          // Check if the image is too tall for the page
+          if (secondaryImgHeight > maxAvailableHeight) {
+            // Scale down to fit available height
+            secondaryImgHeight = maxAvailableHeight;
             secondaryImgWidth = secondaryImgHeight * secondaryAspectRatio;
-            
-            // If secondary image is too wide, adjust both images to fit page width
-            if (firstImageX + imgWidth + secondaryImgWidth + 10 > width - margin.right) {
-              const availableWidth = contentWidth - 10; // 10px spacing
-              const totalWidthRatio = imgWidth / mainAspectRatio + secondaryImgWidth / secondaryAspectRatio;
-              
-              // Recalculate heights and widths proportionally
-              const newHeight = availableWidth / totalWidthRatio;
-              imgHeight = newHeight;
-              imgWidth = imgHeight * mainAspectRatio;
-              secondaryImgHeight = newHeight;
-              secondaryImgWidth = secondaryImgHeight * secondaryAspectRatio;
-            }
-            
-            // Add second image next to the first
-            console.log(`Adding secondary image side-by-side for step ${stepIndex + 1}`);
-            pdf.addImage(
-              secondaryImageData,
-              'JPEG',
-              firstImageX + imgWidth + 10, // 10px spacing
-              currentY,
-              secondaryImgWidth,
-              secondaryImgHeight
-            );
-            
-            // Move Y position below both images
-            currentY += Math.max(imgHeight, secondaryImgHeight) + 10;
-          } else {
-            // Stacked layout - add second image below first
-            secondaryImgHeight = secondaryImgWidth / secondaryAspectRatio;
-            
-            // Add the second image below the first
-            console.log(`Adding secondary image stacked for step ${stepIndex + 1}`);
-            pdf.addImage(
-              secondaryImageData,
-              'JPEG',
-              (width - secondaryImgWidth) / 2,
-              currentY + imgHeight + 10, // 10px spacing between images
-              secondaryImgWidth,
-              secondaryImgHeight
-            );
-            
-            // Move Y position below both images
-            currentY += imgHeight + secondaryImgHeight + 15;
           }
+          
+          // Center the image horizontally
+          const secondaryImageX = (width - secondaryImgWidth) / 2;
+          
+          // Add the secondary image to PDF
+          console.log(`Adding secondary image to PDF for step ${stepIndex + 1}`);
+          pdf.addImage(
+            secondaryImageData, 
+            'JPEG', 
+            secondaryImageX, 
+            currentY, 
+            secondaryImgWidth, 
+            secondaryImgHeight
+          );
+          
+          // Move Y position below the secondary image
+          currentY += secondaryImgHeight + 15;
         } catch (secondaryImgError) {
           console.error(`Error processing secondary image for step ${stepIndex + 1}:`, secondaryImgError);
-          currentY += imgHeight + 10;
+          // Continue with next step even if secondary image fails
         }
-      } else {
-        // Only one image, move Y below it
-        currentY += imgHeight + 15;
       }
       
     } catch (mainImgError) {

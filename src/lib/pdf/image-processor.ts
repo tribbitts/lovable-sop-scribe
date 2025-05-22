@@ -87,17 +87,18 @@ export async function createImageWithStyling(imageUrl: string, callouts: any[] =
         // Create modern styling with rounded corners
         ctx.save();
         
-        const cornerRadius = 6; // Reduced corner radius for more compact look
-        const paddingSize = 8; // Reduced padding for more compact images
+        const cornerRadius = 8; // Slightly larger corner radius
+        const paddingSize = 12; // Increased padding for shadow effect
+        const shadowBlur = 10; // Shadow blur size
         
-        // Expand canvas for padding
+        // Expand canvas for padding and shadow
         const paddedWidth = canvas.width + (paddingSize * 2);
         const paddedHeight = canvas.height + (paddingSize * 2);
         
         // Create a new canvas with padding
         const paddedCanvas = document.createElement('canvas');
-        paddedCanvas.width = paddedWidth;
-        paddedCanvas.height = paddedHeight;
+        paddedCanvas.width = paddedWidth + shadowBlur * 2;
+        paddedCanvas.height = paddedHeight + shadowBlur * 2;
         const paddedCtx = paddedCanvas.getContext('2d');
         
         if (!paddedCtx) {
@@ -106,41 +107,25 @@ export async function createImageWithStyling(imageUrl: string, callouts: any[] =
         
         // Draw white background
         paddedCtx.fillStyle = '#FFFFFF';
-        paddedCtx.fillRect(0, 0, paddedWidth, paddedHeight);
+        paddedCtx.fillRect(0, 0, paddedCanvas.width, paddedCanvas.height);
         
-        // Draw rounded rectangle for the background
+        // Set up shadow
+        paddedCtx.shadowColor = 'rgba(0, 0, 0, 0.3)';
+        paddedCtx.shadowBlur = shadowBlur;
+        paddedCtx.shadowOffsetX = 0;
+        paddedCtx.shadowOffsetY = 4;
+        
+        // Draw rounded rectangle for the image background (with shadow)
         paddedCtx.fillStyle = '#FFFFFF';
         paddedCtx.beginPath();
-        paddedCtx.moveTo(cornerRadius, 0);
-        paddedCtx.lineTo(paddedWidth - cornerRadius, 0);
-        paddedCtx.quadraticCurveTo(paddedWidth, 0, paddedWidth, cornerRadius);
-        paddedCtx.lineTo(paddedWidth, paddedHeight - cornerRadius);
-        paddedCtx.quadraticCurveTo(paddedWidth, paddedHeight, paddedWidth - cornerRadius, paddedHeight);
-        paddedCtx.lineTo(cornerRadius, paddedHeight);
-        paddedCtx.quadraticCurveTo(0, paddedHeight, 0, paddedHeight - cornerRadius);
-        paddedCtx.lineTo(0, cornerRadius);
-        paddedCtx.quadraticCurveTo(0, 0, cornerRadius, 0);
-        paddedCtx.closePath();
+        paddedCtx.roundRect(
+          shadowBlur + paddingSize/2, 
+          shadowBlur + paddingSize/2, 
+          canvas.width + paddingSize, 
+          canvas.height + paddingSize, 
+          cornerRadius
+        );
         paddedCtx.fill();
-        
-        // Add subtle shadow
-        paddedCtx.shadowColor = 'rgba(0, 0, 0, 0.08)';
-        paddedCtx.shadowBlur = 4;
-        paddedCtx.shadowOffsetX = 0;
-        paddedCtx.shadowOffsetY = 1;
-        
-        // Create rounded rectangle for the image
-        paddedCtx.beginPath();
-        paddedCtx.moveTo(paddingSize + cornerRadius, paddingSize);
-        paddedCtx.lineTo(paddingSize + canvas.width - cornerRadius, paddingSize);
-        paddedCtx.arcTo(paddingSize + canvas.width, paddingSize, paddingSize + canvas.width, paddingSize + cornerRadius, cornerRadius);
-        paddedCtx.lineTo(paddingSize + canvas.width, paddingSize + canvas.height - cornerRadius);
-        paddedCtx.arcTo(paddingSize + canvas.width, paddingSize + canvas.height, paddingSize + canvas.width - cornerRadius, paddingSize + canvas.height, cornerRadius);
-        paddedCtx.lineTo(paddingSize + cornerRadius, paddingSize + canvas.height);
-        paddedCtx.arcTo(paddingSize, paddingSize + canvas.height, paddingSize, paddingSize + canvas.height - cornerRadius, cornerRadius);
-        paddedCtx.lineTo(paddingSize, paddingSize + cornerRadius);
-        paddedCtx.arcTo(paddingSize, paddingSize, paddingSize + cornerRadius, paddingSize, cornerRadius);
-        paddedCtx.closePath();
         
         // Reset shadow for the image itself
         paddedCtx.shadowColor = 'transparent';
@@ -148,11 +133,26 @@ export async function createImageWithStyling(imageUrl: string, callouts: any[] =
         paddedCtx.shadowOffsetX = 0;
         paddedCtx.shadowOffsetY = 0;
         
-        // Draw the image within the rounded rectangle area
+        // Create clipping path for rounded image
+        paddedCtx.beginPath();
+        paddedCtx.roundRect(
+          shadowBlur + paddingSize, 
+          shadowBlur + paddingSize, 
+          canvas.width, 
+          canvas.height, 
+          cornerRadius - 2 // Slightly smaller corner radius for the image
+        );
         paddedCtx.clip();
         
         try {
-          paddedCtx.drawImage(img, paddingSize, paddingSize, canvas.width, canvas.height);
+          // Draw the image with proper positioning
+          paddedCtx.drawImage(
+            img, 
+            shadowBlur + paddingSize, 
+            shadowBlur + paddingSize, 
+            canvas.width, 
+            canvas.height
+          );
         } catch (drawError) {
           console.error("Error drawing image on canvas:", drawError);
           throw drawError;
@@ -163,13 +163,19 @@ export async function createImageWithStyling(imageUrl: string, callouts: any[] =
         // Draw the callouts with error handling
         try {
           if (Array.isArray(callouts) && callouts.length > 0) {
-            renderCallouts(paddedCtx, callouts, canvas.width, canvas.height, paddingSize);
+            renderCallouts(
+              paddedCtx, 
+              callouts, 
+              canvas.width, 
+              canvas.height, 
+              shadowBlur + paddingSize
+            );
           }
         } catch (calloutError) {
           console.error("Error rendering callouts:", calloutError);
         }
         
-        // Return the padded canvas with rounded corners
+        // Return the padded canvas with shadow and rounded corners
         try {
           // Use higher quality JPEG output (0.98 instead of 0.95)
           const imgData = paddedCanvas.toDataURL('image/jpeg', 0.98);
