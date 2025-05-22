@@ -7,6 +7,9 @@ import { toast } from "@/hooks/use-toast";
 import { generatePDF } from "@/lib/pdf-generator";
 import { createPdfUsageRecord } from "@/lib/supabase";
 
+/**
+ * Custom hook for PDF export functionality
+ */
 export function usePdfExport() {
   const { user } = useAuth();
   const { canGeneratePdf, incrementPdfCount, refreshSubscription } = useSubscription();
@@ -17,32 +20,45 @@ export function usePdfExport() {
   const [exportError, setExportError] = useState<string | null>(null);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   
+  /**
+   * Validates SOP document before export
+   */
   const validateDocument = (sopDocument: SopDocument): boolean => {
+    if (!validateTitle(sopDocument)) return false;
+    if (!validateTopic(sopDocument)) return false;
+    if (!validateSteps(sopDocument)) return false;
+    return true;
+  };
+  
+  /**
+   * Validates document title
+   */
+  const validateTitle = (sopDocument: SopDocument): boolean => {
     if (!sopDocument.title) {
-      toast({
-        title: "SOP Title Required",
-        description: "Please provide a title for your SOP document.",
-        variant: "destructive"
-      });
+      showValidationError("SOP Title Required", "Please provide a title for your SOP document.");
       return false;
     }
-
+    return true;
+  };
+  
+  /**
+   * Validates document topic
+   */
+  const validateTopic = (sopDocument: SopDocument): boolean => {
     if (!sopDocument.topic) {
-      toast({
-        title: "Topic Required",
-        description: "Please provide a topic for your SOP document.",
-        variant: "destructive"
-      });
+      showValidationError("Topic Required", "Please provide a topic for your SOP document.");
       return false;
     }
-
+    return true;
+  };
+  
+  /**
+   * Validates steps content
+   */
+  const validateSteps = (sopDocument: SopDocument): boolean => {
     // Validate that at least one step exists
     if (sopDocument.steps.length === 0) {
-      toast({
-        title: "No Steps Found",
-        description: "Please add at least one step to your SOP document.",
-        variant: "destructive"
-      });
+      showValidationError("No Steps Found", "Please add at least one step to your SOP document.");
       return false;
     }
 
@@ -50,26 +66,39 @@ export function usePdfExport() {
     for (let i = 0; i < sopDocument.steps.length; i++) {
       const step = sopDocument.steps[i];
       if (!step.description) {
-        toast({
-          title: "Step Description Required",
-          description: `Please provide a description for step ${i + 1}.`,
-          variant: "destructive"
-        });
+        showValidationError(
+          "Step Description Required", 
+          `Please provide a description for step ${i + 1}.`
+        );
         return false;
       }
     }
-
+    
     return true;
   };
-
-  const handleExport = async (sopDocument: SopDocument) => {
+  
+  /**
+   * Shows validation error toast
+   */
+  const showValidationError = (title: string, description: string) => {
+    toast({
+      title,
+      description,
+      variant: "destructive"
+    });
+  };
+  
+  /**
+   * Checks if user can export PDF
+   */
+  const checkUserPermissions = (): boolean => {
     if (!user) {
       toast({
         title: "Authentication Required",
         description: "Please sign in to export PDFs.",
         variant: "destructive"
       });
-      return;
+      return false;
     }
 
     if (!canGeneratePdf) {
@@ -78,9 +107,56 @@ export function usePdfExport() {
         description: "You've reached your daily PDF export limit. Upgrade to Pro for unlimited exports.",
         variant: "destructive"
       });
-      return;
+      return false;
     }
-
+    
+    return true;
+  };
+  
+  /**
+   * Records PDF usage in database
+   */
+  const recordPdfUsage = async () => {
+    if (user) {
+      try {
+        await createPdfUsageRecord(user.id);
+        incrementPdfCount();
+        await refreshSubscription();
+      } catch (err) {
+        console.error("Error recording PDF usage:", err);
+        // Continue even if usage recording fails
+      }
+    }
+  };
+  
+  /**
+   * Sets up progress tracking via console.log
+   */
+  const setupProgressTracking = () => {
+    const originalConsoleLog = console.log;
+    console.log = (message, ...args) => {
+      originalConsoleLog(message, ...args);
+      if (typeof message === 'string') {
+        if (message.includes("Creating cover page")) {
+          setExportProgress("Creating cover page...");
+        } else if (message.includes("Rendering")) {
+          setExportProgress("Rendering steps...");
+        } else if (message.includes("Steps rendered")) {
+          setExportProgress("Finalizing document...");
+        }
+      }
+    };
+    
+    return originalConsoleLog;
+  };
+  
+  /**
+   * Handles PDF export
+   */
+  const handleExport = async (sopDocument: SopDocument) => {
+    // Check permissions before starting
+    if (!checkUserPermissions()) return;
+    
     // Clear previous errors and progress
     setExportError(null);
     setExportProgress(null);
@@ -100,19 +176,7 @@ export function usePdfExport() {
       console.log("Starting PDF export");
       
       // Track progress with console logs
-      const originalConsoleLog = console.log;
-      console.log = (message, ...args) => {
-        originalConsoleLog(message, ...args);
-        if (typeof message === 'string') {
-          if (message.includes("Creating cover page")) {
-            setExportProgress("Creating cover page...");
-          } else if (message.includes("Rendering")) {
-            setExportProgress("Rendering steps...");
-          } else if (message.includes("Steps rendered")) {
-            setExportProgress("Finalizing document...");
-          }
-        }
-      };
+      const originalConsoleLog = setupProgressTracking();
       
       const pdfDataUrl = await generatePDF(sopDocument);
       
@@ -126,16 +190,7 @@ export function usePdfExport() {
       setExportProgress("Recording usage...");
       
       // Record PDF usage in database
-      if (user) {
-        try {
-          await createPdfUsageRecord(user.id);
-          incrementPdfCount();
-          await refreshSubscription();
-        } catch (err) {
-          console.error("Error recording PDF usage:", err);
-          // Continue even if usage recording fails
-        }
-      }
+      await recordPdfUsage();
       
       setExportProgress(null);
       toast({
@@ -143,21 +198,16 @@ export function usePdfExport() {
         description: "Your SOP has been successfully generated and downloaded."
       });
     } catch (error) {
-      console.error("PDF generation error:", error);
-      setExportError(error instanceof Error ? error.message : "Unknown error");
-      toast({
-        title: "Error",
-        description: error instanceof Error 
-          ? `Failed to generate PDF: ${error.message}` 
-          : "Failed to generate PDF. Check console for details.",
-        variant: "destructive"
-      });
+      handleExportError(error);
     } finally {
       setIsExporting(false);
       setExportProgress(null);
     }
   };
-
+  
+  /**
+   * Handles PDF preview generation
+   */
   const handlePreview = async (sopDocument: SopDocument) => {
     if (!sopDocument.title || !sopDocument.topic) {
       toast({
@@ -183,20 +233,8 @@ export function usePdfExport() {
       setIsExporting(true);
       setExportProgress("Preparing preview...");
       
-      // Track progress with console logs for preview too
-      const originalConsoleLog = console.log;
-      console.log = (message, ...args) => {
-        originalConsoleLog(message, ...args);
-        if (typeof message === 'string') {
-          if (message.includes("Creating cover page")) {
-            setExportProgress("Creating cover page...");
-          } else if (message.includes("Rendering")) {
-            setExportProgress("Rendering steps...");
-          } else if (message.includes("Steps rendered")) {
-            setExportProgress("Finalizing preview...");
-          }
-        }
-      };
+      // Track progress with console logs
+      const originalConsoleLog = setupProgressTracking();
       
       // Generate PDF and get base64 data URL
       const pdfDataUrl = await generatePDF(sopDocument);
@@ -218,19 +256,26 @@ export function usePdfExport() {
         description: "PDF preview has been generated."
       });
     } catch (error) {
-      console.error("PDF preview error:", error);
-      setExportError(error instanceof Error ? error.message : "Unknown error");
-      toast({
-        title: "Error",
-        description: error instanceof Error 
-          ? `Failed to generate PDF preview: ${error.message}` 
-          : "Failed to generate PDF preview. Check console for details.",
-        variant: "destructive"
-      });
+      handleExportError(error, true);
     } finally {
       setIsExporting(false);
       setExportProgress(null);
     }
+  };
+  
+  /**
+   * Handles export errors
+   */
+  const handleExportError = (error: unknown, isPreview = false) => {
+    console.error(`PDF ${isPreview ? 'preview' : 'generation'} error:`, error);
+    setExportError(error instanceof Error ? error.message : "Unknown error");
+    toast({
+      title: "Error",
+      description: error instanceof Error 
+        ? `Failed to generate PDF ${isPreview ? 'preview' : ''}: ${error.message}` 
+        : `Failed to generate PDF ${isPreview ? 'preview' : ''}. Check console for details.`,
+      variant: "destructive"
+    });
   };
 
   return {
