@@ -1,4 +1,6 @@
 
+import { SopDocument } from "@/types/sop";
+
 export function addContentPageDesign(
   pdf: any, 
   width: number, 
