@@ -1,3 +1,4 @@
+
 import { SopStep } from "@/types/sop";
 import { prepareScreenshotImage, createImageWithStyling } from "./image-processor";
 
@@ -16,9 +17,9 @@ export async function addScreenshot(
   stepIndex: number,
   addContentPageDesign: Function,
   isFirstOrSecondPage: boolean = false,
-  imageLayoutMode: 'single' | 'firstOfPair' | 'secondOfPair' // Changed from stepCounterOnPage
-): Promise<{y: number, imageId: string | null}> { // Return Y and an ID for the image
-  let imageId = null; // Store a unique ID for the image if needed for positioning next one
+  imageLayoutMode: 'single' | 'firstOfPair' | 'secondOfPair' = 'single' 
+): Promise<{y: number, imageId: string | null}> { 
+  let imageId = null; 
   console.log(`[addScreenshot] Called for step ${stepIndex + 1} with mode: ${imageLayoutMode}, currentY: ${currentY}`);
   try {
     // Skip if no screenshot data
@@ -42,21 +43,13 @@ export async function addScreenshot(
       // Preprocess the image with higher quality setting
       const mainImage = await prepareScreenshotImage(step.screenshot.dataUrl, 0.95);
       
-      // Adjust image width based on number of screenshots on the page
-      const paddingBetweenImages = 5; // 5mm padding
-      let maxImageWidth;
-
-      if (imageLayoutMode === 'firstOfPair' || imageLayoutMode === 'secondOfPair') {
-        maxImageWidth = (contentWidth - paddingBetweenImages) / 2;
-      } else { // 'single'
-        maxImageWidth = contentWidth * 0.8; 
-      }
+      // Calculate maximum image width (80% of content width for single images)
+      const maxImageWidth = contentWidth * 0.8;
       
-      console.log(`[addScreenshot] Step ${stepIndex + 1}: imageLayoutMode = ${imageLayoutMode}, contentWidth = ${contentWidth}, paddingBetweenImages = ${paddingBetweenImages}`);
-      console.log(`[addScreenshot] Step ${stepIndex + 1}: Calculated maxImageWidth = ${maxImageWidth}`);
+      console.log(`[addScreenshot] Step ${stepIndex + 1}: maxImageWidth = ${maxImageWidth}`);
       
       console.log(`[addScreenshot] Creating main image with styling for step ${stepIndex + 1}`);
-      // Create first image with improved quality and shadow effect
+      // Create image with improved quality and shadow effect
       const { imageData: mainImageData, aspectRatio: mainAspectRatio } = 
         await createImageWithStyling(mainImage, step.screenshot.callouts);
       
@@ -78,15 +71,9 @@ export async function addScreenshot(
         console.log(`[addScreenshot] Step ${stepIndex + 1}: Scaled dimensions: imgWidth = ${imgWidth}, imgHeight = ${imgHeight}`);
       }
       
-      // Calculate X position
-      let imageX;
-      if (imageLayoutMode === 'firstOfPair') { 
-        imageX = margin.left;
-      } else if (imageLayoutMode === 'secondOfPair') { 
-        imageX = margin.left + (contentWidth + paddingBetweenImages) / 2;
-      } else { // 'single', centered
-        imageX = margin.left + (contentWidth - imgWidth) / 2; // Center within contentWidth
-      }
+      // Center image horizontally
+      const imageX = margin.left + (contentWidth - imgWidth) / 2;
+      
       console.log(`[addScreenshot] Step ${stepIndex + 1}: Final image parameters: imageX = ${imageX}, currentY = ${currentY}, imgWidth = ${imgWidth}, imgHeight = ${imgHeight}`);
       
       // Add the main image to PDF with error handling
@@ -103,24 +90,14 @@ export async function addScreenshot(
         console.log(`[addScreenshot] Step ${stepIndex + 1}: pdf.addImage() successful.`);
         imageId = `step_${stepIndex}_main`;
         
-        // Y position is advanced by renderSteps for paired images.
-        // For single images, advance Y here.
-        if (imageLayoutMode === 'single') {
-            currentY += imgHeight + 15; // 15mm padding after image
-        } else {
-            // For paired images, renderSteps handles the final Y based on max height.
-            // We return the Y value as if this image was the only one, plus padding.
-            // renderSteps will use this to calculate true image height.
-            currentY += imgHeight + 15;
-        }
+        // Advance Y position
+        currentY += imgHeight + 15; // 15mm padding after image
       } catch (imageError) {
         console.error(`[addScreenshot] Step ${stepIndex + 1}: Error adding main image to PDF:`, imageError);
         return { y: currentY + 10, imageId: null };
       }
       
       // If there's a secondary image, add it on a new page
-      // For now, secondary images will still get their own new page to simplify layout.
-      // This part needs to be refactored if secondary images should also be on the same page.
       if (step.screenshot.secondaryDataUrl && step.screenshot.secondaryDataUrl.startsWith('data:')) {
         try {
           console.log(`Processing secondary image for step ${stepIndex + 1}`);
@@ -179,8 +156,6 @@ export async function addScreenshot(
     }
   } catch (e) {
     console.error(`[addScreenshot] Step ${stepIndex + 1}: General error in addScreenshot:`, e);
-    // Return currentY + 5, not an object, to match original catch block's intent if it was simpler.
-    // However, to be consistent with Promise type, an object should be returned.
     return { y: currentY + 5, imageId: null }; 
   }
   
@@ -188,7 +163,7 @@ export async function addScreenshot(
   return { y: currentY, imageId };
 }
 
-// Temporary simplified version for debugging
+// Simplified version for debugging if needed
 export async function addScreenshotDebug(
   pdf: any, 
   step: SopStep, 
@@ -200,7 +175,7 @@ export async function addScreenshotDebug(
   stepIndex: number,
   addContentPageDesign: Function,
   isFirstOrSecondPage: boolean = false,
-  imageLayoutMode: 'single' | 'firstOfPair' | 'secondOfPair' 
+  imageLayoutMode: 'single' | 'firstOfPair' | 'secondOfPair' = 'single' 
 ): Promise<{y: number, imageId: string | null}> { 
   console.log(`[addScreenshot DEBUG] Called for step ${stepIndex + 1}, currentY: ${currentY}`);
   // ONLY ATTEMPT TO DRAW THE FIRST STEP'S SCREENSHOT FOR DEBUGGING
@@ -257,7 +232,6 @@ export async function addScreenshotDebug(
       console.error("[addScreenshot DEBUG] Error during pdf.addImage:", e);
       return { y: currentY, imageId: null }; // Return original Y if addImage fails
     }
-
   } catch (e) {
     console.error(`[addScreenshot DEBUG] General error for step ${stepIndex + 1}:`, e);
     return { y: currentY, imageId: null };

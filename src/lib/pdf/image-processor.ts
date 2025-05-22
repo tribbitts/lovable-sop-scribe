@@ -84,101 +84,55 @@ export async function createImageWithStyling(imageUrl: string, callouts: any[] =
         
         const aspectRatio = canvas.width / canvas.height;
         
-        // Create modern styling with rounded corners
+        // Create modern styling with shadow effect
         ctx.save();
         
-        const cornerRadius = 8; // Slightly larger corner radius
-        const paddingSize = 12; // Increased padding for shadow effect
-        const shadowBlur = 10; // Shadow blur size
+        // Draw the original image first
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
         
-        // Expand canvas for padding and shadow
-        const paddedWidth = canvas.width + (paddingSize * 2);
-        const paddedHeight = canvas.height + (paddingSize * 2);
+        // Draw callouts if available
+        try {
+          if (Array.isArray(callouts) && callouts.length > 0) {
+            renderCallouts(ctx, callouts, canvas.width, canvas.height, 0);
+          }
+        } catch (calloutError) {
+          console.error("Error rendering callouts:", calloutError);
+        }
         
-        // Create a new canvas with padding
+        // Create a new canvas for the final image with shadow
         const paddedCanvas = document.createElement('canvas');
-        paddedCanvas.width = paddedWidth + shadowBlur * 2;
-        paddedCanvas.height = paddedHeight + shadowBlur * 2;
+        const shadowSize = 15; // Shadow size in pixels
+        paddedCanvas.width = canvas.width + (shadowSize * 2);
+        paddedCanvas.height = canvas.height + (shadowSize * 2);
         const paddedCtx = paddedCanvas.getContext('2d');
         
         if (!paddedCtx) {
           throw new Error("Failed to get padded canvas context");
         }
         
-        // Draw white background
-        paddedCtx.fillStyle = '#FFFFFF';
-        paddedCtx.fillRect(0, 0, paddedCanvas.width, paddedCanvas.height);
-        
-        // Set up shadow
-        paddedCtx.shadowColor = 'rgba(0, 0, 0, 0.3)';
-        paddedCtx.shadowBlur = shadowBlur;
+        // Draw shadow
+        paddedCtx.shadowColor = 'rgba(0, 0, 0, 0.35)';
+        paddedCtx.shadowBlur = 15;
         paddedCtx.shadowOffsetX = 0;
-        paddedCtx.shadowOffsetY = 4;
+        paddedCtx.shadowOffsetY = 5;
         
-        // Draw rounded rectangle for the image background (with shadow)
-        paddedCtx.fillStyle = '#FFFFFF';
-        paddedCtx.beginPath();
-        paddedCtx.roundRect(
-          shadowBlur + paddingSize/2, 
-          shadowBlur + paddingSize/2, 
-          canvas.width + paddingSize, 
-          canvas.height + paddingSize, 
-          cornerRadius
-        );
-        paddedCtx.fill();
+        // Create a rectangle with the image dimensions
+        paddedCtx.fillStyle = '#ffffff';
+        paddedCtx.fillRect(shadowSize, shadowSize, canvas.width, canvas.height);
         
-        // Reset shadow for the image itself
+        // Reset shadow
         paddedCtx.shadowColor = 'transparent';
         paddedCtx.shadowBlur = 0;
         paddedCtx.shadowOffsetX = 0;
         paddedCtx.shadowOffsetY = 0;
         
-        // Create clipping path for rounded image
-        paddedCtx.beginPath();
-        paddedCtx.roundRect(
-          shadowBlur + paddingSize, 
-          shadowBlur + paddingSize, 
-          canvas.width, 
-          canvas.height, 
-          cornerRadius - 2 // Slightly smaller corner radius for the image
-        );
-        paddedCtx.clip();
+        // Draw the image on top of the shadow
+        paddedCtx.drawImage(canvas, shadowSize, shadowSize);
         
+        // Return the final image with shadow
         try {
-          // Draw the image with proper positioning
-          paddedCtx.drawImage(
-            img, 
-            shadowBlur + paddingSize, 
-            shadowBlur + paddingSize, 
-            canvas.width, 
-            canvas.height
-          );
-        } catch (drawError) {
-          console.error("Error drawing image on canvas:", drawError);
-          throw drawError;
-        }
-        
-        paddedCtx.restore();
-        
-        // Draw the callouts with error handling
-        try {
-          if (Array.isArray(callouts) && callouts.length > 0) {
-            renderCallouts(
-              paddedCtx, 
-              callouts, 
-              canvas.width, 
-              canvas.height, 
-              shadowBlur + paddingSize
-            );
-          }
-        } catch (calloutError) {
-          console.error("Error rendering callouts:", calloutError);
-        }
-        
-        // Return the padded canvas with shadow and rounded corners
-        try {
-          // Use higher quality JPEG output (0.98 instead of 0.95)
-          const imgData = paddedCanvas.toDataURL('image/jpeg', 0.98);
+          // Use high quality JPEG output
+          const imgData = paddedCanvas.toDataURL('image/jpeg', 0.95);
           resolve({ 
             imageData: imgData, 
             aspectRatio: aspectRatio 
