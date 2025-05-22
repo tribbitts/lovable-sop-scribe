@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -11,7 +10,7 @@ import { useSubscription } from "@/context/SubscriptionContext";
 import BackgroundSelector from "./BackgroundSelector";
 
 const OrganizationHeader = () => {
-  const { sopDocument, setCompanyName, setLogo, setBackgroundImage } = useSopContext();
+  const { sopDocument, setCompanyName, setLogo, setBackgroundImage: setContextBackgroundImage } = useSopContext();
   const { isPro } = useSubscription();
   const [companyNameInput, setCompanyNameInput] = useState(sopDocument.companyName);
   
@@ -59,7 +58,7 @@ const OrganizationHeader = () => {
       const reader = new FileReader();
       reader.onload = (event) => {
         if (event.target?.result) {
-          setBackgroundImage(event.target.result as string);
+          setContextBackgroundImage(event.target.result as string);
           toast({
             title: "Background Added",
             description: "Custom background image has been added to your SOP."
@@ -70,12 +69,76 @@ const OrganizationHeader = () => {
     }
   };
 
+  const handleSelectPredefinedBackground = async (pathOrNull: string | null) => {
+    if (!isPro) {
+      toast({
+        title: "Pro Feature",
+        description: "Backgrounds are only available with a Pro subscription.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (pathOrNull === null) {
+      setContextBackgroundImage(null);
+      toast({
+        title: "Background Cleared",
+        description: "Background image has been removed."
+      });
+      return;
+    }
+
+    // Assuming pathOrNull is a path like "/backgrounds/image.jpg"
+    try {
+      const response = await fetch(pathOrNull);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch background: ${response.statusText}`);
+      }
+      const blob = await response.blob();
+      
+      // Check file size again (though less critical for predefined, good practice)
+      if (blob.size > 5 * 1024 * 1024) {
+        toast({
+          title: "File too large",
+          description: "Background image must be less than 5MB.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setContextBackgroundImage(reader.result as string);
+        toast({
+          title: "Background Set",
+          description: "Predefined background has been applied."
+        });
+      };
+      reader.onerror = () => {
+        toast({
+          title: "Error",
+          description: "Could not read predefined background file.",
+          variant: "destructive"
+        });
+      };
+      reader.readAsDataURL(blob);
+    } catch (error) {
+      console.error("Error fetching predefined background:", error);
+      toast({
+        title: "Error Fetching Background",
+        description: (error as Error).message || "Could not load the selected background.",
+        variant: "destructive"
+      });
+      setContextBackgroundImage(null); // Clear if error
+    }
+  };
+
   const handleRemoveLogo = () => {
     setLogo(null);
   };
   
   const handleRemoveBackground = () => {
-    setBackgroundImage(null);
+    setContextBackgroundImage(null);
   };
 
   return (
@@ -158,7 +221,7 @@ const OrganizationHeader = () => {
                 </div>
               ) : (
                 <BackgroundSelector
-                  onSelectBackground={setBackgroundImage}
+                  onSelectBackground={handleSelectPredefinedBackground}
                   onCustomUpload={handleBackgroundChange}
                   currentBackground={sopDocument.backgroundImage}
                 />
