@@ -1,4 +1,3 @@
-
 import { SopStep } from "@/types/sop";
 import { styleStep } from "./step-styler";
 import { addScreenshot } from "./screenshot-placement";
@@ -14,94 +13,94 @@ export async function renderSteps(
   backgroundImage: string | null = null
 ) {
   let currentY = margin.top;
-  let pageNumber = 1; // Track which page we're on
+  let pageNumber = 1;
+  let stepCounterOnPage = 0;
+  let firstImageHeightInfo = { height: 0, yStart: 0 };
+  let yForNextAlignedHeader = 0; // Store Y for aligning headers of a pair
 
-  // Process steps in pairs to place two per page when possible
-  for (let i = 0; i < steps.length; i += 2) {
-    // Process first step in the pair
-    const step1 = steps[i];
-    const hasSecondStep = i + 1 < steps.length;
-    const step2 = hasSecondStep ? steps[i + 1] : null;
+  for (let i = 0; i < steps.length; i++) {
+    const step = steps[i];
+    stepCounterOnPage++;
+    let imageLayoutMode: 'single' | 'firstOfPair' | 'secondOfPair' = 'single';
 
-    try {
-      // First step header
-      currentY = styleStep(pdf, step1, i, currentY, margin, width);
-      currentY += 3; // Small spacing after header
-      
-      // Add first screenshot
-      if (step1.screenshot && step1.screenshot.dataUrl) {
-        console.log(`[renderSteps] Step ${i+1}: Processing screenshot. Has dataUrl: ${!!step1.screenshot.dataUrl}`);
-        
-        const result = await addScreenshot(
-          pdf, 
-          step1, 
-          currentY, 
-          margin, 
-          contentWidth, 
-          width, 
-          height, 
-          i,
-          addPageDesignFn,
-          pageNumber <= 2,
-          hasSecondStep ? 'firstOfPair' : 'single' // Mark as first of pair if we have a second step
-        );
-        
-        console.log(`[renderSteps] Step ${i+1}: addScreenshot returned y = ${result.y}`);
-        currentY = result.y; // Update Y position after screenshot
-      } else {
-        console.log(`[renderSteps] Step ${i+1}: No screenshot or no dataUrl.`);
-        currentY += 5; // Minimal spacing if no screenshot
+    const hasNextStep = i + 1 < steps.length;
+    const nextStepHasScreenshot = hasNextStep && steps[i+1]?.screenshot?.dataUrl;
+    if (stepCounterOnPage === 1 && nextStepHasScreenshot && steps[i]?.screenshot?.dataUrl) { // Current and next have screenshot
+      imageLayoutMode = 'firstOfPair';
+    } else if (stepCounterOnPage === 2 && steps[i]?.screenshot?.dataUrl) { // Current is second of a pair with screenshot
+      imageLayoutMode = 'secondOfPair';
+    } // Default is 'single'
+
+    let headerActualStartY = currentY;
+    if (imageLayoutMode === 'secondOfPair') {
+      headerActualStartY = yForNextAlignedHeader; // Align this header with the first of the pair
+    }
+    if (imageLayoutMode === 'firstOfPair') {
+      yForNextAlignedHeader = headerActualStartY; // Save for the next step in the pair
+    }
+
+    let styledHeaderBottomY = styleStep(pdf, step, i, headerActualStartY, margin, width);
+    const screenshotContentStartY = styledHeaderBottomY + 5; // Y where screenshot content (image) begins
+
+    if (step.screenshot && step.screenshot.dataUrl) {
+      let yPosForAddScreenshot = screenshotContentStartY;
+      if (imageLayoutMode === 'secondOfPair') {
+        // Ensure second image aligns with where the first image started its content drawing
+        yPosForAddScreenshot = firstImageHeightInfo.yStart;
       }
       
-      // If we have a second step in this pair, add it below the first one
-      if (hasSecondStep) {
-        // Add some spacing between steps on the same page
-        currentY += 10;
-        
-        // Second step header
-        currentY = styleStep(pdf, step2, i + 1, currentY, margin, width);
-        currentY += 3; // Small spacing after header
-        
-        // Add second screenshot
-        if (step2.screenshot && step2.screenshot.dataUrl) {
-          console.log(`[renderSteps] Step ${i+2}: Processing screenshot. Has dataUrl: ${!!step2.screenshot.dataUrl}`);
-          
-          const result = await addScreenshot(
-            pdf, 
-            step2, 
-            currentY, 
-            margin, 
-            contentWidth, 
-            width, 
-            height, 
-            i + 1,
-            addPageDesignFn,
-            pageNumber <= 2,
-            'secondOfPair' // Mark as second of pair
-          );
-          
-          console.log(`[renderSteps] Step ${i+2}: addScreenshot returned y = ${result.y}`);
-          currentY = result.y;
-        } else {
-          console.log(`[renderSteps] Step ${i+2}: No screenshot or no dataUrl.`);
-          currentY += 5;
-        }
-      }
+      const isFirstOrSecondPage = pageNumber <= 2;
+      const result = await addScreenshot(
+        pdf, 
+        step, 
+        yPosForAddScreenshot, 
+        margin, 
+        contentWidth, 
+        width, 
+        height, 
+        i,
+        addPageDesignFn,
+        isFirstOrSecondPage,
+        imageLayoutMode 
+      );
       
-      // Start a new page for the next pair of steps
-      if (i + 2 < steps.length) {
+      const imageActualHeight = result.y - yPosForAddScreenshot; // This includes addScreenshot's internal bottom padding
+
+      if (imageLayoutMode === 'firstOfPair') {
+          firstImageHeightInfo = { height: imageActualHeight, yStart: yPosForAddScreenshot };
+          // For the first image of a pair, currentY for page flow doesn't advance yet.
+          // It will be determined by the max height of the pair.
+          // currentY for the *next iteration* (second step of pair) is handled by headerActualStartY logic.
+      } else if (imageLayoutMode === 'secondOfPair') {
+          // Finished a pair. Advance currentY by the maximum extent of the pair.
+          // Max extent is from the aligned header start, to the bottom of the taller image block.
+          const firstImageBlockEndY = firstImageHeightInfo.yStart + firstImageHeightInfo.height;
+          const secondImageBlockEndY = yPosForAddScreenshot + imageActualHeight;
+          currentY = Math.max(firstImageBlockEndY, secondImageBlockEndY);
+          firstImageHeightInfo = { height: 0, yStart: 0 };
+      } else { // Single image
+          currentY = result.y; 
+      }
+    } else { // No screenshot for this step
+      currentY = styledHeaderBottomY + 10; // Advance currentY past header + some padding
+    }
+      
+    // Page breaking logic
+    const isLastStep = i === steps.length - 1;
+    if (!isLastStep) {
+      // If we just processed the second item of a pair, or a single item, then break page.
+      if (imageLayoutMode === 'secondOfPair' || imageLayoutMode === 'single') {
         pdf.addPage();
         pageNumber++;
+        stepCounterOnPage = 0; 
+        yForNextAlignedHeader = 0; // Reset
         if (addPageDesignFn) {
           addPageDesignFn(pdf, width, height, margin, backgroundImage);
         }
         currentY = margin.top;
-      }
-      
-    } catch (error) {
-      console.error(`Error rendering step ${i + 1}:`, error);
-      // Continue with next step even if this one fails
-      currentY += 20;
+      } 
+      // If it was 'firstOfPair', loop continues, stepCounterOnPage becomes 2, 
+      // and headerActualStartY for the next step will use yForNextAlignedHeader.
     }
   }
 }
