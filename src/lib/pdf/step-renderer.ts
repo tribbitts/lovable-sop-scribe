@@ -50,6 +50,7 @@ export async function renderSteps(
 
       // Add the screenshot
       if (step.screenshot && step.screenshot.dataUrl) {
+        console.log(`[renderSteps] Step ${i+1}: Processing screenshot. Has dataUrl: ${!!step.screenshot.dataUrl}`);
         const hasNextStep = i + 1 < steps.length;
         const nextStepHasScreenshot = hasNextStep && steps[i+1]?.screenshot?.dataUrl;
 
@@ -58,6 +59,8 @@ export async function renderSteps(
         } else if (stepCounterOnPage === 2) {
           imageLayoutMode = 'secondOfPair';
         } // Default is 'single' as initialized
+        
+        console.log(`[renderSteps] Step ${i+1}: imageLayoutMode = ${imageLayoutMode}, screenshotYStart = ${screenshotYStart}`);
         
         const isFirstOrSecondPage = pageNumber <= 2;
         const result = await addScreenshot(
@@ -73,6 +76,7 @@ export async function renderSteps(
           isFirstOrSecondPage,
           imageLayoutMode 
         );
+        console.log(`[renderSteps] Step ${i+1}: addScreenshot returned y = ${result.y}`);
         
         const imageHeightWithPadding = result.y - screenshotYStart; // This is actual height + 15 padding
 
@@ -86,8 +90,9 @@ export async function renderSteps(
             currentY = result.y; // Advances by image height + padding
         }
       } else {
-        // Add spacing if no screenshot
-        currentY += 10;
+        console.log(`[renderSteps] Step ${i+1}: No screenshot or no dataUrl.`);
+        // No screenshot or no dataUrl, advance Y by a small amount if needed or keep as is.
+        currentY += 10; // Default spacing if no screenshot
       }
       
       // Page breaking logic

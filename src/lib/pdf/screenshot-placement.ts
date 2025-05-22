@@ -19,20 +19,23 @@ export async function addScreenshot(
   imageLayoutMode: 'single' | 'firstOfPair' | 'secondOfPair' // Changed from stepCounterOnPage
 ): Promise<{y: number, imageId: string | null}> { // Return Y and an ID for the image
   let imageId = null; // Store a unique ID for the image if needed for positioning next one
+  console.log(`[addScreenshot] Called for step ${stepIndex + 1} with mode: ${imageLayoutMode}, currentY: ${currentY}`);
   try {
     // Skip if no screenshot data
     if (!step.screenshot || !step.screenshot.dataUrl) {
-      console.log(`No screenshot for step ${stepIndex + 1}, skipping`);
+      console.log(`[addScreenshot] Step ${stepIndex + 1}: No screenshot data or dataUrl. Skipping.`);
       return { y: currentY, imageId };
     }
     
+    console.log(`[addScreenshot] Step ${stepIndex + 1}: Has dataUrl (first 30 chars): ${step.screenshot.dataUrl.substring(0,30)}`);
+    
     // Validate image data before processing
     if (!step.screenshot.dataUrl.startsWith('data:')) {
-      console.error(`Invalid screenshot data for step ${stepIndex + 1}`);
+      console.error(`[addScreenshot] Step ${stepIndex + 1}: Invalid screenshot dataUrl format.`);
       return { y: currentY + 10, imageId };
     }
     
-    console.log(`Processing screenshot for step ${stepIndex + 1}`);
+    console.log(`[addScreenshot] Processing screenshot for step ${stepIndex + 1}`);
     
     // Handle main screenshot with additional error handling
     try {
@@ -49,12 +52,16 @@ export async function addScreenshot(
         maxImageWidth = contentWidth * 0.8; 
       }
       
-      console.log(`Creating main image with styling for step ${stepIndex + 1}`);
+      console.log(`[addScreenshot] Step ${stepIndex + 1}: imageLayoutMode = ${imageLayoutMode}, contentWidth = ${contentWidth}, paddingBetweenImages = ${paddingBetweenImages}`);
+      console.log(`[addScreenshot] Step ${stepIndex + 1}: Calculated maxImageWidth = ${maxImageWidth}`);
+      
+      console.log(`[addScreenshot] Creating main image with styling for step ${stepIndex + 1}`);
       // Create first image with improved quality and shadow effect
       const { imageData: mainImageData, aspectRatio: mainAspectRatio } = 
         await createImageWithStyling(mainImage, step.screenshot.callouts);
       
       if (!mainImageData) {
+        console.error(`[addScreenshot] Step ${stepIndex + 1}: Failed to process mainImage (mainImageData is null).`);
         throw new Error(`Failed to process main image for step ${stepIndex + 1}`);
       }
       
@@ -65,9 +72,10 @@ export async function addScreenshot(
       // Check if the image is too tall for the page
       const maxAvailableHeight = height - currentY - margin.bottom - 20; // 20px buffer
       if (imgHeight > maxAvailableHeight) {
-        // Scale down to fit available height
+        console.log(`[addScreenshot] Step ${stepIndex + 1}: Image too tall (imgHeight: ${imgHeight} > maxAvailableHeight: ${maxAvailableHeight}). Scaling down.`);
         imgHeight = maxAvailableHeight;
         imgWidth = imgHeight * mainAspectRatio;
+        console.log(`[addScreenshot] Step ${stepIndex + 1}: Scaled dimensions: imgWidth = ${imgWidth}, imgHeight = ${imgHeight}`);
       }
       
       // Calculate X position
@@ -79,10 +87,11 @@ export async function addScreenshot(
       } else { // 'single', centered
         imageX = margin.left + (contentWidth - imgWidth) / 2; // Center within contentWidth
       }
+      console.log(`[addScreenshot] Step ${stepIndex + 1}: Final image parameters: imageX = ${imageX}, currentY = ${currentY}, imgWidth = ${imgWidth}, imgHeight = ${imgHeight}`);
       
       // Add the main image to PDF with error handling
       try {
-        console.log(`Adding main image to PDF for step ${stepIndex + 1} at position (${imageX}, ${currentY})`);
+        console.log(`[addScreenshot] Step ${stepIndex + 1}: Attempting pdf.addImage()`);
         pdf.addImage(
           mainImageData, 
           'JPEG', 
@@ -91,6 +100,7 @@ export async function addScreenshot(
           imgWidth, 
           imgHeight
         );
+        console.log(`[addScreenshot] Step ${stepIndex + 1}: pdf.addImage() successful.`);
         imageId = `step_${stepIndex}_main`;
         
         // Y position is advanced by renderSteps for paired images.
@@ -104,7 +114,7 @@ export async function addScreenshot(
             currentY += imgHeight + 15;
         }
       } catch (imageError) {
-        console.error(`Error adding main image to PDF for step ${stepIndex + 1}:`, imageError);
+        console.error(`[addScreenshot] Step ${stepIndex + 1}: Error adding main image to PDF:`, imageError);
         return { y: currentY + 10, imageId: null };
       }
       
@@ -126,6 +136,7 @@ export async function addScreenshot(
             await createImageWithStyling(secondaryImage, step.screenshot.secondaryCallouts || []);
           
           if (!secondaryImageData) {
+            console.error(`[addScreenshot] Step ${stepIndex + 1}: Failed to process secondaryImage (secondaryImageData is null).`);
             throw new Error(`Failed to process secondary image for step ${stepIndex + 1}`);
           }
           
@@ -144,32 +155,35 @@ export async function addScreenshot(
           const secondaryImageX = (width - secondaryImgWidth) / 2;
           
           // Add the secondary image to PDF
-          console.log(`Adding secondary image to PDF for step ${stepIndex + 1}`);
+          console.log(`[addScreenshot] Step ${stepIndex + 1}: Adding secondary image to PDF`);
           pdf.addImage(
             secondaryImageData, 
             'JPEG', 
             secondaryImageX, 
-            secondaryCurrentY, // Use reset Y for new page
+            secondaryCurrentY, 
             secondaryImgWidth, 
             secondaryImgHeight
           );
+          console.log(`[addScreenshot] Step ${stepIndex + 1}: Secondary image added successfully.`);
           
-          // Move Y position below the secondary image
           secondaryCurrentY += secondaryImgHeight + 15;
         } catch (secondaryImgError) {
-          console.error(`Error processing secondary image for step ${stepIndex + 1}:`, secondaryImgError);
+          console.error(`[addScreenshot] Step ${stepIndex + 1}: Error processing secondary image:`, secondaryImgError);
           // Continue with next step even if secondary image fails
         }
       }
       
     } catch (mainImgError) {
-      console.error(`Error processing main image for step ${stepIndex + 1}:`, mainImgError);
+      console.error(`[addScreenshot] Step ${stepIndex + 1}: Error processing main image:`, mainImgError);
       return { y: currentY + 10, imageId: null };
     }
   } catch (e) {
-    console.error(`Error in screenshot handling for step ${stepIndex + 1}:`, e);
-    currentY += 5;
+    console.error(`[addScreenshot] Step ${stepIndex + 1}: General error in addScreenshot:`, e);
+    // Return currentY + 5, not an object, to match original catch block's intent if it was simpler.
+    // However, to be consistent with Promise type, an object should be returned.
+    return { y: currentY + 5, imageId: null }; 
   }
   
+  console.log(`[addScreenshot] Step ${stepIndex + 1}: Returning y = ${currentY}`);
   return { y: currentY, imageId };
 }
