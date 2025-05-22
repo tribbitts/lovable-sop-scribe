@@ -1,3 +1,4 @@
+
 import React, { createContext, useState, useContext, ReactNode } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { SopDocument, SopStep, ScreenshotData, Callout } from "../types/sop";
@@ -13,7 +14,7 @@ interface SopContextType {
   setBackgroundImage: (image: string | null) => void;
   setCompanyName: (name: string) => void;
   addStep: () => void;
-  updateStep: (stepId: string, description: string) => void;
+  updateStep: (stepId: string, field: string, value: string) => void;
   moveStepUp: (stepId: string) => void;
   moveStepDown: (stepId: string) => void;
   deleteStep: (stepId: string) => void;
@@ -85,11 +86,11 @@ export const SopProvider = ({ children }: { children: ReactNode }) => {
     }));
   };
 
-  const updateStep = (stepId: string, description: string) => {
+  const updateStep = (stepId: string, field: string, value: string) => {
     setSopDocument((prev) => ({
       ...prev,
       steps: prev.steps.map((step) =>
-        step.id === stepId ? { ...step, description } : step
+        step.id === stepId ? { ...step, [field]: value } : step
       ),
     }));
   };

@@ -1,219 +1,186 @@
 
-import { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useContext, useState, useEffect } from "react";
 import { useAuth } from "./AuthContext";
-import { getUserSubscription, supabase } from "@/lib/supabase";
-import { toast } from "@/hooks/use-toast";
-
-type SubscriptionTier = "free" | "pro" | "admin" | null;
+import { supabase } from "@/lib/supabase";
+import { SubscriptionTier } from "@/types/sop";
 
 interface SubscriptionContextType {
   tier: SubscriptionTier;
-  isPro: boolean;
-  isAdmin: boolean;
   loading: boolean;
-  pdfCount: number;
-  pdfLimit: number;
+  isAdmin: boolean;
   canGeneratePdf: boolean;
+  canUseHtmlExport: boolean;
   refreshSubscription: () => Promise<void>;
-  incrementPdfCount: () => void;
-  showUpgradePrompt: () => void;
+  dailyPdfExports: number;
+  incrementDailyPdfExport: () => void;
+  dailyHtmlExports: number;
+  incrementDailyHtmlExport: () => void;
 }
 
+interface SubscriptionProviderProps {
+  children: React.ReactNode;
+}
+
+// Create context with default values
 const SubscriptionContext = createContext<SubscriptionContextType>({
-  tier: null,
-  isPro: false,
+  tier: "free",
+  loading: false,
   isAdmin: false,
-  loading: true,
-  pdfCount: 0,
-  pdfLimit: 0,
-  canGeneratePdf: false,
+  canGeneratePdf: true,
+  canUseHtmlExport: false,
   refreshSubscription: async () => {},
-  incrementPdfCount: () => {},
-  showUpgradePrompt: () => {},
+  dailyPdfExports: 0,
+  incrementDailyPdfExport: () => {},
+  dailyHtmlExports: 0,
+  incrementDailyHtmlExport: () => {},
 });
 
-export const useSubscription = () => useContext(SubscriptionContext);
+// Storage keys
+const PDF_EXPORTS_KEY = "sop_daily_pdf_exports";
+const HTML_EXPORTS_KEY = "sop_daily_html_exports";
+const LAST_EXPORT_DATE_KEY = "sop_last_export_date";
 
-export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+// Export the provider component
+export const SubscriptionProvider: React.FC<SubscriptionProviderProps> = ({ children }) => {
   const { user } = useAuth();
-  const [tier, setTier] = useState<SubscriptionTier>(null);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [pdfCount, setPdfCount] = useState<number>(0);
-  const [supabaseConnected, setSupabaseConnected] = useState<boolean>(true);
-  
-  // PDF limits based on tier - strictly enforce 1 per day for free tier
-  const pdfLimit = tier === "pro" || tier === "admin" ? Infinity : 1;
-  const isPro = tier === "pro" || tier === "admin";
-  const isAdmin = tier === "admin";
-  const canGeneratePdf = tier === "pro" || tier === "admin" || pdfCount < pdfLimit;
-  
-  // Show upgrade prompt when limit is reached
-  const showUpgradePrompt = () => {
-    toast({
-      title: "Daily PDF Limit Reached",
-      description: "Upgrade to Pro for unlimited PDF exports.",
-      variant: "destructive",
-      action: (
-        <a 
-          href="#pricing" 
-          className="bg-[#007AFF] hover:bg-[#0069D9] text-white px-3 py-2 rounded-md text-xs"
-          onClick={() => {
-            // If on home page anchor to pricing, otherwise navigate to home page
-            if (!window.location.pathname.includes('/app')) return;
-            window.location.href = '/#pricing';
-          }}
-        >
-          Upgrade to Pro
-        </a>
-      ),
-    });
-  };
-  
-  // Check if Supabase is properly connected
-  useEffect(() => {
-    const checkSupabaseConnection = async () => {
-      try {
-        // Simple query to check connection
-        const { error } = await supabase.from('pdf_usage').select('count', { count: 'exact', head: true });
-        setSupabaseConnected(error === null || (error && error.message !== 'FetchError: fetch failed'));
-      } catch (error) {
-        console.error("Supabase connection check failed:", error);
-        setSupabaseConnected(false);
-        
-        toast({
-          title: "Connection Error",
-          description: "Failed to connect to database. Some features may be limited.",
-          variant: "destructive",
-        });
-      }
-    };
+  const [tier, setTier] = useState<SubscriptionTier>("free");
+  const [loading, setLoading] = useState<boolean>(false);
+  const [isAdmin, setIsAdmin] = useState<boolean>(false);
+  const [dailyPdfExports, setDailyPdfExports] = useState<number>(0);
+  const [dailyHtmlExports, setDailyHtmlExports] = useState<number>(0);
+
+  // Reset daily counters if date has changed
+  const checkAndResetDailyCounters = () => {
+    const today = new Date().toDateString();
+    const lastDate = localStorage.getItem(LAST_EXPORT_DATE_KEY);
     
-    checkSupabaseConnection();
+    if (lastDate !== today) {
+      localStorage.setItem(LAST_EXPORT_DATE_KEY, today);
+      localStorage.setItem(PDF_EXPORTS_KEY, "0");
+      localStorage.setItem(HTML_EXPORTS_KEY, "0");
+      setDailyPdfExports(0);
+      setDailyHtmlExports(0);
+    }
+  };
+
+  // Initialize daily exports from localStorage
+  useEffect(() => {
+    checkAndResetDailyCounters();
+    
+    const storedPdfExports = localStorage.getItem(PDF_EXPORTS_KEY);
+    if (storedPdfExports) {
+      setDailyPdfExports(parseInt(storedPdfExports, 10));
+    }
+    
+    const storedHtmlExports = localStorage.getItem(HTML_EXPORTS_KEY);
+    if (storedHtmlExports) {
+      setDailyHtmlExports(parseInt(storedHtmlExports, 10));
+    }
   }, []);
-  
-  // Fetch user's subscription data with proper error handling
-  const fetchSubscription = async () => {
+
+  // Fetch subscription data when user changes
+  useEffect(() => {
+    if (user) {
+      refreshSubscription();
+    } else {
+      setTier("free");
+      setIsAdmin(false);
+    }
+  }, [user]);
+
+  // Function to refresh subscription data
+  const refreshSubscription = async () => {
+    if (!user) {
+      setTier("free");
+      setIsAdmin(false);
+      return;
+    }
+
+    setLoading(true);
     try {
-      if (!user || !supabaseConnected) {
-        setTier("free");
-        setLoading(false);
-        return;
-      }
-      
-      setLoading(true);
-      console.log("Fetching subscription for user:", user.id);
-      
-      // First check if user has a subscription record
-      const { data: subscription, error } = await supabase
-        .from('subscriptions')
-        .select('*')
+      // Check if user is admin
+      const { data: adminData, error: adminError } = await supabase
+        .from('admins')
+        .select('user_id')
         .eq('user_id', user.id)
-        .maybeSingle();
-      
-      if (error) {
-        console.error("Error fetching subscription:", error);
-        throw error;
+        .single();
+
+      if (!adminError && adminData) {
+        setIsAdmin(true);
       }
-      
-      // If no subscription record found, create a free tier one
-      if (!subscription) {
-        console.log("No subscription found, creating free tier record");
-        const { error: insertError } = await supabase
-          .from('subscriptions')
-          .insert({
-            user_id: user.id,
-            tier: 'free',
-            status: 'active',
-            updated_at: new Date().toISOString()
-          });
-          
-        if (insertError) {
-          console.error("Error creating subscription record:", insertError);
-          throw insertError;
-        }
-        
+
+      // Get subscription
+      const { data, error } = await supabase
+        .from('subscriptions')
+        .select('tier, status')
+        .eq('user_id', user.id)
+        .single();
+
+      if (error) {
+        console.error('Error fetching subscription:', error);
         setTier("free");
-      } else {
-        // Check if user has an active pro or admin subscription
-        console.log("Found subscription:", subscription);
-        if (subscription.status === "active") {
-          if (subscription.tier === "admin") {
-            setTier("admin");
-          } else if (subscription.tier === "pro") {
-            setTier("pro");
-          } else {
-            setTier("free");
-          }
-          
-          // If free tier, get today's usage count
-          if (subscription.tier === "free") {
-            // Get today's usage count for free tier
-            const today = new Date().toISOString().split('T')[0];
-            try {
-              const { count } = await supabase
-                .from('pdf_usage')
-                .select('*', { count: 'exact' })
-                .eq('user_id', user.id)
-                .gte('created_at', `${today}T00:00:00`)
-                .lt('created_at', `${today}T23:59:59`);
-                
-              setPdfCount(count || 0);
-              console.log(`User has created ${count} PDFs today (limit: ${pdfLimit})`);
-            } catch (error) {
-              console.error("Error fetching PDF usage count:", error);
-              setPdfCount(0);
-            }
-          }
+      } else if (data) {
+        // Make sure status is active
+        if (data.status === 'active') {
+          setTier(data.tier as SubscriptionTier);
         } else {
           setTier("free");
         }
+      } else {
+        setTier("free");
       }
-    } catch (error: any) {
-      console.error("Error in fetchSubscription:", error);
-      toast({
-        title: "Error",
-        description: "Failed to load your subscription information",
-        variant: "destructive",
-      });
-      setTier("free"); // Default to free on error
+    } catch (error) {
+      console.error('Error refreshing subscription:', error);
+      setTier("free");
     } finally {
       setLoading(false);
     }
   };
-  
-  // Increment PDF count when a PDF is generated
-  const incrementPdfCount = () => {
-    setPdfCount((prev) => prev + 1);
+
+  // Increment daily PDF exports
+  const incrementDailyPdfExport = () => {
+    checkAndResetDailyCounters();
+    const newCount = dailyPdfExports + 1;
+    setDailyPdfExports(newCount);
+    localStorage.setItem(PDF_EXPORTS_KEY, newCount.toString());
   };
-  
-  // Refresh subscription data
-  const refreshSubscription = async () => {
-    await fetchSubscription();
+
+  // Increment daily HTML exports
+  const incrementDailyHtmlExport = () => {
+    checkAndResetDailyCounters();
+    const newCount = dailyHtmlExports + 1;
+    setDailyHtmlExports(newCount);
+    localStorage.setItem(HTML_EXPORTS_KEY, newCount.toString());
   };
-  
-  // Fetch subscription when user changes
-  useEffect(() => {
-    if (user) {
-      fetchSubscription();
-    } else {
-      setTier(null);
-      setPdfCount(0);
-    }
-  }, [user, supabaseConnected]);
-  
+
+  // Determine if user can generate PDF
+  const canGeneratePdf = () => {
+    if (isAdmin) return true;
+    if (tier === "pro-pdf" || tier === "pro-complete") return true;
+    if (tier === "free" && dailyPdfExports < 1) return true;
+    return false;
+  };
+
+  // Determine if user can use HTML export
+  const canUseHtmlExport = () => {
+    if (isAdmin) return true;
+    if (tier === "pro-html" || tier === "pro-complete") return true;
+    return false;
+  };
+
   const value = {
     tier,
-    isPro,
-    isAdmin,
     loading,
-    pdfCount,
-    pdfLimit,
-    canGeneratePdf,
+    isAdmin,
+    canGeneratePdf: canGeneratePdf(),
+    canUseHtmlExport: canUseHtmlExport(),
     refreshSubscription,
-    incrementPdfCount,
-    showUpgradePrompt,
+    dailyPdfExports,
+    incrementDailyPdfExport,
+    dailyHtmlExports,
+    incrementDailyHtmlExport,
   };
-  
+
   return (
     <SubscriptionContext.Provider value={value}>
       {children}
@@ -221,4 +188,5 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
   );
 };
 
-export default SubscriptionContext;
+// Custom hook to use the subscription context
+export const useSubscription = () => useContext(SubscriptionContext);

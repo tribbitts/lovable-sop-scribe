@@ -7,9 +7,25 @@ import Toolbar from "@/components/Toolbar";
 import { motion } from "@/components/MotionWrapper";
 import StepCarousel from "@/components/StepCarousel";
 import OrganizationHeader from "@/components/OrganizationHeader";
+import ProgressTracker from "@/components/ProgressTracker";
+import { useState, useEffect } from "react";
 
 const SopCreator = () => {
   const { sopDocument } = useSopContext();
+  const [completedSteps, setCompletedSteps] = useState<number>(0);
+  
+  // Simulate step completion for demo purposes
+  useEffect(() => {
+    if (sopDocument.steps.length > 0) {
+      const completed = Math.min(
+        Math.floor(Math.random() * (sopDocument.steps.length + 1)), 
+        sopDocument.steps.length
+      );
+      setCompletedSteps(completed);
+    } else {
+      setCompletedSteps(0);
+    }
+  }, [sopDocument.steps.length]);
 
   return (
     <div className="container mx-auto py-8 px-4">
@@ -60,6 +76,19 @@ const SopCreator = () => {
         >
           <Header />
         </motion.div>
+
+        {sopDocument.steps.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+          >
+            <ProgressTracker 
+              completed={completedSteps} 
+              total={sopDocument.steps.length} 
+            />
+          </motion.div>
+        )}
 
         <motion.div
           initial={{ opacity: 0, y: 20 }}

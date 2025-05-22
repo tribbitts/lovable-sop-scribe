@@ -22,6 +22,11 @@ export interface ScreenshotData {
 export interface SopStep {
   id: string;
   description: string;
+  title?: string;
+  detailedInstructions?: string;
+  notes?: string;
+  fileLink?: string;
+  fileLinkText?: string;
   screenshot: ScreenshotData | null;
 }
 
@@ -38,3 +43,9 @@ export interface SopDocument {
 export interface AppSettings {
   companyName: string;
 }
+
+// Export options
+export type ExportFormat = "pdf" | "html";
+
+// Subscription tiers
+export type SubscriptionTier = "free" | "pro-pdf" | "pro-html" | "pro-complete";

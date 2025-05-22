@@ -1,6 +1,6 @@
 
 import JsonDialog from "@/components/toolbar/JsonDialog";
-import PdfExportManager from "@/components/toolbar/PdfExportManager";
+import ExportManager from "@/components/toolbar/ExportManager";
 import { useSubscription } from "@/context/SubscriptionContext";
 import { Badge } from "@/components/ui/badge";
 import { ShieldCheck } from "lucide-react";
@@ -18,7 +18,7 @@ const Toolbar = () => {
       )}
       <div className="flex flex-wrap gap-2">
         <JsonDialog />
-        <PdfExportManager />
+        <ExportManager />
       </div>
     </div>
   );

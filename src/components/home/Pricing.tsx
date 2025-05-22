@@ -3,38 +3,72 @@ import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
 import { useSubscription } from "@/context/SubscriptionContext";
-import { Loader2 } from "lucide-react";
+import { Loader2, FileText, Code, CheckCircle } from "lucide-react";
 import { useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { toast } from "@/hooks/use-toast";
+import { SubscriptionTier } from "@/types/sop";
+import { Badge } from "@/components/ui/badge";
 
 const PricingTier = ({ 
   title, 
   price, 
   features, 
   isPopular = false, 
-  isPro = false,
+  theme = 'default',
   onSubscribe,
   userTier,
-  loading
+  loading,
+  badgeText,
+  tier
 }: { 
   title: string, 
   price: string, 
   features: { available: boolean, text: string }[], 
   isPopular?: boolean, 
-  isPro?: boolean,
+  theme?: 'default' | 'primary' | 'secondary', 
   onSubscribe?: () => void,
-  userTier?: string | null,
-  loading?: boolean
+  userTier?: SubscriptionTier | null,
+  loading?: boolean,
+  badgeText?: string,
+  tier: SubscriptionTier
 }) => {
-  const isCurrentTier = userTier === title.toLowerCase();
+  const isCurrentTier = userTier === tier;
+  
+  const themes = {
+    default: {
+      background: 'bg-[#2C2C2E]',
+      iconColor: 'text-[#007AFF]',
+      buttonBg: 'bg-[#3A3A3C] hover:bg-[#4A4A4C]',
+      buttonText: 'text-white',
+    },
+    primary: {
+      background: 'bg-[#007AFF]',
+      iconColor: 'text-white',
+      buttonBg: 'bg-white hover:bg-gray-100',
+      buttonText: 'text-[#007AFF]',
+    },
+    secondary: {
+      background: 'bg-[#4A2D8B]',
+      iconColor: 'text-white',
+      buttonBg: 'bg-white hover:bg-gray-100',
+      buttonText: 'text-[#4A2D8B]',
+    }
+  };
+  
+  const themeStyles = themes[theme];
   
   return (
-    <div className={`${isPro ? 'bg-[#007AFF]' : 'bg-[#2C2C2E]'} p-8 rounded-2xl ${isPro ? '' : 'glass-morphism'} relative overflow-hidden`}>
+    <div className={`${themeStyles.background} p-8 rounded-2xl glass-morphism relative overflow-hidden`}>
       {isPopular && (
         <div className="absolute top-0 right-0 bg-blue-600 text-xs text-white px-3 py-1 rounded-bl-lg">
           POPULAR
         </div>
+      )}
+      {badgeText && (
+        <Badge className="absolute top-0 left-0 px-3 py-1 rounded-br-lg bg-amber-600 text-white border-0">
+          {badgeText}
+        </Badge>
       )}
       {isCurrentTier && (
         <div className="absolute top-0 left-0 bg-green-600 text-xs text-white px-3 py-1 rounded-br-lg">
@@ -42,20 +76,18 @@ const PricingTier = ({
         </div>
       )}
       <h3 className="text-2xl font-medium text-white mb-2">{title}</h3>
-      <p className="text-4xl font-bold text-white mb-6">{price}<span className={`text-lg ${isPro ? 'text-white/80' : 'text-zinc-400'} font-normal`}>/month</span></p>
+      <p className="text-4xl font-bold text-white mb-6">{price}<span className={`text-lg ${theme === 'default' ? 'text-zinc-400' : 'text-white/80'} font-normal`}>/month</span></p>
       <ul className="space-y-4 mb-8">
         {features.map((feature, index) => (
           <li key={index} className="flex items-start">
             {feature.available ? (
-              <svg className={`w-6 h-6 ${isPro ? 'text-white' : 'text-[#007AFF]'} mr-2 flex-shrink-0`} fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
+              <CheckCircle className={`w-5 h-5 ${themeStyles.iconColor} mr-2 flex-shrink-0`} />
             ) : (
-              <svg className="w-6 h-6 text-zinc-600 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <svg className="w-5 h-5 text-zinc-600 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             )}
-            <span className={`${feature.available ? (isPro ? 'text-white' : 'text-zinc-300') : 'text-zinc-500'}`}>{feature.text}</span>
+            <span className={`${feature.available ? (theme === 'default' ? 'text-zinc-300' : 'text-white') : 'text-zinc-500'}`}>{feature.text}</span>
           </li>
         ))}
       </ul>
@@ -64,7 +96,7 @@ const PricingTier = ({
           Current Plan
         </Button>
       ) : loading ? (
-        <Button className={`w-full ${isPro ? 'bg-white text-[#007AFF]' : 'bg-[#3A3A3C] text-white'} rounded-xl py-6`} disabled>
+        <Button className={`w-full ${themeStyles.buttonBg} ${themeStyles.buttonText} rounded-xl py-6`} disabled>
           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
           Loading...
         </Button>
@@ -72,14 +104,14 @@ const PricingTier = ({
         onSubscribe ? (
           <Button 
             onClick={onSubscribe} 
-            className={`w-full ${isPro ? 'bg-white text-[#007AFF] hover:bg-gray-100' : 'bg-[#3A3A3C] text-white hover:bg-[#4A4A4C]'} rounded-xl py-6`}
+            className={`w-full ${themeStyles.buttonBg} ${themeStyles.buttonText} rounded-xl py-6`}
           >
-            {isPro ? 'Upgrade to Pro' : 'Continue with Free'}
+            {isPopular ? 'Upgrade Now' : 'Select Plan'}
           </Button>
         ) : (
-          <Link to="/auth">
-            <Button className={`w-full ${isPro ? 'bg-white text-[#007AFF] hover:bg-gray-100' : 'bg-[#3A3A3C] text-white hover:bg-[#4A4A4C]'} rounded-xl py-6`}>
-              {isPro ? 'Try Pro' : 'Get Started'}
+          <Link to="/auth" className="w-full block">
+            <Button className={`w-full ${themeStyles.buttonBg} ${themeStyles.buttonText} rounded-xl py-6`}>
+              Sign Up
             </Button>
           </Link>
         )
@@ -98,12 +130,35 @@ const Pricing = () => {
     { available: true, text: "Unlimited SOPs" },
     { available: true, text: "PDF Export (1 per day)" },
     { available: true, text: "Basic Templates" },
-    { available: false, text: "Team Sharing" }
+    { available: false, text: "HTML Export" },
+    { available: false, text: "Advanced Step Fields" },
+    { available: false, text: "Progress Tracking" }
   ];
   
-  const proTierFeatures = [
+  const proPdfFeatures = [
     { available: true, text: "Everything in Free" },
     { available: true, text: "Unlimited PDF Exports" },
+    { available: true, text: "Premium Templates" },
+    { available: false, text: "HTML Export" },
+    { available: false, text: "Advanced Step Fields" },
+    { available: false, text: "Progress Tracking" }
+  ];
+  
+  const proHtmlFeatures = [
+    { available: true, text: "Everything in Free" },
+    { available: true, text: "HTML Export with Interactive Features" },
+    { available: true, text: "Progress Tracking" },
+    { available: true, text: "Advanced Step Fields" },
+    { available: false, text: "Unlimited PDF Exports" },
+    { available: true, text: "Premium Templates" }
+  ];
+  
+  const proCompleteFeatures = [
+    { available: true, text: "Everything in Free" },
+    { available: true, text: "Unlimited PDF Exports" },
+    { available: true, text: "HTML Export with Interactive Features" },
+    { available: true, text: "Progress Tracking" },
+    { available: true, text: "Advanced Step Fields" },
     { available: true, text: "Premium Templates" },
     { available: true, text: "Priority Support" }
   ];
@@ -112,7 +167,7 @@ const Pricing = () => {
     navigate("/app");
   };
   
-  const handleProTier = async () => {
+  const handleSubscribe = async (selectedTier: string) => {
     if (!user) {
       navigate("/auth");
       return;
@@ -123,7 +178,7 @@ const Pricing = () => {
     try {
       // Call the create-checkout Supabase Edge Function
       const { data, error } = await supabase.functions.invoke('create-checkout', {
-        body: { tier: 'pro' }
+        body: { tier: selectedTier }
       });
       
       if (error) throw error;
@@ -147,8 +202,14 @@ const Pricing = () => {
   return (
     <section id="pricing" className="py-16 bg-[#1E1E1E] border-t border-b border-zinc-800">
       <div className="container mx-auto px-4">
-        <h2 className="text-3xl font-semibold tracking-tight text-white text-center mb-12">Simple Pricing</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl font-semibold tracking-tight text-white mb-4">Plans for Every Need</h2>
+          <p className="text-zinc-400 max-w-2xl mx-auto">
+            Choose the plan that best fits your workflow. All plans include unlimited SOPs and core features.
+          </p>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
           <PricingTier 
             title="Free" 
             price="$0" 
@@ -156,16 +217,44 @@ const Pricing = () => {
             onSubscribe={user ? handleFreeTier : undefined}
             userTier={tier}
             loading={loading}
+            tier="free"
           />
+          
           <PricingTier 
-            title="Pro" 
+            title="Pro PDF" 
             price="$12" 
-            features={proTierFeatures} 
-            isPopular={true} 
-            isPro={true}
-            onSubscribe={user ? handleProTier : undefined}
+            features={proPdfFeatures} 
+            theme="primary"
+            onSubscribe={() => handleSubscribe('pro-pdf')}
             userTier={tier}
             loading={loading}
+            tier="pro-pdf"
+            badgeText="NEW"
+          />
+          
+          <PricingTier 
+            title="Pro HTML" 
+            price="$12" 
+            features={proHtmlFeatures} 
+            theme="secondary"
+            onSubscribe={() => handleSubscribe('pro-html')}
+            userTier={tier}
+            loading={loading}
+            tier="pro-html"
+            badgeText="NEW"
+          />
+          
+          <PricingTier 
+            title="Pro Complete" 
+            price="$20" 
+            features={proCompleteFeatures} 
+            isPopular={true}
+            theme="primary"
+            onSubscribe={() => handleSubscribe('pro-complete')}
+            userTier={tier}
+            loading={loading}
+            tier="pro-complete"
+            badgeText="BEST VALUE"
           />
         </div>
       </div>

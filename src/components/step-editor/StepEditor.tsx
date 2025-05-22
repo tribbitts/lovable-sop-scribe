@@ -43,6 +43,15 @@ const StepEditor: React.FC<StepEditorProps> = ({ step, index }) => {
     if (confirmDelete) deleteStep(step.id);
   };
 
+  // Adapter function to maintain compatibility with existing code
+  const updateStepAdapter = (id: string, field: string, value: string) => {
+    if (field === "description") {
+      updateStep(id, value);
+    } else {
+      updateStep(id, field, value);
+    }
+  };
+
   return (
     <Card className="bg-[#1E1E1E] border-zinc-800 shadow-lg rounded-2xl overflow-hidden">
       <CardContent className="p-6">
@@ -56,7 +65,7 @@ const StepEditor: React.FC<StepEditorProps> = ({ step, index }) => {
         <div className="space-y-6">
           <StepDescription 
             step={step} 
-            updateStep={updateStep} 
+            updateStep={updateStepAdapter} 
           />
 
           <StepScreenshot
