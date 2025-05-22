@@ -39,24 +39,15 @@ export async function addScreenshot(
       const mainImage = await prepareScreenshotImage(step.screenshot.dataUrl, 0.95);
       
       // Always start a new page for each screenshot
-      // Exception: if we're already at the top of a page and it's the first screenshot
-      const isAtTopOfPage = currentY <= margin.top + 5;
-      if (!isAtTopOfPage) {
-        pdf.addPage();
-        addContentPageDesign(pdf, width, height, margin, null); // Add design to the new page
-        currentY = margin.top;
-      }
-      
-      // Check if there's a second image
-      const hasSecondImage = step.screenshot.secondaryDataUrl !== undefined && 
-                           step.screenshot.secondaryDataUrl !== null &&
-                           step.screenshot.secondaryDataUrl.startsWith('data:');
+      pdf.addPage();
+      addContentPageDesign(pdf, width, height, margin, null); // Add design to the new page
+      currentY = margin.top;
       
       // Calculate image dimensions for optimal page utilization
       const maxImageWidth = contentWidth * 0.8; // Use 80% of content width
       
       console.log(`Creating main image with styling for step ${stepIndex + 1}`);
-      // Create first image with improved quality
+      // Create first image with improved quality and shadow effect
       const { imageData: mainImageData, aspectRatio: mainAspectRatio } = 
         await createImageWithStyling(mainImage, step.screenshot.callouts);
       
@@ -99,7 +90,7 @@ export async function addScreenshot(
       }
       
       // If there's a secondary image, add it on a new page
-      if (hasSecondImage && step.screenshot.secondaryDataUrl) {
+      if (step.screenshot.secondaryDataUrl && step.screenshot.secondaryDataUrl.startsWith('data:')) {
         try {
           console.log(`Processing secondary image for step ${stepIndex + 1}`);
           // Always add a new page for the secondary image

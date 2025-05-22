@@ -16,7 +16,7 @@ export function styleStep(
   const stepNumber = index + 1;
   const contentWidth = width - margin.left - margin.right;
   
-  // Set the header height to be more compact - 10px tall instead of previous height
+  // Set the header height to be more compact - 8px tall
   const headerHeight = 8; // Reduced height for more compact look
   
   // Blue 10%, White 90% gradient background for the step header

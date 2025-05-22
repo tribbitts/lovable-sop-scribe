@@ -22,22 +22,10 @@ export async function renderSteps(
       // Style the step header with improved design
       currentY = styleStep(pdf, step, i, currentY, margin, width);
       
-      // Calculate space needed for screenshot
-      const screenshotEstimatedHeight = 
-        step.screenshot ? (step.screenshot.secondaryDataUrl ? 200 : 120) : 10;
+      // Add spacing between step header and content
+      currentY += 5;
       
-      // Check if we need a new page based on remaining space
-      const remainingSpace = height - currentY - margin.bottom;
-      if (remainingSpace < (screenshotEstimatedHeight + 10)) {
-        pdf.addPage();
-        pageNumber++;
-        if (addPageDesignFn) {
-          addPageDesignFn(pdf, width, height, margin, backgroundImage);
-        }
-        currentY = margin.top;
-      }
-      
-      // Add the screenshot with the improved layout
+      // Add the screenshot with the improved layout (one per page)
       if (step.screenshot) {
         // isFirstOrSecondPage helps with sizing images differently on first pages
         const isFirstOrSecondPage = pageNumber <= 2; 
@@ -58,8 +46,15 @@ export async function renderSteps(
         currentY += 10;
       }
       
-      // Add spacing between steps
-      currentY += 15;
+      // Always add a new page for the next step
+      if (i < steps.length - 1) {
+        pdf.addPage();
+        pageNumber++;
+        if (addPageDesignFn) {
+          addPageDesignFn(pdf, width, height, margin, backgroundImage);
+        }
+        currentY = margin.top;
+      }
       
     } catch (error) {
       console.error(`Error rendering step ${i + 1}:`, error);
