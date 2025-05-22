@@ -34,26 +34,33 @@ export function createCroppedImage(
   const cropWidthPx = (completedCrop.width * image.width * scaleX) / 100;
   const cropHeightPx = (completedCrop.height * image.height * scaleY) / 100;
   
-  // Calculate dimensions for the output canvas, ensuring 16:9 aspect ratio
-  // We'll use the crop width as the base and calculate the height from that
-  const outputWidth = cropWidthPx;
-  const outputHeight = outputWidth / aspect;
+  // Calculate source coordinates for cropping
+  const sourceX = (completedCrop.x * image.width * scaleX) / 100;
+  const sourceY = (completedCrop.y * image.height * scaleY) / 100;
   
-  // Set canvas dimensions to match the 16:9 aspect ratio
+  // Set canvas dimensions to maintain the 16:9 aspect ratio
+  // Use the width as the base and calculate height based on aspect
+  const outputWidth = 1280; // Standard width for 16:9
+  const outputHeight = outputWidth / aspect; // Calculate height based on 16:9 aspect ratio
+  
   canvas.width = outputWidth;
   canvas.height = outputHeight;
   
-  // Draw the cropped portion of the image onto the canvas
+  // Fill with white background first
+  ctx.fillStyle = "#FFFFFF";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  
+  // Draw the cropped portion of the image onto the canvas, maintaining aspect ratio
   ctx.drawImage(
     image,
-    (completedCrop.x * image.width * scaleX) / 100,  // source x
-    (completedCrop.y * image.height * scaleY) / 100, // source y
-    cropWidthPx,                                     // source width
-    cropHeightPx,                                    // source height
-    0,                                               // destination x
-    0,                                               // destination y
-    canvas.width,                                    // destination width
-    canvas.height                                    // destination height
+    sourceX,               // source x
+    sourceY,               // source y
+    cropWidthPx,           // source width
+    cropHeightPx,          // source height
+    0,                     // destination x
+    0,                     // destination y
+    outputWidth,           // destination width - fixed width for 16:9
+    outputHeight           // destination height - calculated to maintain aspect
   );
   
   // Convert the canvas to a data URL and return it

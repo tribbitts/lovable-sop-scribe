@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Callout } from "@/types/sop";
 import { Crop } from "lucide-react";
-import CropDialog from "./CropDialog";
+import CropDialog from "./crop/CropDialog";
 
 interface ScreenshotEditorProps {
   stepId: string;
