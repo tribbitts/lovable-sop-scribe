@@ -15,7 +15,8 @@ export async function addScreenshot(
   width: number, 
   height: number, 
   stepIndex: number,
-  addContentPageDesign: Function
+  addContentPageDesign: Function,
+  isFirstOrSecondPage: boolean = false // New parameter to control sizing
 ): Promise<number> {
   try {
     // Skip if no screenshot data
@@ -43,21 +44,29 @@ export async function addScreenshot(
                            step.screenshot.secondaryDataUrl.startsWith('data:');
       
       // Determine layout - side by side or stacked
-      const isWideLayout = contentWidth >= 350; // Minimum width for side-by-side
+      // For pages 1-2, always use stacked layout regardless of width
+      // For pages 3+, use side-by-side when possible for better space utilization
+      const isWideLayout = contentWidth >= 350 && !isFirstOrSecondPage; // Only use wide layout on pages 3+
       const layout = hasSecondImage && isWideLayout ? 'side-by-side' : 'stacked';
       
-      // Calculate image dimensions - use smaller image sizes to fit more content
+      // Calculate image dimensions - use more aggressive scaling for pages 3+
       let imgWidth, imgHeight, secondaryImgWidth, secondaryImgHeight;
       
-      if (layout === 'side-by-side' && hasSecondImage) {
-        // Side-by-side layout (two images)
-        imgWidth = (contentWidth * 0.95) / 2;
-        secondaryImgWidth = imgWidth;
-      } else {
-        // Stacked layout or single image - reduce image size to 85% of content width
+      if (isFirstOrSecondPage) {
+        // First two pages - larger images, one per page
         imgWidth = contentWidth * 0.85;
-        secondaryImgWidth = imgWidth;
+      } else {
+        // Pages 3+ - smaller images to fit more per page
+        if (layout === 'side-by-side' && hasSecondImage) {
+          // Side-by-side layout (two images)
+          imgWidth = (contentWidth * 0.95) / 2;
+        } else {
+          // Stacked layout or single image - smaller size
+          imgWidth = contentWidth * 0.75; // Reduced from 0.85 to 0.75
+        }
       }
+      
+      secondaryImgWidth = imgWidth; // Initialize secondary width the same as primary
       
       console.log(`Creating main image with styling for step ${stepIndex + 1}`);
       // Create first image with error catching
@@ -124,7 +133,7 @@ export async function addScreenshot(
             );
             
             // Move Y position below both images
-            currentY += Math.max(imgHeight, secondaryImgHeight) + 10; // Reduced spacing
+            currentY += Math.max(imgHeight, secondaryImgHeight) + 8; // Reduced spacing from 10 to 8
           } else {
             // Stacked layout - add second image below first
             secondaryImgHeight = secondaryImgWidth / secondaryAspectRatio;
@@ -135,31 +144,31 @@ export async function addScreenshot(
               secondaryImageData,
               'JPEG',
               (width - secondaryImgWidth) / 2,
-              currentY + imgHeight + 8, // Reduced spacing between images
+              currentY + imgHeight + 6, // Reduced spacing between images from 8 to 6
               secondaryImgWidth,
               secondaryImgHeight
             );
             
             // Move Y position below both images
-            currentY += imgHeight + secondaryImgHeight + 15; // Reduced spacing
+            currentY += imgHeight + secondaryImgHeight + 12; // Reduced spacing from 15 to 12
           }
         } catch (secondaryImgError) {
           console.error(`Error processing secondary image for step ${stepIndex + 1}:`, secondaryImgError);
           // Continue with just the main image
-          currentY += imgHeight + 10;
+          currentY += imgHeight + 8; // Reduced from 10 to 8
         }
       } else {
         // Only one image, move Y below it
-        currentY += imgHeight + 10; // Reduced spacing
+        currentY += imgHeight + 8; // Reduced spacing from 10 to 8
       }
       
     } catch (mainImgError) {
       console.error(`Error processing main image for step ${stepIndex + 1}:`, mainImgError);
-      return currentY + 10; // Skip this image but continue with PDF
+      return currentY + 8; // Reduced from 10 to 8
     }
   } catch (e) {
     console.error(`Error in screenshot handling for step ${stepIndex + 1}:`, e);
-    currentY += 5; // Small space if image fails
+    currentY += 4; // Reduced from 5 to 4
   }
   
   return currentY;
