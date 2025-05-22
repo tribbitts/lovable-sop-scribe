@@ -16,7 +16,7 @@ export async function addScreenshot(
   stepIndex: number,
   addContentPageDesign: Function,
   isFirstOrSecondPage: boolean = false,
-  stepCounterOnPage: number // 1 for first image on page, 2 for second
+  imageLayoutMode: 'single' | 'firstOfPair' | 'secondOfPair' // Changed from stepCounterOnPage
 ): Promise<{y: number, imageId: string | null}> { // Return Y and an ID for the image
   let imageId = null; // Store a unique ID for the image if needed for positioning next one
   try {
@@ -41,15 +41,12 @@ export async function addScreenshot(
       
       // Adjust image width based on number of screenshots on the page
       const paddingBetweenImages = 5; // 5mm padding
-      let effectiveContentWidth = contentWidth;
       let maxImageWidth;
 
-      if (stepCounterOnPage === 1 && pdf.isNextImagePartOfPair) { // Hypothetical flag set by renderSteps
-        maxImageWidth = (effectiveContentWidth - paddingBetweenImages) / 2;
-      } else if (stepCounterOnPage === 2) {
-        maxImageWidth = (effectiveContentWidth - paddingBetweenImages) / 2;
-      } else { // Single image on the page
-        maxImageWidth = effectiveContentWidth * 0.8; 
+      if (imageLayoutMode === 'firstOfPair' || imageLayoutMode === 'secondOfPair') {
+        maxImageWidth = (contentWidth - paddingBetweenImages) / 2;
+      } else { // 'single'
+        maxImageWidth = contentWidth * 0.8; 
       }
       
       console.log(`Creating main image with styling for step ${stepIndex + 1}`);
@@ -75,15 +72,12 @@ export async function addScreenshot(
       
       // Calculate X position
       let imageX;
-      if (stepCounterOnPage === 1 && pdf.isNextImagePartOfPair) { // First of a pair
+      if (imageLayoutMode === 'firstOfPair') { 
         imageX = margin.left;
-        pdf.currentImageHeight = imgHeight; // Store height for the next image
-      } else if (stepCounterOnPage === 2) { // Second of a pair
-        imageX = margin.left + (effectiveContentWidth + paddingBetweenImages) / 2;
-        // Ensure Y aligns with the first image of the pair, if heights differ significantly this might need adjustment
-        // currentY might need to be passed as the Y of the first image of the pair.
-      } else { // Single image, centered
-        imageX = (width - imgWidth) / 2;
+      } else if (imageLayoutMode === 'secondOfPair') { 
+        imageX = margin.left + (contentWidth + paddingBetweenImages) / 2;
+      } else { // 'single', centered
+        imageX = margin.left + (contentWidth - imgWidth) / 2; // Center within contentWidth
       }
       
       // Add the main image to PDF with error handling
@@ -99,9 +93,14 @@ export async function addScreenshot(
         );
         imageId = `step_${stepIndex}_main`;
         
-        // Move Y position below the first image
-        // If it's the first of a pair, Y should not advance yet, renderSteps will handle it.
-        if (!(stepCounterOnPage === 1 && pdf.isNextImagePartOfPair)) {
+        // Y position is advanced by renderSteps for paired images.
+        // For single images, advance Y here.
+        if (imageLayoutMode === 'single') {
+            currentY += imgHeight + 15; // 15mm padding after image
+        } else {
+            // For paired images, renderSteps handles the final Y based on max height.
+            // We return the Y value as if this image was the only one, plus padding.
+            // renderSteps will use this to calculate true image height.
             currentY += imgHeight + 15;
         }
       } catch (imageError) {
