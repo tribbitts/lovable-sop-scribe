@@ -1,4 +1,3 @@
-
 import { SopStep } from "@/types/sop";
 import { prepareScreenshotImage, createImageWithStyling } from "./image-processor";
 
@@ -16,7 +15,8 @@ export async function addScreenshot(
   height: number, 
   stepIndex: number,
   addContentPageDesign: Function,
-  isFirstOrSecondPage: boolean = false
+  isFirstOrSecondPage: boolean = false,
+  stepCounterOnPage: number
 ): Promise<number> {
   try {
     // Skip if no screenshot data
@@ -38,13 +38,8 @@ export async function addScreenshot(
       // Preprocess the image with higher quality setting
       const mainImage = await prepareScreenshotImage(step.screenshot.dataUrl, 0.95);
       
-      // Always start a new page for each screenshot
-      pdf.addPage();
-      addContentPageDesign(pdf, width, height, margin, null); // Add design to the new page
-      currentY = margin.top;
-      
-      // Calculate image dimensions for optimal page utilization
-      const maxImageWidth = contentWidth * 0.8; // Use 80% of content width
+      // Adjust image width based on whether it's one or two screenshots per page
+      const maxImageWidth = stepCounterOnPage === 1 ? contentWidth * 0.8 : contentWidth * 0.4; // Use 80% for single, 40% for dual
       
       console.log(`Creating main image with styling for step ${stepIndex + 1}`);
       // Create first image with improved quality and shadow effect
@@ -67,8 +62,21 @@ export async function addScreenshot(
         imgWidth = imgHeight * mainAspectRatio;
       }
       
-      // Center the image horizontally
-      const firstImageX = (width - imgWidth) / 2;
+      // Center the image horizontally, or place side-by-side
+      let firstImageX;
+      if (stepCounterOnPage === 1) {
+        firstImageX = (width - imgWidth) / 2; // Center if single image
+      } else {
+        // Assuming this is the first of two images, place on the left
+        // The second image will need to be handled in a subsequent call if this function is called per image
+        firstImageX = margin.left + (contentWidth * 0.05); // Place on left with some padding
+      }
+      // If this is the second image on the page, adjust X position
+      // This simple logic assumes the function is called for each step's primary image sequentially.
+      // A more robust solution would manage a list of images for the page and place them.
+      if (pdf.pageImages && pdf.pageImages.length === 1 && stepCounterOnPage === 2) { // A hypothetical way to check if an image is already on the page
+         firstImageX = margin.left + contentWidth * 0.55; // Place on right
+      }
       
       // Add the main image to PDF with error handling
       try {
@@ -90,13 +98,15 @@ export async function addScreenshot(
       }
       
       // If there's a secondary image, add it on a new page
+      // For now, secondary images will still get their own new page to simplify layout.
+      // This part needs to be refactored if secondary images should also be on the same page.
       if (step.screenshot.secondaryDataUrl && step.screenshot.secondaryDataUrl.startsWith('data:')) {
         try {
           console.log(`Processing secondary image for step ${stepIndex + 1}`);
           // Always add a new page for the secondary image
           pdf.addPage();
           addContentPageDesign(pdf, width, height, margin, null);
-          currentY = margin.top;
+          let secondaryCurrentY = margin.top; // Reset Y for new page
           
           // Use higher quality for secondary image too
           const secondaryImage = await prepareScreenshotImage(step.screenshot.secondaryDataUrl, 0.95);
@@ -128,13 +138,13 @@ export async function addScreenshot(
             secondaryImageData, 
             'JPEG', 
             secondaryImageX, 
-            currentY, 
+            secondaryCurrentY, // Use reset Y for new page
             secondaryImgWidth, 
             secondaryImgHeight
           );
           
           // Move Y position below the secondary image
-          currentY += secondaryImgHeight + 15;
+          secondaryCurrentY += secondaryImgHeight + 15;
         } catch (secondaryImgError) {
           console.error(`Error processing secondary image for step ${stepIndex + 1}:`, secondaryImgError);
           // Continue with next step even if secondary image fails

@@ -1,4 +1,3 @@
-
 import { SopStep } from "@/types/sop";
 import { addWrappedText } from "./utils";
 
@@ -16,8 +15,8 @@ export function styleStep(
   const stepNumber = index + 1;
   const contentWidth = width - margin.left - margin.right;
   
-  // Set the header height to be more compact - 8px tall
-  const headerHeight = 8; // Reduced height for more compact look
+  // Set the header height to be more compact - 6px tall
+  const headerHeight = 6; // Reduced height for more compact look
   
   // Blue 10%, White 90% gradient background for the step header
   // First, create the blue section (10% of width)
@@ -49,7 +48,7 @@ export function styleStep(
   pdf.text(
     stepText, 
     margin.left + 4, // Centered in blue section
-    currentY + headerHeight/2 + 3 // Vertically centered
+    currentY + headerHeight/2 + 2.5 // Vertically centered
   );
   
   // Add the step description in the white section with black text
@@ -59,7 +58,7 @@ export function styleStep(
   
   // Position the description text in the white section
   const descriptionX = margin.left + blueWidth + 5; // Add padding from blue section
-  const descriptionY = currentY + headerHeight/2 + 3; // Same vertical alignment as step number
+  const descriptionY = currentY + headerHeight/2 + 2.5; // Same vertical alignment as step number
   const availableWidth = contentWidth - blueWidth - 10; // Adjusted width for description
   
   // Only add the first line of description in the header
