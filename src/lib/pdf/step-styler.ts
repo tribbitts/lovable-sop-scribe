@@ -15,60 +15,75 @@ export function styleStep(
   const stepNumber = index + 1;
   const contentWidth = width - margin.left - margin.right;
   
-  // Set the header height to be more compact - 6px tall
-  const headerHeight = 6; // Reduced height for more compact look
+  const fontSize = 8; // Slightly smaller font for tighter fit
+  const pillPaddingY = 1.5; 
+  const textHeight = fontSize * 0.3528; // Conversion from points to mm (approx)
+  const headerHeight = Math.max(10, textHeight + (pillPaddingY * 2)); // Ensure min height, make it snug
+  const pillRadius = headerHeight / 2;
+
+  // Draw the main white pill background first
+  pdf.setFillColor(255, 255, 255); // White background
+  pdf.roundedRect(
+    margin.left, 
+    currentY, 
+    contentWidth, 
+    headerHeight,
+    pillRadius, 
+    pillRadius,
+    'F'
+  );
   
-  // Blue 10%, White 90% gradient background for the step header
-  // First, create the blue section (10% of width)
+  // Draw the blue part on the left, also rounded, but only on its left side
+  // To make it appear as one shape, its right edge should be straight and align with white's start
   const blueWidth = contentWidth * 0.1;
   pdf.setFillColor(0, 122, 255); // Apple Blue background
-  pdf.rect(
+  // We want left corners rounded, right corners square (0 radius)
+  pdf.roundedRect(
     margin.left, 
     currentY, 
     blueWidth, 
     headerHeight,
+    [pillRadius, 0, 0, pillRadius], // TL, TR, BR, BL radii
+    // pillRadius, // If only one radius, it applies to all. For specific, need array.
+    // pillRadius, 
     'F'
   );
   
-  // Then create the white section (90% of width)
-  pdf.setFillColor(255, 255, 255); // White background
-  pdf.rect(
-    margin.left + blueWidth, 
-    currentY, 
-    contentWidth - blueWidth, 
-    headerHeight,
-    'F'
-  );
-  
-  // Add step number with professional styling in the blue section
+  // Add step number in the blue section
   pdf.setFont("helvetica", "bold");
-  pdf.setFontSize(9);
-  pdf.setTextColor(255, 255, 255); // White text for better contrast on blue
+  pdf.setFontSize(fontSize);
+  pdf.setTextColor(255, 255, 255); 
   const stepText = `STEP ${stepNumber}`;
+  // Calculate text Y for vertical centering
+  const textY = currentY + (headerHeight / 2) + (textHeight / 2) - pillPaddingY * 0.5; // Adjusted for better centering
+
   pdf.text(
     stepText, 
-    margin.left + 4, // Centered in blue section
-    currentY + headerHeight/2 + 2.5 // Vertically centered
+    margin.left + pillPaddingY * 2, // Add some horizontal padding
+    textY
   );
   
-  // Add the step description in the white section with black text
+  // Add the step description in the white section
   pdf.setFont("helvetica", "normal");
-  pdf.setFontSize(9);
-  pdf.setTextColor(0, 0, 0); // Black text for description
+  pdf.setFontSize(fontSize);
+  pdf.setTextColor(0, 0, 0); 
   
-  // Position the description text in the white section
-  const descriptionX = margin.left + blueWidth + 5; // Add padding from blue section
-  const descriptionY = currentY + headerHeight/2 + 2.5; // Same vertical alignment as step number
-  const availableWidth = contentWidth - blueWidth - 10; // Adjusted width for description
+  const descriptionX = margin.left + blueWidth + pillPaddingY * 2; 
+  const descriptionY = textY; 
+  const availableWidthForDesc = contentWidth - blueWidth - (pillPaddingY * 4); 
   
-  // Only add the first line of description in the header
   let descriptionFirstLine = step.description;
-  if (descriptionFirstLine.length > 70) {
-    descriptionFirstLine = descriptionFirstLine.substring(0, 70) + "...";
+  if (pdf.getStringUnitWidth(descriptionFirstLine) * fontSize / pdf.internal.scaleFactor > availableWidthForDesc) {
+    // Trim description if too long for the header space
+    // This is a more robust way than just character length
+    let trimmedDesc = step.description;
+    while (pdf.getStringUnitWidth(trimmedDesc + '...') * fontSize / pdf.internal.scaleFactor > availableWidthForDesc && trimmedDesc.length > 0) {
+        trimmedDesc = trimmedDesc.substring(0, trimmedDesc.length - 1);
+    }
+    descriptionFirstLine = trimmedDesc + (step.description.length > trimmedDesc.length ? '...' : '');
   }
   
   pdf.text(descriptionFirstLine, descriptionX, descriptionY);
   
-  // Return the Y position after the header
-  return currentY + headerHeight + 4; // Small spacing after header
+  return currentY + headerHeight + 4; 
 }

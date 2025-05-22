@@ -16,19 +16,20 @@ export async function addScreenshot(
   stepIndex: number,
   addContentPageDesign: Function,
   isFirstOrSecondPage: boolean = false,
-  stepCounterOnPage: number
-): Promise<number> {
+  stepCounterOnPage: number // 1 for first image on page, 2 for second
+): Promise<{y: number, imageId: string | null}> { // Return Y and an ID for the image
+  let imageId = null; // Store a unique ID for the image if needed for positioning next one
   try {
     // Skip if no screenshot data
     if (!step.screenshot || !step.screenshot.dataUrl) {
       console.log(`No screenshot for step ${stepIndex + 1}, skipping`);
-      return currentY;
+      return { y: currentY, imageId };
     }
     
     // Validate image data before processing
     if (!step.screenshot.dataUrl.startsWith('data:')) {
       console.error(`Invalid screenshot data for step ${stepIndex + 1}`);
-      return currentY + 10;
+      return { y: currentY + 10, imageId };
     }
     
     console.log(`Processing screenshot for step ${stepIndex + 1}`);
@@ -38,8 +39,18 @@ export async function addScreenshot(
       // Preprocess the image with higher quality setting
       const mainImage = await prepareScreenshotImage(step.screenshot.dataUrl, 0.95);
       
-      // Adjust image width based on whether it's one or two screenshots per page
-      const maxImageWidth = stepCounterOnPage === 1 ? contentWidth * 0.8 : contentWidth * 0.4; // Use 80% for single, 40% for dual
+      // Adjust image width based on number of screenshots on the page
+      const paddingBetweenImages = 5; // 5mm padding
+      let effectiveContentWidth = contentWidth;
+      let maxImageWidth;
+
+      if (stepCounterOnPage === 1 && pdf.isNextImagePartOfPair) { // Hypothetical flag set by renderSteps
+        maxImageWidth = (effectiveContentWidth - paddingBetweenImages) / 2;
+      } else if (stepCounterOnPage === 2) {
+        maxImageWidth = (effectiveContentWidth - paddingBetweenImages) / 2;
+      } else { // Single image on the page
+        maxImageWidth = effectiveContentWidth * 0.8; 
+      }
       
       console.log(`Creating main image with styling for step ${stepIndex + 1}`);
       // Create first image with improved quality and shadow effect
@@ -62,39 +73,40 @@ export async function addScreenshot(
         imgWidth = imgHeight * mainAspectRatio;
       }
       
-      // Center the image horizontally, or place side-by-side
-      let firstImageX;
-      if (stepCounterOnPage === 1) {
-        firstImageX = (width - imgWidth) / 2; // Center if single image
-      } else {
-        // Assuming this is the first of two images, place on the left
-        // The second image will need to be handled in a subsequent call if this function is called per image
-        firstImageX = margin.left + (contentWidth * 0.05); // Place on left with some padding
-      }
-      // If this is the second image on the page, adjust X position
-      // This simple logic assumes the function is called for each step's primary image sequentially.
-      // A more robust solution would manage a list of images for the page and place them.
-      if (pdf.pageImages && pdf.pageImages.length === 1 && stepCounterOnPage === 2) { // A hypothetical way to check if an image is already on the page
-         firstImageX = margin.left + contentWidth * 0.55; // Place on right
+      // Calculate X position
+      let imageX;
+      if (stepCounterOnPage === 1 && pdf.isNextImagePartOfPair) { // First of a pair
+        imageX = margin.left;
+        pdf.currentImageHeight = imgHeight; // Store height for the next image
+      } else if (stepCounterOnPage === 2) { // Second of a pair
+        imageX = margin.left + (effectiveContentWidth + paddingBetweenImages) / 2;
+        // Ensure Y aligns with the first image of the pair, if heights differ significantly this might need adjustment
+        // currentY might need to be passed as the Y of the first image of the pair.
+      } else { // Single image, centered
+        imageX = (width - imgWidth) / 2;
       }
       
       // Add the main image to PDF with error handling
       try {
-        console.log(`Adding main image to PDF for step ${stepIndex + 1} at position (${firstImageX}, ${currentY})`);
+        console.log(`Adding main image to PDF for step ${stepIndex + 1} at position (${imageX}, ${currentY})`);
         pdf.addImage(
           mainImageData, 
           'JPEG', 
-          firstImageX, 
+          imageX, 
           currentY, 
           imgWidth, 
           imgHeight
         );
+        imageId = `step_${stepIndex}_main`;
         
         // Move Y position below the first image
-        currentY += imgHeight + 15;
+        // If it's the first of a pair, Y should not advance yet, renderSteps will handle it.
+        if (!(stepCounterOnPage === 1 && pdf.isNextImagePartOfPair)) {
+            currentY += imgHeight + 15;
+        }
       } catch (imageError) {
         console.error(`Error adding main image to PDF for step ${stepIndex + 1}:`, imageError);
-        return currentY + 10;
+        return { y: currentY + 10, imageId: null };
       }
       
       // If there's a secondary image, add it on a new page
@@ -153,12 +165,12 @@ export async function addScreenshot(
       
     } catch (mainImgError) {
       console.error(`Error processing main image for step ${stepIndex + 1}:`, mainImgError);
-      return currentY + 10;
+      return { y: currentY + 10, imageId: null };
     }
   } catch (e) {
     console.error(`Error in screenshot handling for step ${stepIndex + 1}:`, e);
     currentY += 5;
   }
   
-  return currentY;
+  return { y: currentY, imageId };
 }
