@@ -139,7 +139,12 @@ const CropDialog: React.FC<CropDialogProps> = ({
           <ReactCrop
             crop={crop}
             onChange={(c) => setCrop(c)}
-            onComplete={(c) => setCompletedCrop(c)}
+            onComplete={(c) => {
+              // Ensure we're setting a PercentCrop by checking if unit is "%"
+              if (c.unit === "%") {
+                setCompletedCrop(c);
+              }
+            }}
             aspect={aspect}
             className="max-h-[50vh] object-contain"
           >
