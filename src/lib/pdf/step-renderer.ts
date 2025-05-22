@@ -16,7 +16,6 @@ export async function renderSteps(
   let pageNumber = 1;
   let stepCounterOnPage = 0;
   let firstImageHeightInfo = { height: 0, yStart: 0 };
-  let yForNextAlignedHeader = 0; // Store Y for aligning headers of a pair
 
   for (let i = 0; i < steps.length; i++) {
     const step = steps[i];
@@ -25,27 +24,23 @@ export async function renderSteps(
 
     const hasNextStep = i + 1 < steps.length;
     const nextStepHasScreenshot = hasNextStep && steps[i+1]?.screenshot?.dataUrl;
-    if (stepCounterOnPage === 1 && nextStepHasScreenshot && steps[i]?.screenshot?.dataUrl) { // Current and next have screenshot
+
+    if (stepCounterOnPage === 1 && steps[i]?.screenshot?.dataUrl && nextStepHasScreenshot) {
       imageLayoutMode = 'firstOfPair';
-    } else if (stepCounterOnPage === 2 && steps[i]?.screenshot?.dataUrl) { // Current is second of a pair with screenshot
+    } else if (stepCounterOnPage === 2 && steps[i]?.screenshot?.dataUrl && firstImageHeightInfo.yStart > 0) {
       imageLayoutMode = 'secondOfPair';
-    } // Default is 'single'
+    } else {
+      imageLayoutMode = 'single';
+    }
 
     let headerActualStartY = currentY;
-    if (imageLayoutMode === 'secondOfPair') {
-      headerActualStartY = yForNextAlignedHeader; // Align this header with the first of the pair
-    }
-    if (imageLayoutMode === 'firstOfPair') {
-      yForNextAlignedHeader = headerActualStartY; // Save for the next step in the pair
-    }
 
     let styledHeaderBottomY = styleStep(pdf, step, i, headerActualStartY, margin, width);
-    const screenshotContentStartY = styledHeaderBottomY + 5; // Y where screenshot content (image) begins
+    const screenshotContentStartY = styledHeaderBottomY + 5;
 
     if (step.screenshot && step.screenshot.dataUrl) {
       let yPosForAddScreenshot = screenshotContentStartY;
       if (imageLayoutMode === 'secondOfPair') {
-        // Ensure second image aligns with where the first image started its content drawing
         yPosForAddScreenshot = firstImageHeightInfo.yStart;
       }
       
@@ -64,43 +59,50 @@ export async function renderSteps(
         imageLayoutMode 
       );
       
-      const imageActualHeight = result.y - yPosForAddScreenshot; // This includes addScreenshot's internal bottom padding
+      const imageActualHeight = result.y - yPosForAddScreenshot;
 
       if (imageLayoutMode === 'firstOfPair') {
           firstImageHeightInfo = { height: imageActualHeight, yStart: yPosForAddScreenshot };
-          // For the first image of a pair, currentY for page flow doesn't advance yet.
-          // It will be determined by the max height of the pair.
-          // currentY for the *next iteration* (second step of pair) is handled by headerActualStartY logic.
+          currentY = styledHeaderBottomY; 
       } else if (imageLayoutMode === 'secondOfPair') {
-          // Finished a pair. Advance currentY by the maximum extent of the pair.
-          // Max extent is from the aligned header start, to the bottom of the taller image block.
           const firstImageBlockEndY = firstImageHeightInfo.yStart + firstImageHeightInfo.height;
           const secondImageBlockEndY = yPosForAddScreenshot + imageActualHeight;
-          currentY = Math.max(firstImageBlockEndY, secondImageBlockEndY);
-          firstImageHeightInfo = { height: 0, yStart: 0 };
+          currentY = Math.max(styledHeaderBottomY, firstImageBlockEndY, secondImageBlockEndY);
+          firstImageHeightInfo = { height: 0, yStart: 0 }; 
       } else { // Single image
           currentY = result.y; 
+          firstImageHeightInfo = { height: 0, yStart: 0 }; // Reset if it was a single image
       }
     } else { // No screenshot for this step
-      currentY = styledHeaderBottomY + 10; // Advance currentY past header + some padding
+      currentY = styledHeaderBottomY + 10; 
+      // If this step was expected to be part of a pair but has no screenshot,
+      // or it's a single step, reset firstImageHeightInfo.
+      // The imageLayoutMode is determined *before* this 'else' block.
+      // If it was 'firstOfPair' but no screenshot, it won't behave as 'firstOfPair' for image placement.
+      // If it was 'secondOfPair' but no screenshot, then mode detection logic is flawed (as it checks for screenshot).
+      // Thus, we primarily care about resetting if a pair was *initiated by a previous step*.
+      if (imageLayoutMode !== 'firstOfPair') { // if not starting a new pair (which it can't without a screenshot)
+        firstImageHeightInfo = { height: 0, yStart: 0 };
+      }
+      // If imageLayoutMode was 'firstOfPair' BUT we are in this else block (no screenshot),
+      // then firstImageHeightInfo would not have been set in the 'if' block above.
+      // It retains its value from previous iteration (or initial state).
+      // The crucial reset for a *completed* or *broken* pair happens correctly
+      // in 'secondOfPair' or 'single' (in the if block), or here if no screenshot.
     }
       
-    // Page breaking logic
     const isLastStep = i === steps.length - 1;
     if (!isLastStep) {
-      // If we just processed the second item of a pair, or a single item, then break page.
       if (imageLayoutMode === 'secondOfPair' || imageLayoutMode === 'single') {
         pdf.addPage();
         pageNumber++;
         stepCounterOnPage = 0; 
-        yForNextAlignedHeader = 0; // Reset
+        currentY = margin.top;
+        firstImageHeightInfo = { height: 0, yStart: 0 };
         if (addPageDesignFn) {
           addPageDesignFn(pdf, width, height, margin, backgroundImage);
         }
-        currentY = margin.top;
       } 
-      // If it was 'firstOfPair', loop continues, stepCounterOnPage becomes 2, 
-      // and headerActualStartY for the next step will use yForNextAlignedHeader.
     }
   }
 }
