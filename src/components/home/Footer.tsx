@@ -7,12 +7,21 @@ const FooterColumn = ({ title, links }: { title: string, links: { text: string, 
     <ul className="space-y-2">
       {links.map((link, index) => (
         <li key={index}>
-          <a 
-            href={link.href} 
-            className="text-sm text-zinc-500 hover:text-white transition-colors"
-          >
-            {link.text}
-          </a>
+          {link.href.startsWith('/') ? (
+            <Link 
+              to={link.href} 
+              className="text-sm text-zinc-500 hover:text-white transition-colors"
+            >
+              {link.text}
+            </Link>
+          ) : (
+            <a 
+              href={link.href} 
+              className="text-sm text-zinc-500 hover:text-white transition-colors"
+            >
+              {link.text}
+            </a>
+          )}
         </li>
       ))}
     </ul>
@@ -33,9 +42,9 @@ const Footer = () => {
   ];
   
   const legalLinks = [
-    { text: "Terms of Service", href: "#" },
-    { text: "Privacy Policy", href: "#" },
-    { text: "Cookie Policy", href: "#" }
+    { text: "Terms of Service", href: "/terms-of-service" },
+    { text: "Privacy Policy", href: "/privacy-policy" },
+    { text: "Cookie Policy", href: "/cookie-policy" }
   ];
 
   return (
