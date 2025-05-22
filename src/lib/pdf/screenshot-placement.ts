@@ -56,8 +56,11 @@ export async function addScreenshot(
       if (imageLayoutMode === 'single') {
         maxAvailableHeight = height - currentY - margin.bottom - 20; 
       } else if (imageLayoutMode === 'firstOfPair') {
-        maxAvailableHeight = (height - margin.top - margin.bottom - 40) / 2; 
-      } else { 
+        // Allow first image to also use space down to bottom, renderSteps will handle overall Y advancement
+        // The second image will start at the same currentY and also use space to bottom.
+        // Max height of the pair determines the step.
+        maxAvailableHeight = height - currentY - margin.bottom - 15; // Similar to single or secondOfPair, but renderSteps manages final Y
+      } else { // secondOfPair
         maxAvailableHeight = height - currentY - margin.bottom - 15; 
       }
 

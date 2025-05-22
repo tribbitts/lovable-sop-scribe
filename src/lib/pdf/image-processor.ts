@@ -157,8 +157,8 @@ export async function createImageWithStyling(imageUrl: string, callouts: any[] =
         
         // Return the final image
         try {
-          // Use high quality JPEG output
-          const imgData = paddedCanvas.toDataURL('image/jpeg', 0.95);
+          // Use PNG output to preserve transparency for rounded corners and shadows
+          const imgData = paddedCanvas.toDataURL('image/png');
           resolve({ 
             imageData: imgData, 
             aspectRatio: aspectRatio 
