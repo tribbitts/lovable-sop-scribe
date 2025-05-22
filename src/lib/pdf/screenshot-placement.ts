@@ -3,7 +3,7 @@ import { prepareScreenshotImage, createImageWithStyling } from "./image-processo
 
 /**
  * Adds screenshots with callouts to the PDF
- * Handles two images per page with consistent sizing
+ * Handles vertical layout with proper sizing for two per page
  */
 export async function addScreenshot(
   pdf: any, 
@@ -16,35 +16,35 @@ export async function addScreenshot(
   stepIndex: number,
   addContentPageDesign: Function,
   isFirstOrSecondPage: boolean = false,
-  imageLayoutMode: 'single' | 'firstOfPair' | 'secondOfPair' = 'single' 
+  imageLayoutMode: 'single' | 'firstOfPair' | 'secondOfPair' | 'vertical' = 'single',
+  maxImageHeight?: number
 ): Promise<{y: number, imageId: string | null}> { 
   let imageId = null; 
-  // console.log(`[addScreenshot] Called for step ${stepIndex + 1} with mode: ${imageLayoutMode}, currentY: ${currentY}`); // Keep console logs minimal for now
+  
   try {
     // Skip if no screenshot data
     if (!step.screenshot || !step.screenshot.dataUrl) {
-      // console.log(`[addScreenshot] Step ${stepIndex + 1}: No screenshot data or dataUrl. Skipping.`);
       return { y: currentY, imageId };
     }
     
     // Validate image data before processing
     if (!step.screenshot.dataUrl.startsWith('data:')) {
-      // console.error(`[addScreenshot] Step ${stepIndex + 1}: Invalid screenshot dataUrl format.`);
       return { y: currentY + 10, imageId };
     }
-    
-    // console.log(`[addScreenshot] Processing screenshot for step ${stepIndex + 1}`);
     
     // Handle main screenshot with additional error handling
     try {
       const mainImage = await prepareScreenshotImage(step.screenshot.dataUrl, 0.95);
       
+      // For vertical layout, use full content width and respect maxImageHeight
       let maxImageWidth;
-      const pairPadding = 5; // Space between paired images
-      if (imageLayoutMode === 'firstOfPair' || imageLayoutMode === 'secondOfPair') {
+      if (imageLayoutMode === 'vertical') {
+        maxImageWidth = contentWidth * 0.85; // Use most of the width for vertical layout
+      } else if (imageLayoutMode === 'firstOfPair' || imageLayoutMode === 'secondOfPair') {
+        const pairPadding = 5;
         maxImageWidth = (contentWidth - pairPadding) / 2;
       } else { // single
-        maxImageWidth = contentWidth * 0.80; // Single images can be wider
+        maxImageWidth = contentWidth * 0.80;
       }
 
       const { imageData: mainImageData, aspectRatio: mainAspectRatio } = 
@@ -54,20 +54,22 @@ export async function addScreenshot(
         throw new Error(`Failed to process main image for step ${stepIndex + 1}`);
       }
       
+      // Calculate image dimensions
       let imgWidth = maxImageWidth;
       let imgHeight = imgWidth / mainAspectRatio;
-      if (imgHeight === Infinity || imgHeight === 0) { // Prevent division by zero or infinite height
-          imgHeight = imgWidth; // Default to square if aspect ratio is bad
+      
+      if (imgHeight === Infinity || imgHeight === 0) {
+        imgHeight = imgWidth; // Default to square if aspect ratio is bad
       }
       
+      // Apply height constraints
       let maxAvailableHeight;
-      if (imageLayoutMode === 'single') {
+      if (imageLayoutMode === 'vertical' && maxImageHeight) {
+        maxAvailableHeight = maxImageHeight;
+      } else if (imageLayoutMode === 'single') {
         maxAvailableHeight = height - currentY - margin.bottom - 20; 
       } else if (imageLayoutMode === 'firstOfPair') {
-        // Allow first image to also use space down to bottom, renderSteps will handle overall Y advancement
-        // The second image will start at the same currentY and also use space to bottom.
-        // Max height of the pair determines the step.
-        maxAvailableHeight = height - currentY - margin.bottom - 15; // Similar to single or secondOfPair, but renderSteps manages final Y
+        maxAvailableHeight = height - currentY - margin.bottom - 15;
       } else { // secondOfPair
         maxAvailableHeight = height - currentY - margin.bottom - 15; 
       }
@@ -75,17 +77,17 @@ export async function addScreenshot(
       if (imgHeight > maxAvailableHeight) {
         imgHeight = maxAvailableHeight;
         imgWidth = imgHeight * mainAspectRatio;
-        if (imgWidth === Infinity || imgWidth === 0) imgWidth = imgHeight; // Re-check after scaling height
+        if (imgWidth === Infinity || imgWidth === 0) imgWidth = imgHeight;
       }
       
+      // Calculate X position
       let imageX;
       if (imageLayoutMode === 'firstOfPair') {
-        // For the first image of a pair, its X position is on the left
         imageX = margin.left;
       } else if (imageLayoutMode === 'secondOfPair') {
-        // For the second image of a pair, its X position is on the right of the first
+        const pairPadding = 5;
         imageX = margin.left + (contentWidth + pairPadding) / 2;
-      } else { // single, centered
+      } else { // single or vertical - center the image
         imageX = margin.left + (contentWidth - imgWidth) / 2;
       }
       
@@ -100,13 +102,18 @@ export async function addScreenshot(
         );
 
         imageId = `step_${stepIndex}_main`;
-        const yPadding = imageLayoutMode === 'firstOfPair' ? 8 : 15;
+        
+        // Add appropriate padding after image
+        const yPadding = imageLayoutMode === 'vertical' ? 10 : 
+                        imageLayoutMode === 'firstOfPair' ? 8 : 15;
         currentY += imgHeight + yPadding;
+        
       } catch (imageError) {
         console.error(`[addScreenshot] Step ${stepIndex + 1}: Error adding main image to PDF:`, imageError);
         return { y: currentY + 10, imageId: null };
       }
       
+      // Handle secondary images (if any)
       if (step.screenshot.secondaryDataUrl && step.screenshot.secondaryDataUrl.startsWith('data:')) {
         try {
           pdf.addPage();
@@ -121,17 +128,11 @@ export async function addScreenshot(
             throw new Error(`Failed to process secondary image for step ${stepIndex + 1}`);
           }
           
-          let secondaryImgWidth = maxImageWidth; // For secondary image on new page, it acts like a single image for width 
-          // If secondary were to be paired, this would need pair logic too.
-          // For now, assuming it's full width like a 'single' image mode for its own page.
-          if (imageLayoutMode === 'firstOfPair' || imageLayoutMode === 'secondOfPair') {
-             // If the main image was part of a pair, secondary is on a new page, so it should get full width for that new page context
-             secondaryImgWidth = contentWidth * 0.80;
-          } // else it inherits maxImageWidth which was already set for single mode.
-          
+          let secondaryImgWidth = contentWidth * 0.80;
           let secondaryImgHeight = secondaryImgWidth / secondaryAspectRatio;
+          
           if (secondaryImgHeight === Infinity || secondaryImgHeight === 0) {
-              secondaryImgHeight = secondaryImgWidth; // Default to square
+            secondaryImgHeight = secondaryImgWidth;
           }
           
           const secondaryMaxAvailableHeight = height - secondaryCurrentY - margin.bottom - 20;
@@ -166,25 +167,5 @@ export async function addScreenshot(
     return { y: currentY + 5, imageId: null }; 
   }
   
-  // console.log(`[addScreenshot] Step ${stepIndex + 1}: Returning y = ${currentY}`);
   return { y: currentY, imageId };
 }
-
-// Ensure addScreenshotDebug is NOT present or is commented out if it was for previous debugging
-/*
-export async function addScreenshotDebug(
-  pdf: any, 
-  step: SopStep, 
-  currentY: number, 
-  margin: any, 
-  contentWidth: number, 
-  width: number, 
-  height: number, 
-  stepIndex: number,
-  addContentPageDesign: Function,
-  isFirstOrSecondPage: boolean = false,
-  imageLayoutMode: 'single' | 'firstOfPair' | 'secondOfPair' = 'single' 
-): Promise<{y: number, imageId: string | null}> { 
-  // ... debug code ...
-}
-*/
