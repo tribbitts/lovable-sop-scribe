@@ -99,8 +99,8 @@ export async function createImageWithStyling(imageUrl: string, callouts: any[] =
         }
         
         // Create a new canvas for the final image with shadow and rounded corners
-        const shadowOffset = 5; // How much the shadow is offset Y
-        const shadowBlurAmount = 10; // How much blur for the shadow
+        const shadowOffset = 8; // How much the shadow is offset Y (increased)
+        const shadowBlurAmount = 12; // How much blur for the shadow (increased)
         const padding = shadowBlurAmount + shadowOffset; // Padding around the image for shadow and blur
         const borderRadius = 8; // Radius for the image corners
 
@@ -127,7 +127,7 @@ export async function createImageWithStyling(imageUrl: string, callouts: any[] =
         paddedCtx.arcTo(padding, padding, padding + borderRadius, padding, borderRadius);
         paddedCtx.closePath();
 
-        paddedCtx.shadowColor = 'rgba(0, 0, 0, 0.3)';
+        paddedCtx.shadowColor = 'rgba(0, 0, 0, 0.45)'; // Darker shadow
         paddedCtx.shadowBlur = shadowBlurAmount;
         paddedCtx.shadowOffsetX = 0;
         paddedCtx.shadowOffsetY = shadowOffset;

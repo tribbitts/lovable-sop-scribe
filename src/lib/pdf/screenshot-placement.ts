@@ -38,7 +38,15 @@ export async function addScreenshot(
     // Handle main screenshot with additional error handling
     try {
       const mainImage = await prepareScreenshotImage(step.screenshot.dataUrl, 0.95);
-      const maxImageWidth = contentWidth * (imageLayoutMode === 'single' ? 0.70 : 0.80);
+      
+      let maxImageWidth;
+      const pairPadding = 5; // Space between paired images
+      if (imageLayoutMode === 'firstOfPair' || imageLayoutMode === 'secondOfPair') {
+        maxImageWidth = (contentWidth - pairPadding) / 2;
+      } else { // single
+        maxImageWidth = contentWidth * 0.80; // Single images can be wider
+      }
+
       const { imageData: mainImageData, aspectRatio: mainAspectRatio } = 
         await createImageWithStyling(mainImage, step.screenshot.callouts);
       
@@ -70,7 +78,16 @@ export async function addScreenshot(
         if (imgWidth === Infinity || imgWidth === 0) imgWidth = imgHeight; // Re-check after scaling height
       }
       
-      const imageX = margin.left + (contentWidth - imgWidth) / 2;
+      let imageX;
+      if (imageLayoutMode === 'firstOfPair') {
+        // For the first image of a pair, its X position is on the left
+        imageX = margin.left;
+      } else if (imageLayoutMode === 'secondOfPair') {
+        // For the second image of a pair, its X position is on the right of the first
+        imageX = margin.left + (contentWidth + pairPadding) / 2;
+      } else { // single, centered
+        imageX = margin.left + (contentWidth - imgWidth) / 2;
+      }
       
       try {
         pdf.addImage(
@@ -104,7 +121,14 @@ export async function addScreenshot(
             throw new Error(`Failed to process secondary image for step ${stepIndex + 1}`);
           }
           
-          let secondaryImgWidth = maxImageWidth; 
+          let secondaryImgWidth = maxImageWidth; // For secondary image on new page, it acts like a single image for width 
+          // If secondary were to be paired, this would need pair logic too.
+          // For now, assuming it's full width like a 'single' image mode for its own page.
+          if (imageLayoutMode === 'firstOfPair' || imageLayoutMode === 'secondOfPair') {
+             // If the main image was part of a pair, secondary is on a new page, so it should get full width for that new page context
+             secondaryImgWidth = contentWidth * 0.80;
+          } // else it inherits maxImageWidth which was already set for single mode.
+          
           let secondaryImgHeight = secondaryImgWidth / secondaryAspectRatio;
           if (secondaryImgHeight === Infinity || secondaryImgHeight === 0) {
               secondaryImgHeight = secondaryImgWidth; // Default to square
