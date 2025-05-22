@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
+import { createCroppedImage } from "./cropUtils";
 
 interface CropDialogProps {
   open: boolean;
@@ -79,46 +80,9 @@ const CropDialog: React.FC<CropDialogProps> = ({
   // Apply the crop to generate a new image
   const handleApplyCrop = () => {
     if (completedCrop && imageRef.current) {
-      const canvas = document.createElement("canvas");
-      const image = imageRef.current;
-      
-      const scaleX = image.naturalWidth / image.width;
-      const scaleY = image.naturalHeight / image.height;
-      
-      const ctx = canvas.getContext("2d");
-      if (!ctx) {
-        toast({
-          title: "Error",
-          description: "Could not create canvas context",
-          variant: "destructive",
-        });
-        return;
-      }
-      
-      // Calculate the dimensions while preserving 16:9 aspect ratio
-      const cropWidth = (completedCrop.width * image.width * scaleX) / 100;
-      const cropHeight = (completedCrop.height * image.height * scaleY) / 100;
-      
-      // Set the canvas dimensions to exactly 16:9 aspect ratio
-      canvas.width = cropWidth;
-      canvas.height = cropHeight;
-      
-      // Draw only the cropped portion of the image
-      ctx.drawImage(
-        image,
-        (completedCrop.x * image.width * scaleX) / 100,
-        (completedCrop.y * image.height * scaleY) / 100,
-        cropWidth,
-        cropHeight,
-        0,
-        0,
-        canvas.width,
-        canvas.height
-      );
-      
       try {
-        // Convert the canvas to a data URL
-        const croppedImageUrl = canvas.toDataURL("image/png");
+        const croppedImageUrl = createCroppedImage(imageRef.current, completedCrop, aspect);
+        
         onCropComplete(croppedImageUrl);
         onOpenChange(false);
         
