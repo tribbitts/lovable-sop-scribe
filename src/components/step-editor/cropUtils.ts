@@ -38,29 +38,30 @@ export function createCroppedImage(
   const sourceX = (completedCrop.x * image.width * scaleX) / 100;
   const sourceY = (completedCrop.y * image.height * scaleY) / 100;
   
-  // Set canvas dimensions to maintain the 16:9 aspect ratio
-  // Use the width as the base and calculate height based on aspect
-  const outputWidth = 1280; // Standard width for 16:9
-  const outputHeight = outputWidth / aspect; // Calculate height based on 16:9 aspect ratio
+  // Create a canvas with the exact 16:9 aspect ratio
+  // FIXED: Always use 16:9 aspect ratio for output regardless of input crop
+  const outputWidth = 1280; // Standard HD width
+  const outputHeight = 720;  // Fixed 16:9 height (1280 / (16/9) = 720)
   
   canvas.width = outputWidth;
   canvas.height = outputHeight;
   
-  // Fill with white background first
+  // Fill with white background first to ensure no transparency
   ctx.fillStyle = "#FFFFFF";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   
-  // Draw the cropped portion of the image onto the canvas, maintaining aspect ratio
+  // Draw the cropped portion of the image onto the canvas
+  // Important: We're always outputting to a 16:9 canvas now
   ctx.drawImage(
     image,
-    sourceX,               // source x
-    sourceY,               // source y
-    cropWidthPx,           // source width
-    cropHeightPx,          // source height
-    0,                     // destination x
-    0,                     // destination y
-    outputWidth,           // destination width - fixed width for 16:9
-    outputHeight           // destination height - calculated to maintain aspect
+    sourceX,              // source x
+    sourceY,              // source y
+    cropWidthPx,          // source width
+    cropHeightPx,         // source height
+    0,                    // destination x
+    0,                    // destination y
+    outputWidth,          // destination width - fixed 16:9 width
+    outputHeight          // destination height - fixed 16:9 height
   );
   
   // Convert the canvas to a data URL and return it
