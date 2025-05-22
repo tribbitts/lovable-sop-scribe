@@ -2,8 +2,8 @@
 import { SopStep } from "@/types/sop";
 
 /**
- * Styles a step header with an improved, more compact design
- * Uses a blue pill for the step number and clean black text for the description
+ * Styles a step header with a simplified design
+ * Uses blue text for the step number and clean black text for the description
  */
 export function styleStep(
   pdf: any,
@@ -24,7 +24,7 @@ export function styleStep(
     const blueColor = [0, 122, 255]; // #007AFF
     const blackTextColor = [0, 0, 0];
     
-    // More compact step styling
+    // Compact step styling
     pdf.setFontSize(11);
     pdf.setFont("helvetica", "bold");
 
@@ -37,42 +37,24 @@ export function styleStep(
     const verticalPadding = 4;
     const totalHeight = 11 / pdf.internal.scaleFactor + (verticalPadding * 2); // text height + padding
     
-    // Draw blue pill for step number - tight around the text
-    const pillWidth = numberWidth + (textPadding * 2);
-    const pillHeight = totalHeight;
-    const pillRadius = pillHeight / 2;
-    
-    pdf.setFillColor(...blueColor);
-    
-    // Draw rounded rectangle for number
-    pdf.roundedRect(
-      margin.left, 
-      currentY, 
-      pillWidth, 
-      pillHeight, 
-      pillRadius, 
-      pillRadius, 
-      'F'
-    );
-    
-    // Add step number text in white
-    pdf.setTextColor(255, 255, 255);
+    // Add step number text in blue
+    pdf.setTextColor(...blueColor);
     pdf.text(
       stepNumberStr, 
-      margin.left + textPadding, 
+      margin.left, 
       currentY + verticalPadding + (11 / pdf.internal.scaleFactor)
     );
     
-    // Add step description text in black, positioned after the pill
+    // Add step description text in black, positioned after the step number
     pdf.setTextColor(...blackTextColor);
     pdf.text(
       stepText, 
-      margin.left + pillWidth + (textPadding * 2), 
+      margin.left + numberWidth + textPadding, 
       currentY + verticalPadding + (11 / pdf.internal.scaleFactor)
     );
     
     // Return the new Y position
-    return currentY + pillHeight + 2; // Add a little extra space after the step header
+    return currentY + totalHeight; // Add a little extra space after the step header
   } catch (error) {
     console.error("Error styling step:", error);
     return currentY + 15; // Return a default value to continue

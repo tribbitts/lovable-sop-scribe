@@ -21,7 +21,7 @@ export async function renderSteps(
     const isLastStep = i === steps.length - 1;
 
     try {
-      // Style the step header with improved design - compact pill style
+      // Style the step header with simplified design - just colored text
       currentY = styleStep(pdf, step, i, currentY, margin, width);
       
       // Add minimal spacing between step header and content
