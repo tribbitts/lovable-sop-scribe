@@ -19,7 +19,7 @@ export async function renderSteps(
   // Calculate available space for two step+screenshot pairs per page
   const availableHeight = height - margin.top - margin.bottom;
   const spacePerStepPair = availableHeight / 2;
-  const maxImageHeight = spacePerStepPair * 0.7; // 70% of space for image, 30% for step header
+  const maxImageHeight = spacePerStepPair * 0.85; // Increased from 70% to 85% for larger images
 
   for (let i = 0; i < steps.length; i++) {
     const step = steps[i];
@@ -37,7 +37,7 @@ export async function renderSteps(
 
     // Style the step header
     const styledHeaderBottomY = styleStep(pdf, step, i, currentY, margin, width);
-    let nextY = styledHeaderBottomY + 5;
+    let nextY = styledHeaderBottomY + 2; // Reduced from 5 to 2
 
     // Add screenshot if it exists
     if (step.screenshot && step.screenshot.dataUrl) {

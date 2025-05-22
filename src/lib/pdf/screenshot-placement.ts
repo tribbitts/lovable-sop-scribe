@@ -39,7 +39,7 @@ export async function addScreenshot(
       // For vertical layout, use full content width and respect maxImageHeight
       let maxImageWidth;
       if (imageLayoutMode === 'vertical') {
-        maxImageWidth = contentWidth * 0.85; // Use most of the width for vertical layout
+        maxImageWidth = contentWidth * 0.90; // Increased from 85% to 90% for larger images
       } else if (imageLayoutMode === 'firstOfPair' || imageLayoutMode === 'secondOfPair') {
         const pairPadding = 5;
         maxImageWidth = (contentWidth - pairPadding) / 2;
@@ -104,7 +104,7 @@ export async function addScreenshot(
         imageId = `step_${stepIndex}_main`;
         
         // Add appropriate padding after image
-        const yPadding = imageLayoutMode === 'vertical' ? 10 : 
+        const yPadding = imageLayoutMode === 'vertical' ? 5 : // Reduced from 10 to 5
                         imageLayoutMode === 'firstOfPair' ? 8 : 15;
         currentY += imgHeight + yPadding;
         
