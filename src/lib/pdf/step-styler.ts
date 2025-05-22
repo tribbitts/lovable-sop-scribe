@@ -17,7 +17,7 @@ export function styleStep(
   const contentWidth = width - margin.left - margin.right;
   
   // Add a subtle gradient background for the step header
-  pdf.setFillColor(248, 249, 250); // Very light gray background
+  pdf.setFillColor(0, 122, 255); // Apple Blue background
   pdf.rect(
     margin.left, 
     currentY, 
@@ -26,45 +26,38 @@ export function styleStep(
     'F'
   );
   
-  // Draw a small accent line on the left
-  pdf.setFillColor(0, 122, 255); // Apple Blue
-  pdf.rect(
-    margin.left, 
-    currentY, 
-    3, // Width of the accent line
-    10, // Height matching the header
-    'F'
-  );
-  
   // Add step number with professional styling
   pdf.setFont("helvetica", "bold");
   pdf.setFontSize(9);
-  pdf.setTextColor(70, 70, 70); // Dark gray text
+  pdf.setTextColor(255, 255, 255); // White text for better contrast
+  const stepText = `STEP ${stepNumber}`;
   pdf.text(
-    `STEP ${stepNumber}`, 
+    stepText, 
     margin.left + 7, // Indented after the accent line
     currentY + 6.5 // Vertically centered
   );
   
-  // Add the step description
+  // Calculate the width of the step text to position the description
+  const stepTextWidth = pdf.getStringUnitWidth(stepText) * 9 / pdf.internal.scaleFactor;
+  
+  // Add the step description on the same line as step number
   pdf.setFont("helvetica", "normal");
-  pdf.setFontSize(10);
-  pdf.setTextColor(44, 44, 46); // Dark gray text for description
+  pdf.setFontSize(9);
+  pdf.setTextColor(255, 255, 255); // Keep white text for description in the header
   
-  // Calculate new Y position after the header
-  currentY += 12;
+  // Position the description text after the step number with some padding
+  const descriptionX = margin.left + stepTextWidth + 15; // Add padding after step number
+  const descriptionY = currentY + 6.5; // Same vertical alignment as step number
+  const availableWidth = contentWidth - stepTextWidth - 20; // Adjusted width for description
   
-  // Add description text with proper wrapping
-  const descriptionX = margin.left + 2;
-  const availableWidth = contentWidth - 4;
-  currentY = addWrappedText(
-    pdf,
-    step.description,
-    descriptionX,
-    currentY,
-    availableWidth,
-    5 // Line height
-  );
+  // Only add the first line of description in the header
+  let descriptionFirstLine = step.description;
+  if (descriptionFirstLine.length > 70) {
+    descriptionFirstLine = descriptionFirstLine.substring(0, 70) + "...";
+  }
   
-  return currentY + 2; // Small spacing after text
+  pdf.text(descriptionFirstLine, descriptionX, descriptionY);
+  
+  // Return the Y position after the header
+  return currentY + 12; // Small spacing after header
 }

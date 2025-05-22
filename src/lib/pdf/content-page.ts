@@ -13,21 +13,23 @@ export function addContentPageDesign(
     try {
       console.log("Applying background image to PDF page");
       
-      // Add the background image to the full page
-      pdf.addImage(
-        backgroundImage,
-        'JPEG',  // Use JPEG format for better compatibility
-        0,       // X position (0 = left edge)
-        0,       // Y position (0 = top edge)
-        width,   // Full page width
-        height,  // Full page height
-        undefined, // No alias needed
-        'FAST'   // Use fast compression for better performance
-      );
+      // Add the background image to the full page with proper parameters
+      pdf.addImage({
+        imageData: backgroundImage,
+        format: 'JPEG',  // Use JPEG format for better compatibility
+        x: 0,       // X position (0 = left edge)
+        y: 0,       // Y position (0 = top edge)
+        width: width,   // Full page width
+        height: height,  // Full page height
+        compression: 'FAST',   // Use fast compression for better performance
+        rotation: 0      // No rotation
+      });
       
       // Add a very slight overlay to ensure text readability if background is too bright
-      pdf.setFillColor(255, 255, 255, 0.1); // Very subtle white overlay with 10% opacity
+      pdf.setFillColor(255, 255, 255);
+      pdf.setGState(new pdf.GState({ opacity: 0.1 })); // 10% opacity white overlay
       pdf.rect(0, 0, width, height, 'F');
+      pdf.setGState(new pdf.GState({ opacity: 1 })); // Reset opacity
       
       console.log("Background image applied to PDF page");
     } catch (error) {

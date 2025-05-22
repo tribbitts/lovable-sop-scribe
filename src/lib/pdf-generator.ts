@@ -58,6 +58,8 @@ export async function generatePDF(sopDocument: SopDocument): Promise<string> {
         
         // Add new page for steps content
         pdf.addPage();
+        
+        // Add the background to the content page
         addContentPageDesign(pdf, width, height, margin, backgroundImage);
         
         console.log(`Rendering ${sopDocument.steps.length} steps`);
@@ -70,7 +72,7 @@ export async function generatePDF(sopDocument: SopDocument): Promise<string> {
           height, 
           margin, 
           contentWidth,
-          (pdf, width, height, margin, bgImage) => addContentPageDesign(pdf, width, height, margin, bgImage),
+          addContentPageDesign,
           backgroundImage
         );
         
