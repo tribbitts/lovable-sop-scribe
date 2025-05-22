@@ -1,13 +1,19 @@
 
 import { SopDocument } from "@/types/sop";
 
-export function addContentPageDesign(pdf: any, width: number, height: number, margin: any) {
+export function addContentPageDesign(
+  pdf: any, 
+  width: number, 
+  height: number, 
+  margin: any,
+  backgroundImage: string | null = null
+) {
   // If there's a background image, add it first (so it's behind everything)
-  if (pdf.backgroundImage) {
+  if (backgroundImage) {
     try {
       // Add the background image to the full page
       pdf.addImage(
-        pdf.backgroundImage,
+        backgroundImage,
         'JPEG',  // Use JPEG format for better compatibility
         0,       // X position (0 = left edge)
         0,       // Y position (0 = top edge)

@@ -46,16 +46,8 @@ export async function generatePDF(sopDocument: SopDocument): Promise<string> {
       // Calculate content width
       const contentWidth = width - (margin.left + margin.right);
       
-      // Set background image if available
-      if (sopDocument.backgroundImage) {
-        try {
-          // Store the background image for use in content pages
-          pdf.backgroundImage = sopDocument.backgroundImage;
-          console.log("Background image stored for PDF pages");
-        } catch (bgError) {
-          console.error("Error storing background image:", bgError);
-        }
-      }
+      // Store background image as a local variable instead of attaching to pdf object
+      const backgroundImage = sopDocument.backgroundImage || null;
       
       console.log("Creating cover page");
       
@@ -66,7 +58,7 @@ export async function generatePDF(sopDocument: SopDocument): Promise<string> {
         
         // Add new page for steps content
         pdf.addPage();
-        addContentPageDesign(pdf, width, height, margin);
+        addContentPageDesign(pdf, width, height, margin, backgroundImage);
         
         console.log(`Rendering ${sopDocument.steps.length} steps`);
         
@@ -78,7 +70,7 @@ export async function generatePDF(sopDocument: SopDocument): Promise<string> {
           height, 
           margin, 
           contentWidth,
-          addContentPageDesign
+          (pdf, width, height, margin) => addContentPageDesign(pdf, width, height, margin, backgroundImage)
         );
         
         console.log("Steps rendered successfully");
