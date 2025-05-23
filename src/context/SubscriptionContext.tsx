@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { useAuth } from "./AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -117,16 +116,19 @@ export const SubscriptionProvider: React.FC<SubscriptionProviderProps> = ({ chil
         .eq('user_id', user.id)
         .maybeSingle();
       
-      // Set admin status based on query result
-      setIsAdmin(!!adminData && !adminError);
+      // Determine admin status (local variable to avoid race condition)
+      let userIsAdmin = !!adminData && !adminError;
       
       // Special case for our super user
       if (user.email === 'tribbit@tribbit.gg') {
-        setIsAdmin(true);
+        userIsAdmin = true;
       }
 
+      // Set admin status
+      setIsAdmin(userIsAdmin);
+
       // If user is admin, they have all permissions
-      if (isAdmin) {
+      if (userIsAdmin) {
         setTier("pro-complete");
         setLoading(false);
         return;
