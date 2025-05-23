@@ -260,81 +260,86 @@ const CalloutOverlay: React.FC<CalloutOverlayProps> = ({
           animate={{ opacity: 1, y: 0 }}
           className="absolute top-4 left-4 right-4 z-50 bg-zinc-900 backdrop-blur-sm border-2 border-[#007AFF] rounded-lg p-4 shadow-2xl"
         >
-          <div className="flex items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <span className="text-sm font-medium text-white bg-[#007AFF] px-2 py-1 rounded">Add Callout:</span>
-              
-              {/* Tool Selection */}
-              <div className="flex gap-1">
-                {[
-                  { type: "circle", icon: Circle, label: "Circle" },
-                  { type: "rectangle", icon: Square, label: "Rectangle" },
-                  { type: "arrow", icon: MousePointer, label: "Arrow" },
-                  { type: "number", icon: Type, label: "Number" },
-                ].map(({ type, icon: Icon, label }) => (
-                  <Button
-                    key={type}
-                    size="sm"
-                    variant={selectedTool === type ? "default" : "outline"}
-                    onClick={() => setSelectedTool(type as any)}
-                    className={`h-8 w-8 p-0 ${
-                      selectedTool === type 
-                        ? 'bg-[#007AFF] text-white border-[#007AFF]' 
-                        : 'border-zinc-600 text-zinc-300 hover:bg-zinc-800 hover:border-zinc-500'
-                    }`}
-                    title={label}
-                  >
-                    <Icon className="h-4 w-4" />
-                  </Button>
-                ))}
-              </div>
-              
-              {/* Color Selection */}
-              <div className="flex items-center gap-2">
-                <Palette className="h-4 w-4 text-zinc-400" />
+          <div className="flex flex-col gap-3">
+            {/* Top Row: Tools and Colors */}
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-3 flex-1">
+                <span className="text-sm font-medium text-white bg-[#007AFF] px-2 py-1 rounded whitespace-nowrap">Add Callout:</span>
+                
+                {/* Tool Selection */}
                 <div className="flex gap-1">
-                  {colors.slice(0, 5).map((color) => (
-                    <button
-                      key={color}
-                      className={`w-6 h-6 rounded-full border-2 hover:scale-110 transition-transform ${
-                        selectedColor === color ? 'border-white scale-110' : 'border-zinc-600'
+                  {[
+                    { type: "circle", icon: Circle, label: "Circle" },
+                    { type: "rectangle", icon: Square, label: "Rectangle" },
+                    { type: "arrow", icon: MousePointer, label: "Arrow" },
+                    { type: "number", icon: Type, label: "Number" },
+                  ].map(({ type, icon: Icon, label }) => (
+                    <Button
+                      key={type}
+                      size="sm"
+                      variant={selectedTool === type ? "default" : "outline"}
+                      onClick={() => setSelectedTool(type as any)}
+                      className={`h-8 w-8 p-0 ${
+                        selectedTool === type 
+                          ? 'bg-[#007AFF] text-white border-[#007AFF]' 
+                          : 'border-zinc-600 text-zinc-300 hover:bg-zinc-800 hover:border-zinc-500'
                       }`}
-                      style={{ backgroundColor: color }}
-                      onClick={() => setSelectedColor(color)}
-                    />
+                      title={label}
+                    >
+                      <Icon className="h-4 w-4" />
+                    </Button>
                   ))}
                 </div>
+                
+                {/* Color Selection */}
+                <div className="flex items-center gap-2">
+                  <Palette className="h-4 w-4 text-zinc-400" />
+                  <div className="flex gap-1">
+                    {colors.slice(0, 5).map((color) => (
+                      <button
+                        key={color}
+                        className={`w-6 h-6 rounded-full border-2 hover:scale-110 transition-transform ${
+                          selectedColor === color ? 'border-white scale-110' : 'border-zinc-600'
+                        }`}
+                        style={{ backgroundColor: color }}
+                        onClick={() => setSelectedColor(color)}
+                      />
+                    ))}
+                  </div>
+                </div>
               </div>
+              
+              {/* Add Callout Button - Always Visible */}
+              <Button
+                size="sm"
+                onClick={() => setIsAddingCallout(!isAddingCallout)}
+                className={`px-4 whitespace-nowrap ${
+                  isAddingCallout 
+                    ? 'bg-green-600 hover:bg-green-700 text-white' 
+                    : 'bg-[#007AFF] hover:bg-[#0069D9] text-white'
+                }`}
+              >
+                {isAddingCallout ? (
+                  <>
+                    <Edit3 className="h-4 w-4 mr-2" />
+                    Click to Place
+                  </>
+                ) : (
+                  <>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Callout
+                  </>
+                )}
+              </Button>
             </div>
             
-            <Button
-              size="sm"
-              onClick={() => setIsAddingCallout(!isAddingCallout)}
-              className={`px-4 ${
-                isAddingCallout 
-                  ? 'bg-green-600 hover:bg-green-700 text-white' 
-                  : 'bg-[#007AFF] hover:bg-[#0069D9] text-white'
-              }`}
-            >
-              {isAddingCallout ? (
-                <>
-                  <Edit3 className="h-4 w-4 mr-2" />
-                  Click to Place
-                </>
-              ) : (
-                <>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Callout
-                </>
-              )}
-            </Button>
+            {/* Instructions Row */}
+            {isAddingCallout && (
+              <div className="text-sm text-zinc-300 bg-[#007AFF]/20 border border-[#007AFF]/30 rounded p-3">
+                <strong>✨ Click anywhere on the screenshot below to place a <span className="text-[#007AFF] font-medium">{selectedTool}</span> callout</strong>
+              </div>
+            )}
           </div>
-          
-          {isAddingCallout && (
-            <div className="mt-3 text-sm text-zinc-300 bg-[#007AFF]/20 border border-[#007AFF]/30 rounded p-3">
-              <strong>Click anywhere on the screenshot below to place a <span className="text-[#007AFF] font-medium">{selectedTool}</span> callout</strong>
-            </div>
-          )}
         </motion.div>
       )}
 
