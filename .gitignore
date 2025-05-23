@@ -26,3 +26,4 @@ fix-database-corrected.sql
 fix-database.sql
 fix-database-fixed.sql
 debug-current-state.sql
+emergency-subscription-fix.sql
