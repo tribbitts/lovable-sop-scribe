@@ -1,6 +1,6 @@
 
 import { ReactNode } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/hooks/useTheme";
 import { useAuth } from "@/context/AuthContext";
@@ -14,7 +14,18 @@ interface AppLayoutProps {
 const AppLayout = ({ children }: AppLayoutProps) => {
   const { theme, toggleTheme } = useTheme();
   const { user, signOut } = useAuth();
-  const { tier, pdfCount, pdfLimit, isPro } = useSubscription();
+  const { tier, pdfCount, pdfLimit, isPro, isAdmin } = useSubscription();
+  const navigate = useNavigate();
+  
+  const handleSignOut = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    try {
+      await signOut();
+      // Navigation is now handled inside the signOut function
+    } catch (error) {
+      console.error("Error during sign out:", error);
+    }
+  };
   
   return (
     <div className="min-h-screen bg-[#121212] text-[#F1F1F1] dark">
@@ -36,9 +47,11 @@ const AppLayout = ({ children }: AppLayoutProps) => {
             {user && (
               <div className="flex items-center gap-3">
                 <div className="hidden md:flex items-center px-3 py-1 rounded-full bg-zinc-800 text-xs">
-                  <span className={`w-2 h-2 rounded-full mr-1.5 ${isPro ? "bg-green-500" : "bg-amber-400"}`}></span>
-                  <span className="mr-1.5 text-zinc-300">{isPro ? "Pro" : "Free"}</span>
-                  {!isPro && (
+                  <span className={`w-2 h-2 rounded-full mr-1.5 ${isPro ? "bg-green-500" : isAdmin ? "bg-blue-500" : "bg-amber-400"}`}></span>
+                  <span className="mr-1.5 text-zinc-300">
+                    {isAdmin ? "Admin" : (isPro ? "Pro" : "Free")}
+                  </span>
+                  {!isPro && !isAdmin && (
                     <span className="text-zinc-400">
                       {pdfCount}/{pdfLimit} PDFs today
                     </span>
@@ -55,7 +68,7 @@ const AppLayout = ({ children }: AppLayoutProps) => {
                 <Button 
                   variant="outline" 
                   className="border-zinc-700 text-zinc-300 hover:bg-zinc-800 rounded-xl text-sm flex items-center gap-2"
-                  onClick={() => signOut()}
+                  onClick={handleSignOut}
                 >
                   <LogOut className="h-4 w-4" />
                   <span className="hidden md:inline">Log Out</span>

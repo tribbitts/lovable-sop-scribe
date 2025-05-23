@@ -141,13 +141,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signOut = async () => {
     try {
-      setLoading(true);
+      // Don't set loading state to true here to avoid UI flickering
       setError(null);
       
       if (!isConnected) {
         throw new Error("Unable to connect to authentication service. Please check your network connection.");
       }
       
+      // First clear local state to ensure UI updates immediately
+      setUser(null);
+      setSession(null);
+      
+      // Then perform the actual sign out
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
       
@@ -155,8 +160,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         title: "Signed out",
         description: "You have been signed out successfully.",
       });
+      
+      // Force navigation to auth page after logout
+      window.location.href = '/auth';
     } catch (error: any) {
       const errorMessage = error.message || "Error signing out";
+      console.error("Sign out error:", error);
       setError(errorMessage);
       
       toast({
@@ -164,8 +173,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         description: errorMessage,
         variant: "destructive",
       });
-    } finally {
-      setLoading(false);
     }
   };
 
