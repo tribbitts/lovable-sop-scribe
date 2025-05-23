@@ -22,9 +22,11 @@ const PdfExportManager = () => {
   const onExport = () => handleExport(sopDocument);
   const onPreview = () => handlePreview(sopDocument);
   
-  // Convert exportError to string if it's an Error object
+  // Convert exportError to string safely without instanceof check
   const displayError = exportError ? 
-    (exportError instanceof Error ? exportError.message : String(exportError)) 
+    (typeof exportError === 'object' && exportError !== null && 'message' in exportError 
+      ? exportError.message 
+      : String(exportError)) 
     : null;
   
   return (
