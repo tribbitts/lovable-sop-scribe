@@ -26,23 +26,23 @@ const Testimonials = () => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         <TestimonialCard 
           gradientClasses="bg-gradient-to-br from-[#007AFF] to-purple-500" 
-          content="I created SOPify to make creating and distributing training documents and SOPs more efficient and interactive at work to help improve workflows and processes." 
-          author="Alex Chen"
-          role="Operations Manager"
+          content="" 
+          author=""
+          role=""
         />
         
         <TestimonialCard 
           gradientClasses="bg-gradient-to-br from-green-400 to-[#007AFF]" 
-          content="I created SOPify to make creating and distributing training documents and SOPs more efficient, inclusive, and interactive at work to help improve workflows and processes." 
+          content="I created SOPify to make creating and distributing training documents and SOPs more efficient, inclusive, and interactive at work to help improve workflows and outcomes." 
           author="Tim Holsborg"
           role="Founder"
         />
         
         <TestimonialCard 
           gradientClasses="bg-gradient-to-br from-amber-500 to-red-500" 
-          content="I love how I can create professional-looking documentation in minutes rather than hours." 
-          author="Michael Torres"
-          role="Team Lead"
+          content="" 
+          author=""
+          role=""
         />
       </div>
     </section>
