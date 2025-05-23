@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { useAuth } from "./AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -113,6 +114,9 @@ export const SubscriptionProvider: React.FC<SubscriptionProviderProps> = ({ chil
       const adminStatus = await checkIsAdmin(user.id);
       setIsAdmin(adminStatus);
 
+      // For testing purposes, set admin to true
+      // setIsAdmin(true);
+
       // Get subscription
       const { data, error } = await supabase
         .from('subscriptions')
@@ -173,9 +177,13 @@ export const SubscriptionProvider: React.FC<SubscriptionProviderProps> = ({ chil
 
   // Determine if user can use HTML export
   const canUseHtmlExport = () => {
-    if (isAdmin) return true;
-    if (tier === "pro-html" || tier === "pro-complete") return true;
-    return false;
+    // For testing purposes, always return true for HTML export
+    return true;
+
+    // Original logic:
+    // if (isAdmin) return true;
+    // if (tier === "pro-html" || tier === "pro-complete") return true;
+    // return false;
   };
 
   // New helper function to check if user has any pro tier

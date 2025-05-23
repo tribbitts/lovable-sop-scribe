@@ -15,8 +15,7 @@ const ExportFormatSelector: React.FC<ExportFormatSelectorProps> = ({
   format,
   onFormatChange,
 }) => {
-  const { tier, isAdmin } = useSubscription();
-  const canUseHtml = isAdmin || tier === "pro-html" || tier === "pro-complete";
+  const { tier, isAdmin, canUseHtmlExport } = useSubscription();
   const canUsePdf = isAdmin || tier === "pro-pdf" || tier === "pro-complete" || tier === "free";
 
   return (
@@ -43,13 +42,13 @@ const ExportFormatSelector: React.FC<ExportFormatSelectorProps> = ({
         </div>
 
         <div className="flex items-center space-x-2">
-          <RadioGroupItem value="html" id="html-format" disabled={!canUseHtml} />
+          <RadioGroupItem value="html" id="html-format" disabled={!canUseHtmlExport} />
           <Label
             htmlFor="html-format"
-            className={`flex items-center ${!canUseHtml ? "text-zinc-500" : "text-zinc-300"}`}
+            className={`flex items-center ${!canUseHtmlExport ? "text-zinc-500" : "text-zinc-300"}`}
           >
             Interactive HTML
-            {!canUseHtml && (
+            {!canUseHtmlExport && !isAdmin && (
               <Badge variant="outline" className="ml-2 text-xs bg-zinc-800 text-zinc-400 border-zinc-700">
                 Pro HTML required
               </Badge>

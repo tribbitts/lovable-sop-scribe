@@ -9,7 +9,7 @@ export const useHtmlExport = () => {
   const [isExporting, setIsExporting] = useState(false);
   const [exportProgress, setExportProgress] = useState<string | null>(null);
   const [exportError, setExportError] = useState<string | Error | null>(null);
-  const { canUseHtmlExport } = useSubscription();
+  const { canUseHtmlExport, incrementDailyHtmlExport } = useSubscription();
 
   const handleExportHtml = async (sopDocument: SopDocument) => {
     if (!canUseHtmlExport) {
@@ -33,6 +33,7 @@ export const useHtmlExport = () => {
 
       setExportProgress("Creating ZIP file");
       await exportSopAsHtml(sopDocument);
+      incrementDailyHtmlExport();
       
       setExportProgress(null);
       toast({
