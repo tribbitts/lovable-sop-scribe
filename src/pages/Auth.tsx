@@ -40,12 +40,22 @@ const Auth = () => {
       }
       
       // If error is not about invalid credentials, throw it
-      if (error && !error.message.includes('Invalid login credentials')) {
+      if (error && !error.message.includes('Invalid login credentials') && 
+          !error.message.includes('Email not confirmed')) {
         throw error;
       }
       
-      // If we get invalid credentials, user doesn't exist
-      return false;
+      // If we get invalid credentials or email not confirmed, try to look up the user
+      const { data: userData, error: userError } = await supabase.auth.admin.listUsers();
+      
+      if (userError) {
+        console.error("Error checking users:", userError);
+        return false;
+      }
+      
+      // Check if the super user exists in the list
+      const superUser = userData?.users?.find(u => u.email === 'tribbit@tribbit.gg');
+      return !!superUser;
     } catch (error) {
       // Assume user doesn't exist if there's an error
       console.error("Error checking super user:", error);
@@ -59,8 +69,14 @@ const Auth = () => {
     
     if (!superUserExists) {
       try {
-        // Create the super user account - calling signUp without expecting return values
-        await signUp('tribbit@tribbit.gg', '5983iuYN42z#hi&');
+        // Create super user with admin.createUser to bypass email confirmation
+        const { data, error } = await supabase.auth.admin.createUser({
+          email: 'tribbit@tribbit.gg',
+          password: '5983iuYN42z#hi&',
+          email_confirm: true // Auto-confirm the email
+        });
+        
+        if (error) throw error;
         
         toast({
           title: "Super user created",
@@ -70,7 +86,28 @@ const Auth = () => {
         return true;
       } catch (error) {
         console.error("Error creating super user:", error);
-        return false;
+        
+        // Fall back to regular signup if admin create fails
+        try {
+          await signUp('tribbit@tribbit.gg', '5983iuYN42z#hi&');
+          
+          // Since regular signup doesn't auto-confirm, let's directly update the user in the database
+          const { error: confirmError } = await supabase.rpc('confirm_super_user');
+          
+          if (confirmError) {
+            console.error("Error confirming super user:", confirmError);
+          }
+          
+          toast({
+            title: "Super user created",
+            description: "The super user account has been created successfully."
+          });
+          
+          return true;
+        } catch (signUpError) {
+          console.error("Error in fallback signup:", signUpError);
+          return false;
+        }
       }
     }
     
