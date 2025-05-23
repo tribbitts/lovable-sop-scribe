@@ -1,5 +1,5 @@
 import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
+import 'jspdf-autotable';
 import { SopDocument, SopStep } from "@/types/sop";
 import { toast } from "@/hooks/use-toast";
 
@@ -46,8 +46,8 @@ const generatePdf = async (sopDocument: SopDocument, setExportProgress: (value: 
         doc.setFont("helvetica", "normal");
         doc.setTextColor(100);
 
-        // Word wrap function
-        const wrappedText = doc.splitTextToSize(step.details, availableWidth);
+        // Word wrap function - using description instead of details
+        const wrappedText = doc.splitTextToSize(step.description, availableWidth);
         wrappedText.forEach((line: string) => {
           doc.text(line, 10, currentY);
           currentY += 6;
@@ -73,11 +73,13 @@ const generatePdf = async (sopDocument: SopDocument, setExportProgress: (value: 
       doc.text(`Generated on: ${currentDate}`, 10, doc.internal.pageSize.getHeight() - 10);
 
       setExportProgress("Finalizing PDF...");
-      doc.output("blob", "sop.pdf");
+      
+      // Fix: Use 'blob' properly by using the output method correctly
+      const pdfBlob = doc.output('blob');
+      
+      // Also save for download
       doc.save("sop.pdf");
       
-      // Convert to Blob and resolve
-      const pdfBlob = doc.output('blob');
       resolve(pdfBlob);
 
     } catch (error) {
