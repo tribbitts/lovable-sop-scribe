@@ -13,9 +13,9 @@ export function usePdfExport() {
   const { user } = useAuth();
   const { 
     canGeneratePdf, 
-    incrementPdfCount, 
-    refreshSubscription, 
     isPro,
+    refreshSubscription,
+    incrementPdfCount,
     showUpgradePrompt
   } = useSubscription();
   

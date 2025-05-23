@@ -1,8 +1,8 @@
-
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { useAuth } from "./AuthContext";
 import { supabase } from "@/lib/supabase";
 import { SubscriptionTier } from "@/types/sop";
+import { toast } from "@/hooks/use-toast";
 
 interface SubscriptionContextType {
   tier: SubscriptionTier;
@@ -15,6 +15,11 @@ interface SubscriptionContextType {
   incrementDailyPdfExport: () => void;
   dailyHtmlExports: number;
   incrementDailyHtmlExport: () => void;
+  isPro: boolean;
+  pdfCount: number;
+  pdfLimit: number;
+  incrementPdfCount: () => void;
+  showUpgradePrompt: () => void;
 }
 
 interface SubscriptionProviderProps {
@@ -33,6 +38,11 @@ const SubscriptionContext = createContext<SubscriptionContextType>({
   incrementDailyPdfExport: () => {},
   dailyHtmlExports: 0,
   incrementDailyHtmlExport: () => {},
+  isPro: false,
+  pdfCount: 0,
+  pdfLimit: 1,
+  incrementPdfCount: () => {},
+  showUpgradePrompt: () => {},
 });
 
 // Storage keys
@@ -168,6 +178,25 @@ export const SubscriptionProvider: React.FC<SubscriptionProviderProps> = ({ chil
     return false;
   };
 
+  // New helper function to check if user has any pro tier
+  const isPro = () => {
+    return tier === "pro-pdf" || tier === "pro-html" || tier === "pro-complete" || isAdmin;
+  };
+
+  // Alias for incrementDailyPdfExport to match expected function name
+  const incrementPdfCount = () => {
+    incrementDailyPdfExport();
+  };
+
+  // Show upgrade prompt function
+  const showUpgradePrompt = () => {
+    toast({
+      title: "Subscription Required",
+      description: "Upgrade to a Pro plan to use this feature.",
+      variant: "destructive"
+    });
+  };
+
   const value = {
     tier,
     loading,
@@ -179,6 +208,11 @@ export const SubscriptionProvider: React.FC<SubscriptionProviderProps> = ({ chil
     incrementDailyPdfExport,
     dailyHtmlExports,
     incrementDailyHtmlExport,
+    isPro: isPro(),
+    pdfCount: dailyPdfExports,
+    pdfLimit: tier === "free" ? 1 : 999,
+    incrementPdfCount,
+    showUpgradePrompt,
   };
 
   return (

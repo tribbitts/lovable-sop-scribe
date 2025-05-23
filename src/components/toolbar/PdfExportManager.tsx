@@ -22,6 +22,11 @@ const PdfExportManager = () => {
   const onExport = () => handleExport(sopDocument);
   const onPreview = () => handlePreview(sopDocument);
   
+  // Convert exportError to string if it's an Error object
+  const displayError = exportError ? 
+    (exportError instanceof Error ? exportError.message : String(exportError)) 
+    : null;
+  
   return (
     <div className="flex flex-wrap gap-2">
       <PreviewButton 
@@ -36,6 +41,7 @@ const PdfExportManager = () => {
         isExporting={isExporting} 
         exportProgress={exportProgress} 
         disabled={sopDocument.steps.length === 0}
+        format="pdf"
       />
       
       <PdfPreviewDialog
@@ -44,10 +50,10 @@ const PdfExportManager = () => {
         isExporting={isExporting}
         exportProgress={exportProgress}
         pdfPreviewUrl={pdfPreviewUrl}
-        exportError={exportError}
+        exportError={displayError}
       />
       
-      {!isPreviewOpen && <PdfExportError error={exportError} />}
+      {!isPreviewOpen && <PdfExportError error={displayError} />}
     </div>
   );
 };

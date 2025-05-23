@@ -8,7 +8,7 @@ import { useSubscription } from "@/context/SubscriptionContext";
 export const useHtmlExport = () => {
   const [isExporting, setIsExporting] = useState(false);
   const [exportProgress, setExportProgress] = useState<string | null>(null);
-  const [exportError, setExportError] = useState<Error | null>(null);
+  const [exportError, setExportError] = useState<string | Error | null>(null);
   const { canUseHtmlExport } = useSubscription();
 
   const handleExportHtml = async (sopDocument: SopDocument) => {

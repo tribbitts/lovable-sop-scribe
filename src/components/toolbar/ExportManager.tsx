@@ -46,6 +46,11 @@ const ExportManager = () => {
   
   const onPreview = () => handlePreview(sopDocument);
   
+  // Convert exportError to string for display
+  const displayError = exportError ? 
+    (exportError instanceof Error ? exportError.message : String(exportError)) 
+    : null;
+  
   return (
     <div className="flex flex-col gap-2">
       <ExportFormatSelector format={format} onFormatChange={setFormat} />
@@ -75,10 +80,10 @@ const ExportManager = () => {
         isExporting={isExporting}
         exportProgress={exportProgress}
         pdfPreviewUrl={pdfPreviewUrl}
-        exportError={exportError}
+        exportError={displayError}
       />
       
-      {!isPreviewOpen && <PdfExportError error={exportError} />}
+      {!isPreviewOpen && <PdfExportError error={displayError} />}
     </div>
   );
 };

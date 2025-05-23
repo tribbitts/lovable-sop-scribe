@@ -14,7 +14,7 @@ interface AppLayoutProps {
 const AppLayout = ({ children }: AppLayoutProps) => {
   const { theme, toggleTheme } = useTheme();
   const { user, signOut } = useAuth();
-  const { tier, pdfCount, pdfLimit } = useSubscription();
+  const { tier, pdfCount, pdfLimit, isPro } = useSubscription();
   
   return (
     <div className="min-h-screen bg-[#121212] text-[#F1F1F1] dark">
@@ -36,9 +36,9 @@ const AppLayout = ({ children }: AppLayoutProps) => {
             {user && (
               <div className="flex items-center gap-3">
                 <div className="hidden md:flex items-center px-3 py-1 rounded-full bg-zinc-800 text-xs">
-                  <span className={`w-2 h-2 rounded-full mr-1.5 ${tier === "pro" ? "bg-green-500" : "bg-amber-400"}`}></span>
-                  <span className="mr-1.5 text-zinc-300">{tier === "pro" ? "Pro" : "Free"}</span>
-                  {tier !== "pro" && (
+                  <span className={`w-2 h-2 rounded-full mr-1.5 ${isPro ? "bg-green-500" : "bg-amber-400"}`}></span>
+                  <span className="mr-1.5 text-zinc-300">{isPro ? "Pro" : "Free"}</span>
+                  {!isPro && (
                     <span className="text-zinc-400">
                       {pdfCount}/{pdfLimit} PDFs today
                     </span>

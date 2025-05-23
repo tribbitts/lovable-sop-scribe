@@ -44,9 +44,9 @@ const StepEditor: React.FC<StepEditorProps> = ({ step, index }) => {
   };
 
   // Adapter function to maintain compatibility with existing code
-  const updateStepAdapter = (id: string, field: string, value: string) => {
+  const updateStepAdapter = (id: string, field: string, value: any) => {
     if (field === "description") {
-      updateStep(id, value);
+      updateStep(id, undefined, value);
     } else {
       updateStep(id, field, value);
     }
