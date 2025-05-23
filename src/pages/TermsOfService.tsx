@@ -1,4 +1,3 @@
-
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
@@ -95,11 +94,11 @@ const TermsOfService = () => {
             </p>
             
             <h2 className="text-xl font-medium text-white mt-6">11. Contact Us</h2>
-            <p>
+            <p className="text-zinc-300 leading-relaxed mt-4">
               If you have any questions about these Terms, please contact us at:
             </p>
-            <p className="mt-2">
-              Email: legal@sopify.com
+            <p className="text-zinc-300 mt-2">
+              Email: support@sopifyapp.com
             </p>
           </div>
         </div>

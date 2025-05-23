@@ -1,4 +1,3 @@
-
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Cookie } from "lucide-react";
@@ -83,11 +82,11 @@ const CookiePolicy = () => {
             </p>
             
             <h2 className="text-xl font-medium text-white mt-6">7. Where can you get further information?</h2>
-            <p>
+            <p className="text-zinc-300 leading-relaxed mt-4">
               If you have any questions about our use of cookies or other technologies, please contact us at:
             </p>
-            <p className="mt-2">
-              Email: privacy@sopify.com
+            <p className="text-zinc-300 mt-2">
+              Email: support@sopifyapp.com
             </p>
           </div>
         </div>
