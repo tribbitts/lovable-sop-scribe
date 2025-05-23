@@ -1,8 +1,7 @@
-
 import { useState } from "react";
-import { SopDocument } from "@/types/sop";
-import { exportSopAsHtml, HtmlExportOptions } from "@/lib/html-export";
 import { toast } from "@/hooks/use-toast";
+import { exportSopAsHtml, HtmlExportOptions } from "@/lib/html-export";
+import { SopDocument } from "@/types/sop";
 import { useSubscription } from "@/context/SubscriptionContext";
 import { useAuth } from "@/context/AuthContext";
 
@@ -15,7 +14,7 @@ export const useHtmlExport = () => {
   const { user } = useAuth();
 
   const handleExportHtml = async (
-    sopDocument: SopDocument, 
+    sopDocument: SopDocument,
     options?: HtmlExportOptions
   ) => {
     // Super user access check
@@ -66,6 +65,7 @@ export const useHtmlExport = () => {
         title: "Export Complete",
         description: `Your SOP has been exported as a ${modeText}.`,
       });
+
     } catch (error) {
       console.error("HTML export error:", error);
       setExportError(error instanceof Error ? error : new Error("Unknown error during export"));

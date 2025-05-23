@@ -55,22 +55,11 @@ const CalloutOverlay: React.FC<CalloutOverlayProps> = ({
   }, [isEditing, isAddingCallout]);
 
   const handleOverlayClick = useCallback((event: React.MouseEvent<HTMLDivElement>) => {
-    console.log('Overlay clicked!', { isEditing, isAddingCallout });
-    if (!isEditing || !isAddingCallout || !overlayRef.current || !onCalloutAdd) {
-      console.log('Click ignored - conditions not met:', { 
-        isEditing, 
-        isAddingCallout, 
-        hasOverlayRef: !!overlayRef.current, 
-        hasOnCalloutAdd: !!onCalloutAdd 
-      });
-      return;
-    }
+    if (!isEditing || !isAddingCallout || !overlayRef.current || !onCalloutAdd) return;
 
     const rect = overlayRef.current.getBoundingClientRect();
     const x = ((event.clientX - rect.left) / rect.width) * 100;
     const y = ((event.clientY - rect.top) / rect.height) * 100;
-
-    console.log('Placing callout at:', { x, y, selectedTool, selectedColor });
 
     // Default dimensions based on callout type
     let width = 5;  // percentage
@@ -94,7 +83,6 @@ const CalloutOverlay: React.FC<CalloutOverlayProps> = ({
       number: selectedTool === "number" ? (screenshot.callouts.length + 1) : undefined,
     };
 
-    console.log('Adding callout:', newCallout);
     onCalloutAdd(newCallout);
     setIsAddingCallout(false);
   }, [isEditing, isAddingCallout, selectedTool, selectedColor, screenshot.callouts.length, onCalloutAdd]);
@@ -362,12 +350,6 @@ const CalloutOverlay: React.FC<CalloutOverlayProps> = ({
           isAddingCallout ? 'cursor-crosshair' : 'cursor-default'
         }`}
         onClick={handleOverlayClick}
-        style={{
-          // Add visual debugging when in adding mode
-          backgroundColor: isAddingCallout ? 'rgba(0, 122, 255, 0.1)' : 'transparent',
-          border: isAddingCallout ? '2px dashed rgba(0, 122, 255, 0.5)' : 'none',
-          zIndex: isAddingCallout ? 40 : 10
-        }}
       >
         {/* Render Callouts */}
         <AnimatePresence>

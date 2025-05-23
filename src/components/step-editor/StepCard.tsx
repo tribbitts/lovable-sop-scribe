@@ -38,6 +38,7 @@ const StepCard: React.FC<StepCardProps> = ({
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [showCropper, setShowCropper] = useState(false);
   const [isEditingCallouts, setIsEditingCallouts] = useState(false);
+  const [showScreenshotModal, setShowScreenshotModal] = useState(false);
   const [newTag, setNewTag] = useState("");
   const [newResource, setNewResource] = useState<Partial<StepResource>>({});
   const [showResourceForm, setShowResourceForm] = useState(false);
@@ -488,6 +489,16 @@ const StepCard: React.FC<StepCardProps> = ({
                         <Button
                           size="sm"
                           variant="outline"
+                          onClick={() => setShowScreenshotModal(true)}
+                          className="border-zinc-700 text-white hover:bg-zinc-800"
+                        >
+                          <Edit3 className="h-4 w-4 mr-1" />
+                          Edit Full Size
+                        </Button>
+                        
+                        <Button
+                          size="sm"
+                          variant="outline"
                           onClick={() => setShowCropper(true)}
                           className="border-zinc-700 text-white hover:bg-zinc-800"
                         >
@@ -566,6 +577,53 @@ const StepCard: React.FC<StepCardProps> = ({
           onCancel={() => setShowCropper(false)}
           aspectRatio={16 / 9}
         />
+      )}
+      
+      {/* Full Size Screenshot Editor Modal */}
+      {showScreenshotModal && step.screenshot && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-zinc-900 rounded-lg max-w-6xl w-full max-h-[90vh] overflow-hidden">
+            <div className="flex items-center justify-between p-4 border-b border-zinc-700">
+              <h3 className="text-lg font-semibold text-white">
+                Edit Screenshot - Step {index + 1}
+              </h3>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => setShowScreenshotModal(false)}
+                className="text-white hover:bg-zinc-800"
+              >
+                ✕
+              </Button>
+            </div>
+            
+            <div className="p-4">
+              <div className="relative bg-zinc-800 rounded-lg">
+                <img
+                  src={step.screenshot.dataUrl}
+                  alt={`Step ${index + 1} screenshot`}
+                  className="w-full h-auto block rounded-lg max-h-[70vh] object-contain"
+                />
+                <CalloutOverlay
+                  screenshot={step.screenshot}
+                  isEditing={true}
+                  onCalloutAdd={handleCalloutAdd}
+                  onCalloutUpdate={handleCalloutUpdate}
+                  onCalloutDelete={handleCalloutDelete}
+                />
+              </div>
+              
+              <div className="mt-4 flex justify-center">
+                <Button
+                  onClick={() => setShowScreenshotModal(false)}
+                  className="bg-[#007AFF] hover:bg-[#0069D9] text-white"
+                >
+                  Done Editing
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </motion.div>
   );
