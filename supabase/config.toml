@@ -31,8 +31,8 @@ enabled = true
 site_url = "http://localhost:3000"
 uri_allow_list = ["https://localhost:3000", "http://localhost:3000", "*"]
 additional_redirect_urls = ["https://localhost:3000", "*"]
-# Disable email confirmation to simplify login process
-enable_confirmations = false
+# Enable email confirmation to secure signup process
+enable_confirmations = true
 
 [realtime]
 enabled = true

@@ -62,16 +62,13 @@ export const handleSignUp = async (
       throw new Error("Unable to connect to authentication service. Please check your network connection.");
     }
     
-    // In development mode, use auto-confirm for easier testing
-    let options = {};
-    if (isDev) {
-      options = { emailRedirectTo: window.location.origin + '/app' };
-    }
-    
+    // Use standard email verification flow regardless of environment
     const { error, data } = await supabase.auth.signUp({ 
       email, 
       password,
-      options
+      options: {
+        emailRedirectTo: window.location.origin + '/app'
+      }
     });
     
     if (error) throw error;
@@ -96,9 +93,7 @@ export const handleSignUp = async (
     
     toast({
       title: "Account created",
-      description: isDev 
-        ? "Development account created. You can now sign in." 
-        : "Please check your email for the confirmation link.",
+      description: "Please check your email for the confirmation link.",
     });
     
     return { error: null };

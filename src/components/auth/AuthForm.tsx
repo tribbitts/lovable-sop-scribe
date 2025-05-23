@@ -24,7 +24,6 @@ const AuthForm = () => {
   const { signIn, signUp, loading, error: authError } = useAuth();
   const [connectionError, setConnectionError] = useState<string | null>(null);
   const [signupSuccess, setSignupSuccess] = useState<boolean>(false);
-  const [isDev] = useState(() => import.meta.env.MODE === 'development');
   
   const form = useForm<AuthFormValues>({
     resolver: zodResolver(authSchema),
@@ -52,11 +51,6 @@ const AuthForm = () => {
       setSignupSuccess(true);
       // Reset the form after successful signup
       form.reset();
-      
-      // In development mode, tell users they can use the account right away
-      if (isDev) {
-        setConnectionError("In development mode, new accounts can be used immediately. You can sign in now.");
-      }
     }
   };
 
@@ -73,9 +67,9 @@ const AuthForm = () => {
         </TabsList>
         
         {(authError || connectionError) && (
-          <Alert variant={connectionError && isDev ? "default" : "destructive"} className="mt-4">
+          <Alert variant="destructive" className="mt-4">
             <AlertCircle className="h-4 w-4" />
-            <AlertTitle>{connectionError && isDev ? "Note" : "Error"}</AlertTitle>
+            <AlertTitle>Error</AlertTitle>
             <AlertDescription>
               {connectionError || authError}
             </AlertDescription>
@@ -87,9 +81,7 @@ const AuthForm = () => {
             <Info className="h-4 w-4" />
             <AlertTitle>Account Created</AlertTitle>
             <AlertDescription>
-              {isDev 
-                ? "Account created successfully. You can now sign in with your credentials." 
-                : "Please check your email for a confirmation link to verify your account. Once verified, you can sign in."}
+              Please check your email for a confirmation link to verify your account. Once verified, you can sign in.
             </AlertDescription>
           </Alert>
         )}
