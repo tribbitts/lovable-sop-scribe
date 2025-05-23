@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useSopContext } from "@/context/SopContext";
 import { usePdfExport } from "@/hooks/pdf-export";
@@ -9,6 +8,7 @@ import ExportButton from "./ExportButton";
 import PdfPreviewDialog from "./PdfPreviewDialog";
 import PdfExportError from "./PdfExportError";
 import ExportFormatSelector from "./ExportFormatSelector";
+import HtmlExportOptions from "./HtmlExportOptions";
 
 const ExportManager = () => {
   const { sopDocument } = useSopContext();
@@ -29,6 +29,8 @@ const ExportManager = () => {
     isExporting: isHtmlExporting,
     exportProgress: htmlExportProgress,
     exportError: htmlExportError,
+    exportMode,
+    setExportMode,
     handleExportHtml
   } = useHtmlExport();
   
@@ -40,7 +42,7 @@ const ExportManager = () => {
     if (format === "pdf") {
       handlePdfExport(sopDocument);
     } else if (format === "html") {
-      handleExportHtml(sopDocument);
+      handleExportHtml(sopDocument, { mode: exportMode });
     }
   };
   
@@ -52,8 +54,17 @@ const ExportManager = () => {
     : null;
   
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-4">
       <ExportFormatSelector format={format} onFormatChange={setFormat} />
+      
+      {/* HTML Export Options */}
+      {format === "html" && (
+        <HtmlExportOptions
+          exportMode={exportMode}
+          onExportModeChange={setExportMode}
+          disabled={isExporting}
+        />
+      )}
       
       <div className="flex flex-wrap gap-2">
         {format === "pdf" && (
