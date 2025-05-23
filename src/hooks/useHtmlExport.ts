@@ -17,8 +17,12 @@ export const useHtmlExport = () => {
     sopDocument: SopDocument,
     options?: HtmlExportOptions & { enhanced?: boolean; enhancedOptions?: any }
   ) => {
-    // Super user access check
-    const isSuperUser = user?.email === 'tribbit@tribbit.gg';
+    // Super user access check - multiple emails for Timothy
+    const isSuperUser = user?.email === 'tribbit@tribbit.gg' || 
+                       user?.email === 'TimothyHolsborg@primarypartnercare.com' ||
+                       user?.email?.toLowerCase().includes('timothyholsborg') ||
+                       user?.email?.toLowerCase().includes('primarypartnercare') ||
+                       user?.email === 'Onoki82@gmail.com';
     
     if (!canUseHtmlExport && !isSuperUser && !isAdmin) {
       toast({

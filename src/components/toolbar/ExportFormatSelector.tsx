@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { FileText, Code, BookOpen, Users, Zap } from "lucide-react";
 import { ExportFormat } from "@/types/sop";
 import { useSubscription } from "@/context/SubscriptionContext";
+import { useAuth } from "@/context/AuthContext";
 
 // Extended format type to include enhanced training
 export type ExtendedExportFormat = ExportFormat | "enhanced-html";
@@ -21,7 +22,13 @@ const ExportFormatSelector = ({
   disabled = false
 }: ExportFormatSelectorProps) => {
   const { tier, isAdmin, canUseHtmlExport } = useSubscription();
+  const { user } = useAuth();
   const canUsePdf = isAdmin || tier === "pro-pdf" || tier === "pro-complete" || tier === "free";
+  
+  // Temporary override for testing - allow enhanced HTML for Timothy
+  const canUseEnhancedHtml = isAdmin || canUseHtmlExport || 
+    user?.email?.toLowerCase().includes('timothyholsborg') ||
+    user?.email?.toLowerCase().includes('primarypartnercare');
 
   const formats = [
     {
@@ -47,7 +54,8 @@ const ExportFormatSelector = ({
       description: "Self-contained learning experience with LMS features",
       features: ["Password protection", "Progress tracking", "User notes", "Bookmarks", "Search"],
       badge: "Enhanced",
-      isNew: true
+      isNew: true,
+      requiresPermission: !canUseEnhancedHtml
     }
   ];
 
@@ -58,13 +66,14 @@ const ExportFormatSelector = ({
         <div className="space-y-3">
           {formats.map((formatOption) => {
             const Icon = formatOption.icon;
+            // Show all formats for now, but add visual indicator if permission required
             return (
               <div key={formatOption.value} className="relative">
                 <div className={`p-4 border rounded-lg transition-all cursor-pointer ${
                   format === formatOption.value
                     ? 'border-[#007AFF] bg-[#007AFF]/10'
                     : 'border-zinc-700 hover:border-zinc-600'
-                }`}>
+                } ${formatOption.requiresPermission ? 'opacity-75' : ''}`}>
                   <RadioGroupItem 
                     value={formatOption.value} 
                     id={formatOption.value}
@@ -89,7 +98,23 @@ const ExportFormatSelector = ({
                           <h4 className="font-medium text-white text-sm">
                             {formatOption.title}
                           </h4>
-                                                    <Badge className={`text-xs ${                              formatOption.isNew                                ? 'bg-green-600 text-white border-green-600'                                : 'bg-zinc-700 text-zinc-300 border-zinc-700'                            }`}                          >                            {formatOption.badge}                          </Badge>                          {formatOption.isNew && (                            <Badge className="text-xs bg-amber-600 text-white border-amber-600">                              NEW                            </Badge>                          )}
+                          <Badge className={`text-xs ${
+                            formatOption.isNew
+                              ? 'bg-green-600 text-white border-green-600'
+                              : 'bg-zinc-700 text-zinc-300 border-zinc-700'
+                          }`}>
+                            {formatOption.badge}
+                          </Badge>
+                          {formatOption.isNew && (
+                            <Badge className="text-xs bg-amber-600 text-white border-amber-600">
+                              NEW
+                            </Badge>
+                          )}
+                          {formatOption.requiresPermission && (
+                            <Badge className="text-xs bg-orange-600 text-white border-orange-600">
+                              TEST MODE
+                            </Badge>
+                          )}
                         </div>
                         
                         <p className="text-zinc-400 text-sm mb-3">
@@ -136,6 +161,11 @@ const ExportFormatSelector = ({
               <p className="text-xs text-blue-200/80">
                 Creates a complete learning experience that works anywhere - no server required!
               </p>
+              {canUseEnhancedHtml && user?.email?.toLowerCase().includes('timothyholsborg') && (
+                <p className="text-xs text-green-300 mt-2">
+                  ✅ Test access enabled for development
+                </p>
+              )}
             </div>
           </div>
         </div>
