@@ -22,12 +22,12 @@ const PdfExportManager = () => {
   const onExport = () => handleExport(sopDocument);
   const onPreview = () => handlePreview(sopDocument);
   
-  // Convert exportError to string safely without instanceof check
-  const displayError = exportError ? 
-    (typeof exportError === 'object' && exportError !== null && 'message' in exportError 
+  // Convert exportError to string safely with proper null checking
+  const displayError = exportError === null ? null : (
+    typeof exportError === 'object' && exportError !== null && 'message' in exportError 
       ? exportError.message 
-      : String(exportError)) 
-    : null;
+      : String(exportError)
+  );
   
   return (
     <div className="flex flex-wrap gap-2">
