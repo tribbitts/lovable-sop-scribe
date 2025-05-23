@@ -581,8 +581,8 @@ const StepCard: React.FC<StepCardProps> = ({
       
       {/* Full Size Screenshot Editor Modal */}
       {showScreenshotModal && step.screenshot && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-zinc-900 rounded-lg max-w-6xl w-full max-h-[90vh] overflow-hidden">
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[9999] flex items-center justify-center p-4">
+          <div className="bg-zinc-900 rounded-lg max-w-6xl w-full max-h-[90vh] overflow-hidden shadow-2xl">
             <div className="flex items-center justify-between p-4 border-b border-zinc-700">
               <h3 className="text-lg font-semibold text-white">
                 Edit Screenshot - Step {index + 1}
@@ -598,19 +598,21 @@ const StepCard: React.FC<StepCardProps> = ({
             </div>
             
             <div className="p-4">
-              <div className="relative bg-zinc-800 rounded-lg">
+              <div className="relative bg-zinc-800 rounded-lg overflow-visible">
                 <img
                   src={step.screenshot.dataUrl}
                   alt={`Step ${index + 1} screenshot`}
                   className="w-full h-auto block rounded-lg max-h-[70vh] object-contain"
                 />
-                <CalloutOverlay
-                  screenshot={step.screenshot}
-                  isEditing={true}
-                  onCalloutAdd={handleCalloutAdd}
-                  onCalloutUpdate={handleCalloutUpdate}
-                  onCalloutDelete={handleCalloutDelete}
-                />
+                <div className="absolute inset-0">
+                  <CalloutOverlay
+                    screenshot={step.screenshot}
+                    isEditing={true}
+                    onCalloutAdd={handleCalloutAdd}
+                    onCalloutUpdate={handleCalloutUpdate}
+                    onCalloutDelete={handleCalloutDelete}
+                  />
+                </div>
               </div>
               
               <div className="mt-4 flex justify-center">
