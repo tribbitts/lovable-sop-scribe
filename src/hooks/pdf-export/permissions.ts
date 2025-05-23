@@ -1,16 +1,38 @@
 
 import { toast } from "@/hooks/use-toast";
 import { createPdfUsageRecord } from "@/lib/supabase";
+import { supabase } from "@/integrations/supabase/client";
+
+/**
+ * Checks if the user is an admin
+ */
+export const checkIsAdmin = async (userId: string): Promise<boolean> => {
+  if (!userId) return false;
+  
+  try {
+    // Direct query without using RLS
+    const { data, error } = await supabase
+      .from('admins')
+      .select('id')
+      .eq('user_id', userId)
+      .maybeSingle();
+    
+    return !!data && !error;
+  } catch (err) {
+    console.error("Error checking admin status:", err);
+    return false;
+  }
+};
 
 /**
  * Checks if user can export PDF
  */
-export const checkUserPermissions = (
+export const checkUserPermissions = async (
   user: any,
   canGeneratePdf: boolean,
   showUpgradePrompt: () => void,
   isAdmin: boolean = false
-): boolean => {
+): Promise<boolean> => {
   if (!user) {
     toast({
       title: "Authentication Required",

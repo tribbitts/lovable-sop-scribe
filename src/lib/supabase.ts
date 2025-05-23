@@ -49,9 +49,10 @@ export const testSupabaseConnection = async () => {
   }
 };
 
-// Create a subscription client that will be used to track PDF usage
+// Create a PDF usage record that will be used to track PDF usage
 export const createPdfUsageRecord = async (userId: string) => {
   try {
+    // Use the supabase client from the integrations folder to bypass RLS
     const { data, error } = await supabase
       .from('pdf_usage')
       .insert({

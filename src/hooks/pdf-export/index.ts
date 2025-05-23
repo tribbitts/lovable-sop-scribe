@@ -5,6 +5,7 @@ import { SopDocument } from "@/types/sop";
 import { useAuth } from "@/context/AuthContext";
 import { useSubscription } from "@/context/SubscriptionContext";
 import { handleExport, handlePreview } from "./export-functions";
+import { checkUserPermissions } from "./permissions";
 
 /**
  * Custom hook for PDF export functionality
@@ -16,7 +17,8 @@ export function usePdfExport() {
     isPro,
     refreshSubscription,
     incrementPdfCount,
-    showUpgradePrompt
+    showUpgradePrompt,
+    isAdmin
   } = useSubscription();
   
   const [isExporting, setIsExporting] = useState(false);
@@ -26,6 +28,16 @@ export function usePdfExport() {
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
 
   const exportPdf = async (sopDocument: SopDocument) => {
+    // Check permissions first
+    const hasPermission = await checkUserPermissions(
+      user,
+      canGeneratePdf,
+      showUpgradePrompt,
+      isAdmin
+    );
+    
+    if (!hasPermission) return;
+    
     await handleExport(
       sopDocument,
       user,
@@ -36,11 +48,22 @@ export function usePdfExport() {
       refreshSubscription,
       setIsExporting,
       setExportProgress,
-      setExportError
+      setExportError,
+      isAdmin
     );
   };
 
   const previewPdf = async (sopDocument: SopDocument) => {
+    // Check permissions first
+    const hasPermission = await checkUserPermissions(
+      user,
+      canGeneratePdf,
+      showUpgradePrompt,
+      isAdmin
+    );
+    
+    if (!hasPermission) return;
+    
     await handlePreview(
       sopDocument,
       user,
@@ -51,7 +74,8 @@ export function usePdfExport() {
       setExportProgress,
       setExportError,
       setPdfPreviewUrl,
-      setIsPreviewOpen
+      setIsPreviewOpen,
+      isAdmin
     );
   };
 

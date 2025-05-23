@@ -1,9 +1,9 @@
-
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { useAuth } from "./AuthContext";
-import { supabase } from "@/lib/supabase";
+import { supabase } from "@/integrations/supabase/client";
 import { SubscriptionTier } from "@/types/sop";
 import { toast } from "@/hooks/use-toast";
+import { checkIsAdmin } from "@/hooks/pdf-export/permissions";
 
 interface SubscriptionContextType {
   tier: SubscriptionTier;
@@ -109,18 +109,9 @@ export const SubscriptionProvider: React.FC<SubscriptionProviderProps> = ({ chil
 
     setLoading(true);
     try {
-      // Check if user is admin
-      const { data: adminData, error: adminError } = await supabase
-        .from('admins')
-        .select('user_id')
-        .eq('user_id', user.id)
-        .single();
-
-      if (!adminError && adminData) {
-        setIsAdmin(true);
-      } else {
-        setIsAdmin(false);
-      }
+      // Check if user is admin using our new function
+      const adminStatus = await checkIsAdmin(user.id);
+      setIsAdmin(adminStatus);
 
       // Get subscription
       const { data, error } = await supabase

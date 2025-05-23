@@ -1,15 +1,92 @@
-
-import { SopDocument } from "@/types/sop";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
+import { SopDocument, SopStep } from "@/types/sop";
 import { toast } from "@/hooks/use-toast";
-import { generatePDF } from "@/lib/pdf-generator";
-import { checkUserPermissions, recordPdfUsage } from "./permissions";
-import { validateDocument } from "./validation";
-import { setupProgressTracking } from "./progress-tracking";
-import { handleExportError } from "./error-handling";
 
-/**
- * Handles PDF export
- */
+const generatePdf = async (sopDocument: SopDocument, setExportProgress: (value: string | null) => void) => {
+  return new Promise<Blob>((resolve, reject) => {
+    try {
+      setExportProgress("Initializing PDF...");
+      const doc = new jsPDF();
+
+      // Set document properties
+      doc.setProperties({
+        title: sopDocument.title,
+        subject: "Standard Operating Procedure",
+        author: "SOPify",
+        creator: "SOPify"
+      });
+
+      // Add title
+      doc.setFontSize(24);
+      doc.text(sopDocument.title, 10, 20);
+
+      // Add subtitle
+      doc.setFontSize(14);
+      doc.setTextColor(100);
+      doc.text("Standard Operating Procedure", 10, 30);
+
+      let currentY = 40; // Starting Y position
+
+      // Function to add a step to the PDF
+      const addStep = (step: SopStep, index: number) => {
+        const pageWidth = doc.internal.pageSize.getWidth();
+        const margin = 10;
+        const availableWidth = pageWidth - 2 * margin;
+
+        // Step Number
+        doc.setFontSize(16);
+        doc.setTextColor(0);
+        doc.setFont("helvetica", "bold");
+        doc.text(`Step ${index + 1}: ${step.title}`, 10, currentY);
+        currentY += 8;
+
+        // Step Details
+        doc.setFontSize(12);
+        doc.setFont("helvetica", "normal");
+        doc.setTextColor(100);
+
+        // Word wrap function
+        const wrappedText = doc.splitTextToSize(step.details, availableWidth);
+        wrappedText.forEach((line: string) => {
+          doc.text(line, 10, currentY);
+          currentY += 6;
+        });
+
+        currentY += 4; // Add a little space after each step
+      };
+
+      // Loop through steps and add them to the PDF
+      sopDocument.steps.forEach((step, index) => {
+        if (currentY > doc.internal.pageSize.getHeight() - 20) {
+          doc.addPage();
+          currentY = 20; // Reset Y position on new page
+        }
+        setExportProgress(`Adding step ${index + 1} of ${sopDocument.steps.length}...`);
+        addStep(step, index);
+      });
+
+      // Add current date to the footer
+      const currentDate = new Date().toLocaleDateString();
+      doc.setFontSize(10);
+      doc.setTextColor(150);
+      doc.text(`Generated on: ${currentDate}`, 10, doc.internal.pageSize.getHeight() - 10);
+
+      setExportProgress("Finalizing PDF...");
+      doc.output("blob", "sop.pdf");
+      doc.save("sop.pdf");
+      
+      // Convert to Blob and resolve
+      const pdfBlob = doc.output('blob');
+      resolve(pdfBlob);
+
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+      reject(error);
+    }
+  });
+};
+
 export const handleExport = async (
   sopDocument: SopDocument,
   user: any,
@@ -18,136 +95,115 @@ export const handleExport = async (
   isPro: boolean,
   incrementPdfCount: () => void,
   refreshSubscription: () => Promise<void>,
-  setIsExporting: (isExporting: boolean) => void,
-  setExportProgress: (progress: string | null) => void,
-  setExportError: (error: string | null) => void
+  setIsExporting: (value: boolean) => void,
+  setExportProgress: (value: string | null) => void,
+  setExportError: (value: string | null) => void,
+  isAdmin: boolean = false
 ) => {
-  // Check permissions before starting
-  if (!checkUserPermissions(user, canGeneratePdf, showUpgradePrompt)) return;
-  
-  // Clear previous errors and progress
+  setIsExporting(true);
+  setExportProgress("Starting export...");
   setExportError(null);
-  setExportProgress(null);
-  
-  // Validate document before starting
-  if (!validateDocument(sopDocument, isPro)) return;
-  
+
   try {
-    setIsExporting(true);
-    setExportProgress("Preparing document...");
-    
-    toast({
-      title: "Creating PDF",
-      description: "Please wait while your PDF is being generated..."
-    });
-    
-    console.log("Starting PDF export");
-    
-    // Track progress with console logs
-    const originalConsoleLog = setupProgressTracking(setExportProgress);
-    
-    const pdfDataUrl = await generatePDF(sopDocument);
-    
-    // Restore console.log
-    console.log = originalConsoleLog;
-    
-    if (!pdfDataUrl) {
-      throw new Error("PDF generation returned empty result");
+    if (!user) {
+      toast({
+        title: "Authentication Required",
+        description: "Please sign in to export PDFs.",
+        variant: "destructive"
+      });
+      setIsExporting(false);
+      return;
     }
+
+    if (!isAdmin && !canGeneratePdf) {
+      showUpgradePrompt();
+      setIsExporting(false);
+      return;
+    }
+
+    // Generate the PDF
+    setExportProgress("Generating PDF...");
+    await generatePdf(sopDocument, setExportProgress)
     
-    setExportProgress("Recording usage...");
-    
-    // Record PDF usage in database
-    await recordPdfUsage(user, incrementPdfCount, refreshSubscription);
-    
-    setExportProgress(null);
+    if (!isAdmin) {
+      incrementPdfCount();
+    }
+    await refreshSubscription();
+
     toast({
-      title: "PDF Generated",
-      description: "Your SOP has been successfully generated and downloaded."
+      title: "SOP Exported",
+      description: "Your SOP has been successfully exported as a PDF.",
     });
-  } catch (error) {
-    handleExportError(error, setExportError);
+  } catch (error: any) {
+    console.error("Error during PDF export:", error);
+    setExportError(error.message || "An unexpected error occurred during export.");
+    toast({
+      title: "Export Failed",
+      description: "There was an error exporting the SOP as a PDF.",
+      variant: "destructive",
+    });
   } finally {
     setIsExporting(false);
     setExportProgress(null);
   }
 };
 
-/**
- * Handles PDF preview generation
- */
 export const handlePreview = async (
   sopDocument: SopDocument,
   user: any,
   canGeneratePdf: boolean,
   showUpgradePrompt: () => void,
   isPro: boolean,
-  setIsExporting: (isExporting: boolean) => void,
-  setExportProgress: (progress: string | null) => void,
-  setExportError: (error: string | null) => void,
-  setPdfPreviewUrl: (url: string | null) => void,
-  setIsPreviewOpen: (isOpen: boolean) => void
+  setIsExporting: (value: boolean) => void,
+  setExportProgress: (value: string | null) => void,
+  setExportError: (value: string | null) => void,
+  setPdfPreviewUrl: (value: string | null) => void,
+  setIsPreviewOpen: (value: boolean) => void,
+  isAdmin: boolean = false
 ) => {
-  if (!checkUserPermissions(user, canGeneratePdf, showUpgradePrompt)) return;
-  
-  if (!sopDocument.title || !sopDocument.topic) {
-    toast({
-      title: "Missing Information",
-      description: "Please provide a title and topic before previewing.",
-      variant: "destructive"
-    });
-    return;
-  }
-  
-  // Verify Pro status for background image
-  if (sopDocument.backgroundImage && !isPro) {
-    toast({
-      title: "Pro Feature Required",
-      description: "Custom backgrounds are only available with a Pro subscription.",
-      variant: "destructive"
-    });
-    return;
-  }
-  
-  // Clear previous errors and progress
+  setIsExporting(true);
+  setExportProgress("Starting preview generation...");
   setExportError(null);
-  setExportProgress(null);
-  setPdfPreviewUrl(null);
-  
+
   try {
-    // Show loading toast
-    toast({
-      title: "Generating Preview",
-      description: "Creating PDF preview..."
-    });
-    
-    setIsExporting(true);
-    setExportProgress("Preparing preview...");
-    
-    // Track progress with console logs
-    const originalConsoleLog = setupProgressTracking(setExportProgress);
-    
-    // Generate PDF and get base64 data URL
-    const pdfDataUrl = await generatePDF(sopDocument);
-    
-    // Restore console.log
-    console.log = originalConsoleLog;
-    
-    if (!pdfDataUrl) {
-      throw new Error("PDF preview generation returned empty result");
+    if (!user) {
+      toast({
+        title: "Authentication Required",
+        description: "Please sign in to preview PDFs.",
+        variant: "destructive"
+      });
+      setIsExporting(false);
+      return;
     }
-    
-    // Set the preview URL and open modal
-    setPdfPreviewUrl(pdfDataUrl);
+
+    if (!isAdmin && !canGeneratePdf) {
+      showUpgradePrompt();
+      setIsExporting(false);
+      return;
+    }
+
+    // Generate the PDF
+    setExportProgress("Generating PDF...");
+    const pdfBlob = await generatePdf(sopDocument, setExportProgress);
+
+    // Create a URL for the blob
+    setExportProgress("Creating preview URL...");
+    const pdfUrl = URL.createObjectURL(pdfBlob);
+    setPdfPreviewUrl(pdfUrl);
     setIsPreviewOpen(true);
-    setExportProgress(null);
-    
+
     toast({
-      title: "Preview Ready",
-      description: "PDF preview has been generated."
+      title: "SOP Preview Ready",
+      description: "Your SOP preview has been successfully generated.",
     });
-  } catch (error) {
-    handleExportError(error, setExportError, true);
+  } catch (error: any) {
+    console.error("Error during PDF preview:", error);
+    setExportError(error.message || "An unexpected error occurred during preview.");
+    toast({
+      title: "Preview Failed",
+      description: "There was an error generating the SOP preview.",
+      variant: "destructive",
+    });
   } finally {
     setIsExporting(false);
     setExportProgress(null);
