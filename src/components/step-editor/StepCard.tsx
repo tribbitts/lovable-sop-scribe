@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { StepCardProps, StepResource } from "@/types/sop";
+import { StepCardProps, StepResource, Callout } from "@/types/sop";
 import { 
   ChevronUp, 
   ChevronDown, 
@@ -18,11 +18,13 @@ import {
   Tag,
   Edit3,
   CheckCircle2,
-  Circle
+  Circle,
+  MousePointer
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import ImageCropper from "./ImageCropper";
 import CalloutOverlay from "./CalloutOverlay";
+import { useSopContext } from "@/context/SopContext";
 import { v4 as uuidv4 } from "uuid";
 
 const StepCard: React.FC<StepCardProps> = ({
@@ -35,10 +37,14 @@ const StepCard: React.FC<StepCardProps> = ({
   const [isExpanded, setIsExpanded] = useState(isActive);
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [showCropper, setShowCropper] = useState(false);
+  const [isEditingCallouts, setIsEditingCallouts] = useState(false);
   const [newTag, setNewTag] = useState("");
   const [newResource, setNewResource] = useState<Partial<StepResource>>({});
   const [showResourceForm, setShowResourceForm] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  // Get callout functions from context
+  const { addCallout, updateCallout, deleteCallout } = useSopContext();
 
   const handleFieldChange = (field: keyof typeof step, value: any) => {
     if (onStepChange) {
@@ -126,6 +132,19 @@ const StepCard: React.FC<StepCardProps> = ({
     if (onStepComplete) {
       onStepComplete(step.id, newCompleted);
     }
+  };
+
+  // Callout management functions
+  const handleCalloutAdd = (callout: Omit<Callout, "id">) => {
+    addCallout(step.id, callout);
+  };
+
+  const handleCalloutUpdate = (callout: Callout) => {
+    updateCallout(step.id, callout);
+  };
+
+  const handleCalloutDelete = (calloutId: string) => {
+    deleteCallout(step.id, calloutId);
   };
 
   return (
@@ -435,11 +454,28 @@ const StepCard: React.FC<StepCardProps> = ({
                         />
                         <CalloutOverlay
                           screenshot={step.screenshot}
-                          isEditing={false}
+                          isEditing={isEditingCallouts}
+                          onCalloutAdd={handleCalloutAdd}
+                          onCalloutUpdate={handleCalloutUpdate}
+                          onCalloutDelete={handleCalloutDelete}
                         />
                       </div>
                       
-                      <div className="flex gap-2">
+                      <div className="flex gap-2 flex-wrap">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => setIsEditingCallouts(!isEditingCallouts)}
+                          className={`${
+                            isEditingCallouts 
+                              ? 'bg-[#007AFF] text-white hover:bg-[#0069D9]' 
+                              : 'border-zinc-700 text-white hover:bg-zinc-800'
+                          }`}
+                        >
+                          <MousePointer className="h-4 w-4 mr-1" />
+                          {isEditingCallouts ? 'Done Editing' : 'Edit Callouts'}
+                        </Button>
+                        
                         <Button
                           size="sm"
                           variant="outline"
@@ -481,6 +517,12 @@ const StepCard: React.FC<StepCardProps> = ({
                           Remove
                         </Button>
                       </div>
+                      
+                      {step.screenshot.callouts && step.screenshot.callouts.length > 0 && (
+                        <div className="text-sm text-zinc-400">
+                          {step.screenshot.callouts.length} callout{step.screenshot.callouts.length !== 1 ? 's' : ''} added
+                        </div>
+                      )}
                     </div>
                   ) : (
                     <div

@@ -1,4 +1,3 @@
-
 import { SopDocument } from "@/types/sop";
 import { saveAs } from "file-saver";
 import JSZip from "jszip";
@@ -18,6 +17,34 @@ export const generateHtml = (sopDocument: SopDocument): string => {
         </div>
       `;
     }).join('');
+    
+    // Generate tags HTML
+    const tagsHtml = step.tags && step.tags.length > 0 ? `
+      <div class="step-tags">
+        <h4 class="tags-title">Tags</h4>
+        <div class="tags-container">
+          ${step.tags.map(tag => `<span class="tag">${tag}</span>`).join('')}
+        </div>
+      </div>
+    ` : '';
+    
+    // Generate resources HTML
+    const resourcesHtml = step.resources && step.resources.length > 0 ? `
+      <div class="step-resources">
+        <h4 class="resources-title">Resources</h4>
+        <div class="resources-container">
+          ${step.resources.map(resource => `
+            <div class="resource-item">
+              <span class="resource-type">${resource.type === 'link' ? '🔗' : '📄'}</span>
+              <div class="resource-content">
+                <a href="${resource.url}" target="_blank" class="resource-link">${resource.title}</a>
+                ${resource.description ? `<p class="resource-description">${resource.description}</p>` : ''}
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    ` : '';
     
     return `
       <div class="step-card" data-step="${stepNumber}" id="step-${stepNumber}">
@@ -45,12 +72,8 @@ export const generateHtml = (sopDocument: SopDocument): string => {
           </div>
           ` : ''}
           
-          ${step.fileLink ? `
-          <div class="step-file-link">
-            <h4 class="file-link-title">Related Files</h4>
-            <a href="${step.fileLink}" target="_blank" class="file-link">${step.fileLinkText || 'View File'}</a>
-          </div>
-          ` : ''}
+          ${tagsHtml}
+          ${resourcesHtml}
           
           ${step.screenshot ? `
           <div class="step-screenshot">
@@ -367,6 +390,118 @@ export const generateHtml = (sopDocument: SopDocument): string => {
         
         .step-card.completed .mark-complete-button {
           background-color: var(--step-complete-color);
+        }
+        
+        /* Tags styles */
+        .step-tags {
+          margin-top: 20px;
+          padding-top: 20px;
+          border-top: 1px solid #eee;
+        }
+        
+        .dark-mode .step-tags {
+          border-top-color: #333;
+        }
+        
+        .tags-title {
+          font-size: 16px;
+          margin-top: 0;
+          margin-bottom: 10px;
+          color: #555;
+        }
+        
+        .dark-mode .tags-title {
+          color: #bbb;
+        }
+        
+        .tags-container {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 8px;
+        }
+        
+        .tag {
+          background-color: var(--primary-color);
+          color: white;
+          padding: 4px 12px;
+          border-radius: 16px;
+          font-size: 12px;
+          font-weight: 500;
+          white-space: nowrap;
+        }
+        
+        /* Resources styles */
+        .step-resources {
+          margin-top: 20px;
+          padding-top: 20px;
+          border-top: 1px solid #eee;
+        }
+        
+        .dark-mode .step-resources {
+          border-top-color: #333;
+        }
+        
+        .resources-title {
+          font-size: 16px;
+          margin-top: 0;
+          margin-bottom: 10px;
+          color: #555;
+        }
+        
+        .dark-mode .resources-title {
+          color: #bbb;
+        }
+        
+        .resources-container {
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+        }
+        
+        .resource-item {
+          display: flex;
+          align-items: flex-start;
+          gap: 12px;
+          padding: 12px;
+          background-color: #f9f9f9;
+          border-radius: 8px;
+          border-left: 3px solid var(--primary-color);
+        }
+        
+        .dark-mode .resource-item {
+          background-color: #252525;
+        }
+        
+        .resource-type {
+          font-size: 16px;
+          line-height: 1;
+          margin-top: 2px;
+        }
+        
+        .resource-content {
+          flex: 1;
+        }
+        
+        .resource-link {
+          color: var(--primary-color);
+          text-decoration: none;
+          font-weight: 500;
+          display: block;
+          margin-bottom: 4px;
+        }
+        
+        .resource-link:hover {
+          text-decoration: underline;
+        }
+        
+        .resource-description {
+          font-size: 14px;
+          color: #666;
+          margin: 0;
+        }
+        
+        .dark-mode .resource-description {
+          color: #aaa;
         }
         
         /* Responsive design */
