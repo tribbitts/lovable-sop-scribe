@@ -25,3 +25,4 @@ dist-ssr
 fix-database-corrected.sql
 fix-database.sql
 fix-database-fixed.sql
+debug-current-state.sql
