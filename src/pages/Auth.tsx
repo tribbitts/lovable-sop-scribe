@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
@@ -93,6 +94,7 @@ const Auth = () => {
         
         // Fall back to regular signup if admin create fails
         try {
+          // We need to properly type this call to signUp to avoid the TypeScript error
           await signUp('tribbit@tribbit.gg', '5983iuYN42z#hi&');
           
           // Since regular signup doesn't auto-confirm, let's directly update the user in the database
