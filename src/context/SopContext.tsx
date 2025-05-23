@@ -3,6 +3,7 @@ import { v4 as uuidv4 } from "uuid";
 import { SopDocument, SopStep, ScreenshotData, Callout, StepResource, ExportFormat, ExportOptions } from "../types/sop";
 import { saveAs } from "file-saver";
 import { toast } from "@/hooks/use-toast";
+import { HtmlExportOptions } from "@/lib/html-export";
 
 interface SopContextType {
   sopDocument: SopDocument;
@@ -231,6 +232,7 @@ export const SopProvider = ({ children }: { children: ReactNode }) => {
     }));
   };
 
+  
   const setStepScreenshot = (stepId: string, dataUrl: string) => {
     setSopDocument((prev) => ({
       ...prev,
@@ -555,7 +557,7 @@ export const SopProvider = ({ children }: { children: ReactNode }) => {
     });
   };
 
-  exportDocument = async (format: ExportFormat, options?: ExportOptions): Promise<void> => {
+  const exportDocument = async (format: ExportFormat, options?: ExportOptions): Promise<void> => {
     try {
       if (format === "pdf") {
         // Use existing PDF export functionality
@@ -564,7 +566,13 @@ export const SopProvider = ({ children }: { children: ReactNode }) => {
       } else if (format === "html") {
         // Use existing HTML export functionality
         const { exportSopAsHtml } = await import("@/lib/html-export");
-        await exportSopAsHtml(sopDocument, options);
+        // Convert ExportOptions to HtmlExportOptions
+        const htmlOptions: HtmlExportOptions = {
+          mode: 'standalone', // Default mode
+          quality: 0.85,
+          includeTableOfContents: options?.includeTableOfContents
+        };
+        await exportSopAsHtml(sopDocument, htmlOptions);
       }
       
       toast({

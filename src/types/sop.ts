@@ -1,3 +1,4 @@
+
 export type CalloutShape = "circle" | "rectangle" | "arrow" | "number";
 
 export interface Callout {
@@ -71,6 +72,16 @@ export interface AppSettings {
 export type ExportFormat = "pdf" | "html";
 export type ExportTheme = "light" | "dark" | "auto";
 
+// Export options - now includes mode for HTML exports
+export interface ExportOptions {
+  theme?: ExportTheme;
+  includeTableOfContents?: boolean;
+  includeProgressInfo?: boolean;
+  customFooter?: string;
+  quality?: "low" | "medium" | "high";
+  mode?: 'standalone' | 'zip'; // Added to make compatible with HtmlExportOptions
+}
+
 // Progress tracking
 export interface ProgressSession {
   id: string;
@@ -129,12 +140,4 @@ export interface ExportPanelProps {
   onExport: (format: ExportFormat, options?: ExportOptions) => void;
   isExporting?: boolean;
   exportProgress?: string;
-}
-
-export interface ExportOptions {
-  theme?: ExportTheme;
-  includeTableOfContents?: boolean;
-  includeProgressInfo?: boolean;
-  customFooter?: string;
-  quality?: "low" | "medium" | "high";
 }

@@ -17,6 +17,12 @@ export interface HtmlExportResult {
   estimatedSize: number;
 }
 
+// Define interface for processed step with screenshots
+interface ProcessedStep extends SopStep {
+  processedScreenshot?: string;
+  secondaryProcessedScreenshot?: string;
+}
+
 /**
  * Export SOP document as HTML
  */
@@ -28,10 +34,10 @@ export async function exportSopAsHtml(
   
   try {
     // Process steps and their screenshots
-    const processedSteps: (SopStep & { processedScreenshot?: string; secondaryProcessedScreenshot?: string })[] = 
+    const processedSteps: ProcessedStep[] = 
       await Promise.all(sopDocument.steps.map(async (step) => {
         // Create a copy of the step that we can modify
-        const processedStep = { ...step };
+        const processedStep: ProcessedStep = { ...step };
         
         // Process primary screenshot if available
         if (step.screenshot?.dataUrl) {
@@ -88,7 +94,7 @@ export async function exportSopAsHtml(
  */
 function generateSopHtml(
   sopDocument: SopDocument, 
-  processedSteps: (SopStep & { processedScreenshot?: string; secondaryProcessedScreenshot?: string })[], 
+  processedSteps: ProcessedStep[], 
   options: HtmlExportOptions
 ): HtmlExportResult {
   // Basic HTML structure with responsive design
@@ -398,7 +404,7 @@ function generateSopHtml(
 /**
  * Generate table of contents HTML
  */
-function generateTableOfContents(steps: SopStep[]): string {
+function generateTableOfContents(steps: ProcessedStep[]): string {
   if (!steps || steps.length === 0) return '';
   
   const listItems = steps.map((step, index) => {
@@ -419,7 +425,7 @@ function generateTableOfContents(steps: SopStep[]): string {
 async function createHtmlZipPackage(
   sopDocument: SopDocument,
   html: string,
-  processedSteps: (SopStep & { processedScreenshot?: string; secondaryProcessedScreenshot?: string })[]
+  processedSteps: ProcessedStep[]
 ): Promise<void> {
   try {
     const zip = new JSZip();
@@ -464,7 +470,7 @@ async function createHtmlZipPackage(
  */
 function createZipFriendlyHtml(
   html: string,
-  processedSteps: (SopStep & { processedScreenshot?: string; secondaryProcessedScreenshot?: string })[]
+  processedSteps: ProcessedStep[]
 ): string {
   let zipHtml = html;
   
