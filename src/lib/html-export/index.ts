@@ -17,7 +17,7 @@ export const generateStandaloneHtml = async (
   sopDocument: SopDocument, 
   options: HtmlExportOptions = { mode: 'standalone', quality: 0.85 }
 ): Promise<{ html: string; estimatedSize: number }> => {
-  const { title, topic, date, logo, steps, companyName } = sopDocument;
+  const { title, topic, date, logo, steps, companyName, tableOfContents } = sopDocument;
   let totalEstimatedSize = 0;
   
   // Process all screenshots and convert to Base64 with callouts
@@ -127,6 +127,25 @@ export const generateStandaloneHtml = async (
       </div>
     `;
   }).join('');
+  
+  // Generate Table of Contents if enabled
+  const tableOfContentsHtml = tableOfContents && steps.length > 0 ? `
+    <div class="table-of-contents">
+      <h2 class="toc-title">Table of Contents</h2>
+      <nav class="toc-nav">
+        <ol class="toc-list">
+          ${steps.map((step, index) => `
+            <li class="toc-item">
+              <a href="#step-${index + 1}" class="toc-link">
+                <span class="toc-number">${index + 1}</span>
+                <span class="toc-text">${step.title || `Step ${index + 1}`}</span>
+              </a>
+            </li>
+          `).join('')}
+        </ol>
+      </nav>
+    </div>
+  ` : '';
   
   // Process logo if exists
   let logoHtml = '';
@@ -267,6 +286,95 @@ export const generateStandaloneHtml = async (
           background-color: rgba(255, 255, 255, 0.1);
         }
         
+        /* Table of Contents styles */
+        .table-of-contents {
+          background-color: #f8f9fa;
+          border-radius: 12px;
+          padding: 30px;
+          margin: 30px 0;
+          border-left: 4px solid var(--primary-color);
+        }
+        
+        .dark-mode .table-of-contents {
+          background-color: #1a1a1a;
+          border-left-color: var(--primary-color);
+        }
+        
+        .toc-title {
+          font-size: 24px;
+          margin: 0 0 20px 0;
+          color: var(--text-light);
+          font-weight: 600;
+        }
+        
+        .dark-mode .toc-title {
+          color: var(--text-dark);
+        }
+        
+        .toc-nav {
+          margin: 0;
+        }
+        
+        .toc-list {
+          list-style: none;
+          padding: 0;
+          margin: 0;
+        }
+        
+        .toc-item {
+          margin-bottom: 12px;
+        }
+        
+        .toc-link {
+          display: flex;
+          align-items: center;
+          padding: 12px 16px;
+          background-color: white;
+          border-radius: 8px;
+          text-decoration: none;
+          color: var(--text-light);
+          transition: all 0.2s ease;
+          border: 1px solid var(--border-light);
+        }
+        
+        .dark-mode .toc-link {
+          background-color: #2a2a2a;
+          color: var(--text-dark);
+          border-color: var(--border-dark);
+        }
+        
+        .toc-link:hover {
+          background-color: var(--primary-color);
+          color: white;
+          transform: translateX(4px);
+          box-shadow: 0 4px 12px rgba(0, 122, 255, 0.3);
+        }
+        
+        .toc-number {
+          background-color: var(--primary-color);
+          color: white;
+          width: 28px;
+          height: 28px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-weight: bold;
+          margin-right: 16px;
+          flex-shrink: 0;
+          font-size: 14px;
+        }
+        
+        .toc-link:hover .toc-number {
+          background-color: white;
+          color: var(--primary-color);
+        }
+        
+        .toc-text {
+          font-weight: 500;
+          flex-grow: 1;
+        }
+        
         /* Progress bar */
         .progress-container {
           background-color: #f0f0f0;
@@ -303,6 +411,7 @@ export const generateStandaloneHtml = async (
           margin-bottom: 30px;
           overflow: hidden;
           transition: all 0.3s ease;
+          scroll-margin-top: 100px; /* Account for fixed header when jumping to anchors */
         }
         
         .dark-mode .step-card {
@@ -533,6 +642,21 @@ export const generateStandaloneHtml = async (
           .step-content {
             padding: 15px;
           }
+          
+          .table-of-contents {
+            padding: 20px;
+          }
+          
+          .toc-link {
+            padding: 10px 12px;
+          }
+          
+          .toc-number {
+            width: 24px;
+            height: 24px;
+            font-size: 12px;
+            margin-right: 12px;
+          }
         }
         
         /* Print styles */
@@ -550,6 +674,10 @@ export const generateStandaloneHtml = async (
           .screenshot-wrapper img {
             max-height: 400px;
             object-fit: contain;
+          }
+          
+          .table-of-contents {
+            break-inside: avoid;
           }
         }
       </style>
@@ -585,6 +713,8 @@ export const generateStandaloneHtml = async (
           </button>
         </header>
         
+        ${tableOfContentsHtml}
+        
         <div class="progress-container">
           <div class="progress-bar" id="progress-bar"></div>
         </div>
@@ -612,6 +742,28 @@ export const generateStandaloneHtml = async (
           body.classList.toggle('dark-mode');
           const currentTheme = body.classList.contains('dark-mode') ? 'dark' : 'light';
           localStorage.setItem('sopTheme', currentTheme);
+        });
+        
+        // Smooth scrolling for table of contents links
+        document.querySelectorAll('.toc-link').forEach(link => {
+          link.addEventListener('click', (e) => {
+            e.preventDefault();
+            const targetId = link.getAttribute('href');
+            const targetElement = document.querySelector(targetId);
+            if (targetElement) {
+              targetElement.scrollIntoView({ 
+                behavior: 'smooth',
+                block: 'start',
+                inline: 'nearest'
+              });
+              
+              // Add a brief highlight effect
+              targetElement.style.transform = 'scale(1.02)';
+              setTimeout(() => {
+                targetElement.style.transform = '';
+              }, 300);
+            }
+          });
         });
         
         // Progress tracking functionality
