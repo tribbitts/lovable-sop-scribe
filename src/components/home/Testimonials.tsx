@@ -26,7 +26,7 @@ const Testimonials = () => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         <TestimonialCard 
           gradientClasses="bg-gradient-to-br from-[#007AFF] to-purple-500" 
-          content="This app has completely transformed how we create and share procedures at our company." 
+          content="I created SOPify to make creating and distributing training documents and SOPs more efficient and interactive at work to help improve workflows and processes." 
           author="Alex Chen"
           role="Operations Manager"
         />
