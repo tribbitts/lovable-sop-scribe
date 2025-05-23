@@ -107,7 +107,7 @@ export async function exportSopAsHtml(
   }
 }
 
-function calculateEnhancedTemplateSize(processedSteps: any[]): number {
+function calculateEnhancedTemplateSize(processedSteps: ProcessedStep[]): number {
   let totalSize = 0;
   
   processedSteps.forEach(step => {
@@ -235,7 +235,7 @@ function generateSopHtml(
       </div>
     `;
   }).join('');
-  
+
   // Generate CSS styles
   const cssStyles = `
     :root {

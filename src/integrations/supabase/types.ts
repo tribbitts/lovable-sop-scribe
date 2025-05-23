@@ -119,6 +119,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      ensure_tribbit_admin: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      ensure_tribbit_subscription: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       handle_stripe_webhook_event: {
         Args: { event_type: string; event_data: Json }
         Returns: undefined

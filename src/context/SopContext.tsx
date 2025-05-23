@@ -1,3 +1,4 @@
+
 import React, { createContext, useState, useContext, ReactNode } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { SopDocument, SopStep, ScreenshotData, Callout, StepResource, ExportFormat, ExportOptions } from "../types/sop";
@@ -568,7 +569,7 @@ export const SopProvider = ({ children }: { children: ReactNode }) => {
         const { exportSopAsHtml } = await import("@/lib/html-export");
         // Convert ExportOptions to HtmlExportOptions
         const htmlOptions: HtmlExportOptions = {
-          mode: 'standalone', // Default mode
+          mode: options?.mode || 'standalone', // Use mode from options or default to standalone
           quality: 0.85,
           includeTableOfContents: options?.includeTableOfContents
         };
