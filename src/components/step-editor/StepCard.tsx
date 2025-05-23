@@ -189,6 +189,7 @@ const StepCard: React.FC<StepCardProps> = ({
                     onClick={() => setIsEditingTitle(true)}
                   >
                     {step.title || `Step ${index + 1}`}
+                    {step.completed && <span className="ml-2 text-green-400 text-sm">- Completed</span>}
                     <Edit3 className="inline h-4 w-4 ml-2 opacity-0 group-hover:opacity-100" />
                   </h3>
                 )}
@@ -228,7 +229,7 @@ const StepCard: React.FC<StepCardProps> = ({
         </CardHeader>
 
         <AnimatePresence>
-          {isExpanded && (
+          {isExpanded && !step.completed && (
             <motion.div
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: "auto", opacity: 1 }}

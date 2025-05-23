@@ -109,9 +109,9 @@ function generateSopHtml(
   
   // Generate step HTML
   const stepsHtml = processedSteps.map((step, index) => {
-    // Generate tags HTML
+    // Generate tags HTML with clickable functionality
     const sopTagsHtml = step.tags && step.tags.length > 0 
-      ? `<div class="sop-tags">${step.tags.map(tag => `<span class="sop-tag">${tag}</span>`).join('')}</div>`
+      ? `<div class="sop-tags">${step.tags.map(tag => `<span class="sop-tag clickable-tag" data-tag="${tag}" title="Click to highlight related steps">${tag}</span>`).join('')}</div>`
       : '';
     
     // Process screenshots
@@ -160,15 +160,22 @@ function generateSopHtml(
       ` 
       : '';
     
-    // Compile step HTML
+    // Compile step HTML with collapsible functionality
     return `
-      <div class="sop-step" id="step-${index + 1}">
-        <div class="step-header">
-          <h2>${index + 1}. ${step.title || `Step ${index + 1}`}</h2>
+      <div class="sop-step" id="step-${index + 1}" data-step-tags="${step.tags ? step.tags.join(',') : ''}">
+        <div class="step-header" onclick="toggleStepCompletion(${index + 1})">
+          <div class="step-header-content">
+            <div class="step-number">${index + 1}</div>
+            <h2>${step.title || `Step ${index + 1}`}</h2>
+            <div class="step-status">
+              <input type="checkbox" class="step-checkbox" id="checkbox-${index + 1}" onclick="event.stopPropagation();" />
+              <label for="checkbox-${index + 1}" class="checkbox-label">Mark Complete</label>
+            </div>
+          </div>
           ${sopTagsHtml}
         </div>
         
-        <div class="step-content">
+        <div class="step-content" id="content-${index + 1}">
           ${step.description ? `<p class="step-description">${step.description}</p>` : ''}
           
           ${screenshotHtml}
@@ -380,6 +387,8 @@ function generateSopHtml(
       padding: 20px;
       background-color: #252525;
       border-bottom: 1px solid var(--border-dark);
+      cursor: pointer;
+      user-select: none;
     }
     
     .light-mode .step-header {
@@ -464,6 +473,142 @@ function generateSopHtml(
       font-size: 12px;
       font-weight: 500;
       white-space: nowrap;
+    }
+    
+    /* Clickable tags */
+    .clickable-tag {
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    
+    .clickable-tag:hover {
+      background-color: #0056CC;
+      transform: scale(1.05);
+    }
+    
+    .tag-highlighted {
+      animation: tagPulse 0.6s ease-in-out;
+    }
+    
+    @keyframes tagPulse {
+      0%, 100% { background-color: var(--primary-color); }
+      50% { background-color: #00CC88; }
+    }
+    
+    /* Progress tracker styles */
+    .progress-container {
+      margin-top: 16px;
+    }
+    
+    .progress-bar {
+      width: 100%;
+      height: 8px;
+      background-color: #333;
+      border-radius: 4px;
+      overflow: hidden;
+      margin-bottom: 8px;
+    }
+    
+    .light-mode .progress-bar {
+      background-color: #e0e0e0;
+    }
+    
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--primary-color), #00CC88);
+      width: 0%;
+      transition: width 0.5s ease;
+      border-radius: 4px;
+    }
+    
+    .progress-text {
+      font-size: 14px;
+      color: #aaa;
+      text-align: center;
+    }
+    
+    .light-mode .progress-text {
+      color: #666;
+    }
+    
+    /* Step collapsing styles */
+    .step-header-content {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    
+    .step-number {
+      width: 32px;
+      height: 32px;
+      background-color: var(--primary-color);
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 14px;
+    }
+    
+    .step-status {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .step-checkbox {
+      margin: 0;
+    }
+    
+    .checkbox-label {
+      font-size: 14px;
+      color: #aaa;
+      cursor: pointer;
+    }
+    
+    .light-mode .checkbox-label {
+      color: #666;
+    }
+    
+    .sop-step.completed .step-number {
+      background-color: var(--step-complete-color);
+    }
+    
+    .sop-step.completed .step-content {
+      display: none;
+    }
+    
+    .sop-step.completed .step-header {
+      background-color: #1a2f1a;
+    }
+    
+    .light-mode .sop-step.completed .step-header {
+      background-color: #e8f5e8;
+    }
+    
+    .step-collapsed-indicator {
+      margin-left: 8px;
+      font-size: 12px;
+      color: var(--step-complete-color);
+      font-weight: 500;
+    }
+    
+    /* Step highlighting for tag navigation */
+    .step-highlighted {
+      animation: stepHighlight 1s ease-in-out;
+      border: 2px solid var(--primary-color) !important;
+    }
+    
+    @keyframes stepHighlight {
+      0%, 100% { 
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
+      }
+      50% { 
+        box-shadow: 0 8px 25px rgba(0, 122, 255, 0.6);
+        transform: scale(1.02);
+      }
     }
     
     /* Resources styles */
@@ -574,6 +719,16 @@ function generateSopHtml(
             ${sopDocument.topic ? `<p class="sop-topic">${sopDocument.topic}</p>` : ''}
             <p class="sop-date">Created: ${date}</p>
             ${companyName ? `<p class="sop-company">${companyName}</p>` : ''}
+            
+            <!-- Progress Tracker -->
+            <div class="progress-container">
+              <div class="progress-bar">
+                <div class="progress-fill" id="progress-fill"></div>
+              </div>
+              <div class="progress-text">
+                <span id="progress-count">0</span> of ${processedSteps.length} steps completed (<span id="progress-percent">0</span>%)
+              </div>
+            </div>
           </div>
           <div class="header-controls">
             <button class="theme-toggle" id="theme-toggle" title="Toggle Light/Dark Mode">
@@ -616,6 +771,132 @@ function generateSopHtml(
           localStorage.setItem('sopTheme', currentTheme);
         });
         
+        // Progress tracking
+        let completedSteps = new Set();
+        const totalSteps = ${processedSteps.length};
+        
+        function updateProgress() {
+          const progressCount = document.getElementById('progress-count');
+          const progressPercent = document.getElementById('progress-percent');
+          const progressFill = document.getElementById('progress-fill');
+          
+          const completed = completedSteps.size;
+          const percentage = Math.round((completed / totalSteps) * 100);
+          
+          progressCount.textContent = completed;
+          progressPercent.textContent = percentage;
+          progressFill.style.width = percentage + '%';
+        }
+        
+        // Step collapsing functionality
+        function toggleStepCompletion(stepNumber) {
+          const stepElement = document.getElementById('step-' + stepNumber);
+          const checkbox = document.getElementById('checkbox-' + stepNumber);
+          const stepContent = document.getElementById('content-' + stepNumber);
+          
+          if (completedSteps.has(stepNumber)) {
+            // Uncomplete the step
+            completedSteps.delete(stepNumber);
+            stepElement.classList.remove('completed');
+            checkbox.checked = false;
+            stepContent.style.display = 'block';
+          } else {
+            // Complete the step
+            completedSteps.add(stepNumber);
+            stepElement.classList.add('completed');
+            checkbox.checked = true;
+            stepContent.style.display = 'none';
+            
+            // Add completed indicator to header
+            const stepHeader = stepElement.querySelector('.step-header-content h2');
+            if (!stepHeader.querySelector('.step-collapsed-indicator')) {
+              stepHeader.innerHTML += ' <span class="step-collapsed-indicator">- Completed</span>';
+            }
+          }
+          
+          updateProgress();
+        }
+        
+        // Clickable tags functionality
+        document.addEventListener('click', function(e) {
+          if (e.target.classList.contains('clickable-tag')) {
+            e.stopPropagation();
+            const clickedTag = e.target.getAttribute('data-tag');
+            highlightStepsWithTag(clickedTag);
+            
+            // Add visual feedback to clicked tag
+            e.target.classList.add('tag-highlighted');
+            setTimeout(() => {
+              e.target.classList.remove('tag-highlighted');
+            }, 600);
+          }
+        });
+        
+        function highlightStepsWithTag(tag) {
+          // Clear previous highlights
+          document.querySelectorAll('.step-highlighted').forEach(el => {
+            el.classList.remove('step-highlighted');
+          });
+          
+          // Find and highlight steps with matching tag
+          const stepsWithTag = [];
+          document.querySelectorAll('.sop-step').forEach(step => {
+            const stepTags = step.getAttribute('data-step-tags');
+            if (stepTags && stepTags.split(',').includes(tag)) {
+              step.classList.add('step-highlighted');
+              stepsWithTag.push(step);
+              
+              // Scroll to first matching step
+              if (stepsWithTag.length === 1) {
+                step.scrollIntoView({ 
+                  behavior: 'smooth',
+                  block: 'center',
+                  inline: 'nearest'
+                });
+              }
+            }
+          });
+          
+          // Remove highlights after animation
+          setTimeout(() => {
+            document.querySelectorAll('.step-highlighted').forEach(el => {
+              el.classList.remove('step-highlighted');
+            });
+          }, 1000);
+          
+          console.log('Highlighted', stepsWithTag.length, 'steps with tag:', tag);
+        }
+        
+        // Checkbox event listeners (separate from header clicks)
+        document.querySelectorAll('.step-checkbox').forEach((checkbox, index) => {
+          checkbox.addEventListener('change', function(e) {
+            e.stopPropagation();
+            const stepNumber = index + 1;
+            
+            if (this.checked) {
+              completedSteps.add(stepNumber);
+              const stepElement = document.getElementById('step-' + stepNumber);
+              stepElement.classList.add('completed');
+              
+              // Add completed indicator
+              const stepHeader = stepElement.querySelector('.step-header-content h2');
+              if (!stepHeader.querySelector('.step-collapsed-indicator')) {
+                stepHeader.innerHTML += ' <span class="step-collapsed-indicator">- Completed</span>';
+              }
+            } else {
+              completedSteps.delete(stepNumber);
+              const stepElement = document.getElementById('step-' + stepNumber);
+              stepElement.classList.remove('completed');
+              
+              // Remove completed indicator
+              const indicator = stepElement.querySelector('.step-collapsed-indicator');
+              if (indicator) indicator.remove();
+            }
+            
+            updateProgress();
+          });
+        });
+        
         // Smooth scrolling for table of contents links
         document.querySelectorAll('.sop-toc a').forEach(link => {
           link.addEventListener('click', (e) => {
@@ -638,7 +919,11 @@ function generateSopHtml(
           });
         });
         
+        // Initialize progress
+        updateProgress();
+        
         console.log('SOP loaded successfully with ${processedSteps.length} steps');
+        console.log('Interactive features: Progress tracking, step collapsing, clickable tags');
         console.log('File contains embedded images - no external dependencies required');
       </script>
     </body>
