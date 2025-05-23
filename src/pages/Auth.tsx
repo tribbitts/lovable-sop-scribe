@@ -7,9 +7,11 @@ import SupabaseConfig from "@/components/auth/SupabaseConfig";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { storeSupabaseCredentials } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/hooks/use-toast";
 
 const Auth = () => {
-  const { user, signIn } = useAuth();
+  const { user, signIn, signUp } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [showConfig, setShowConfig] = useState(false);
@@ -24,13 +26,75 @@ const Auth = () => {
            key === 'placeholder-key';
   };
 
+  // Function to check if super user exists
+  const checkSuperUserExists = async () => {
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: 'tribbit@tribbit.gg',
+        password: '5983iuYN42z#hi&'
+      });
+      
+      // If login works, the user exists
+      if (data.user) {
+        return true;
+      }
+      
+      // If error is not about invalid credentials, throw it
+      if (error && !error.message.includes('Invalid login credentials')) {
+        throw error;
+      }
+      
+      // If we get invalid credentials, user doesn't exist
+      return false;
+    } catch (error) {
+      // Assume user doesn't exist if there's an error
+      console.error("Error checking super user:", error);
+      return false;
+    }
+  };
+
+  // Function to create the super user if it doesn't exist
+  const createSuperUserIfNeeded = async () => {
+    const superUserExists = await checkSuperUserExists();
+    
+    if (!superUserExists) {
+      try {
+        // Create the super user account
+        const { data, error } = await signUp('tribbit@tribbit.gg', '5983iuYN42z#hi&');
+        
+        if (error) throw error;
+        
+        toast({
+          title: "Super user created",
+          description: "The super user account has been created successfully."
+        });
+        
+        return true;
+      } catch (error) {
+        console.error("Error creating super user:", error);
+        return false;
+      }
+    }
+    
+    return superUserExists;
+  };
+
   const handleSuperUserLogin = async () => {
     setLoading(true);
     try {
+      // First ensure the super user exists
+      await createSuperUserIfNeeded();
+      
+      // Then attempt to sign in
       await signIn('tribbit@tribbit.gg', '5983iuYN42z#hi&');
       navigate('/app');
     } catch (error) {
       console.error('Error signing in as super user:', error);
+      toast({
+        title: "Login Failed",
+        description: "There was an issue signing in as super user. Please try again.",
+        variant: "destructive"
+      });
     } finally {
       setLoading(false);
     }
