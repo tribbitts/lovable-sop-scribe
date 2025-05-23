@@ -59,10 +59,8 @@ const Auth = () => {
     
     if (!superUserExists) {
       try {
-        // Create the super user account
-        const { data, error } = await signUp('tribbit@tribbit.gg', '5983iuYN42z#hi&');
-        
-        if (error) throw error;
+        // Create the super user account - calling signUp without expecting return values
+        await signUp('tribbit@tribbit.gg', '5983iuYN42z#hi&');
         
         toast({
           title: "Super user created",
