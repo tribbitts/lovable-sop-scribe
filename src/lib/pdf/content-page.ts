@@ -7,8 +7,8 @@ export function addContentPageDesign(
   margin: any,
   backgroundImage: string | null = null
 ) {
-  // Modern light background
-  pdf.setFillColor(252, 253, 254); // Very light blue-gray
+  // Warm, business-appropriate background
+  pdf.setFillColor(252, 251, 249); // Very light warm beige
   pdf.rect(0, 0, width, height, 'F');
   
   // Add subtle page elements for visual interest
@@ -30,8 +30,8 @@ export function addContentPageDesign(
         rotation: 0
       });
       
-      // Professional overlay for readability
-      pdf.setFillColor(252, 253, 254);
+      // Professional overlay for readability with warm tone
+      pdf.setFillColor(252, 251, 249);
       pdf.setGState(new pdf.GState({ opacity: 0.9 })); // 90% opacity overlay
       pdf.rect(0, 0, width, height, 'F');
       pdf.setGState(new pdf.GState({ opacity: 1 })); // Reset opacity
@@ -45,27 +45,85 @@ export function addContentPageDesign(
 
 // Add subtle page accents for visual interest
 function addPageAccents(pdf: any, width: number, height: number, margin: any) {
-  // Header accent line
-  pdf.setDrawColor(0, 122, 255, 0.2);
-  pdf.setLineWidth(2);
-  pdf.line(margin.left, margin.top - 10, width - margin.right, margin.top - 10);
+  // Very subtle header accent line in warm gray
+  pdf.setDrawColor(160, 155, 150, 0.15); // Warm gray with very low opacity
+  pdf.setLineWidth(1);
+  pdf.line(margin.left, margin.top - 8, width - margin.right, margin.top - 8);
   
-  // Subtle corner elements
-  pdf.setFillColor(0, 122, 255, 0.03);
+  // Subtle flowing organic shapes in earth tones
+  pdf.setFillColor(205, 195, 185, 0.03); // Warm beige, very subtle
   
-  // Top-right corner accent
-  pdf.roundedRect(width - 60, 0, 60, 40, 0, 0, 'F');
+  // Organic flowing shape in top-right (inspired by your image)
+  const topRightPath = [
+    [width - 45, 0],
+    [width, 0],
+    [width, 35],
+    [width - 25, 45],
+    [width - 45, 25]
+  ];
   
-  // Bottom-left corner accent
-  pdf.roundedRect(0, height - 30, 50, 30, 0, 0, 'F');
-  
-  // Very subtle dotted pattern
-  pdf.setFillColor(0, 122, 255, 0.02);
-  for (let x = margin.left; x < width - margin.right; x += 40) {
-    for (let y = margin.top; y < height - margin.bottom; y += 40) {
-      pdf.circle(x, y, 0.5, 'F');
-    }
+  try {
+    pdf.setFillColor(205, 195, 185, 0.03);
+    // Create a curved organic shape
+    pdf.lines(topRightPath, width - 45, 0, [1, 1], 'F');
+  } catch (e) {
+    // Fallback to simple rectangle if path drawing fails
+    pdf.roundedRect(width - 40, 0, 40, 30, 15, 15, 'F');
   }
+  
+  // Subtle flowing element in bottom-left
+  pdf.setFillColor(185, 175, 165, 0.025); // Slightly darker warm gray
+  
+  const bottomLeftPath = [
+    [0, height - 25],
+    [35, height - 30],
+    [40, height],
+    [0, height]
+  ];
+  
+  try {
+    pdf.setFillColor(185, 175, 165, 0.025);
+    pdf.lines(bottomLeftPath, 0, height - 25, [1, 1], 'F');
+  } catch (e) {
+    // Fallback to simple rectangle
+    pdf.roundedRect(0, height - 20, 35, 20, 10, 10, 'F');
+  }
+  
+  // Very subtle flowing accent in the middle area
+  pdf.setFillColor(195, 185, 175, 0.015); // Ultra-subtle warm tone
+  
+  // Create a gentle S-curve accent
+  const midPath = [
+    [width * 0.7, height * 0.3],
+    [width * 0.85, height * 0.35],
+    [width * 0.9, height * 0.5],
+    [width * 0.75, height * 0.55],
+    [width * 0.65, height * 0.45]
+  ];
+  
+  try {
+    pdf.setFillColor(195, 185, 175, 0.015);
+    pdf.lines(midPath, width * 0.7, height * 0.3, [1, 1], 'F');
+  } catch (e) {
+    // Skip this element if it fails
+  }
+  
+  // Replace the dotted pattern with very subtle organic texture
+  pdf.setFillColor(190, 180, 170, 0.008); // Extremely subtle
+  
+  // Add just a few organic dots in a flowing pattern
+  const organicDots = [
+    { x: width * 0.15, y: height * 0.25, r: 1.5 },
+    { x: width * 0.25, y: height * 0.35, r: 1 },
+    { x: width * 0.35, y: height * 0.28, r: 1.2 },
+    { x: width * 0.65, y: height * 0.65, r: 1 },
+    { x: width * 0.75, y: height * 0.75, r: 1.3 },
+    { x: width * 0.85, y: height * 0.68, r: 0.8 }
+  ];
+  
+  organicDots.forEach(dot => {
+    pdf.circle(dot.x, dot.y, dot.r, 'F');
+  });
 }
 
 export function addPageFooters(pdf: any, sopDocument: SopDocument, width: number, height: number, margin: any) {
@@ -78,8 +136,8 @@ export function addPageFooters(pdf: any, sopDocument: SopDocument, width: number
     
     const footerY = height - margin.bottom + 5;
     
-    // Modern footer design with subtle line
-    pdf.setDrawColor(0, 122, 255, 0.2);
+    // Modern footer design with subtle warm-toned line
+    pdf.setDrawColor(160, 155, 150, 0.3); // Warm gray instead of blue
     pdf.setLineWidth(0.5);
     pdf.line(margin.left, footerY - 8, width - margin.right, footerY - 8);
     
@@ -116,7 +174,7 @@ export function addPageFooters(pdf: any, sopDocument: SopDocument, width: number
       pdf.text(displayCenterText, centerX, footerY);
     }
     
-    // Right side - Page number with modern styling
+    // Right side - Page number with warm-toned styling
     const pageText = `${i} of ${pageCount}`;
     let pageTextWidth;
     try {
@@ -127,9 +185,9 @@ export function addPageFooters(pdf: any, sopDocument: SopDocument, width: number
     
     const pageX = width - margin.right - pageTextWidth;
     
-    // Page number background for better visibility
+    // Page number background with warm tone
     if (i > 1) { // Skip page number background on cover
-      pdf.setFillColor(248, 250, 252);
+      pdf.setFillColor(248, 246, 244); // Warm beige background
       pdf.roundedRect(pageX - 3, footerY - 5, pageTextWidth + 6, 8, 2, 2, 'F');
     }
     
