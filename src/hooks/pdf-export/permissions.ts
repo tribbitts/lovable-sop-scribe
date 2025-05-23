@@ -1,4 +1,3 @@
-
 import { toast } from "@/hooks/use-toast";
 import { createPdfUsageRecord } from "@/lib/supabase";
 import { supabase } from "@/integrations/supabase/client";
@@ -10,8 +9,8 @@ export const checkIsAdmin = async (userId: string): Promise<boolean> => {
   if (!userId) return false;
   
   // Special case for our designated admin email
-  const { data: userData, error: userError } = await supabase.auth.admin.getUserById(userId);
-  if (!userError && userData?.user?.email === 'Onoki82@gmail.com') {
+  const { data: userData } = await supabase.auth.getUser(userId);
+  if (userData?.user?.email === 'Onoki82@gmail.com') {
     return true;
   }
   
