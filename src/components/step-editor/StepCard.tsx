@@ -446,11 +446,11 @@ const StepCard: React.FC<StepCardProps> = ({
                   
                   {step.screenshot ? (
                     <div className="space-y-3">
-                      <div className="relative bg-zinc-800 rounded-lg overflow-hidden">
+                      <div className="relative bg-zinc-800 rounded-lg overflow-hidden min-h-[200px]">
                         <img
                           src={step.screenshot.dataUrl}
                           alt={`Step ${index + 1} screenshot`}
-                          className="w-full h-auto"
+                          className="w-full h-auto block"
                         />
                         <CalloutOverlay
                           screenshot={step.screenshot}
@@ -459,6 +459,13 @@ const StepCard: React.FC<StepCardProps> = ({
                           onCalloutUpdate={handleCalloutUpdate}
                           onCalloutDelete={handleCalloutDelete}
                         />
+                        
+                        {/* Debug indicator */}
+                        {isEditingCallouts && (
+                          <div className="absolute bottom-0 right-0 bg-green-500 text-white text-xs px-2 py-1 rounded-tl">
+                            EDIT MODE
+                          </div>
+                        )}
                       </div>
                       
                       <div className="flex gap-2 flex-wrap">

@@ -40,6 +40,20 @@ const CalloutOverlay: React.FC<CalloutOverlayProps> = ({
     "#FF5722", // Deep Orange
   ];
 
+  // Handle escape key to cancel callout placement
+  React.useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && isAddingCallout) {
+        setIsAddingCallout(false);
+      }
+    };
+
+    if (isEditing) {
+      document.addEventListener('keydown', handleKeyDown);
+      return () => document.removeEventListener('keydown', handleKeyDown);
+    }
+  }, [isEditing, isAddingCallout]);
+
   const handleOverlayClick = useCallback((event: React.MouseEvent<HTMLDivElement>) => {
     if (!isEditing || !isAddingCallout || !overlayRef.current || !onCalloutAdd) return;
 
@@ -238,17 +252,17 @@ const CalloutOverlay: React.FC<CalloutOverlayProps> = ({
   };
 
   return (
-    <div className="relative">
+    <div className="relative w-full h-full">
       {/* Editing Toolbar */}
       {isEditing && (
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="absolute top-2 left-2 right-2 z-30 bg-zinc-900/90 backdrop-blur-sm border border-zinc-700 rounded-lg p-3"
+          className="absolute top-4 left-4 right-4 z-50 bg-zinc-900 backdrop-blur-sm border-2 border-[#007AFF] rounded-lg p-4 shadow-2xl"
         >
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-3">
-              <span className="text-sm font-medium text-white">Add Callout:</span>
+              <span className="text-sm font-medium text-white bg-[#007AFF] px-2 py-1 rounded">Add Callout:</span>
               
               {/* Tool Selection */}
               <div className="flex gap-1">
@@ -265,8 +279,8 @@ const CalloutOverlay: React.FC<CalloutOverlayProps> = ({
                     onClick={() => setSelectedTool(type as any)}
                     className={`h-8 w-8 p-0 ${
                       selectedTool === type 
-                        ? 'bg-[#007AFF] text-white' 
-                        : 'border-zinc-700 text-zinc-300 hover:bg-zinc-800'
+                        ? 'bg-[#007AFF] text-white border-[#007AFF]' 
+                        : 'border-zinc-600 text-zinc-300 hover:bg-zinc-800 hover:border-zinc-500'
                     }`}
                     title={label}
                   >
@@ -282,8 +296,8 @@ const CalloutOverlay: React.FC<CalloutOverlayProps> = ({
                   {colors.slice(0, 5).map((color) => (
                     <button
                       key={color}
-                      className={`w-6 h-6 rounded-full border-2 ${
-                        selectedColor === color ? 'border-white' : 'border-zinc-600'
+                      className={`w-6 h-6 rounded-full border-2 hover:scale-110 transition-transform ${
+                        selectedColor === color ? 'border-white scale-110' : 'border-zinc-600'
                       }`}
                       style={{ backgroundColor: color }}
                       onClick={() => setSelectedColor(color)}
@@ -296,7 +310,7 @@ const CalloutOverlay: React.FC<CalloutOverlayProps> = ({
             <Button
               size="sm"
               onClick={() => setIsAddingCallout(!isAddingCallout)}
-              className={`${
+              className={`px-4 ${
                 isAddingCallout 
                   ? 'bg-green-600 hover:bg-green-700 text-white' 
                   : 'bg-[#007AFF] hover:bg-[#0069D9] text-white'
@@ -317,8 +331,8 @@ const CalloutOverlay: React.FC<CalloutOverlayProps> = ({
           </div>
           
           {isAddingCallout && (
-            <div className="mt-2 text-sm text-zinc-400">
-              Click anywhere on the screenshot to place a {selectedTool} callout
+            <div className="mt-3 text-sm text-zinc-300 bg-[#007AFF]/20 border border-[#007AFF]/30 rounded p-3">
+              <strong>Click anywhere on the screenshot below to place a <span className="text-[#007AFF] font-medium">{selectedTool}</span> callout</strong>
             </div>
           )}
         </motion.div>
@@ -337,21 +351,30 @@ const CalloutOverlay: React.FC<CalloutOverlayProps> = ({
           {screenshot.callouts.map(renderCallout)}
         </AnimatePresence>
         
-        {/* Click Instructions */}
+        {/* Click Instructions Overlay */}
         {isAddingCallout && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="absolute inset-0 bg-black/20 flex items-center justify-center pointer-events-none"
+            className="absolute inset-0 bg-black/30 flex items-center justify-center pointer-events-none"
           >
-            <div className="bg-zinc-900/90 backdrop-blur-sm border border-zinc-700 rounded-lg p-4 text-center">
+            <div className="bg-zinc-900/95 backdrop-blur-sm border border-zinc-700 rounded-lg p-6 text-center shadow-xl">
               <Plus className="h-8 w-8 text-[#007AFF] mx-auto mb-2" />
-              <p className="text-white font-medium">Click to place {selectedTool}</p>
-              <p className="text-sm text-zinc-400 mt-1">
+              <p className="text-white font-medium mb-1">Click to place {selectedTool}</p>
+              <p className="text-sm text-zinc-400">
                 Press Escape to cancel
               </p>
             </div>
           </motion.div>
+        )}
+        
+        {/* Editing Mode Indicator */}
+        {isEditing && !isAddingCallout && (
+          <div className="absolute bottom-2 left-2 bg-zinc-900/90 backdrop-blur-sm border border-zinc-700 rounded-lg px-3 py-1">
+            <span className="text-xs text-zinc-400">
+              Edit mode: Click callouts to edit, or "Add Callout" to place new ones
+            </span>
+          </div>
         )}
       </div>
       
