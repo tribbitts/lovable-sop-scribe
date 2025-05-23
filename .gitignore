@@ -30,3 +30,6 @@ emergency-subscription-fix.sql
 fix-admins-table-500.sql
 simple-admin-fix.sql
 force-training-module-browser-fix.js
+improved-training-module-fix.js
+fix-react-component.js
+force-real-training-module.js

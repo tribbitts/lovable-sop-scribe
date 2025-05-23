@@ -32,7 +32,12 @@ const ExportFormatSelector = ({
     canUseHtmlExport
   });
   
-    // Define canUseEnhancedHtml - allow for admins, HTML export users, and specific test users  const canUseEnhancedHtml = isAdmin || canUseHtmlExport ||     user?.email?.toLowerCase().includes('timothyholsborg') ||    user?.email?.toLowerCase().includes('primarypartnercare') ||    user?.email === 'tribbit@tribbit.gg' ||    user?.email === 'Onoki82@gmail.com';
+  // Define canUseEnhancedHtml - allow for admins, HTML export users, and specific test users
+  const canUseEnhancedHtml = isAdmin || canUseHtmlExport || 
+    user?.email?.toLowerCase().includes('timothyholsborg') ||
+    user?.email?.toLowerCase().includes('primarypartnercare') ||
+    user?.email === 'tribbit@tribbit.gg' ||
+    user?.email === 'Onoki82@gmail.com';
 
   const formats = [
     {
@@ -102,7 +107,7 @@ const ExportFormatSelector = ({
                           <h4 className="font-medium text-white text-sm">
                             {formatOption.title}
                           </h4>
-                          <Badge className={`text-xs ${
+                          <Badge variant="secondary" className={`text-xs ${
                             formatOption.isNew
                               ? 'bg-green-600 text-white border-green-600'
                               : 'bg-zinc-700 text-zinc-300 border-zinc-700'
@@ -110,12 +115,12 @@ const ExportFormatSelector = ({
                             {formatOption.badge}
                           </Badge>
                           {formatOption.isNew && (
-                            <Badge className="text-xs bg-amber-600 text-white border-amber-600">
+                            <Badge variant="secondary" className="text-xs bg-amber-600 text-white border-amber-600">
                               NEW
                             </Badge>
                           )}
                           {formatOption.requiresPermission && (
-                            <Badge className="text-xs bg-orange-600 text-white border-orange-600">
+                            <Badge variant="secondary" className="text-xs bg-orange-600 text-white border-orange-600">
                               TEST MODE
                             </Badge>
                           )}
@@ -178,4 +183,4 @@ const ExportFormatSelector = ({
   );
 };
 
-export default ExportFormatSelector;
+export default ExportFormatSelector; 
