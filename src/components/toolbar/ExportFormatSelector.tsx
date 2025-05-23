@@ -1,61 +1,140 @@
-
 import React from "react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import { FileText, Code, BookOpen, Users, Zap } from "lucide-react";
 import { ExportFormat } from "@/types/sop";
 import { useSubscription } from "@/context/SubscriptionContext";
-import { Badge } from "@/components/ui/badge";
+
+// Extended format type to include enhanced training
+export type ExtendedExportFormat = ExportFormat | "enhanced-html";
 
 interface ExportFormatSelectorProps {
-  format: ExportFormat;
-  onFormatChange: (format: ExportFormat) => void;
+  format: ExtendedExportFormat;
+  onFormatChange: (format: ExtendedExportFormat) => void;
+  disabled?: boolean;
 }
 
 const ExportFormatSelector: React.FC<ExportFormatSelectorProps> = ({
   format,
   onFormatChange,
+  disabled = false
 }) => {
   const { tier, isAdmin, canUseHtmlExport } = useSubscription();
   const canUsePdf = isAdmin || tier === "pro-pdf" || tier === "pro-complete" || tier === "free";
 
-  return (
-    <div className="mb-4">
-      <h3 className="text-sm font-medium mb-3 text-zinc-300">Export Format</h3>
-      <RadioGroup
-        value={format}
-        onValueChange={(value) => onFormatChange(value as ExportFormat)}
-        className="flex flex-col space-y-2"
-      >
-        <div className="flex items-center space-x-2">
-          <RadioGroupItem value="pdf" id="pdf-format" disabled={!canUsePdf} />
-          <Label
-            htmlFor="pdf-format"
-            className={`flex items-center ${!canUsePdf ? "text-zinc-500" : "text-zinc-300"}`}
-          >
-            PDF Document
-            {tier === "free" && !isAdmin && (
-              <Badge variant="outline" className="ml-2 text-xs bg-zinc-800 text-zinc-400 border-zinc-700">
-                1 per day
-              </Badge>
-            )}
-          </Label>
-        </div>
+  const formats = [
+    {
+      value: "pdf" as ExtendedExportFormat,
+      icon: FileText,
+      title: "PDF Document",
+      description: "Professional, print-ready format",
+      features: ["Print optimized", "Consistent layout", "Professional appearance"],
+      badge: "Standard"
+    },
+    {
+      value: "html" as ExtendedExportFormat,
+      icon: Code,
+      title: "HTML Package",
+      description: "Interactive web-ready format",
+      features: ["Interactive elements", "Responsive design", "Web sharing"],
+      badge: "Interactive"
+    },
+    {
+      value: "enhanced-html" as ExtendedExportFormat,
+      icon: BookOpen,
+      title: "Training Module",
+      description: "Self-contained learning experience with LMS features",
+      features: ["Password protection", "Progress tracking", "User notes", "Bookmarks", "Search"],
+      badge: "Enhanced",
+      isNew: true
+    }
+  ];
 
-        <div className="flex items-center space-x-2">
-          <RadioGroupItem value="html" id="html-format" disabled={!canUseHtmlExport} />
-          <Label
-            htmlFor="html-format"
-            className={`flex items-center ${!canUseHtmlExport ? "text-zinc-500" : "text-zinc-300"}`}
-          >
-            Interactive HTML
-            {!canUseHtmlExport && !isAdmin && (
-              <Badge variant="outline" className="ml-2 text-xs bg-zinc-800 text-zinc-400 border-zinc-700">
-                Pro HTML required
-              </Badge>
-            )}
-          </Label>
+  return (
+    <div className="space-y-3">
+      <Label className="text-sm font-medium text-zinc-300">Export Format</Label>
+      <RadioGroup value={format} onValueChange={onFormatChange}>
+        <div className="space-y-3">
+          {formats.map((formatOption) => {
+            const Icon = formatOption.icon;
+            return (
+              <div key={formatOption.value} className="relative">
+                <div className={`p-4 border rounded-lg transition-all cursor-pointer ${
+                  format === formatOption.value
+                    ? 'border-[#007AFF] bg-[#007AFF]/10'
+                    : 'border-zinc-700 hover:border-zinc-600'
+                }`}>
+                  <RadioGroupItem 
+                    value={formatOption.value} 
+                    id={formatOption.value}
+                    className="sr-only"
+                    disabled={disabled}
+                  />
+                  <label 
+                    htmlFor={formatOption.value} 
+                    className="cursor-pointer block"
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className={`p-2 rounded-lg ${
+                        format === formatOption.value
+                          ? 'bg-[#007AFF] text-white'
+                          : 'bg-zinc-800 text-zinc-400'
+                      }`}>
+                        <Icon className="h-5 w-5" />
+                      </div>
+                      
+                      <div className="flex-1 min-w-0">
+                                                 <div className="flex items-center gap-2 mb-1">                           <h4 className="font-medium text-white text-sm">                             {formatOption.title}                           </h4>                           <Badge                              className={`text-xs ${                               formatOption.isNew                                  ? 'bg-green-600 text-white border-green-600'                                  : 'bg-zinc-700 text-zinc-300 border-zinc-700'                             }`}                           >                             {formatOption.badge}                           </Badge>                           {formatOption.isNew && (                             <Badge className="text-xs bg-amber-600 text-white border-amber-600">                               NEW                             </Badge>                           )}                         </div>
+                        
+                        <p className="text-zinc-400 text-sm mb-3">
+                          {formatOption.description}
+                        </p>
+                        
+                        <div className="flex flex-wrap gap-1">
+                          {formatOption.features.map((feature, index) => (
+                            <span 
+                              key={index}
+                              className="text-xs px-2 py-1 bg-zinc-800 text-zinc-400 rounded"
+                            >
+                              {feature}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </label>
+                </div>
+                
+                {formatOption.isNew && (
+                  <div className="absolute -top-1 -right-1">
+                    <div className="bg-green-500 text-white text-xs px-2 py-1 rounded-full font-medium flex items-center gap-1">
+                      <Zap className="h-3 w-3" />
+                      NEW
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       </RadioGroup>
+      
+      {format === "enhanced-html" && (
+        <div className="p-3 bg-gradient-to-r from-blue-500/10 to-green-500/10 border border-blue-500/20 rounded-lg">
+          <div className="flex items-start gap-2">
+            <Users className="h-4 w-4 text-blue-400 flex-shrink-0 mt-0.5" />
+            <div>
+              <p className="text-sm text-blue-300 font-medium mb-1">
+                Perfect for Training & Onboarding
+              </p>
+              <p className="text-xs text-blue-200/80">
+                Creates a complete learning experience that works anywhere - no server required!
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -2,12 +2,16 @@ import { SopDocument, SopStep } from "@/types/sop";
 import { createBase64ImageWithCallouts, estimateBase64ImageSize, formatFileSize } from "./image-processor";
 import JSZip from "jszip";
 import { saveAs } from "file-saver";
+import { generateEnhancedHtmlTemplate, EnhancedHtmlOptions } from "./enhanced-template";
 
 // Define export options interface
 export interface HtmlExportOptions {
   mode: 'standalone' | 'zip';
   quality?: number;
   includeTableOfContents?: boolean;
+  // Enhanced options
+  enhanced?: boolean;
+  enhancedOptions?: EnhancedHtmlOptions;
 }
 
 // Result of HTML export
@@ -29,7 +33,7 @@ export async function exportSopAsHtml(
   sopDocument: SopDocument,
   options: HtmlExportOptions = { mode: 'standalone', quality: 0.85 }
 ): Promise<string> {
-  const { mode = 'standalone', quality = 0.85 } = options;
+  const { mode = 'standalone', quality = 0.85, enhanced = false } = options;
   
   try {
     // Process steps and their screenshots
@@ -67,14 +71,29 @@ export async function exportSopAsHtml(
         return processedStep;
       }));
     
-    // Generate HTML content
-    const { html, estimatedSize } = generateSopHtml(sopDocument, processedSteps, options);
+    // Choose template based on enhanced option
+    let html: string;
+    let estimatedSize: number;
+    
+    if (enhanced && options.enhancedOptions) {
+      // Use enhanced template
+      html = generateEnhancedHtmlTemplate(sopDocument, processedSteps, options.enhancedOptions);
+      estimatedSize = calculateEnhancedTemplateSize(processedSteps);
+    } else {
+      // Use original template
+      const result = generateSopHtml(sopDocument, processedSteps, options);
+      html = result.html;
+      estimatedSize = result.estimatedSize;
+    }
     
     // Handle export based on mode
     if (mode === 'standalone') {
       // For standalone mode, save as a single HTML file
       const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
-      saveAs(blob, `${sopDocument.title || 'SOP'}.html`);
+      const filename = enhanced 
+        ? `${sopDocument.title || 'Training-Module'}.html`
+        : `${sopDocument.title || 'SOP'}.html`;
+      saveAs(blob, filename);
     } else {
       // For zip mode, create a package with assets
       await createHtmlZipPackage(sopDocument, html, processedSteps);
@@ -86,6 +105,21 @@ export async function exportSopAsHtml(
     console.error("Error exporting SOP as HTML:", error);
     throw error;
   }
+}
+
+function calculateEnhancedTemplateSize(processedSteps: any[]): number {
+  let totalSize = 0;
+  
+  processedSteps.forEach(step => {
+    if (step.processedScreenshot) {
+      totalSize += estimateBase64ImageSize(step.processedScreenshot);
+    }
+    if (step.secondaryProcessedScreenshot) {
+      totalSize += estimateBase64ImageSize(step.secondaryProcessedScreenshot);
+    }
+  });
+  
+  return totalSize;
 }
 
 /**

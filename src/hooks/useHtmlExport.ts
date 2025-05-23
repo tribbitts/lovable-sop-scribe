@@ -13,10 +13,7 @@ export const useHtmlExport = () => {
   const { canUseHtmlExport, incrementDailyHtmlExport, isAdmin } = useSubscription();
   const { user } = useAuth();
 
-  const handleExportHtml = async (
-    sopDocument: SopDocument,
-    options?: HtmlExportOptions
-  ) => {
+  const handleExportHtml = async (    sopDocument: SopDocument,    options?: HtmlExportOptions & { enhanced?: boolean; enhancedOptions?: any }  ) => {
     // Super user access check
     const isSuperUser = user?.email === 'tribbit@tribbit.gg';
     
@@ -39,10 +36,7 @@ export const useHtmlExport = () => {
         throw new Error("Cannot export an empty SOP. Add at least one step.");
       }
 
-      const exportOptions: HtmlExportOptions = {
-        mode: options?.mode || exportMode,
-        quality: options?.quality || 0.85
-      };
+            const exportOptions: HtmlExportOptions = {        mode: options?.mode || exportMode,        quality: options?.quality || 0.85,        enhanced: options?.enhanced || false,        enhancedOptions: options?.enhancedOptions      };
 
       if (exportOptions.mode === 'standalone') {
         setExportProgress("Processing screenshots with callouts...");
