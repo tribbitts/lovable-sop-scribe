@@ -107,23 +107,7 @@ const ExportFormatSelector = ({
                           <h4 className="font-medium text-white text-sm">
                             {formatOption.title}
                           </h4>
-                          <Badge variant="secondary" className={`text-xs ${
-                            formatOption.isNew
-                              ? 'bg-green-600 text-white border-green-600'
-                              : 'bg-zinc-700 text-zinc-300 border-zinc-700'
-                          }`}>
-                            {formatOption.badge}
-                          </Badge>
-                          {formatOption.isNew && (
-                            <Badge variant="secondary" className="text-xs bg-amber-600 text-white border-amber-600">
-                              NEW
-                            </Badge>
-                          )}
-                          {formatOption.requiresPermission && (
-                            <Badge variant="secondary" className="text-xs bg-orange-600 text-white border-orange-600">
-                              TEST MODE
-                            </Badge>
-                          )}
+                                                    <Badge className={`text-xs ${                            formatOption.isNew                              ? 'bg-green-600 text-white border-green-600'                              : 'bg-zinc-700 text-zinc-300 border-zinc-700'                          }`}>                            {formatOption.badge}                          </Badge>                          {formatOption.isNew && (                            <Badge className="text-xs bg-amber-600 text-white border-amber-600">                              NEW                            </Badge>                          )}                          {formatOption.requiresPermission && (                            <Badge className="text-xs bg-orange-600 text-white border-orange-600">                              TEST MODE                            </Badge>                          )}
                         </div>
                         
                         <p className="text-zinc-400 text-sm mb-3">
