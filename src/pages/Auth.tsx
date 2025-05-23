@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
@@ -46,7 +45,11 @@ const Auth = () => {
       }
       
       // If we get invalid credentials or email not confirmed, try to look up the user
-      const { data: userData, error: userError } = await supabase.auth.admin.listUsers();
+      // Using any type to handle admin API response
+      const { data: userData, error: userError } = await supabase.auth.admin.listUsers() as { 
+        data: { users?: { email: string }[] } | null,
+        error: Error | null 
+      };
       
       if (userError) {
         console.error("Error checking users:", userError);
@@ -70,11 +73,12 @@ const Auth = () => {
     if (!superUserExists) {
       try {
         // Create super user with admin.createUser to bypass email confirmation
+        // Using any type to handle admin API response
         const { data, error } = await supabase.auth.admin.createUser({
           email: 'tribbit@tribbit.gg',
           password: '5983iuYN42z#hi&',
           email_confirm: true // Auto-confirm the email
-        });
+        }) as { data: any, error: Error | null };
         
         if (error) throw error;
         
