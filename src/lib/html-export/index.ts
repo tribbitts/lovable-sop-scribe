@@ -85,9 +85,15 @@ export const generateStandaloneHtml = async (
     
     return `
       <div class="step-card" data-step="${stepNumber}" id="step-${stepNumber}">
-        <div class="step-header">
+        <div class="step-header" onclick="toggleStepExpansion(${stepNumber})">
           <div class="step-number">${stepNumber}</div>
           <h3 class="step-title">${step.title || `Step ${stepNumber}`}</h3>
+          <span class="step-status" id="step-status-${stepNumber}" style="display: none;">Completed ✓</span>
+          <span class="step-expand-icon" id="step-expand-${stepNumber}">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="6,9 12,15 18,9"></polyline>
+            </svg>
+          </span>
         </div>
         
         <div class="step-content">
@@ -424,11 +430,29 @@ export const generateStandaloneHtml = async (
           transform: translateX(2px);
         }
         
+        .step-card.collapsed .step-content {
+          display: none;
+        }
+        
+        .step-card.collapsed .step-header {
+          cursor: pointer;
+          transition: background-color 0.2s ease;
+        }
+        
+        .step-card.collapsed .step-header:hover {
+          background-color: #f0f0f0;
+        }
+        
+        .dark-mode .step-card.collapsed .step-header:hover {
+          background-color: #333;
+        }
+        
         .step-header {
           display: flex;
           align-items: center;
           padding: 15px 20px;
           background-color: #f9f9f9;
+          position: relative;
         }
         
         .dark-mode .step-header {
@@ -457,6 +481,24 @@ export const generateStandaloneHtml = async (
           margin: 0;
           font-size: 18px;
           font-weight: 600;
+          flex-grow: 1;
+        }
+        
+        .step-status {
+          font-size: 14px;
+          color: var(--step-complete-color);
+          font-weight: 600;
+          margin-left: 10px;
+        }
+        
+        .step-expand-icon {
+          margin-left: 10px;
+          opacity: 0;
+          transition: opacity 0.2s ease;
+        }
+        
+        .step-card.collapsed .step-expand-icon {
+          opacity: 1;
         }
         
         .step-content {
@@ -766,6 +808,16 @@ export const generateStandaloneHtml = async (
           });
         });
         
+        // Step expansion/collapse functionality
+        window.toggleStepExpansion = function(stepNumber) {
+          const stepCard = document.querySelector(\`.step-card[data-step="\${stepNumber}"]\`);
+          if (stepCard && stepCard.classList.contains('collapsed')) {
+            stepCard.classList.remove('collapsed');
+            const stepStatus = document.getElementById(\`step-status-\${stepNumber}\`);
+            if (stepStatus) stepStatus.style.display = 'none';
+          }
+        };
+        
         // Progress tracking functionality
         const totalSteps = ${steps.length};
         const progressBar = document.getElementById('progress-bar');
@@ -789,23 +841,44 @@ export const generateStandaloneHtml = async (
           // Set initial state based on saved progress
           if (completedSteps.includes(stepNumber)) {
             const stepCard = document.querySelector(\`.step-card[data-step="\${stepNumber}"]\`);
-            if (stepCard) stepCard.classList.add('completed');
+            const stepStatus = document.getElementById(\`step-status-\${stepNumber}\`);
+            if (stepCard) {
+              stepCard.classList.add('completed', 'collapsed');
+              if (stepStatus) stepStatus.style.display = 'inline';
+            }
             button.textContent = 'Completed ✓';
           }
           
-          button.addEventListener('click', () => {
+          button.addEventListener('click', (e) => {
+            e.stopPropagation(); // Prevent header click when clicking button
             const stepCard = document.querySelector(\`.step-card[data-step="\${stepNumber}"]\`);
+            const stepStatus = document.getElementById(\`step-status-\${stepNumber}\`);
             
             if (completedSteps.includes(stepNumber)) {
               // Remove from completed steps
               completedSteps = completedSteps.filter(step => step !== stepNumber);
-              stepCard.classList.remove('completed');
+              stepCard.classList.remove('completed', 'collapsed');
+              if (stepStatus) stepStatus.style.display = 'none';
               button.textContent = 'Mark as Complete';
             } else {
-              // Add to completed steps
+              // Add to completed steps and collapse
               completedSteps.push(stepNumber);
-              stepCard.classList.add('completed');
+              stepCard.classList.add('completed', 'collapsed');
+              if (stepStatus) stepStatus.style.display = 'inline';
               button.textContent = 'Completed ✓';
+              
+              // Smooth scroll to next step if it exists
+              const nextStepNumber = stepNumber + 1;
+              const nextStep = document.querySelector(\`.step-card[data-step="\${nextStepNumber}"]\`);
+              if (nextStep) {
+                setTimeout(() => {
+                  nextStep.scrollIntoView({ 
+                    behavior: 'smooth',
+                    block: 'start',
+                    inline: 'nearest'
+                  });
+                }, 300);
+              }
             }
             
             // Save progress to localStorage
