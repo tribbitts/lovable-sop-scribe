@@ -46,9 +46,20 @@ const StepEditor: React.FC<StepEditorProps> = ({ step, index }) => {
   // Adapter function to maintain compatibility with existing code
   const updateStepAdapter = (id: string, field: string, value: any) => {
     if (field === "description") {
-      updateStep(id, undefined, value);
+      updateStep(id, "description", value);
+    } else if (field === "title") {
+      updateStep(id, "title", value);
+    } else if (field === "detailedInstructions") {
+      updateStep(id, "detailedInstructions", value);
+    } else if (field === "notes") {
+      updateStep(id, "notes", value);
+    } else if (field === "fileLink") {
+      updateStep(id, "fileLink", value);
+    } else if (field === "fileLinkText") {
+      updateStep(id, "fileLinkText", value);
     } else {
-      updateStep(id, field, value);
+      // For other fields, try to cast safely
+      updateStep(id, field as keyof SopStep, value);
     }
   };
 

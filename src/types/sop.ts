@@ -40,6 +40,8 @@ export interface SopStep {
   resources?: StepResource[];
   screenshot: ScreenshotData | null;
   completed?: boolean;
+  fileLink?: string; // Adding this property to fix the error
+  fileLinkText?: string; // Adding this property to fix the error
 }
 
 export interface SopDocument {
