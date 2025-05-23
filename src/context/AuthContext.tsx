@@ -111,13 +111,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         options = { emailRedirectTo: window.location.origin + '/app' };
       }
       
-      const { error } = await supabase.auth.signUp({ 
+      const { error, data } = await supabase.auth.signUp({ 
         email, 
         password,
         options
       });
       
       if (error) throw error;
+      
+      // Special case for the admin account
+      if (email === 'tribbit@tribbit.gg') {
+        // Create admin entry
+        const { error: adminError } = await supabase
+          .from('admins')
+          .insert({ user_id: data.user?.id });
+        
+        if (adminError) {
+          console.error("Error creating admin record:", adminError);
+          // Continue anyway, just log the error
+        } else {
+          toast({
+            title: "Admin account created",
+            description: "You have super user privileges.",
+          });
+        }
+      }
       
       toast({
         title: "Account created",
@@ -141,7 +159,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signOut = async () => {
     try {
-      // Don't set loading state to true here to avoid UI flickering
       setError(null);
       
       if (!isConnected) {

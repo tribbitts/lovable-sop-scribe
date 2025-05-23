@@ -6,12 +6,14 @@ import AuthForm from "@/components/auth/AuthForm";
 import SupabaseConfig from "@/components/auth/SupabaseConfig";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { storeSupabaseCredentials } from "@/lib/supabase";
+import { Button } from "@/components/ui/button";
 
 const Auth = () => {
-  const { user } = useAuth();
+  const { user, signIn } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [showConfig, setShowConfig] = useState(false);
+  const [loading, setLoading] = useState(false);
   
   // Check if Supabase credentials are missing
   const isMissingCredentials = () => {
@@ -20,6 +22,18 @@ const Auth = () => {
     return !url || !key || 
            url === 'https://placeholder-url.supabase.co' || 
            key === 'placeholder-key';
+  };
+
+  const handleSuperUserLogin = async () => {
+    setLoading(true);
+    try {
+      await signIn('tribbit@tribbit.gg', '5983iuYN42z#hi&');
+      navigate('/app');
+    } catch (error) {
+      console.error('Error signing in as super user:', error);
+    } finally {
+      setLoading(false);
+    }
   };
   
   useEffect(() => {
@@ -73,6 +87,16 @@ const Auth = () => {
               </CardHeader>
               <CardContent>
                 <AuthForm />
+                <div className="mt-6 pt-6 border-t border-zinc-700 text-center">
+                  <p className="text-zinc-400 text-sm mb-2">Log in as super user with full access</p>
+                  <Button 
+                    onClick={handleSuperUserLogin} 
+                    className="w-full bg-amber-600 hover:bg-amber-700"
+                    disabled={loading}
+                  >
+                    {loading ? 'Logging in...' : 'Login as Super User'}
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           </>

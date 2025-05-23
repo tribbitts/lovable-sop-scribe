@@ -110,14 +110,29 @@ export const SubscriptionProvider: React.FC<SubscriptionProviderProps> = ({ chil
 
     setLoading(true);
     try {
-      // Check if user is admin using our new function
-      const adminStatus = await checkIsAdmin(user.id);
-      setIsAdmin(adminStatus);
+      // Check if user is admin
+      const { data: adminData, error: adminError } = await supabase
+        .from('admins')
+        .select('id')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      
+      // Set admin status based on query result
+      setIsAdmin(!!adminData && !adminError);
+      
+      // Special case for our super user
+      if (user.email === 'tribbit@tribbit.gg') {
+        setIsAdmin(true);
+      }
 
-      // For testing purposes, set admin to true
-      // setIsAdmin(true);
+      // If user is admin, they have all permissions
+      if (isAdmin) {
+        setTier("pro-complete");
+        setLoading(false);
+        return;
+      }
 
-      // Get subscription
+      // Get subscription for non-admin users
       const { data, error } = await supabase
         .from('subscriptions')
         .select('tier, status')
@@ -177,13 +192,9 @@ export const SubscriptionProvider: React.FC<SubscriptionProviderProps> = ({ chil
 
   // Determine if user can use HTML export
   const canUseHtmlExport = () => {
-    // For testing purposes, always return true for HTML export
-    return true;
-
-    // Original logic:
-    // if (isAdmin) return true;
-    // if (tier === "pro-html" || tier === "pro-complete") return true;
-    // return false;
+    if (isAdmin) return true; 
+    if (tier === "pro-html" || tier === "pro-complete") return true;
+    return false;
   };
 
   // New helper function to check if user has any pro tier

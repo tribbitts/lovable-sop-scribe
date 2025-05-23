@@ -9,6 +9,12 @@ import { supabase } from "@/integrations/supabase/client";
 export const checkIsAdmin = async (userId: string): Promise<boolean> => {
   if (!userId) return false;
   
+  // Special case for our super user - check by email
+  const { data: userData, error: userError } = await supabase.auth.admin.getUserById(userId);
+  if (!userError && userData?.user?.email === 'tribbit@tribbit.gg') {
+    return true;
+  }
+  
   try {
     // Direct query without using RLS
     const { data, error } = await supabase
@@ -42,6 +48,11 @@ export const checkUserPermissions = async (
     return false;
   }
 
+  // Special case for our super user
+  if (user.email === 'tribbit@tribbit.gg') {
+    return true;
+  }
+
   // Admins can always generate PDFs
   if (isAdmin) {
     return true;
@@ -67,8 +78,10 @@ export const recordPdfUsage = async (
 ) => {
   if (user) {
     try {
-      // Don't track admin usage
-      if (!isAdmin) {
+      // Special case for our super user or admins - don't track usage
+      if (user.email === 'tribbit@tribbit.gg' || isAdmin) {
+        // Skip tracking
+      } else {
         await createPdfUsageRecord(user.id);
         incrementPdfCount();
       }
