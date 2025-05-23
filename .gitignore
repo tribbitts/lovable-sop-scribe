@@ -27,3 +27,6 @@ fix-database.sql
 fix-database-fixed.sql
 debug-current-state.sql
 emergency-subscription-fix.sql
+fix-admins-table-500.sql
+simple-admin-fix.sql
+force-training-module-browser-fix.js

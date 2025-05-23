@@ -32,10 +32,7 @@ const ExportFormatSelector = ({
     canUseHtmlExport
   });
   
-  // Define canUseEnhancedHtml - allow for admins, HTML export users, and specific test users
-  const canUseEnhancedHtml = isAdmin || canUseHtmlExport || 
-    user?.email?.toLowerCase().includes('timothyholsborg') ||
-    user?.email?.toLowerCase().includes('primarypartnercare');
+    // Define canUseEnhancedHtml - allow for admins, HTML export users, and specific test users  const canUseEnhancedHtml = isAdmin || canUseHtmlExport ||     user?.email?.toLowerCase().includes('timothyholsborg') ||    user?.email?.toLowerCase().includes('primarypartnercare') ||    user?.email === 'tribbit@tribbit.gg' ||    user?.email === 'Onoki82@gmail.com';
 
   const formats = [
     {
