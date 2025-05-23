@@ -115,14 +115,7 @@ export const SubscriptionProvider: React.FC<SubscriptionProviderProps> = ({ chil
         .from('admins')
         .select('id')
         .eq('user_id', user.id)
-        .maybeSingle();
-      
-      // Determine admin status (local variable to avoid race condition)
-      let userIsAdmin = !!adminData && !adminError;
-      
-            // Special case for our designated admin emails      if (user.email === 'Onoki82@gmail.com' ||           user.email === 'TimothyHolsborg@primarypartnercare.com' ||          user.email?.toLowerCase().includes('timothyholsborg') ||          user.email?.toLowerCase().includes('primarypartnercare')) {        userIsAdmin = true;      }
-
-      // Set admin status
+                .maybeSingle();            // Determine admin status (local variable to avoid race condition)      let userIsAdmin = !!adminData && !adminError;            // Special case for our designated admin emails      if (user.email === 'Onoki82@gmail.com' ||           user.email === 'TimothyHolsborg@primarypartnercare.com' ||          user.email?.toLowerCase().includes('timothyholsborg') ||          user.email?.toLowerCase().includes('primarypartnercare')) {        userIsAdmin = true;      }      // Set admin status
       setIsAdmin(userIsAdmin);
 
       // If user is admin, they have all permissions

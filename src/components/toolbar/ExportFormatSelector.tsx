@@ -22,13 +22,7 @@ const ExportFormatSelector = ({
   disabled = false
 }: ExportFormatSelectorProps) => {
   const { tier, isAdmin, canUseHtmlExport } = useSubscription();
-  const { user } = useAuth();
-  const canUsePdf = isAdmin || tier === "pro-pdf" || tier === "pro-complete" || tier === "free";
-  
-  // Temporary override for testing - allow enhanced HTML for Timothy
-  const canUseEnhancedHtml = isAdmin || canUseHtmlExport || 
-    user?.email?.toLowerCase().includes('timothyholsborg') ||
-    user?.email?.toLowerCase().includes('primarypartnercare');
+    const { user } = useAuth();  const canUsePdf = isAdmin || tier === "pro-pdf" || tier === "pro-complete" || tier === "free";    // Debug logging for Timothy  console.log('🔍 Export Format Selector Debug:', {    userEmail: user?.email,    tier,    isAdmin,    canUseHtmlExport  });    // Temporary override for testing - allow enhanced HTML for Timothy  const canUseEnhancedHtml = isAdmin || canUseHtmlExport ||     user?.email?.toLowerCase().includes('timothyholsborg') ||    user?.email?.toLowerCase().includes('primarypartnercare');
 
   const formats = [
     {
