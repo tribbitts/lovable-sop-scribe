@@ -1,4 +1,4 @@
-import React from "react";
+import { useState } from "react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
@@ -15,11 +15,11 @@ interface ExportFormatSelectorProps {
   disabled?: boolean;
 }
 
-const ExportFormatSelector: React.FC<ExportFormatSelectorProps> = ({
+const ExportFormatSelector = ({
   format,
   onFormatChange,
   disabled = false
-}) => {
+}: ExportFormatSelectorProps) => {
   const { tier, isAdmin, canUseHtmlExport } = useSubscription();
   const canUsePdf = isAdmin || tier === "pro-pdf" || tier === "pro-complete" || tier === "free";
 
@@ -85,7 +85,12 @@ const ExportFormatSelector: React.FC<ExportFormatSelectorProps> = ({
                       </div>
                       
                       <div className="flex-1 min-w-0">
-                                                 <div className="flex items-center gap-2 mb-1">                           <h4 className="font-medium text-white text-sm">                             {formatOption.title}                           </h4>                           <Badge                              className={`text-xs ${                               formatOption.isNew                                  ? 'bg-green-600 text-white border-green-600'                                  : 'bg-zinc-700 text-zinc-300 border-zinc-700'                             }`}                           >                             {formatOption.badge}                           </Badge>                           {formatOption.isNew && (                             <Badge className="text-xs bg-amber-600 text-white border-amber-600">                               NEW                             </Badge>                           )}                         </div>
+                        <div className="flex items-center gap-2 mb-1">
+                          <h4 className="font-medium text-white text-sm">
+                            {formatOption.title}
+                          </h4>
+                                                    <Badge className={`text-xs ${                              formatOption.isNew                                ? 'bg-green-600 text-white border-green-600'                                : 'bg-zinc-700 text-zinc-300 border-zinc-700'                            }`}                          >                            {formatOption.badge}                          </Badge>                          {formatOption.isNew && (                            <Badge className="text-xs bg-amber-600 text-white border-amber-600">                              NEW                            </Badge>                          )}
+                        </div>
                         
                         <p className="text-zinc-400 text-sm mb-3">
                           {formatOption.description}

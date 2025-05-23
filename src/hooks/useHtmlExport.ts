@@ -13,7 +13,10 @@ export const useHtmlExport = () => {
   const { canUseHtmlExport, incrementDailyHtmlExport, isAdmin } = useSubscription();
   const { user } = useAuth();
 
-  const handleExportHtml = async (    sopDocument: SopDocument,    options?: HtmlExportOptions & { enhanced?: boolean; enhancedOptions?: any }  ) => {
+  const handleExportHtml = async (
+    sopDocument: SopDocument,
+    options?: HtmlExportOptions & { enhanced?: boolean; enhancedOptions?: any }
+  ) => {
     // Super user access check
     const isSuperUser = user?.email === 'tribbit@tribbit.gg';
     
@@ -36,11 +39,17 @@ export const useHtmlExport = () => {
         throw new Error("Cannot export an empty SOP. Add at least one step.");
       }
 
-            const exportOptions: HtmlExportOptions = {        mode: options?.mode || exportMode,        quality: options?.quality || 0.85,        enhanced: options?.enhanced || false,        enhancedOptions: options?.enhancedOptions      };
+      const exportOptions: HtmlExportOptions = {
+        mode: options?.mode || exportMode,
+        quality: options?.quality || 0.85,
+        enhanced: options?.enhanced || false,
+        enhancedOptions: options?.enhancedOptions
+      };
 
-      if (exportOptions.mode === 'standalone') {
+      if (exportOptions.enhanced) {
+        setExportProgress("Creating enhanced training module with LMS features...");
+      } else if (exportOptions.mode === 'standalone') {
         setExportProgress("Processing screenshots with callouts...");
-        // Additional progress updates will be handled by the export function
       } else {
         setExportProgress("Creating ZIP file with assets...");
       }
@@ -54,10 +63,11 @@ export const useHtmlExport = () => {
       
       setExportProgress(null);
       
-      const modeText = exportOptions.mode === 'standalone' ? 'standalone HTML file' : 'ZIP package';
+      const exportType = exportOptions.enhanced ? 'enhanced training module' : 
+                        (exportOptions.mode === 'standalone' ? 'standalone HTML file' : 'ZIP package');
       toast({
         title: "Export Complete",
-        description: `Your SOP has been exported as a ${modeText}.`,
+        description: `Your SOP has been exported as a ${exportType}.`,
       });
 
     } catch (error) {
