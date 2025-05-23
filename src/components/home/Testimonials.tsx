@@ -33,9 +33,9 @@ const Testimonials = () => {
         
         <TestimonialCard 
           gradientClasses="bg-gradient-to-br from-green-400 to-[#007AFF]" 
-          content="The simplicity and clean design make creating SOPs a breeze. Highly recommended!" 
-          author="Sarah Johnson"
-          role="CEO"
+          content="I created SOPify to make creating and distributing training documents and SOPs more efficient, inclusive, and interactive at work to help improve workflows and processes." 
+          author="Tim Holsborg"
+          role="Founder"
         />
         
         <TestimonialCard 
