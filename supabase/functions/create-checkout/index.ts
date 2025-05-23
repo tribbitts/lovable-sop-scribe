@@ -22,6 +22,8 @@ serve(async (req) => {
   }
 
   try {
+    console.log("Starting checkout process");
+    
     // Get the authorization header
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
@@ -42,23 +44,37 @@ serve(async (req) => {
     const token = authHeader.replace("Bearer ", "");
     const { data: { user }, error } = await supabaseClient.auth.getUser(token);
     if (error || !user) {
+      console.error("Authentication error:", error);
       return new Response(
         JSON.stringify({ error: "Unauthorized" }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 401 }
       );
     }
 
+    console.log(`Authenticated user: ${user.email}`);
+
     // Initialize Stripe
-    const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
+    const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
+    if (!stripeKey) {
+      console.error("Missing STRIPE_SECRET_KEY");
+      return new Response(
+        JSON.stringify({ error: "Server configuration error" }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
+      );
+    }
+    
+    const stripe = new Stripe(stripeKey, {
       apiVersion: "2023-10-16",
     });
 
     // Parse request body
-    const { tier = "pro-complete" } = await req.json();
+    const requestData = await req.json();
+    const tier = requestData.tier || "pro-complete";
     
     // Validate tier and get corresponding price ID
-    const priceId = PRICE_ID_MAP[tier as keyof typeof PRICE_ID_MAP];
+    const priceId = PRICE_ID_MAP[tier];
     if (!priceId) {
+      console.error(`Invalid tier: ${tier}`);
       return new Response(
         JSON.stringify({ error: `Invalid tier: ${tier}. Valid tiers are: ${Object.keys(PRICE_ID_MAP).join(', ')}` }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
@@ -78,6 +94,7 @@ serve(async (req) => {
 
     // If no customer ID exists, create one
     if (!customerId) {
+      console.log("No customer ID found, creating new customer");
       const customer = await stripe.customers.create({
         email: user.email,
         metadata: {
@@ -85,6 +102,7 @@ serve(async (req) => {
         },
       });
       customerId = customer.id;
+      console.log(`Created new customer with ID: ${customerId}`);
 
       // Save the customer ID
       await supabaseClient
@@ -116,7 +134,7 @@ serve(async (req) => {
       },
     });
 
-    console.log(`Checkout session created: ${session.id} for tier: ${tier}`);
+    console.log(`Checkout session created: ${session.id}`);
 
     // Return the checkout URL
     return new Response(

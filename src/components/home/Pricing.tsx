@@ -124,6 +124,7 @@ const Pricing = () => {
   const { user } = useAuth();
   const { tier, refreshSubscription } = useSubscription();
   const [loading, setLoading] = useState(false);
+  const [processingTier, setProcessingTier] = useState<string | null>(null);
   const navigate = useNavigate();
   
   const freeTierFeatures = [
@@ -174,18 +175,29 @@ const Pricing = () => {
     }
     
     setLoading(true);
+    setProcessingTier(selectedTier);
     
     try {
+      console.log(`Starting checkout process for tier: ${selectedTier}`);
+      
       // Call the create-checkout Supabase Edge Function
       const { data, error } = await supabase.functions.invoke('create-checkout', {
         body: { tier: selectedTier }
       });
       
-      if (error) throw error;
+      if (error) {
+        console.error("Error from create-checkout function:", error);
+        throw error;
+      }
+      
+      console.log("Checkout response:", data);
       
       // Redirect to Stripe checkout
       if (data?.url) {
+        console.log("Redirecting to checkout URL:", data.url);
         window.location.href = data.url;
+      } else {
+        throw new Error("No checkout URL returned");
       }
     } catch (error: any) {
       console.error("Error creating checkout session:", error);
@@ -196,6 +208,7 @@ const Pricing = () => {
       });
     } finally {
       setLoading(false);
+      setProcessingTier(null);
     }
   };
 
@@ -216,7 +229,7 @@ const Pricing = () => {
             features={freeTierFeatures} 
             onSubscribe={user ? handleFreeTier : undefined}
             userTier={tier}
-            loading={loading}
+            loading={loading && processingTier === "free"}
             tier="free"
           />
           
@@ -227,7 +240,7 @@ const Pricing = () => {
             theme="primary"
             onSubscribe={() => handleSubscribe('pro-pdf')}
             userTier={tier}
-            loading={loading}
+            loading={loading && processingTier === "pro-pdf"}
             tier="pro-pdf"
             badgeText="NEW"
           />
@@ -239,7 +252,7 @@ const Pricing = () => {
             theme="secondary"
             onSubscribe={() => handleSubscribe('pro-html')}
             userTier={tier}
-            loading={loading}
+            loading={loading && processingTier === "pro-html"}
             tier="pro-html"
             badgeText="NEW"
           />
@@ -252,7 +265,7 @@ const Pricing = () => {
             theme="primary"
             onSubscribe={() => handleSubscribe('pro-complete')}
             userTier={tier}
-            loading={loading}
+            loading={loading && processingTier === "pro-complete"}
             tier="pro-complete"
             badgeText="BEST VALUE"
           />
