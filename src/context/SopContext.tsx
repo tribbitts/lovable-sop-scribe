@@ -555,7 +555,7 @@ export const SopProvider = ({ children }: { children: ReactNode }) => {
     });
   };
 
-  const exportDocument = async (format: ExportFormat, options?: ExportOptions): Promise<void> => {
+  exportDocument = async (format: ExportFormat, options?: ExportOptions): Promise<void> => {
     try {
       if (format === "pdf") {
         // Use existing PDF export functionality
@@ -564,7 +564,7 @@ export const SopProvider = ({ children }: { children: ReactNode }) => {
       } else if (format === "html") {
         // Use existing HTML export functionality
         const { exportSopAsHtml } = await import("@/lib/html-export");
-        await exportSopAsHtml(sopDocument);
+        await exportSopAsHtml(sopDocument, options);
       }
       
       toast({
