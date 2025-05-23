@@ -24,8 +24,10 @@ const PdfExportManager = () => {
   
   // Convert exportError to string safely with proper null checking
   const displayError = exportError === null ? null : (
-    typeof exportError === 'object' && exportError !== null && 'message' in exportError 
-      ? String(exportError.message)
+    typeof exportError === 'object' && exportError !== null 
+      ? (exportError && 'message' in exportError 
+          ? String(exportError.message) 
+          : String(exportError))
       : String(exportError)
   );
   
