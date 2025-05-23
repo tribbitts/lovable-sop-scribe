@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import Stripe from "https://esm.sh/stripe@14.21.0";
@@ -60,13 +61,19 @@ serve(async (req) => {
     if (event.type === "checkout.session.completed") {
       const session = event.data.object;
       const customerId = session.customer;
+      
+      // Extract tier from metadata and validate it
       const tierFromMetadata = session.metadata?.tier || "pro-complete"; // Default fallback
+      
+      // Validate that tier is one of the expected values
+      const validTiers = ["pro-pdf", "pro-html", "pro-complete", "free"];
+      const tier = validTiers.includes(tierFromMetadata) ? tierFromMetadata : "pro-complete";
       
       if (!customerId) {
         throw new Error("No customer ID found in checkout session");
       }
 
-      console.log(`Checkout completed for customer: ${customerId}, tier: ${tierFromMetadata}`);
+      console.log(`Checkout completed for customer: ${customerId}, tier: ${tier}`);
       
       // Find the subscription associated with this customer
       const { data: subscriptionData, error: subscriptionError } = await supabaseClient
@@ -116,7 +123,7 @@ serve(async (req) => {
             stripe_customer_id: customerId,
             stripe_subscription_id: session.subscription,
             status: "active",
-            tier: tierFromMetadata,
+            tier: tier,
             updated_at: new Date().toISOString()
           });
 
@@ -124,7 +131,7 @@ serve(async (req) => {
           throw upsertError;
         }
         
-        console.log(`Created new subscription for user ${user.id} with customer ID ${customerId} and tier ${tierFromMetadata}`);
+        console.log(`Created new subscription for user ${user.id} with customer ID ${customerId} and tier ${tier}`);
       } else {
         // Update the existing subscription with the correct tier
         const { error: updateError } = await supabaseClient
@@ -132,7 +139,7 @@ serve(async (req) => {
           .update({
             stripe_subscription_id: session.subscription,
             status: "active",
-            tier: tierFromMetadata,
+            tier: tier,
             updated_at: new Date().toISOString()
           })
           .eq("stripe_customer_id", customerId);
@@ -141,7 +148,7 @@ serve(async (req) => {
           throw updateError;
         }
         
-        console.log(`Updated subscription for customer ID ${customerId} to active ${tierFromMetadata} status`);
+        console.log(`Updated subscription for customer ID ${customerId} to active ${tier} status`);
       }
     }
 
@@ -150,8 +157,37 @@ serve(async (req) => {
       const subscription = event.data.object;
       const customerId = subscription.customer;
       const status = subscription.status;
+
+      // For subscription updates, we want to preserve the tier if possible
+      if (event.type === "customer.subscription.updated" && status === "active") {
+        // Try to get the current tier from the subscription metadata
+        const tierFromMetadata = subscription.metadata?.tier;
+        
+        if (tierFromMetadata && ["pro-pdf", "pro-html", "pro-complete"].includes(tierFromMetadata)) {
+          // We found a valid tier in the metadata
+          const { error: updateError } = await supabaseClient
+            .from("subscriptions")
+            .update({
+              status: "active",
+              tier: tierFromMetadata,
+              updated_at: new Date().toISOString()
+            })
+            .eq("stripe_customer_id", customerId);
+            
+          if (updateError) {
+            throw updateError;
+          }
+          
+          console.log(`Updated subscription status for customer ${customerId} to ${status} with tier ${tierFromMetadata}`);
+          
+          return new Response(JSON.stringify({ received: true }), { 
+            status: 200,
+            headers: { ...corsHeaders, "Content-Type": "application/json" }
+          });
+        }
+      }
       
-      // Update subscription status
+      // Default update (status only, preserve existing tier)
       const { error: updateError } = await supabaseClient
         .from("subscriptions")
         .update({

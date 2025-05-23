@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { useAuth } from "./AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -119,8 +120,8 @@ export const SubscriptionProvider: React.FC<SubscriptionProviderProps> = ({ chil
       // Determine admin status (local variable to avoid race condition)
       let userIsAdmin = !!adminData && !adminError;
       
-      // Special case for our super user
-      if (user.email === 'tribbit@tribbit.gg') {
+      // Special case for our designated admin email
+      if (user.email === 'Onoki82@gmail.com') {
         userIsAdmin = true;
       }
 
@@ -147,12 +148,21 @@ export const SubscriptionProvider: React.FC<SubscriptionProviderProps> = ({ chil
       } else if (data) {
         // Make sure status is active
         if (data.status === 'active') {
-          setTier(data.tier as SubscriptionTier);
+          // Validate that tier is one of the expected values
+          const validTiers: SubscriptionTier[] = ["free", "pro-pdf", "pro-html", "pro-complete"];
+          const validTier = validTiers.includes(data.tier as SubscriptionTier) 
+            ? data.tier as SubscriptionTier 
+            : "free";
+          
+          setTier(validTier);
+          console.log(`Set subscription tier to ${validTier} for user ${user.id}`);
         } else {
           setTier("free");
+          console.log(`User ${user.id} has inactive subscription, setting to free tier`);
         }
       } else {
         setTier("free");
+        console.log(`No subscription found for user ${user.id}, setting to free tier`);
       }
     } catch (error) {
       console.error('Error refreshing subscription:', error);
@@ -199,7 +209,7 @@ export const SubscriptionProvider: React.FC<SubscriptionProviderProps> = ({ chil
     return false;
   };
 
-  // New helper function to check if user has any pro tier
+  // Helper function to check if user has any pro tier
   const isPro = () => {
     return tier === "pro-pdf" || tier === "pro-html" || tier === "pro-complete" || isAdmin;
   };

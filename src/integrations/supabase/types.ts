@@ -60,6 +60,27 @@ export type Database = {
         }
         Relationships: []
       }
+      stripe_events_log: {
+        Row: {
+          created_at: string | null
+          event_data: Json
+          event_type: string
+          id: number
+        }
+        Insert: {
+          created_at?: string | null
+          event_data: Json
+          event_type: string
+          id?: never
+        }
+        Update: {
+          created_at?: string | null
+          event_data?: Json
+          event_type?: string
+          id?: never
+        }
+        Relationships: []
+      }
       subscriptions: {
         Row: {
           created_at: string
@@ -98,7 +119,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      handle_stripe_webhook_event: {
+        Args: { event_type: string; event_data: Json }
+        Returns: undefined
+      }
+      handle_stripe_webhook_event_v2: {
+        Args: { event_type: string; event_data: Json }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never
