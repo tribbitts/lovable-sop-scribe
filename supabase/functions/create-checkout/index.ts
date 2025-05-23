@@ -7,6 +7,13 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+// Price ID mapping for different tiers
+const PRICE_ID_MAP = {
+  'pro-pdf': Deno.env.get("STRIPE_PRO_PDF_PRICE_ID") || "",
+  'pro-html': Deno.env.get("STRIPE_PRO_HTML_PRICE_ID") || "",
+  'pro-complete': Deno.env.get("STRIPE_PRO_COMPLETE_PRICE_ID") || "",
+};
+
 serve(async (req) => {
   // Handle CORS
   if (req.method === "OPTIONS") {
@@ -46,7 +53,18 @@ serve(async (req) => {
     });
 
     // Parse request body
-    const { tier = "pro" } = await req.json();
+    const { tier = "pro-complete" } = await req.json();
+    
+    // Validate tier and get corresponding price ID
+    const priceId = PRICE_ID_MAP[tier as keyof typeof PRICE_ID_MAP];
+    if (!priceId) {
+      return new Response(
+        JSON.stringify({ error: `Invalid tier: ${tier}. Valid tiers are: ${Object.keys(PRICE_ID_MAP).join(', ')}` }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
+      );
+    }
+
+    console.log(`Creating checkout session for tier: ${tier} with price ID: ${priceId}`);
 
     // Check if user already has a Stripe customer ID
     const { data: subscriptionData } = await supabaseClient
@@ -70,26 +88,34 @@ serve(async (req) => {
       // Save the customer ID
       await supabaseClient
         .from("subscriptions")
-        .update({
+        .upsert({
+          user_id: user.id,
           stripe_customer_id: customerId,
+          tier: "free",
+          status: "inactive",
           updated_at: new Date().toISOString(),
-        })
-        .eq("user_id", user.id);
+        });
     }
 
-    // Create checkout session
+    // Create checkout session with the correct price ID
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       line_items: [
         {
-          price: Deno.env.get("STRIPE_PRICE_ID") || "price_1234567890", // Use environment variable
+          price: priceId,
           quantity: 1,
         },
       ],
       mode: "subscription",
-      success_url: `${req.headers.get("origin")}/app?success=true`,
+      success_url: `${req.headers.get("origin")}/app?success=true&tier=${tier}`,
       cancel_url: `${req.headers.get("origin")}/app?canceled=true`,
+      metadata: {
+        tier: tier,
+        user_id: user.id,
+      },
     });
+
+    console.log(`Checkout session created: ${session.id} for tier: ${tier}`);
 
     // Return the checkout URL
     return new Response(

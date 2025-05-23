@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import Stripe from "https://esm.sh/stripe@14.21.0";
@@ -61,12 +60,13 @@ serve(async (req) => {
     if (event.type === "checkout.session.completed") {
       const session = event.data.object;
       const customerId = session.customer;
+      const tierFromMetadata = session.metadata?.tier || "pro-complete"; // Default fallback
       
       if (!customerId) {
         throw new Error("No customer ID found in checkout session");
       }
 
-      console.log(`Checkout completed for customer: ${customerId}`);
+      console.log(`Checkout completed for customer: ${customerId}, tier: ${tierFromMetadata}`);
       
       // Find the subscription associated with this customer
       const { data: subscriptionData, error: subscriptionError } = await supabaseClient
@@ -108,7 +108,7 @@ serve(async (req) => {
           throw new Error(`No user found with email: ${customerEmail}`);
         }
 
-        // Create or update the subscription
+        // Create or update the subscription with the correct tier
         const { error: upsertError } = await supabaseClient
           .from("subscriptions")
           .upsert({
@@ -116,7 +116,7 @@ serve(async (req) => {
             stripe_customer_id: customerId,
             stripe_subscription_id: session.subscription,
             status: "active",
-            tier: "pro",
+            tier: tierFromMetadata,
             updated_at: new Date().toISOString()
           });
 
@@ -124,15 +124,15 @@ serve(async (req) => {
           throw upsertError;
         }
         
-        console.log(`Created new subscription for user ${user.id} with customer ID ${customerId}`);
+        console.log(`Created new subscription for user ${user.id} with customer ID ${customerId} and tier ${tierFromMetadata}`);
       } else {
-        // Update the existing subscription
+        // Update the existing subscription with the correct tier
         const { error: updateError } = await supabaseClient
           .from("subscriptions")
           .update({
             stripe_subscription_id: session.subscription,
             status: "active",
-            tier: "pro",
+            tier: tierFromMetadata,
             updated_at: new Date().toISOString()
           })
           .eq("stripe_customer_id", customerId);
@@ -141,7 +141,7 @@ serve(async (req) => {
           throw updateError;
         }
         
-        console.log(`Updated subscription for customer ID ${customerId} to active pro status`);
+        console.log(`Updated subscription for customer ID ${customerId} to active ${tierFromMetadata} status`);
       }
     }
 
