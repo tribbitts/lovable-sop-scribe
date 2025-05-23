@@ -9,9 +9,9 @@ import { supabase } from "@/integrations/supabase/client";
 export const checkIsAdmin = async (userId: string): Promise<boolean> => {
   if (!userId) return false;
   
-  // Special case for our super user - check by email
+  // Special case for our designated admin email
   const { data: userData, error: userError } = await supabase.auth.admin.getUserById(userId);
-  if (!userError && userData?.user?.email === 'tribbit@tribbit.gg') {
+  if (!userError && userData?.user?.email === 'Onoki82@gmail.com') {
     return true;
   }
   
@@ -48,8 +48,8 @@ export const checkUserPermissions = async (
     return false;
   }
 
-  // Special case for our super user
-  if (user.email === 'tribbit@tribbit.gg') {
+  // Special case for our admin user
+  if (user.email === 'Onoki82@gmail.com') {
     return true;
   }
 
@@ -78,8 +78,8 @@ export const recordPdfUsage = async (
 ) => {
   if (user) {
     try {
-      // Special case for our super user or admins - don't track usage
-      if (user.email === 'tribbit@tribbit.gg' || isAdmin) {
+      // Special case for our admin user or admins - don't track usage
+      if (user.email === 'Onoki82@gmail.com' || isAdmin) {
         // Skip tracking
       } else {
         await createPdfUsageRecord(user.id);

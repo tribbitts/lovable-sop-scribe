@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -120,8 +119,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (error) throw error;
       
       // Special case for the admin account
-      if (email === 'tribbit@tribbit.gg') {
-        // Create admin entry
+      if (email === 'Onoki82@gmail.com') {
+        // Create admin entry if this is the admin email
         const { error: adminError } = await supabase
           .from('admins')
           .insert({ user_id: data.user?.id });
@@ -132,7 +131,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         } else {
           toast({
             title: "Admin account created",
-            description: "You have super user privileges.",
+            description: "You have administrator privileges.",
           });
         }
       }
