@@ -452,13 +452,15 @@ const StepCard: React.FC<StepCardProps> = ({
                           alt={`Step ${index + 1} screenshot`}
                           className="w-full h-auto block rounded-lg"
                         />
-                        <CalloutOverlay
-                          screenshot={step.screenshot}
-                          isEditing={isEditingCallouts}
-                          onCalloutAdd={handleCalloutAdd}
-                          onCalloutUpdate={handleCalloutUpdate}
-                          onCalloutDelete={handleCalloutDelete}
-                        />
+                        <div className="absolute inset-0">
+                          <CalloutOverlay
+                            screenshot={step.screenshot}
+                            isEditing={isEditingCallouts}
+                            onCalloutAdd={handleCalloutAdd}
+                            onCalloutUpdate={handleCalloutUpdate}
+                            onCalloutDelete={handleCalloutDelete}
+                          />
+                        </div>
                         
                         {/* Debug indicator */}
                         {isEditingCallouts && (

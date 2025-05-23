@@ -362,6 +362,12 @@ const CalloutOverlay: React.FC<CalloutOverlayProps> = ({
           isAddingCallout ? 'cursor-crosshair' : 'cursor-default'
         }`}
         onClick={handleOverlayClick}
+        style={{
+          // Add visual debugging when in adding mode
+          backgroundColor: isAddingCallout ? 'rgba(0, 122, 255, 0.1)' : 'transparent',
+          border: isAddingCallout ? '2px dashed rgba(0, 122, 255, 0.5)' : 'none',
+          zIndex: isAddingCallout ? 40 : 10
+        }}
       >
         {/* Render Callouts */}
         <AnimatePresence>
