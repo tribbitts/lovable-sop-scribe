@@ -8,7 +8,8 @@ import { createPdfUsageRecord } from "@/lib/supabase";
 export const checkUserPermissions = (
   user: any,
   canGeneratePdf: boolean,
-  showUpgradePrompt: () => void
+  showUpgradePrompt: () => void,
+  isAdmin: boolean = false
 ): boolean => {
   if (!user) {
     toast({
@@ -17,6 +18,11 @@ export const checkUserPermissions = (
       variant: "destructive"
     });
     return false;
+  }
+
+  // Admins can always generate PDFs
+  if (isAdmin) {
+    return true;
   }
 
   if (!canGeneratePdf) {
@@ -34,12 +40,16 @@ export const checkUserPermissions = (
 export const recordPdfUsage = async (
   user: any,
   incrementPdfCount: () => void,
-  refreshSubscription: () => Promise<void>
+  refreshSubscription: () => Promise<void>,
+  isAdmin: boolean = false
 ) => {
   if (user) {
     try {
-      await createPdfUsageRecord(user.id);
-      incrementPdfCount();
+      // Don't track admin usage
+      if (!isAdmin) {
+        await createPdfUsageRecord(user.id);
+        incrementPdfCount();
+      }
       await refreshSubscription();
     } catch (err) {
       console.error("Error recording PDF usage:", err);

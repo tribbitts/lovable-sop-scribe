@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { useAuth } from "./AuthContext";
 import { supabase } from "@/lib/supabase";
@@ -117,6 +118,8 @@ export const SubscriptionProvider: React.FC<SubscriptionProviderProps> = ({ chil
 
       if (!adminError && adminData) {
         setIsAdmin(true);
+      } else {
+        setIsAdmin(false);
       }
 
       // Get subscription
@@ -149,6 +152,9 @@ export const SubscriptionProvider: React.FC<SubscriptionProviderProps> = ({ chil
 
   // Increment daily PDF exports
   const incrementDailyPdfExport = () => {
+    // Admins are not limited by daily exports
+    if (isAdmin) return;
+    
     checkAndResetDailyCounters();
     const newCount = dailyPdfExports + 1;
     setDailyPdfExports(newCount);
@@ -157,6 +163,9 @@ export const SubscriptionProvider: React.FC<SubscriptionProviderProps> = ({ chil
 
   // Increment daily HTML exports
   const incrementDailyHtmlExport = () => {
+    // Admins are not limited by daily exports
+    if (isAdmin) return;
+    
     checkAndResetDailyCounters();
     const newCount = dailyHtmlExports + 1;
     setDailyHtmlExports(newCount);

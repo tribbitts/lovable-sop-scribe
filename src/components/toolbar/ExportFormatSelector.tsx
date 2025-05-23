@@ -15,9 +15,9 @@ const ExportFormatSelector: React.FC<ExportFormatSelectorProps> = ({
   format,
   onFormatChange,
 }) => {
-  const { tier } = useSubscription();
-  const canUseHtml = tier === "pro-html" || tier === "pro-complete";
-  const canUsePdf = tier === "pro-pdf" || tier === "pro-complete" || tier === "free";
+  const { tier, isAdmin } = useSubscription();
+  const canUseHtml = isAdmin || tier === "pro-html" || tier === "pro-complete";
+  const canUsePdf = isAdmin || tier === "pro-pdf" || tier === "pro-complete" || tier === "free";
 
   return (
     <div className="mb-4">
@@ -34,7 +34,7 @@ const ExportFormatSelector: React.FC<ExportFormatSelectorProps> = ({
             className={`flex items-center ${!canUsePdf ? "text-zinc-500" : "text-zinc-300"}`}
           >
             PDF Document
-            {tier === "free" && (
+            {tier === "free" && !isAdmin && (
               <Badge variant="outline" className="ml-2 text-xs bg-zinc-800 text-zinc-400 border-zinc-700">
                 1 per day
               </Badge>

@@ -15,11 +15,11 @@ interface ExportButtonProps {
 
 const ExportButton = ({ onClick, isExporting, exportProgress, disabled, format }: ExportButtonProps) => {
   const { user } = useAuth();
-  const { canGeneratePdf, canUseHtmlExport, tier } = useSubscription();
+  const { canGeneratePdf, canUseHtmlExport, tier, isAdmin } = useSubscription();
   
   const canExport = format === "pdf" ? canGeneratePdf : canUseHtmlExport;
   const buttonText = format === "pdf" ? "Export as PDF" : "Export as HTML";
-  const limitText = tier === "free" ? "Daily Limit Reached" : buttonText;
+  const limitText = tier === "free" && !isAdmin ? "Daily Limit Reached" : buttonText;
 
   return (
     <Button 

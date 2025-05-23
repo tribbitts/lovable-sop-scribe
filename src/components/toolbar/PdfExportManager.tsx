@@ -1,6 +1,7 @@
 
 import { useSopContext } from "@/context/SopContext";
 import { usePdfExport } from "@/hooks/usePdfExport";
+import { useSubscription } from "@/context/SubscriptionContext";
 import PreviewButton from "./PreviewButton";
 import ExportButton from "./ExportButton";
 import PdfPreviewDialog from "./PdfPreviewDialog";
@@ -8,6 +9,7 @@ import PdfExportError from "./PdfExportError";
 
 const PdfExportManager = () => {
   const { sopDocument } = useSopContext();
+  const { isAdmin } = useSubscription();
   const {
     isExporting,
     exportProgress,
