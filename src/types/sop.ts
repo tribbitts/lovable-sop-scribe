@@ -1,5 +1,4 @@
-
-export type CalloutShape = "circle" | "rectangle";
+export type CalloutShape = "circle" | "rectangle" | "arrow" | "number";
 
 export interface Callout {
   id: string;
@@ -9,25 +8,38 @@ export interface Callout {
   y: number;
   width: number;
   height: number;
+  number?: number; // For numbered callouts
+  text?: string; // For text callouts
 }
 
 export interface ScreenshotData {
   id: string;
   dataUrl: string;
+  originalDataUrl?: string; // Store original before cropping
   callouts: Callout[];
   secondaryDataUrl?: string;
   secondaryCallouts?: Callout[];
+  isCropped?: boolean;
+}
+
+export interface StepResource {
+  id: string;
+  type: "link" | "file";
+  title: string;
+  url: string;
+  description?: string;
 }
 
 export interface SopStep {
   id: string;
-  description: string;
   title?: string;
+  description: string;
   detailedInstructions?: string;
   notes?: string;
-  fileLink?: string;
-  fileLinkText?: string;
+  tags?: string[];
+  resources?: StepResource[];
   screenshot: ScreenshotData | null;
+  completed?: boolean;
 }
 
 export interface SopDocument {
@@ -38,14 +50,89 @@ export interface SopDocument {
   backgroundImage?: string | null;
   steps: SopStep[];
   companyName: string;
+  tableOfContents?: boolean;
+  darkMode?: boolean;
+  progressTracking?: {
+    enabled: boolean;
+    sessionName?: string;
+    lastSaved?: string;
+  };
 }
 
 export interface AppSettings {
   companyName: string;
+  defaultDarkMode?: boolean;
+  autoSave?: boolean;
 }
 
 // Export options
 export type ExportFormat = "pdf" | "html";
+export type ExportTheme = "light" | "dark" | "auto";
+
+// Progress tracking
+export interface ProgressSession {
+  id: string;
+  name: string;
+  completedSteps: string[];
+  totalSteps: number;
+  lastUpdated: string;
+  sopTitle: string;
+}
 
 // Subscription tiers
 export type SubscriptionTier = "free" | "pro-pdf" | "pro-html" | "pro-complete";
+
+// Cropping types
+export interface CropArea {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+// Component props for modular architecture
+export interface StepCardProps {
+  step: SopStep;
+  index: number;
+  isActive?: boolean;
+  onStepChange?: (stepId: string, field: keyof SopStep, value: any) => void;
+  onStepComplete?: (stepId: string, completed: boolean) => void;
+}
+
+export interface CalloutOverlayProps {
+  screenshot: ScreenshotData;
+  isEditing: boolean;
+  onCalloutAdd?: (callout: Omit<Callout, "id">) => void;
+  onCalloutUpdate?: (callout: Callout) => void;
+  onCalloutDelete?: (calloutId: string) => void;
+}
+
+export interface ImageCropperProps {
+  imageDataUrl: string;
+  onCropComplete: (croppedDataUrl: string) => void;
+  onCancel: () => void;
+  aspectRatio?: number;
+}
+
+export interface ProgressTrackerProps {
+  completed: number;
+  total: number;
+  showPercentage?: boolean;
+  variant?: "bar" | "ring" | "steps";
+  className?: string;
+}
+
+export interface ExportPanelProps {
+  document: SopDocument;
+  onExport: (format: ExportFormat, options?: ExportOptions) => void;
+  isExporting?: boolean;
+  exportProgress?: string;
+}
+
+export interface ExportOptions {
+  theme?: ExportTheme;
+  includeTableOfContents?: boolean;
+  includeProgressInfo?: boolean;
+  customFooter?: string;
+  quality?: "low" | "medium" | "high";
+}
