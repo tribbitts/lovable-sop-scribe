@@ -22,7 +22,7 @@ const TestimonialCard = ({
 const Testimonials = () => {
   return (
     <section className="py-16 container mx-auto px-4">
-      <h2 className="text-3xl font-semibold tracking-tight text-white text-center mb-12">What Our Users Say</h2>
+      <h2 className="text-3xl font-semibold tracking-tight text-white text-center mb-12">From The Founder and Users</h2>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         <TestimonialCard 
           gradientClasses="bg-gradient-to-br from-[#007AFF] to-purple-500" 
