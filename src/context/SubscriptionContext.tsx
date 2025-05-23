@@ -90,17 +90,37 @@ export const SubscriptionProvider: React.FC<SubscriptionProviderProps> = ({ chil
     }
   }, []);
 
-  // Fetch subscription data when user changes
-  useEffect(() => {
-    if (user) {
-      refreshSubscription();
-    } else {
+  // Function to refresh subscription data
+  const refreshSubscription = async () => {
+    if (!user) {
       setTier("free");
       setIsAdmin(false);
+      return;
     }
-  }, [user]);
 
-    // Function to refresh subscription data  const refreshSubscription = async () => {    if (!user) {      setTier("free");      setIsAdmin(false);      return;    }    setLoading(true);    try {      // Check if user is admin      const { data: adminData, error: adminError } = await supabase        .from('admins')        .select('id')        .eq('user_id', user.id)        .maybeSingle();            // Determine admin status (local variable to avoid race condition)      let userIsAdmin = !!adminData && !adminError;            // Special case for our designated admin emails      if (user.email === 'Onoki82@gmail.com' ||           user.email === 'tribbit@tribbit.gg' ||          user.email === 'TimothyHolsborg@primarypartnercare.com' ||          user.email?.toLowerCase().includes('timothyholsborg') ||          user.email?.toLowerCase().includes('primarypartnercare')) {        userIsAdmin = true;      }      // Set admin status      setIsAdmin(userIsAdmin);
+    setLoading(true);
+    try {
+      // Check if user is admin
+      const { data: adminData, error: adminError } = await supabase
+        .from('admins')
+        .select('id')
+        .eq('user_id', user.id)
+        .maybeSingle();
+            
+      // Determine admin status (local variable to avoid race condition)
+      let userIsAdmin = !!adminData && !adminError;
+            
+      // Special case for our designated admin emails
+      if (user.email === 'Onoki82@gmail.com' ||
+          user.email === 'tribbit@tribbit.gg' ||
+          user.email === 'TimothyHolsborg@primarypartnercare.com' ||
+          user.email?.toLowerCase().includes('timothyholsborg') ||
+          user.email?.toLowerCase().includes('primarypartnercare')) {
+        userIsAdmin = true;
+      }
+      
+      // Set admin status
+      setIsAdmin(userIsAdmin);
 
       // If user is admin, they have all permissions
       if (userIsAdmin) {
@@ -145,6 +165,16 @@ export const SubscriptionProvider: React.FC<SubscriptionProviderProps> = ({ chil
       setLoading(false);
     }
   };
+
+  // Fetch subscription data when user changes
+  useEffect(() => {
+    if (user) {
+      refreshSubscription();
+    } else {
+      setTier("free");
+      setIsAdmin(false);
+    }
+  }, [user]);
 
   // Increment daily PDF exports
   const incrementDailyPdfExport = () => {
