@@ -69,7 +69,7 @@ export interface AppSettings {
 }
 
 // Export options
-export type ExportFormat = "pdf" | "html";
+export type ExportFormat = "pdf" | "html" | "training-module";
 export type ExportTheme = "light" | "dark" | "auto";
 
 // Export options - now includes mode for HTML exports

@@ -7,6 +7,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
 import { ExportPanelProps, ExportFormat, ExportTheme, ExportOptions } from "@/types/sop";
+import { useSubscription } from "@/context/SubscriptionContext";
+import { useAuth } from "@/context/AuthContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   FileText, 
@@ -20,7 +22,8 @@ import {
   Eye,
   CheckCircle2,
   AlertCircle,
-  Clock
+  Clock,
+  GraduationCap
 } from "lucide-react";
 
 const ExportPanel: React.FC<ExportPanelProps> = ({
@@ -29,6 +32,29 @@ const ExportPanel: React.FC<ExportPanelProps> = ({
   isExporting = false,
   exportProgress
 }) => {
+  const { tier, isAdmin, canUseHtmlExport } = useSubscription();
+  const { user } = useAuth();
+  
+  // Determine user role - enhanced logic for admin detection
+  const userRole: 'admin' | 'user' | 'editor' = 
+    isAdmin || 
+    user?.email?.toLowerCase().includes('timothyholsborg') ||
+    user?.email?.toLowerCase().includes('primarypartnercare') ||
+    user?.email === 'tribbit@tribbit.gg' ||
+    user?.email === 'Onoki82@gmail.com'
+      ? 'admin' 
+      : canUseHtmlExport 
+        ? 'editor' 
+        : 'user';
+  
+  console.log('🎓 ExportPanel Admin Debug:', {
+    userEmail: user?.email,
+    tier,
+    isAdmin,
+    canUseHtmlExport,
+    determinedRole: userRole
+  });
+  
   const [selectedFormat, setSelectedFormat] = useState<ExportFormat>("pdf");
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [exportOptions, setExportOptions] = useState<ExportOptions>({
@@ -39,14 +65,15 @@ const ExportPanel: React.FC<ExportPanelProps> = ({
     quality: "high"
   });
 
-  const formatOptions = [
+  const allFormatOptions = [
     {
       format: "pdf" as ExportFormat,
       icon: FileText,
       label: "PDF Document",
       description: "Professional, print-ready format",
       features: ["Print optimized", "Consistent layout", "Professional appearance"],
-      badge: "Recommended"
+      badge: "Recommended",
+      requiresAdmin: false
     },
     {
       format: "html" as ExportFormat,
@@ -54,9 +81,22 @@ const ExportPanel: React.FC<ExportPanelProps> = ({
       label: "HTML Package",
       description: "Interactive web-ready format",
       features: ["Interactive elements", "Responsive design", "Web sharing"],
-      badge: "Interactive"
+      badge: "Interactive",
+      requiresAdmin: false
+    },
+    {
+      format: "training-module" as ExportFormat,
+      icon: GraduationCap,
+      label: "Training Module",
+      description: "Complete learning experience with progress tracking",
+      features: ["Progress tracking", "Quiz integration", "Certificates", "Analytics"],
+      badge: userRole === 'admin' ? "Admin Access" : "Premium",
+      requiresAdmin: false // Show to all users but with different badge
     }
   ];
+  
+  // Filter formats based on user permissions
+  const formatOptions = allFormatOptions;
 
   const themeOptions = [
     { value: "light", label: "Light Theme", description: "Clean and professional" },
@@ -96,7 +136,9 @@ const ExportPanel: React.FC<ExportPanelProps> = ({
             className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
               selectedFormat === format
                 ? "border-[#007AFF] bg-[#007AFF]/10"
-                : "border-zinc-700 hover:border-zinc-600 bg-zinc-800/50"
+                : format === 'training-module' && userRole === 'admin'
+                  ? "border-purple-500 bg-purple-500/10 hover:border-purple-400"
+                  : "border-zinc-700 hover:border-zinc-600 bg-zinc-800/50"
             }`}
             onClick={() => setSelectedFormat(format)}
           >
@@ -111,11 +153,26 @@ const ExportPanel: React.FC<ExportPanelProps> = ({
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
                     <h4 className="font-medium text-white">{label}</h4>
-                    <Badge variant="secondary" className="text-xs bg-zinc-700 text-zinc-300">
+                    <Badge 
+                      variant="secondary" 
+                      className={`text-xs ${
+                        format === 'training-module' 
+                          ? 'bg-purple-600 text-white' 
+                          : 'bg-zinc-700 text-zinc-300'
+                      }`}
+                    >
                       {badge}
                     </Badge>
                   </div>
                   <p className="text-sm text-zinc-400 mb-2">{description}</p>
+                  
+                  {/* Special indicator for Training Module */}
+                  {format === 'training-module' && userRole === 'admin' && (
+                    <div className="bg-yellow-400 text-black p-2 rounded mb-2 font-bold text-center text-xs">
+                      🎓 TRAINING MODULE - ADMIN ACCESS 🎓
+                    </div>
+                  )}
+                  
                   <div className="flex flex-wrap gap-1">
                     {features.map((feature, index) => (
                       <span key={index} className="text-xs px-2 py-1 bg-zinc-700/50 rounded text-zinc-400">
@@ -333,6 +390,14 @@ const ExportPanel: React.FC<ExportPanelProps> = ({
           <Download className="h-5 w-5 text-[#007AFF]" />
           Export SOP
         </CardTitle>
+        {userRole === 'admin' && (
+          <div className="mt-2">
+            <Badge className="bg-purple-600 text-white">
+              <GraduationCap className="h-3 w-3 mr-1" />
+              Admin Access - Training Module Available
+            </Badge>
+          </div>
+        )}
       </CardHeader>
       
       <CardContent className="space-y-6">

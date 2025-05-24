@@ -142,110 +142,12 @@ const ExportManager = () => {
   
   return (
     <div className="flex flex-col gap-6">
-      {/* Toggle between interfaces for development */}
-      <div className="flex justify-between items-center">
+      {/* Header */}
+      <div className="mb-6">
         <h2 className="text-xl font-bold text-white">Export SOP</h2>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => setShowLegacyInterface(!showLegacyInterface)}
-          className="border-zinc-600 text-zinc-300 text-xs"
-        >
-          {showLegacyInterface ? 'New Interface' : 'Legacy Mode'}
-        </Button>
       </div>
 
-      {showLegacyInterface ? (
-        // Legacy Interface
-        <>
-          {/* Format Selection */}
-          <Card className="bg-[#1E1E1E] border-zinc-700">
-            <CardHeader className="pb-3">
-              <CardTitle className="flex items-center gap-2 text-base">
-                <Settings className="h-4 w-4" />
-                Export Settings (Legacy)
-              </CardTitle>
-            </CardHeader>
-                         <CardContent className="space-y-4">
-               <ExportFormatSelector 
-                 format={format} 
-                 onFormatChange={(newFormat) => setFormat(newFormat as ExtendedExportFormat)}
-                 onExport={() => {}} // Dummy function for legacy mode
-               />
-              
-              {/* Standard HTML Export Options */}
-              {format === "html" && (
-                <HtmlExportOptions
-                  exportMode={exportMode}
-                  onExportModeChange={setExportMode}
-                  disabled={isExporting}
-                />
-              )}
-            </CardContent>
-          </Card>
-          
-          {/* Enhanced HTML Options */}
-          {format === "enhanced-html" && (
-            <Card className="bg-[#1E1E1E] border-zinc-700 border-green-500/30">
-              <CardHeader className="pb-3">
-                <CardTitle className="flex items-center gap-2 text-base">
-                  <Sparkles className="h-4 w-4 text-green-400" />
-                  Training Module Configuration
-                  <span className="text-xs bg-green-600 text-white px-2 py-1 rounded-full">ENHANCED</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <EnhancedHtmlExportOptions
-                  settings={enhancedSettings}
-                  onSettingsChange={setEnhancedSettings}
-                  disabled={isExporting}
-                />
-              </CardContent>
-            </Card>
-          )}
-          
-          {/* Export Actions */}
-          <Card className="bg-[#1E1E1E] border-zinc-700">
-            <CardContent className="pt-6">
-              <div className="flex flex-wrap gap-3">
-                {format === "pdf" && (
-                  <PreviewButton 
-                    onClick={onPreview} 
-                    disabled={sopDocument.steps.length === 0} 
-                    isExporting={isExporting}
-                    exportProgress={exportProgress}
-                  />
-                )}
-                
-                <ExportButton 
-                  onClick={onExport} 
-                  isExporting={isExporting} 
-                  exportProgress={exportProgress} 
-                  disabled={sopDocument.steps.length === 0}
-                  format={format === "enhanced-html" ? "html" : format}
-                />
-                
-                {format === "enhanced-html" && !isExporting && (
-                  <div className="flex items-center gap-2 text-sm text-green-400">
-                    <BookOpen className="h-4 w-4" />
-                    <span>Creates self-contained training module</span>
-                  </div>
-                )}
-              </div>
-              
-              {/* Progress or Error Display */}
-              {isExporting && exportProgress && (
-                <div className="mt-4 p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
-                  <p className="text-sm text-blue-300">{exportProgress}</p>
-                </div>
-              )}
-              
-              {!isPreviewOpen && <PdfExportError error={displayError} />}
-            </CardContent>
-          </Card>
-        </>
-      ) : (
-        // New Comprehensive Interface
+      {/* Comprehensive Export Interface */}
         <div className="space-y-6">
           <ExportFormatSelector
             onExport={handleComprehensiveExport}
@@ -324,7 +226,6 @@ const ExportManager = () => {
             </CardContent>
           </Card>
         </div>
-      )}
       
       {/* PDF Preview Dialog */}
       <PdfPreviewDialog
