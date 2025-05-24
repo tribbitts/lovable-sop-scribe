@@ -3,6 +3,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useSopContext } from "@/context/SopContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
@@ -17,16 +19,18 @@ import {
   CheckCircle2,
   Clock,
   Palette,
-  GraduationCap
+  GraduationCap,
+  Zap,
+  HelpCircle,
+  Users,
+  Target,
+  ArrowRight,
+  Sparkles
 } from "lucide-react";
 
-// Import our new modular components
+// Import our modular components
 import StepCard from "@/components/step-editor/StepCard";
-import ProgressTracker from "@/components/ProgressTracker";
 import ExportPanel from "@/components/toolbar/ExportPanel";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
-import OrganizationHeader from "@/components/OrganizationHeader";
 
 const SopCreator = () => {
   const {
@@ -48,16 +52,21 @@ const SopCreator = () => {
 
   const [activeStepId, setActiveStepId] = useState<string | null>(null);
   const [showExportPanel, setShowExportPanel] = useState(false);
-  const [showSettings, setShowSettings] = useState(false);
+  const [showAdvancedSettings, setShowAdvancedSettings] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [exportProgress, setExportProgress] = useState<string>("");
 
-  // Auto-expand first step when created
+  // Auto-expand first step when created and auto-enable training mode
   useEffect(() => {
     if (sopDocument.steps.length === 1 && !activeStepId) {
       setActiveStepId(sopDocument.steps[0].id);
     }
-  }, [sopDocument.steps.length, activeStepId]);
+    
+    // Auto-enable training mode if not set
+    if (sopDocument.trainingMode === undefined) {
+      setTrainingMode(true);
+    }
+  }, [sopDocument.steps.length, activeStepId, sopDocument.trainingMode, setTrainingMode]);
 
   const handleStepChange = (stepId: string, field: keyof typeof sopDocument.steps[0], value: any) => {
     updateStep(stepId, field, value);
@@ -78,15 +87,16 @@ const SopCreator = () => {
     }, 100);
   };
 
+  const handleQuickExport = () => {
+    setShowExportPanel(true);
+  };
+
   const handleExport = async (format: "pdf" | "html" | "training-module", options?: any) => {
     setIsExporting(true);
     
     if (format === "training-module") {
       setExportProgress("Creating interactive training module...");
       
-      console.log('🎓 Training Module Export - Options received:', options);
-      
-      // Convert training-module to enhanced HTML export
       const enhancedOptions = {
         mode: 'standalone' as const,
         enhanced: true,
@@ -112,8 +122,6 @@ const SopCreator = () => {
         }
       };
       
-      console.log('🎓 Final enhanced options being passed:', enhancedOptions);
-      
       try {
         await exportDocument("html", enhancedOptions);
       } catch (error) {
@@ -132,33 +140,252 @@ const SopCreator = () => {
     setExportProgress("");
   };
 
+  // Smart onboarding empty state
   const renderEmptyState = () => (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       className="text-center py-16"
     >
-      <div className="max-w-md mx-auto">
-        <BookOpen className="h-16 w-16 text-zinc-500 mx-auto mb-6" />
-        <h3 className="text-xl font-semibold text-white mb-4">
-          Ready to Create Your SOP?
-        </h3>
-        <p className="text-zinc-400 mb-8">
-          Start by adding your first step. You can include descriptions, screenshots, 
-          callouts, tags, and resources to create comprehensive documentation.
-        </p>
-        <Button 
-          onClick={handleAddStep}
-          size="lg"
-          className="bg-[#007AFF] hover:bg-[#0069D9] text-white"
-        >
-          <Plus className="h-5 w-5 mr-2" />
-          Add Your First Step
-        </Button>
+      <div className="max-w-lg mx-auto">
+        <div className="mb-8">
+          <div className="w-20 h-20 bg-gradient-to-r from-purple-600 to-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-6">
+            <GraduationCap className="h-10 w-10 text-white" />
+          </div>
+          <h2 className="text-2xl font-bold text-white mb-3">
+            Create Your First Training Module
+          </h2>
+          <p className="text-zinc-400 text-lg leading-relaxed">
+            Build interactive learning experiences with step-by-step lessons, 
+            quizzes, and progress tracking. Perfect for employee training and onboarding.
+          </p>
+        </div>
+        
+        <div className="space-y-4">
+          <Button 
+            onClick={handleAddStep}
+            size="lg"
+            className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white w-full max-w-xs"
+          >
+            <Plus className="h-5 w-5 mr-2" />
+            Add Your First Lesson
+          </Button>
+          
+          <div className="flex items-center justify-center gap-4 text-sm text-zinc-500">
+            <div className="flex items-center gap-1">
+              <CheckCircle2 className="h-4 w-4 text-green-500" />
+              Auto-saved locally
+            </div>
+            <div className="flex items-center gap-1">
+              <Sparkles className="h-4 w-4 text-purple-500" />
+              Interactive features
+            </div>
+          </div>
+        </div>
       </div>
     </motion.div>
   );
 
+  // Simplified header with key info only
+  const renderSimpleHeader = () => (
+    <Card className="bg-[#1E1E1E] border-zinc-800 rounded-2xl mb-6">
+      <CardContent className="p-6">
+        <div className="flex items-center justify-between">
+          <div className="flex-1">
+            <div className="flex items-center gap-3 mb-2">
+              <h1 className="text-2xl font-bold text-white">Training Module Creator</h1>
+              {sopDocument.trainingMode && (
+                <Badge className="bg-gradient-to-r from-purple-600 to-blue-600 text-white">
+                  <GraduationCap className="h-3 w-3 mr-1" />
+                  Interactive Mode
+                </Badge>
+              )}
+            </div>
+            <p className="text-zinc-400">
+              {sopDocument.steps.length === 0 
+                ? "Get started by adding your first lesson below"
+                : `${sopDocument.steps.length} lesson${sopDocument.steps.length !== 1 ? 's' : ''} created`
+              }
+            </p>
+          </div>
+          
+          {sopDocument.steps.length > 0 && (
+            <div className="flex items-center gap-3">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowAdvancedSettings(!showAdvancedSettings)}
+                className="border-zinc-700 text-zinc-300 hover:bg-zinc-800"
+              >
+                <Settings className="h-4 w-4 mr-1" />
+                Settings
+              </Button>
+              
+              <Button
+                onClick={handleQuickExport}
+                disabled={sopDocument.steps.length === 0}
+                className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white"
+              >
+                <Download className="h-4 w-4 mr-2" />
+                Export Module
+              </Button>
+            </div>
+          )}
+        </div>
+
+      </CardContent>
+    </Card>
+  );
+
+  // Progressive disclosure for advanced settings
+  const renderAdvancedSettings = () => (
+    <AnimatePresence>
+      {showAdvancedSettings && (
+        <motion.div
+          initial={{ opacity: 0, height: 0 }}
+          animate={{ opacity: 1, height: "auto" }}
+          exit={{ opacity: 0, height: 0 }}
+          className="mb-6"
+        >
+          <Card className="bg-[#1E1E1E] border-zinc-800 rounded-2xl">
+            <CardContent className="p-6">
+              <div className="flex items-center gap-2 mb-4">
+                <Settings className="h-5 w-5 text-purple-400" />
+                <h3 className="text-lg font-semibold text-white">Advanced Settings</h3>
+              </div>
+              
+              <Accordion type="single" collapsible className="w-full">
+                {/* Training Features */}
+                <AccordionItem value="training" className="border-zinc-700">
+                  <AccordionTrigger className="text-sm text-zinc-300 hover:text-white">
+                    <div className="flex items-center gap-2">
+                      <GraduationCap className="h-4 w-4 text-purple-400" />
+                      Training Features
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="space-y-4 pt-2">
+                    <div className="p-4 bg-gradient-to-r from-purple-500/10 to-blue-500/10 border border-purple-500/30 rounded-lg">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <div className="flex items-center gap-2 mb-1">
+                            <GraduationCap className="h-4 w-4 text-purple-400" />
+                            <span className="text-sm font-medium text-white">Interactive Training Mode</span>
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger>
+                                  <HelpCircle className="h-3 w-3 text-zinc-400" />
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p className="text-xs">Enables quizzes, learning objectives, and progress tracking</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          </div>
+                          <p className="text-xs text-purple-300">Enable quizzes, learning objectives, and progress tracking for all lessons</p>
+                        </div>
+                        <Switch
+                          checked={sopDocument.trainingMode !== false}
+                          onCheckedChange={(checked) => {
+                            setTrainingMode(checked);
+                            if (checked) {
+                              sopDocument.steps.forEach(step => {
+                                if (!step.trainingMode) {
+                                  updateStep(step.id, "trainingMode", true);
+                                }
+                              });
+                            }
+                          }}
+                        />
+                      </div>
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+
+                {/* Export Settings */}
+                <AccordionItem value="export" className="border-zinc-700">
+                  <AccordionTrigger className="text-sm text-zinc-300 hover:text-white">
+                    <div className="flex items-center gap-2">
+                      <Download className="h-4 w-4 text-blue-400" />
+                      Export Options
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="space-y-3 pt-2">
+                    <div className="flex items-center justify-between p-3 bg-zinc-800/50 rounded-lg">
+                      <div className="flex items-center gap-3">
+                        <BookOpen className="h-4 w-4 text-zinc-400" />
+                        <div>
+                          <p className="text-sm font-medium text-white">Navigation Menu</p>
+                          <p className="text-xs text-zinc-400">Include table of contents in exports</p>
+                        </div>
+                      </div>
+                      <Switch
+                        checked={sopDocument.tableOfContents}
+                        onCheckedChange={setTableOfContents}
+                      />
+                    </div>
+                    
+                    <div className="flex items-center justify-between p-3 bg-zinc-800/50 rounded-lg">
+                      <div className="flex items-center gap-3">
+                        <Palette className="h-4 w-4 text-zinc-400" />
+                        <div>
+                          <p className="text-sm font-medium text-white">Dark Theme</p>
+                          <p className="text-xs text-zinc-400">Use dark theme for exports</p>
+                        </div>
+                      </div>
+                      <Switch
+                        checked={sopDocument.darkMode}
+                        onCheckedChange={setDarkMode}
+                      />
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+
+                {/* Document Management */}
+                <AccordionItem value="management" className="border-zinc-700">
+                  <AccordionTrigger className="text-sm text-zinc-300 hover:text-white">
+                    <div className="flex items-center gap-2">
+                      <Save className="h-4 w-4 text-green-400" />
+                      Document Management
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="space-y-3 pt-2">
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={saveDocumentToJSON}
+                        className="border-green-600 text-green-400 hover:bg-green-600/10"
+                      >
+                        <Save className="h-4 w-4 mr-2" />
+                        Download Backup
+                      </Button>
+                      
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          if (window.confirm("Reset the entire document? This cannot be undone.")) {
+                            resetDocument();
+                            setActiveStepId(null);
+                          }
+                        }}
+                        className="border-red-600 text-red-400 hover:bg-red-600/10"
+                      >
+                        <RotateCcw className="h-4 w-4 mr-2" />
+                        Reset All
+                      </Button>
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
+            </CardContent>
+          </Card>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+
+  // Clean steps list with better add button
   const renderStepsList = () => (
     <div className="space-y-6">
       <AnimatePresence>
@@ -174,167 +401,42 @@ const SopCreator = () => {
         ))}
       </AnimatePresence>
       
-      {/* Add Step Button */}
+      {/* Improved Add Step Button */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="flex justify-center"
+        className="relative"
       >
-        <Button
-          onClick={handleAddStep}
-          variant="outline"
-          size="lg"
-          className="border-zinc-700 text-white hover:bg-zinc-800 border-dashed"
-        >
-          <Plus className="h-5 w-5 mr-2" />
-          Add Another Step
-        </Button>
+        <div className="flex items-center justify-center">
+          <Button
+            onClick={handleAddStep}
+            variant="outline"
+            size="lg"
+            className="border-purple-600/50 text-purple-300 hover:bg-purple-600/10 border-dashed group"
+          >
+            <Plus className="h-5 w-5 mr-2 group-hover:scale-110 transition-transform" />
+            Add Another Lesson
+            <ArrowRight className="h-4 w-4 ml-2 opacity-0 group-hover:opacity-100 transition-opacity" />
+          </Button>
+        </div>
+        
+        {/* Quick tip for new users */}
+        {sopDocument.steps.length === 1 && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="mt-4 text-center"
+          >
+            <p className="text-sm text-zinc-500">
+              💡 Tip: Add 3-5 lessons for an effective training module
+            </p>
+          </motion.div>
+        )}
       </motion.div>
     </div>
   );
 
-  const renderQuickActions = () => (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="sticky top-4 z-10"
-    >
-      <Card className="bg-[#1E1E1E]/90 backdrop-blur-sm border-zinc-800 rounded-2xl">
-        <CardContent className="p-4">
-          <div className="flex items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <Badge variant="secondary" className="bg-zinc-800 text-zinc-300">
-                {sopDocument.steps.length} step{sopDocument.steps.length !== 1 ? 's' : ''}
-              </Badge>
-              
-              {sopDocument.steps.length > 0 && (
-                <Badge variant="secondary" className="bg-green-600 text-white">
-                  {getCompletedStepsCount()}/{sopDocument.steps.length} completed
-                </Badge>
-              )}
-            </div>
-            
-            <div className="flex items-center gap-2">
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => setShowSettings(!showSettings)}
-                className="border-zinc-700 text-white hover:bg-zinc-800"
-              >
-                <Settings className="h-4 w-4" />
-              </Button>
-              
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={saveDocumentToJSON}
-                className="border-zinc-700 text-white hover:bg-zinc-800"
-              >
-                <Save className="h-4 w-4" />
-              </Button>
-              
-              <Button
-                size="sm"
-                onClick={() => setShowExportPanel(!showExportPanel)}
-                disabled={sopDocument.steps.length === 0}
-                className="bg-[#007AFF] hover:bg-[#0069D9] text-white"
-              >
-                <Download className="h-4 w-4 mr-1" />
-                Export
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    </motion.div>
-  );
-
-  const renderSettings = () => (
-    <AnimatePresence>
-      {showSettings && (
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -20 }}
-          className="mb-6"
-        >
-          <Card className="bg-[#1E1E1E] border-zinc-800 rounded-2xl">
-            <CardContent className="p-6">
-              <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                <Settings className="h-5 w-5" />
-                Document Settings
-              </h3>
-              
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-white">Table of Contents</p>
-                    <p className="text-xs text-zinc-400">Include navigation links in exports</p>
-                  </div>
-                  <Switch
-                    checked={sopDocument.tableOfContents}
-                    onCheckedChange={setTableOfContents}
-                  />
-                </div>
-                
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-white">Dark Mode</p>
-                    <p className="text-xs text-zinc-400">Use dark theme for exports</p>
-                  </div>
-                  <Switch
-                    checked={sopDocument.darkMode}
-                    onCheckedChange={setDarkMode}
-                  />
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-white flex items-center gap-2">
-                      <GraduationCap className="h-4 w-4 text-purple-400" />
-                      Training Module Mode
-                    </p>
-                    <p className="text-xs text-zinc-400">Enable interactive training features for all steps</p>
-                  </div>
-                  <Switch
-                    checked={sopDocument.trainingMode || false}
-                    onCheckedChange={(checked) => {
-                      setTrainingMode(checked);
-                      // Auto-enable training mode for all steps when document mode is enabled
-                      if (checked) {
-                        sopDocument.steps.forEach(step => {
-                          if (!step.trainingMode) {
-                            updateStep(step.id, "trainingMode", true);
-                          }
-                        });
-                      }
-                    }}
-                  />
-                </div>
-                
-                <div className="pt-4 border-t border-zinc-800">
-                  <Button
-                    variant="outline"
-                    onClick={() => {
-                      if (window.confirm("Reset the entire document? This cannot be undone.")) {
-                        resetDocument();
-                        setActiveStepId(null);
-                      }
-                    }}
-                    className="border-red-600 text-red-400 hover:bg-red-600/10"
-                  >
-                    <RotateCcw className="h-4 w-4 mr-2" />
-                    Reset Document
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-      )}
-    </AnimatePresence>
-  );
-
+  // Export Panel Overlay
   const renderExportPanel = () => (
     <AnimatePresence>
       {showExportPanel && (
@@ -366,124 +468,28 @@ const SopCreator = () => {
     </AnimatePresence>
   );
 
-  return (
+    return (
     <div className="min-h-screen bg-[#121212]">
-      <div className="container mx-auto py-8 px-4 max-w-6xl">
-        {/* Header Section */}
+      <div className="container mx-auto py-8 px-4 max-w-5xl">
+        {/* Simplified Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="mb-6"
-      >
-        <Card className="mb-6 bg-[#1E1E1E] border-zinc-800 overflow-hidden rounded-2xl">
-          <CardContent className="p-8">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h1 className="text-3xl font-bold tracking-tight text-white mb-2">
-                    SOP Creator
-                  </h1>
-                  <p className="text-zinc-400 text-lg">
-              Create professional Standard Operating Procedures with step-by-step 
-                    instructions, screenshots, and interactive elements.
-                  </p>
-                </div>
-                
-                <div className="flex items-center gap-4">
-                  <div className="text-right">
-                    <div className="flex items-center gap-2 text-sm text-zinc-500 mb-1">
-                      <Clock className="h-4 w-4" />
-                      Auto-saved locally
-                    </div>
-                    <div className="flex items-center gap-2 text-sm text-zinc-400">
-                      <CheckCircle2 className="h-4 w-4 text-green-500" />
-                      Ready for export
-                    </div>
-                  </div>
-                </div>
-              </div>
-              
-              {/* Progress indicator when there are steps */}
-              {sopDocument.steps.length > 0 && (
-                <div className="mt-6 pt-6 border-t border-zinc-800">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-zinc-400">Overall Progress</span>
-                    <span className="text-white font-medium">{getProgressPercentage()}%</span>
-                  </div>
-            </div>
-              )}
-          </CardContent>
-        </Card>
-      </motion.div>
-
-        {/* Organization Header */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.1 }}
-          className="mb-6"
-      >
-        <OrganizationHeader />
-      </motion.div>
-
-        {/* Quick Actions */}
-        {renderQuickActions()}
-        
-        {/* Settings Panel */}
-        {renderSettings()}
-
-        {/* Main Content */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Steps Column */}
-          <div className="lg:col-span-2 space-y-6">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.2 }}
-      >
-              <Header />
-      </motion.div>
-
-            {/* Steps List or Empty State */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.3 }}
         >
-              {sopDocument.steps.length === 0 ? renderEmptyState() : renderStepsList()}
+          {renderSimpleHeader()}
         </motion.div>
-          </div>
 
-          {/* Sidebar */}
-          <div className="space-y-6">
-            {/* Progress Tracker */}
-        {sopDocument.steps.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.4 }}
-          >
-            <ProgressTracker 
-                  completed={getCompletedStepsCount()}
-              total={sopDocument.steps.length} 
-                  variant="bar"
-                  showPercentage={true}
-            />
-          </motion.div>
-        )}
+        {/* Advanced Settings (Progressive Disclosure) */}
+        {renderAdvancedSettings()}
 
-            {/* Additional sidebar content can go here */}
-          </div>
-        </div>
-        
-        {/* Footer */}
+        {/* Main Content - Full Width */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.5 }}
-          className="mt-12"
+          transition={{ duration: 0.5, delay: 0.2 }}
         >
-          <Footer />
+          {sopDocument.steps.length === 0 ? renderEmptyState() : renderStepsList()}
         </motion.div>
       </div>
 
@@ -491,6 +497,6 @@ const SopCreator = () => {
       {renderExportPanel()}
     </div>
   );
-};
+ };
 
-export default SopCreator;
+ export default SopCreator;

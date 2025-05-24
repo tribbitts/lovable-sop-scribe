@@ -85,7 +85,7 @@ function renderCalloutsOnCanvas(
     
     switch (callout.shape) {
       case "circle":
-      case "number":
+      case "number": {
         const radius = Math.max(width, height) / 2;
         const centerX = x + width / 2;
         const centerY = y + height / 2;
@@ -123,8 +123,9 @@ function renderCalloutsOnCanvas(
           ctx.stroke();
         }
         break;
+      }
         
-      case "rectangle":
+      case "rectangle": {
         // Draw rectangle with semi-transparent fill
         ctx.shadowColor = callout.color;
         ctx.shadowBlur = 6;
@@ -152,8 +153,9 @@ function renderCalloutsOnCanvas(
           );
         }
         break;
+      }
         
-      case "arrow":
+      case "arrow": {
         // Draw arrow pointing to the location
         const arrowSize = Math.max(width, height);
         const tipX = x + width / 2;
@@ -178,6 +180,7 @@ function renderCalloutsOnCanvas(
         ctx.fill();
         ctx.stroke();
         break;
+      }
     }
     
     ctx.restore();
