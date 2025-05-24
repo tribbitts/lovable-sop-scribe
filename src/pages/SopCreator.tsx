@@ -16,7 +16,8 @@ import {
   BookOpen,
   CheckCircle2,
   Clock,
-  Palette
+  Palette,
+  GraduationCap
 } from "lucide-react";
 
 // Import our new modular components
@@ -40,6 +41,7 @@ const SopCreator = () => {
     getProgressPercentage,
     setTableOfContents,
     setDarkMode,
+    setTrainingMode,
     saveDocumentToJSON,
     resetDocument
   } = useSopContext();
@@ -283,6 +285,30 @@ const SopCreator = () => {
                   <Switch
                     checked={sopDocument.darkMode}
                     onCheckedChange={setDarkMode}
+                  />
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-white flex items-center gap-2">
+                      <GraduationCap className="h-4 w-4 text-purple-400" />
+                      Training Module Mode
+                    </p>
+                    <p className="text-xs text-zinc-400">Enable interactive training features for all steps</p>
+                  </div>
+                  <Switch
+                    checked={sopDocument.trainingMode || false}
+                    onCheckedChange={(checked) => {
+                      setTrainingMode(checked);
+                      // Auto-enable training mode for all steps when document mode is enabled
+                      if (checked) {
+                        sopDocument.steps.forEach(step => {
+                          if (!step.trainingMode) {
+                            updateStep(step.id, "trainingMode", true);
+                          }
+                        });
+                      }
+                    }}
                   />
                 </div>
                 

@@ -61,6 +61,7 @@ interface SopContextType {
   // Settings
   setTableOfContents: (enabled: boolean) => void;
   setDarkMode: (enabled: boolean) => void;
+  setTrainingMode: (enabled: boolean) => void;
   enableProgressTracking: (sessionName?: string) => void;
   disableProgressTracking: () => void;
 }
@@ -626,6 +627,10 @@ export const SopProvider = ({ children }: { children: ReactNode }) => {
     setSopDocument((prev) => ({ ...prev, darkMode: enabled }));
   };
 
+  const setTrainingMode = (enabled: boolean) => {
+    setSopDocument((prev) => ({ ...prev, trainingMode: enabled }));
+  };
+
   const enableProgressTracking = (sessionName?: string) => {
     setSopDocument((prev) => ({
       ...prev,
@@ -701,6 +706,7 @@ export const SopProvider = ({ children }: { children: ReactNode }) => {
     // Settings
     setTableOfContents,
     setDarkMode,
+    setTrainingMode,
     enableProgressTracking,
     disableProgressTracking
   };

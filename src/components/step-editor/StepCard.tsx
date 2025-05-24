@@ -5,6 +5,9 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { StepCardProps, StepResource, Callout } from "@/types/sop";
 import { 
   ChevronUp, 
@@ -19,7 +22,12 @@ import {
   Edit3,
   CheckCircle2,
   Circle,
-  MousePointer
+  MousePointer,
+  GraduationCap,
+  HelpCircle,
+  Award,
+  Target,
+  BookOpen
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import ImageCropper from "./ImageCropper";
@@ -43,6 +51,18 @@ const StepCard: React.FC<StepCardProps> = ({
   const [newResource, setNewResource] = useState<Partial<StepResource>>({});
   const [showResourceForm, setShowResourceForm] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  // Training module state
+  const [isTrainingMode, setIsTrainingMode] = useState(step.trainingMode || false);
+  const [showQuizForm, setShowQuizForm] = useState(false);
+  const [newQuizQuestion, setNewQuizQuestion] = useState({
+    question: "",
+    type: "multiple-choice" as "multiple-choice" | "true-false" | "short-answer",
+    options: ["", "", "", ""],
+    correctAnswer: "",
+    explanation: ""
+  });
+  const [newObjective, setNewObjective] = useState("");
   
   // Get callout functions from context
   const { addCallout, updateCallout, deleteCallout } = useSopContext();
@@ -125,6 +145,62 @@ const StepCard: React.FC<StepCardProps> = ({
   const removeResource = (resourceId: string) => {
     const currentResources = step.resources || [];
     handleFieldChange("resources", currentResources.filter(r => r.id !== resourceId));
+  };
+
+  // Training module functions
+  const toggleTrainingMode = (enabled: boolean) => {
+    setIsTrainingMode(enabled);
+    handleFieldChange("trainingMode", enabled);
+  };
+
+  const addLearningObjective = () => {
+    if (newObjective.trim()) {
+      const objective = {
+        id: uuidv4(),
+        text: newObjective.trim(),
+        category: "knowledge" as const
+      };
+      
+      const currentObjectives = step.learningObjectives || [];
+      handleFieldChange("learningObjectives", [...currentObjectives, objective]);
+      setNewObjective("");
+    }
+  };
+
+  const removeLearningObjective = (objectiveId: string) => {
+    const currentObjectives = step.learningObjectives || [];
+    handleFieldChange("learningObjectives", currentObjectives.filter(o => o.id !== objectiveId));
+  };
+
+  const addQuizQuestion = () => {
+    if (newQuizQuestion.question.trim() && newQuizQuestion.correctAnswer.trim()) {
+      const question = {
+        id: uuidv4(),
+        question: newQuizQuestion.question.trim(),
+        type: newQuizQuestion.type,
+        options: newQuizQuestion.type === "multiple-choice" ? newQuizQuestion.options.filter(o => o.trim()) : undefined,
+        correctAnswer: newQuizQuestion.correctAnswer.trim(),
+        explanation: newQuizQuestion.explanation.trim() || undefined
+      };
+      
+      const currentQuestions = step.quizQuestions || [];
+      handleFieldChange("quizQuestions", [...currentQuestions, question]);
+      
+      // Reset form
+      setNewQuizQuestion({
+        question: "",
+        type: "multiple-choice",
+        options: ["", "", "", ""],
+        correctAnswer: "",
+        explanation: ""
+      });
+      setShowQuizForm(false);
+    }
+  };
+
+  const removeQuizQuestion = (questionId: string) => {
+    const currentQuestions = step.quizQuestions || [];
+    handleFieldChange("quizQuestions", currentQuestions.filter(q => q.id !== questionId));
   };
 
   const toggleCompletion = () => {
@@ -436,6 +512,279 @@ const StepCard: React.FC<StepCardProps> = ({
                       <Plus className="h-4 w-4 mr-2" />
                       Add Resource
                     </Button>
+                  )}
+                </div>
+
+                {/* Training Module Features */}
+                <div className="space-y-4 pt-4 border-t border-zinc-800">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor={`training-mode-${step.id}`} className="text-sm font-medium text-zinc-300 flex items-center gap-2">
+                      <GraduationCap className="h-4 w-4 text-purple-400" />
+                      Training Mode
+                    </Label>
+                    <Switch
+                      id={`training-mode-${step.id}`}
+                      checked={isTrainingMode}
+                      onCheckedChange={toggleTrainingMode}
+                    />
+                  </div>
+                  
+                  {isTrainingMode && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="space-y-6 p-4 bg-purple-500/5 border border-purple-500/20 rounded-lg"
+                    >
+                      <div className="text-center">
+                        <div className="inline-flex items-center gap-2 px-3 py-1 bg-purple-600 text-white rounded-full text-sm font-medium">
+                          <GraduationCap className="h-4 w-4" />
+                          Training Mode Enabled
+                        </div>
+                        <p className="text-xs text-zinc-400 mt-2">
+                          This step will include interactive learning features
+                        </p>
+                      </div>
+
+                      {/* Learning Objectives */}
+                      <div className="space-y-3">
+                        <label className="text-sm font-medium text-zinc-300 flex items-center gap-2">
+                          <Target className="h-4 w-4" />
+                          Learning Objectives
+                        </label>
+                        
+                        {step.learningObjectives?.map((objective) => (
+                          <div
+                            key={objective.id}
+                            className="flex items-center justify-between p-3 bg-zinc-800/50 rounded-lg border border-zinc-700"
+                          >
+                            <div className="flex items-center gap-3">
+                              <BookOpen className="h-4 w-4 text-green-400" />
+                              <span className="text-white">{objective.text}</span>
+                              <Badge variant="secondary" className="text-xs">
+                                {objective.category}
+                              </Badge>
+                            </div>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => removeLearningObjective(objective.id)}
+                              className="text-red-400 hover:text-red-300 hover:bg-red-400/10"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        ))}
+                        
+                        <div className="flex gap-2">
+                          <Input
+                            value={newObjective}
+                            onChange={(e) => setNewObjective(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") addLearningObjective();
+                            }}
+                            placeholder="Add learning objective..."
+                            className="bg-zinc-800 border-zinc-700 text-white flex-1"
+                          />
+                          <Button
+                            size="sm"
+                            onClick={addLearningObjective}
+                            disabled={!newObjective.trim()}
+                            className="bg-green-600 hover:bg-green-700 text-white"
+                          >
+                            <Plus className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+
+                      {/* Quiz Questions */}
+                      <div className="space-y-3">
+                        <label className="text-sm font-medium text-zinc-300 flex items-center gap-2">
+                          <HelpCircle className="h-4 w-4" />
+                          Quiz Questions
+                        </label>
+                        
+                        {step.quizQuestions?.map((question) => (
+                          <div
+                            key={question.id}
+                            className="p-3 bg-zinc-800/50 rounded-lg border border-zinc-700"
+                          >
+                            <div className="flex items-start justify-between">
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2 mb-2">
+                                  <Badge variant="secondary" className="text-xs">
+                                    {question.type.replace("-", " ")}
+                                  </Badge>
+                                </div>
+                                <p className="text-white font-medium mb-1">{question.question}</p>
+                                {question.type === "multiple-choice" && question.options && (
+                                  <ul className="text-sm text-zinc-400 space-y-1">
+                                    {question.options.map((option, idx) => (
+                                      <li key={idx} className={`${option === question.correctAnswer ? 'text-green-400 font-medium' : ''}`}>
+                                        {String.fromCharCode(65 + idx)}. {option} {option === question.correctAnswer ? '✓' : ''}
+                                      </li>
+                                    ))}
+                                  </ul>
+                                )}
+                                {question.type !== "multiple-choice" && (
+                                  <p className="text-sm text-green-400">Correct: {question.correctAnswer}</p>
+                                )}
+                                {question.explanation && (
+                                  <p className="text-xs text-zinc-500 mt-2">Explanation: {question.explanation}</p>
+                                )}
+                              </div>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => removeQuizQuestion(question.id)}
+                                className="text-red-400 hover:text-red-300 hover:bg-red-400/10"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </div>
+                        ))}
+                        
+                        {showQuizForm ? (
+                          <div className="space-y-3 p-4 bg-blue-500/5 border border-blue-500/20 rounded-lg">
+                            <Select
+                              value={newQuizQuestion.type}
+                              onValueChange={(value: "multiple-choice" | "true-false" | "short-answer") => 
+                                setNewQuizQuestion(prev => ({ ...prev, type: value }))
+                              }
+                            >
+                              <SelectTrigger className="bg-zinc-800 border-zinc-700 text-white">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent className="bg-zinc-800 border-zinc-700">
+                                <SelectItem value="multiple-choice">Multiple Choice</SelectItem>
+                                <SelectItem value="true-false">True/False</SelectItem>
+                                <SelectItem value="short-answer">Short Answer</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            
+                            <Textarea
+                              value={newQuizQuestion.question}
+                              onChange={(e) => setNewQuizQuestion(prev => ({ ...prev, question: e.target.value }))}
+                              placeholder="Enter your question..."
+                              className="bg-zinc-800 border-zinc-700 text-white min-h-[60px]"
+                            />
+                            
+                            {newQuizQuestion.type === "multiple-choice" && (
+                              <div className="space-y-2">
+                                <label className="text-xs text-zinc-400">Answer Options</label>
+                                {newQuizQuestion.options.map((option, idx) => (
+                                  <Input
+                                    key={idx}
+                                    value={option}
+                                    onChange={(e) => {
+                                      const newOptions = [...newQuizQuestion.options];
+                                      newOptions[idx] = e.target.value;
+                                      setNewQuizQuestion(prev => ({ ...prev, options: newOptions }));
+                                    }}
+                                    placeholder={`Option ${String.fromCharCode(65 + idx)}`}
+                                    className="bg-zinc-800 border-zinc-700 text-white"
+                                  />
+                                ))}
+                              </div>
+                            )}
+                            
+                            {newQuizQuestion.type === "multiple-choice" ? (
+                              <Select
+                                value={newQuizQuestion.correctAnswer}
+                                onValueChange={(value) => setNewQuizQuestion(prev => ({ ...prev, correctAnswer: value }))}
+                              >
+                                <SelectTrigger className="bg-zinc-800 border-zinc-700 text-white">
+                                  <SelectValue placeholder="Select correct answer" />
+                                </SelectTrigger>
+                                <SelectContent className="bg-zinc-800 border-zinc-700">
+                                  {newQuizQuestion.options.filter(opt => opt.trim()).map((option, idx) => (
+                                    <SelectItem key={idx} value={option}>{String.fromCharCode(65 + idx)}. {option}</SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            ) : (
+                              <Input
+                                value={newQuizQuestion.correctAnswer}
+                                onChange={(e) => setNewQuizQuestion(prev => ({ ...prev, correctAnswer: e.target.value }))}
+                                placeholder={newQuizQuestion.type === "true-false" ? "true or false" : "Correct answer"}
+                                className="bg-zinc-800 border-zinc-700 text-white"
+                              />
+                            )}
+                            
+                            <Textarea
+                              value={newQuizQuestion.explanation}
+                              onChange={(e) => setNewQuizQuestion(prev => ({ ...prev, explanation: e.target.value }))}
+                              placeholder="Explanation (optional)..."
+                              className="bg-zinc-800 border-zinc-700 text-white min-h-[60px]"
+                            />
+                            
+                            <div className="flex gap-2">
+                              <Button
+                                size="sm"
+                                onClick={addQuizQuestion}
+                                disabled={!newQuizQuestion.question.trim() || !newQuizQuestion.correctAnswer.trim()}
+                                className="bg-blue-600 hover:bg-blue-700 text-white"
+                              >
+                                Add Question
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => setShowQuizForm(false)}
+                                className="border-zinc-700 text-white hover:bg-zinc-800"
+                              >
+                                Cancel
+                              </Button>
+                            </div>
+                          </div>
+                        ) : (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => setShowQuizForm(true)}
+                            className="border-blue-600 text-blue-400 hover:bg-blue-600/10"
+                          >
+                            <Plus className="h-4 w-4 mr-2" />
+                            Add Quiz Question
+                          </Button>
+                        )}
+                      </div>
+
+                      {/* Assessment Settings */}
+                      <div className="space-y-3">
+                        <label className="text-sm font-medium text-zinc-300 flex items-center gap-2">
+                          <Award className="h-4 w-4" />
+                          Assessment Settings
+                        </label>
+                        
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <label className="text-xs text-zinc-400">Required Score (%)</label>
+                            <Input
+                              type="number"
+                              min="0"
+                              max="100"
+                              value={step.requiredScore || 80}
+                              onChange={(e) => handleFieldChange("requiredScore", parseInt(e.target.value) || 80)}
+                              className="bg-zinc-800 border-zinc-700 text-white"
+                            />
+                          </div>
+                          <div className="flex items-end">
+                            <div className="flex items-center space-x-2">
+                              <Switch
+                                id={`retakes-${step.id}`}
+                                checked={step.allowRetakes !== false}
+                                onCheckedChange={(checked) => handleFieldChange("allowRetakes", checked)}
+                              />
+                              <Label htmlFor={`retakes-${step.id}`} className="text-xs text-zinc-400">
+                                Allow Retakes
+                              </Label>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </motion.div>
                   )}
                 </div>
 

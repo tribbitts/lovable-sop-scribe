@@ -31,6 +31,21 @@ export interface StepResource {
   description?: string;
 }
 
+export interface QuizQuestion {
+  id: string;
+  question: string;
+  type: "multiple-choice" | "true-false" | "short-answer";
+  options?: string[];
+  correctAnswer: string;
+  explanation?: string;
+}
+
+export interface LearningObjective {
+  id: string;
+  text: string;
+  category?: "knowledge" | "skill" | "behavior";
+}
+
 export interface SopStep {
   id: string;
   title?: string;
@@ -43,6 +58,13 @@ export interface SopStep {
   completed?: boolean;
   fileLink?: string; // Adding this property to fix the error
   fileLinkText?: string; // Adding this property to fix the error
+  
+  // Training module properties
+  trainingMode?: boolean;
+  learningObjectives?: LearningObjective[];
+  quizQuestions?: QuizQuestion[];
+  requiredScore?: number; // Percentage needed to pass
+  allowRetakes?: boolean;
 }
 
 export interface SopDocument {
@@ -55,6 +77,7 @@ export interface SopDocument {
   companyName: string;
   tableOfContents?: boolean;
   darkMode?: boolean;
+  trainingMode?: boolean;
   progressTracking?: {
     enabled: boolean;
     sessionName?: string;
