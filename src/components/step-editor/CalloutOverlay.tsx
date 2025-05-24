@@ -2,7 +2,6 @@ import React, { useState, useRef, useCallback } from "react";
 import { CalloutOverlayProps, Callout } from "@/types/sop";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   Circle, 
@@ -12,7 +11,7 @@ import {
   Palette, 
   Trash2,
   Plus,
-  Edit3
+  Settings
 } from "lucide-react";
 import { v4 as uuidv4 } from "uuid";
 
@@ -27,6 +26,7 @@ const CalloutOverlay: React.FC<CalloutOverlayProps> = ({
   const [selectedColor, setSelectedColor] = useState("#FF6B6B");
   const [isAddingCallout, setIsAddingCallout] = useState(false);
   const [editingCallout, setEditingCallout] = useState<string | null>(null);
+  const [showToolbar, setShowToolbar] = useState(false);
   const overlayRef = useRef<HTMLDivElement>(null);
 
   const colors = [
@@ -36,8 +36,6 @@ const CalloutOverlay: React.FC<CalloutOverlayProps> = ({
     "#FFA726", // Orange
     "#66BB6A", // Green
     "#AB47BC", // Purple
-    "#FFEB3B", // Yellow
-    "#FF5722", // Deep Orange
   ];
 
   // Handle escape key to cancel callout placement
@@ -84,7 +82,7 @@ const CalloutOverlay: React.FC<CalloutOverlayProps> = ({
     };
 
     onCalloutAdd(newCallout);
-    setIsAddingCallout(false);
+    // Keep adding mode active - user can add multiple callouts
   }, [isEditing, isAddingCallout, selectedTool, selectedColor, screenshot.callouts.length, onCalloutAdd]);
 
   const handleCalloutClick = useCallback((calloutId: string, event: React.MouseEvent) => {
@@ -206,44 +204,40 @@ const CalloutOverlay: React.FC<CalloutOverlayProps> = ({
       >
         {renderShape()}
         
-        {/* Edit Controls */}
+        {/* Minimal Edit Controls */}
         <AnimatePresence>
           {isEditing && (
             <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              className="absolute -top-12 left-1/2 transform -translate-x-1/2 bg-zinc-900 border border-zinc-700 rounded-lg p-2 flex items-center gap-2 z-20"
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.8 }}
+              className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-black/90 backdrop-blur-sm rounded-lg p-1 flex items-center gap-1 z-20 border border-zinc-600"
             >
-              {/* Color Palette */}
-              <div className="flex gap-1">
-                {colors.map((color) => (
-                  <button
-                    key={color}
-                    className={`w-6 h-6 rounded-full border-2 ${
-                      callout.color === color ? 'border-white' : 'border-transparent'
-                    }`}
-                    style={{ backgroundColor: color }}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      updateCalloutColor(callout.id, color);
-                    }}
-                  />
-                ))}
-              </div>
+              {/* Compact Color Palette */}
+              {colors.map((color) => (
+                <button
+                  key={color}
+                  className={`w-4 h-4 rounded-full border ${
+                    callout.color === color ? 'border-white' : 'border-transparent'
+                  } hover:scale-110 transition-transform`}
+                  style={{ backgroundColor: color }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    updateCalloutColor(callout.id, color);
+                  }}
+                />
+              ))}
               
               {/* Delete Button */}
-              <Button
-                size="sm"
-                variant="ghost"
+              <button
                 onClick={(e) => {
                   e.stopPropagation();
                   deleteCallout(callout.id);
                 }}
-                className="text-red-400 hover:text-red-300 hover:bg-red-400/10 h-6 w-6 p-0"
+                className="text-red-400 hover:text-red-300 hover:bg-red-400/20 rounded p-1 ml-1"
               >
                 <Trash2 className="h-3 w-3" />
-              </Button>
+              </button>
             </motion.div>
           )}
         </AnimatePresence>
@@ -253,97 +247,90 @@ const CalloutOverlay: React.FC<CalloutOverlayProps> = ({
 
   return (
     <div className="relative w-full h-full">
-      {/* Editing Toolbar */}
+      {/* Minimal Floating Toolbar - Only when editing */}
       {isEditing && (
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="absolute top-4 left-4 right-4 z-50 bg-zinc-900 backdrop-blur-sm border-2 border-[#007AFF] rounded-lg p-4 shadow-2xl"
-        >
-          <div className="flex flex-col gap-3">
-            {/* Top Row: Tools and Colors */}
-            <div className="flex items-center justify-between gap-4">
-              <div className="flex items-center gap-3 flex-1">
-                <span className="text-sm font-medium text-white bg-[#007AFF] px-2 py-1 rounded whitespace-nowrap">Add Callout:</span>
-                
-                {/* Tool Selection */}
-                <div className="flex gap-1">
-                  {[
-                    { type: "circle", icon: Circle, label: "Circle" },
-                    { type: "rectangle", icon: Square, label: "Rectangle" },
-                    { type: "arrow", icon: MousePointer, label: "Arrow" },
-                    { type: "number", icon: Type, label: "Number" },
-                  ].map(({ type, icon: Icon, label }) => (
-                    <Button
-                      key={type}
-                      size="sm"
-                      variant={selectedTool === type ? "default" : "outline"}
-                      onClick={() => setSelectedTool(type as any)}
-                      className={`h-8 w-8 p-0 ${
-                        selectedTool === type 
-                          ? 'bg-[#007AFF] text-white border-[#007AFF]' 
-                          : 'border-zinc-600 text-zinc-300 hover:bg-zinc-800 hover:border-zinc-500'
-                      }`}
-                      title={label}
-                    >
-                      <Icon className="h-4 w-4" />
-                    </Button>
-                  ))}
-                </div>
-                
-                {/* Color Selection */}
-                <div className="flex items-center gap-2">
-                  <Palette className="h-4 w-4 text-zinc-400" />
-                  <div className="flex gap-1">
-                    {colors.slice(0, 5).map((color) => (
-                      <button
-                        key={color}
-                        className={`w-6 h-6 rounded-full border-2 hover:scale-110 transition-transform ${
-                          selectedColor === color ? 'border-white scale-110' : 'border-zinc-600'
-                        }`}
-                        style={{ backgroundColor: color }}
-                        onClick={() => setSelectedColor(color)}
-                      />
-                    ))}
-                  </div>
-                </div>
-              </div>
-              
-              {/* Add Callout Button - Always Visible */}
-              <Button
-                size="sm"
-                onClick={() => setIsAddingCallout(!isAddingCallout)}
-                className={`px-4 whitespace-nowrap ${
-                  isAddingCallout 
-                    ? 'bg-green-600 hover:bg-green-700 text-white' 
-                    : 'bg-[#007AFF] hover:bg-[#0069D9] text-white'
-                }`}
+        <div className="absolute top-2 left-2 z-50 flex items-center gap-2">
+          {/* Quick Add Button */}
+          {!isAddingCallout ? (
+            <Button
+              size="sm"
+              onClick={() => setIsAddingCallout(true)}
+              className="h-8 px-3 text-xs bg-purple-600 hover:bg-purple-700 text-white shadow-lg"
+            >
+              <Plus className="h-3 w-3 mr-1" />
+              Add Callouts
+            </Button>
+          ) : (
+            <Button
+              size="sm"
+              onClick={() => setIsAddingCallout(false)}
+              className="h-8 px-3 text-xs bg-green-600 hover:bg-green-700 text-white shadow-lg"
+            >
+              ✓ Done Adding
+            </Button>
+          )}
+          
+          {/* Tool & Color Selector - Compact */}
+          <AnimatePresence>
+            {(isAddingCallout || showToolbar) && (
+              <motion.div
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -10 }}
+                className="flex items-center gap-1 bg-black/80 backdrop-blur-sm rounded-lg p-1 border border-zinc-600"
               >
-                {isAddingCallout ? (
-                  <>
-                    <Edit3 className="h-4 w-4 mr-2" />
-                    Click to Place
-                  </>
-                ) : (
-                  <>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add Callout
-                  </>
-                )}
-              </Button>
-            </div>
-            
-            {/* Instructions Row */}
-            {isAddingCallout && (
-              <div className="text-sm text-zinc-300 bg-[#007AFF]/20 border border-[#007AFF]/30 rounded p-3">
-                <strong>✨ Click anywhere on the screenshot below to place a <span className="text-[#007AFF] font-medium">{selectedTool}</span> callout</strong>
-              </div>
+                {/* Tool Selection - Compact */}
+                {[
+                  { type: "circle", icon: Circle },
+                  { type: "rectangle", icon: Square },
+                  { type: "arrow", icon: MousePointer },
+                  { type: "number", icon: Type },
+                ].map(({ type, icon: Icon }) => (
+                  <button
+                    key={type}
+                    onClick={() => setSelectedTool(type as any)}
+                    className={`p-1 rounded ${
+                      selectedTool === type 
+                        ? 'bg-purple-600 text-white' 
+                        : 'text-zinc-400 hover:text-white hover:bg-zinc-700'
+                    }`}
+                  >
+                    <Icon className="h-3 w-3" />
+                  </button>
+                ))}
+                
+                <div className="w-px h-4 bg-zinc-600 mx-1" />
+                
+                {/* Color Selection - Compact */}
+                {colors.slice(0, 4).map((color) => (
+                  <button
+                    key={color}
+                    className={`w-4 h-4 rounded-full border ${
+                      selectedColor === color ? 'border-white ring-1 ring-white' : 'border-zinc-600'
+                    } hover:scale-110 transition-transform`}
+                    style={{ backgroundColor: color }}
+                    onClick={() => setSelectedColor(color)}
+                  />
+                ))}
+              </motion.div>
             )}
-          </div>
-        </motion.div>
+          </AnimatePresence>
+          
+          {/* Settings Toggle */}
+          {!isAddingCallout && (
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => setShowToolbar(!showToolbar)}
+              className="h-8 w-8 p-0 text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-lg"
+            >
+              <Settings className="h-3 w-3" />
+            </Button>
+          )}
+        </div>
       )}
 
-      {/* Overlay Container */}
+      {/* Main Overlay Container - Completely Clean */}
       <div
         ref={overlayRef}
         className={`absolute inset-0 ${
@@ -355,41 +342,22 @@ const CalloutOverlay: React.FC<CalloutOverlayProps> = ({
         <AnimatePresence>
           {screenshot.callouts.map(renderCallout)}
         </AnimatePresence>
-        
-        {/* Click Instructions Overlay */}
-        {isAddingCallout && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="absolute inset-0 bg-black/30 flex items-center justify-center pointer-events-none"
-          >
-            <div className="bg-zinc-900/95 backdrop-blur-sm border border-zinc-700 rounded-lg p-6 text-center shadow-xl">
-              <Plus className="h-8 w-8 text-[#007AFF] mx-auto mb-2" />
-              <p className="text-white font-medium mb-1">Click to place {selectedTool}</p>
-              <p className="text-sm text-zinc-400">
-                Press Escape to cancel
-              </p>
-            </div>
-          </motion.div>
-        )}
-        
-        {/* Editing Mode Indicator */}
-        {isEditing && !isAddingCallout && (
-          <div className="absolute bottom-2 left-2 bg-zinc-900/90 backdrop-blur-sm border border-zinc-700 rounded-lg px-3 py-1">
-            <span className="text-xs text-zinc-400">
-              Edit mode: Click callouts to edit, or "Add Callout" to place new ones
-            </span>
-          </div>
-        )}
       </div>
       
-      {/* Callout Count Badge */}
+      {/* Minimal Status Indicators */}
+      {isAddingCallout && (
+        <div className="absolute bottom-2 right-2 bg-black/80 backdrop-blur-sm rounded-lg px-2 py-1 text-xs text-white border border-zinc-600">
+          Click anywhere to add callouts • ESC or "Done Adding" to finish
+        </div>
+      )}
+      
+      {/* Callout Count Badge - Only when not editing */}
       {screenshot.callouts.length > 0 && !isEditing && (
         <Badge 
           variant="secondary" 
-          className="absolute top-2 right-2 bg-zinc-900/80 text-white border-zinc-700"
+          className="absolute top-2 right-2 bg-black/80 text-white border-zinc-600 text-xs"
         >
-          {screenshot.callouts.length} callout{screenshot.callouts.length !== 1 ? 's' : ''}
+          {screenshot.callouts.length}
         </Badge>
       )}
     </div>
