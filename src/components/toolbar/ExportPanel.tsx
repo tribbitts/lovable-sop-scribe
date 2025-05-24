@@ -55,7 +55,7 @@ const ExportPanel: React.FC<ExportPanelProps> = ({
     determinedRole: userRole
   });
   
-  const [selectedFormat, setSelectedFormat] = useState<ExportFormat>("pdf");
+  const [selectedFormat, setSelectedFormat] = useState<ExportFormat>("training-module");
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [exportOptions, setExportOptions] = useState<ExportOptions>({
     theme: "light",
@@ -82,31 +82,34 @@ const ExportPanel: React.FC<ExportPanelProps> = ({
 
   const allFormatOptions = [
     {
+      format: "training-module" as ExportFormat,
+      icon: GraduationCap,
+      label: "Interactive Training Module",
+      description: "Complete offline learning experience with quizzes, progress tracking, and certificates",
+      features: ["Quiz Integration", "Progress Tracking", "Completion Certificates", "Self-contained HTML", "Works Offline", "No server required"],
+      badge: "Primary",
+      requiresAdmin: false,
+      isPrimary: true
+    },
+    {
       format: "pdf" as ExportFormat,
       icon: FileText,
       label: "PDF Document",
-      description: "Professional, print-ready format",
-      features: ["Print optimized", "Consistent layout", "Professional appearance"],
-      badge: "Recommended",
-      requiresAdmin: false
+      description: "Static printable format for documentation",
+      features: ["Print optimized", "Static format", "Widely compatible"],
+      badge: "Utility",
+      requiresAdmin: false,
+      isPrimary: false
     },
     {
       format: "html" as ExportFormat,
       icon: Code,
-      label: "HTML Package",
-      description: "Interactive web-ready format",
-      features: ["Interactive elements", "Responsive design", "Web sharing"],
-      badge: "Interactive",
-      requiresAdmin: false
-    },
-    {
-      format: "training-module" as ExportFormat,
-      icon: GraduationCap,
-      label: "Training Module",
-      description: "Complete learning experience with progress tracking",
-      features: ["Progress tracking", "Quiz integration", "Certificates", "Analytics"],
-      badge: userRole === 'admin' ? "Admin Access" : "Premium",
-      requiresAdmin: false // Show to all users but with different badge
+      label: "Basic HTML",
+      description: "Simple web format without interactive features",
+      features: ["Basic web format", "No interactivity", "Lightweight"],
+      badge: "Utility", 
+      requiresAdmin: false,
+      isPrimary: false
     }
   ];
   
@@ -153,55 +156,43 @@ const ExportPanel: React.FC<ExportPanelProps> = ({
         Export Format
       </h3>
       
-      <div className="grid gap-3">
-        {formatOptions.map(({ format, icon: Icon, label, description, features, badge }) => (
+      <div className="space-y-4">
+        {/* Primary Export Option */}
+        {formatOptions.filter(option => option.isPrimary).map(({ format, icon: Icon, label, description, features, badge }) => (
           <motion.div
             key={format}
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
-            className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
+            className={`p-6 rounded-xl border-2 cursor-pointer transition-all ${
               selectedFormat === format
-                ? "border-[#007AFF] bg-[#007AFF]/10"
-                : format === 'training-module' && userRole === 'admin'
-                  ? "border-purple-500 bg-purple-500/10 hover:border-purple-400"
-                  : "border-zinc-700 hover:border-zinc-600 bg-zinc-800/50"
+                ? "border-purple-500 bg-gradient-to-r from-purple-500/10 to-blue-500/10 shadow-lg"
+                : "border-purple-600/50 bg-gradient-to-r from-purple-600/5 to-blue-600/5 hover:border-purple-500/70"
             }`}
             onClick={() => setSelectedFormat(format)}
           >
             <div className="flex items-start justify-between">
-              <div className="flex items-start gap-3">
-                <div className={`p-2 rounded-lg ${
-                  selectedFormat === format ? "bg-[#007AFF] text-white" : "bg-zinc-700 text-zinc-300"
+              <div className="flex items-start gap-4">
+                <div className={`p-3 rounded-xl ${
+                  selectedFormat === format 
+                    ? "bg-gradient-to-r from-purple-600 to-blue-600 text-white shadow-lg" 
+                    : "bg-gradient-to-r from-purple-600/20 to-blue-600/20 text-purple-300"
                 }`}>
-                  <Icon className="h-4 w-4" />
+                  <Icon className="h-6 w-6" />
                 </div>
                 
                 <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <h4 className="font-medium text-white">{label}</h4>
-                    <Badge 
-                      variant="secondary" 
-                      className={`text-xs ${
-                        format === 'training-module' 
-                          ? 'bg-purple-600 text-white' 
-                          : 'bg-zinc-700 text-zinc-300'
-                      }`}
-                    >
-                      {badge}
+                  <div className="flex items-center gap-3 mb-2">
+                    <h4 className="text-lg font-semibold text-white">{label}</h4>
+                    <Badge className="bg-gradient-to-r from-purple-600 to-blue-600 text-white">
+                      ⭐ {badge}
                     </Badge>
                   </div>
-                  <p className="text-sm text-zinc-400 mb-2">{description}</p>
+                  <p className="text-zinc-300 mb-3 text-base">{description}</p>
                   
-                  {/* Special indicator for Training Module */}
-                  {format === 'training-module' && userRole === 'admin' && (
-                    <div className="bg-yellow-400 text-black p-2 rounded mb-2 font-bold text-center text-xs">
-                      🎓 TRAINING MODULE - ADMIN ACCESS 🎓
-                    </div>
-                  )}
-                  
-                  <div className="flex flex-wrap gap-1">
+                  <div className="grid grid-cols-2 gap-2">
                     {features.map((feature, index) => (
-                      <span key={index} className="text-xs px-2 py-1 bg-zinc-700/50 rounded text-zinc-400">
+                      <span key={index} className="text-sm px-3 py-1 bg-purple-600/20 rounded-full text-purple-200 flex items-center gap-1">
+                        <span className="text-purple-400">●</span>
                         {feature}
                       </span>
                     ))}
@@ -213,14 +204,67 @@ const ExportPanel: React.FC<ExportPanelProps> = ({
                 <motion.div
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
-                  className="text-[#007AFF]"
+                  className="text-purple-400"
                 >
-                  <CheckCircle2 className="h-5 w-5" />
+                  <CheckCircle2 className="h-6 w-6" />
                 </motion.div>
               )}
             </div>
           </motion.div>
         ))}
+        
+        {/* Utility Export Options */}
+        <div className="space-y-2">
+          <h4 className="text-sm font-medium text-zinc-400 flex items-center gap-2">
+            <FileText className="h-4 w-4" />
+            Alternative Formats (Utility Exports)
+          </h4>
+          <div className="grid gap-2">
+            {formatOptions.filter(option => !option.isPrimary).map(({ format, icon: Icon, label, description, features, badge }) => (
+              <motion.div
+                key={format}
+                whileHover={{ scale: 1.01 }}
+                whileTap={{ scale: 0.99 }}
+                className={`p-3 rounded-lg border cursor-pointer transition-all ${
+                  selectedFormat === format
+                    ? "border-zinc-500 bg-zinc-800/80"
+                    : "border-zinc-700 bg-zinc-800/40 hover:border-zinc-600"
+                }`}
+                onClick={() => setSelectedFormat(format)}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className={`p-2 rounded-lg ${
+                      selectedFormat === format ? "bg-zinc-600 text-white" : "bg-zinc-700 text-zinc-400"
+                    }`}>
+                      <Icon className="h-4 w-4" />
+                    </div>
+                    
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <h4 className="font-medium text-zinc-300">{label}</h4>
+                        <Badge variant="secondary" className="text-xs bg-zinc-700 text-zinc-400">
+                          {badge}
+                        </Badge>
+                      </div>
+                      <p className="text-sm text-zinc-500">{description}</p>
+                    </div>
+                  </div>
+                  
+                  {selectedFormat === format && (
+                    <motion.div
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      className="text-zinc-400"
+                    >
+                      <CheckCircle2 className="h-5 w-5" />
+                    </motion.div>
+                  )}
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -548,17 +592,12 @@ const ExportPanel: React.FC<ExportPanelProps> = ({
     <Card className="bg-[#1E1E1E] border-zinc-800 rounded-2xl overflow-hidden">
       <CardHeader className="pb-4">
         <CardTitle className="text-white flex items-center gap-2">
-          <Download className="h-5 w-5 text-[#007AFF]" />
-          Export SOP
+          <GraduationCap className="h-5 w-5 text-purple-400" />
+          Create Training Module
         </CardTitle>
-        {userRole === 'admin' && (
-          <div className="mt-2">
-            <Badge className="bg-purple-600 text-white">
-              <GraduationCap className="h-3 w-3 mr-1" />
-              Admin Access - Training Module Available
-            </Badge>
-          </div>
-        )}
+        <p className="text-zinc-400 text-sm mt-2">
+          Export your lessons as an interactive, self-contained training experience
+        </p>
       </CardHeader>
       
       <CardContent className="space-y-6">

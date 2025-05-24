@@ -53,7 +53,7 @@ const StepCard: React.FC<StepCardProps> = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   // Training module state
-  const [isTrainingMode, setIsTrainingMode] = useState(step.trainingMode || false);
+  const [isTrainingMode, setIsTrainingMode] = useState(step.trainingMode !== false);
   const [showQuizForm, setShowQuizForm] = useState(false);
   const [newQuizQuestion, setNewQuizQuestion] = useState({
     question: "",
@@ -256,18 +256,26 @@ const StepCard: React.FC<StepCardProps> = ({
                       if (e.key === "Enter") setIsEditingTitle(false);
                     }}
                     className="bg-zinc-800 border-zinc-700 text-white"
-                    placeholder={`Step ${index + 1} Title`}
+                    placeholder={`Lesson ${index + 1} Title`}
                     autoFocus
                   />
                 ) : (
-                  <h3 
-                    className="text-lg font-semibold text-white cursor-pointer hover:text-[#007AFF] transition-colors"
-                    onClick={() => setIsEditingTitle(true)}
-                  >
-                    {step.title || `Step ${index + 1}`}
-                    {step.completed && <span className="ml-2 text-green-400 text-sm">- Completed</span>}
-                    <Edit3 className="inline h-4 w-4 ml-2 opacity-0 group-hover:opacity-100" />
-                  </h3>
+                  <div className="flex items-center gap-2">
+                    <h3 
+                      className="text-lg font-semibold text-white cursor-pointer hover:text-purple-400 transition-colors"
+                      onClick={() => setIsEditingTitle(true)}
+                    >
+                      {step.title || `Lesson ${index + 1}`}
+                      {step.completed && <span className="ml-2 text-green-400 text-sm">- Completed</span>}
+                      <Edit3 className="inline h-4 w-4 ml-2 opacity-0 group-hover:opacity-100" />
+                    </h3>
+                    {isTrainingMode && (
+                      <Badge variant="secondary" className="bg-gradient-to-r from-purple-600 to-blue-600 text-white text-xs">
+                        <GraduationCap className="h-3 w-3 mr-1" />
+                        Interactive
+                      </Badge>
+                    )}
+                  </div>
                 )}
               </div>
               
@@ -352,175 +360,12 @@ const StepCard: React.FC<StepCardProps> = ({
                   />
                 </div>
 
-                {/* Tags */}
-                <div className="space-y-3">
-                  <label className="text-sm font-medium text-zinc-300 flex items-center gap-2">
-                    <Tag className="h-4 w-4" />
-                    Tags
-                  </label>
-                  
-                  <div className="flex flex-wrap gap-2">
-                    {step.tags?.map((tag, tagIndex) => (
-                      <Badge
-                        key={tagIndex}
-                        variant="secondary"
-                        className="bg-zinc-800 text-zinc-300 hover:bg-zinc-700 cursor-pointer"
-                        onClick={() => removeTag(tag)}
-                      >
-                        {tag} ×
-                      </Badge>
-                    ))}
-                  </div>
-                  
-                  <div className="flex gap-2">
-                    <Input
-                      value={newTag}
-                      onChange={(e) => setNewTag(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") addTag();
-                      }}
-                      placeholder="Add a tag..."
-                      className="bg-zinc-800 border-zinc-700 text-white flex-1"
-                    />
-                    <Button
-                      size="sm"
-                      onClick={addTag}
-                      disabled={!newTag.trim()}
-                      className="bg-[#007AFF] hover:bg-[#0069D9] text-white"
-                    >
-                      <Plus className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-
-                {/* Resources */}
-                <div className="space-y-3">
-                  <label className="text-sm font-medium text-zinc-300 flex items-center gap-2">
-                    <FileText className="h-4 w-4" />
-                    Resources
-                  </label>
-                  
-                  {step.resources?.map((resource) => (
-                    <div
-                      key={resource.id}
-                      className="flex items-center justify-between p-3 bg-zinc-800 rounded-lg"
-                    >
-                      <div className="flex items-center gap-3">
-                        {resource.type === "link" ? (
-                          <Link className="h-4 w-4 text-[#007AFF]" />
-                        ) : (
-                          <FileText className="h-4 w-4 text-[#007AFF]" />
-                        )}
-                        <div>
-                          <a
-                            href={resource.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-white hover:text-[#007AFF] font-medium"
-                          >
-                            {resource.title}
-                          </a>
-                          {resource.description && (
-                            <p className="text-sm text-zinc-400">{resource.description}</p>
-                          )}
-                        </div>
-                      </div>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => removeResource(resource.id)}
-                        className="text-red-400 hover:text-red-300 hover:bg-red-400/10"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  ))}
-                  
-                  {showResourceForm ? (
-                    <div className="space-y-3 p-4 bg-zinc-800/50 rounded-lg border border-zinc-700">
-                      <div className="flex gap-2">
-                        <Button
-                          size="sm"
-                          variant={newResource.type === "link" ? "default" : "outline"}
-                          onClick={() => setNewResource(prev => ({ ...prev, type: "link" }))}
-                          className="text-xs"
-                        >
-                          <Link className="h-3 w-3 mr-1" />
-                          Link
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant={newResource.type === "file" ? "default" : "outline"}
-                          onClick={() => setNewResource(prev => ({ ...prev, type: "file" }))}
-                          className="text-xs"
-                        >
-                          <FileText className="h-3 w-3 mr-1" />
-                          File
-                        </Button>
-                      </div>
-                      
-                      <Input
-                        value={newResource.title || ""}
-                        onChange={(e) => setNewResource(prev => ({ ...prev, title: e.target.value }))}
-                        placeholder="Resource title..."
-                        className="bg-zinc-800 border-zinc-700 text-white"
-                      />
-                      
-                      <Input
-                        value={newResource.url || ""}
-                        onChange={(e) => setNewResource(prev => ({ ...prev, url: e.target.value }))}
-                        placeholder="URL or file path..."
-                        className="bg-zinc-800 border-zinc-700 text-white"
-                      />
-                      
-                      <Input
-                        value={newResource.description || ""}
-                        onChange={(e) => setNewResource(prev => ({ ...prev, description: e.target.value }))}
-                        placeholder="Description (optional)..."
-                        className="bg-zinc-800 border-zinc-700 text-white"
-                      />
-                      
-                      <div className="flex gap-2">
-                        <Button
-                          size="sm"
-                          onClick={addResource}
-                          disabled={!newResource.title || !newResource.url}
-                          className="bg-[#007AFF] hover:bg-[#0069D9] text-white"
-                        >
-                          Add Resource
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => {
-                            setShowResourceForm(false);
-                            setNewResource({});
-                          }}
-                          className="border-zinc-700 text-white hover:bg-zinc-800"
-                        >
-                          Cancel
-                        </Button>
-                      </div>
-                    </div>
-                  ) : (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => setShowResourceForm(true)}
-                      className="border-zinc-700 text-white hover:bg-zinc-800"
-                    >
-                      <Plus className="h-4 w-4 mr-2" />
-                      Add Resource
-                    </Button>
-                  )}
-                </div>
-
-                {/* Training Module Features */}
-                <div className="space-y-4 pt-4 border-t border-zinc-800">
+                {/* Training Module Features - Moved up for prominence */}
+                <div className="space-y-4 pt-4 border-t border-purple-800/30">
                   <div className="flex items-center justify-between">
                     <Label htmlFor={`training-mode-${step.id}`} className="text-sm font-medium text-zinc-300 flex items-center gap-2">
                       <GraduationCap className="h-4 w-4 text-purple-400" />
-                      Training Mode
+                      Interactive Learning Features
                     </Label>
                     <Switch
                       id={`training-mode-${step.id}`}
@@ -537,12 +382,12 @@ const StepCard: React.FC<StepCardProps> = ({
                       className="space-y-6 p-4 bg-purple-500/5 border border-purple-500/20 rounded-lg"
                     >
                       <div className="text-center">
-                        <div className="inline-flex items-center gap-2 px-3 py-1 bg-purple-600 text-white rounded-full text-sm font-medium">
+                        <div className="inline-flex items-center gap-2 px-3 py-1 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-full text-sm font-medium">
                           <GraduationCap className="h-4 w-4" />
-                          Training Mode Enabled
+                          Interactive Learning Enabled
                         </div>
                         <p className="text-xs text-zinc-400 mt-2">
-                          This step will include interactive learning features
+                          This lesson includes quizzes, learning objectives, and progress tracking
                         </p>
                       </div>
 
@@ -787,6 +632,171 @@ const StepCard: React.FC<StepCardProps> = ({
                     </motion.div>
                   )}
                 </div>
+
+                {/* Tags */}
+                <div className="space-y-3">
+                  <label className="text-sm font-medium text-zinc-300 flex items-center gap-2">
+                    <Tag className="h-4 w-4" />
+                    Tags
+                  </label>
+                  
+                  <div className="flex flex-wrap gap-2">
+                    {step.tags?.map((tag, tagIndex) => (
+                      <Badge
+                        key={tagIndex}
+                        variant="secondary"
+                        className="bg-zinc-800 text-zinc-300 hover:bg-zinc-700 cursor-pointer"
+                        onClick={() => removeTag(tag)}
+                      >
+                        {tag} ×
+                      </Badge>
+                    ))}
+                  </div>
+                  
+                  <div className="flex gap-2">
+                    <Input
+                      value={newTag}
+                      onChange={(e) => setNewTag(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") addTag();
+                      }}
+                      placeholder="Add a tag..."
+                      className="bg-zinc-800 border-zinc-700 text-white flex-1"
+                    />
+                    <Button
+                      size="sm"
+                      onClick={addTag}
+                      disabled={!newTag.trim()}
+                      className="bg-[#007AFF] hover:bg-[#0069D9] text-white"
+                    >
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Resources */}
+                <div className="space-y-3">
+                  <label className="text-sm font-medium text-zinc-300 flex items-center gap-2">
+                    <FileText className="h-4 w-4" />
+                    Resources
+                  </label>
+                  
+                  {step.resources?.map((resource) => (
+                    <div
+                      key={resource.id}
+                      className="flex items-center justify-between p-3 bg-zinc-800 rounded-lg"
+                    >
+                      <div className="flex items-center gap-3">
+                        {resource.type === "link" ? (
+                          <Link className="h-4 w-4 text-[#007AFF]" />
+                        ) : (
+                          <FileText className="h-4 w-4 text-[#007AFF]" />
+                        )}
+                        <div>
+                          <a
+                            href={resource.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-white hover:text-[#007AFF] font-medium"
+                          >
+                            {resource.title}
+                          </a>
+                          {resource.description && (
+                            <p className="text-sm text-zinc-400">{resource.description}</p>
+                          )}
+                        </div>
+                      </div>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => removeResource(resource.id)}
+                        className="text-red-400 hover:text-red-300 hover:bg-red-400/10"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                  
+                  {showResourceForm ? (
+                    <div className="space-y-3 p-4 bg-zinc-800/50 rounded-lg border border-zinc-700">
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          variant={newResource.type === "link" ? "default" : "outline"}
+                          onClick={() => setNewResource(prev => ({ ...prev, type: "link" }))}
+                          className="text-xs"
+                        >
+                          <Link className="h-3 w-3 mr-1" />
+                          Link
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant={newResource.type === "file" ? "default" : "outline"}
+                          onClick={() => setNewResource(prev => ({ ...prev, type: "file" }))}
+                          className="text-xs"
+                        >
+                          <FileText className="h-3 w-3 mr-1" />
+                          File
+                        </Button>
+                      </div>
+                      
+                      <Input
+                        value={newResource.title || ""}
+                        onChange={(e) => setNewResource(prev => ({ ...prev, title: e.target.value }))}
+                        placeholder="Resource title..."
+                        className="bg-zinc-800 border-zinc-700 text-white"
+                      />
+                      
+                      <Input
+                        value={newResource.url || ""}
+                        onChange={(e) => setNewResource(prev => ({ ...prev, url: e.target.value }))}
+                        placeholder="URL or file path..."
+                        className="bg-zinc-800 border-zinc-700 text-white"
+                      />
+                      
+                      <Input
+                        value={newResource.description || ""}
+                        onChange={(e) => setNewResource(prev => ({ ...prev, description: e.target.value }))}
+                        placeholder="Description (optional)..."
+                        className="bg-zinc-800 border-zinc-700 text-white"
+                      />
+                      
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          onClick={addResource}
+                          disabled={!newResource.title || !newResource.url}
+                          className="bg-[#007AFF] hover:bg-[#0069D9] text-white"
+                        >
+                          Add Resource
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => {
+                            setShowResourceForm(false);
+                            setNewResource({});
+                          }}
+                          className="border-zinc-700 text-white hover:bg-zinc-800"
+                        >
+                          Cancel
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setShowResourceForm(true)}
+                      className="border-zinc-700 text-white hover:bg-zinc-800"
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add Resource
+                    </Button>
+                  )}
+                </div>
+
+
 
                 {/* Screenshot Section */}
                 <div className="space-y-3">

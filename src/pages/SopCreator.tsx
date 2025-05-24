@@ -139,21 +139,22 @@ const SopCreator = () => {
       className="text-center py-16"
     >
       <div className="max-w-md mx-auto">
-        <BookOpen className="h-16 w-16 text-zinc-500 mx-auto mb-6" />
+        <GraduationCap className="h-16 w-16 text-purple-500 mx-auto mb-6" />
         <h3 className="text-xl font-semibold text-white mb-4">
-          Ready to Create Your SOP?
+          Ready to Build Your Training Module?
         </h3>
         <p className="text-zinc-400 mb-8">
-          Start by adding your first step. You can include descriptions, screenshots, 
-          callouts, tags, and resources to create comprehensive documentation.
+          Create interactive learning experiences with step-by-step lessons, quizzes, 
+          progress tracking, and completion certificates. Perfect for employee training, 
+          onboarding, or educational content.
         </p>
         <Button 
           onClick={handleAddStep}
           size="lg"
-          className="bg-[#007AFF] hover:bg-[#0069D9] text-white"
+          className="bg-purple-600 hover:bg-purple-700 text-white"
         >
           <Plus className="h-5 w-5 mr-2" />
-          Add Your First Step
+          Add Your First Lesson
         </Button>
       </div>
     </motion.div>
@@ -184,10 +185,10 @@ const SopCreator = () => {
           onClick={handleAddStep}
           variant="outline"
           size="lg"
-          className="border-zinc-700 text-white hover:bg-zinc-800 border-dashed"
+          className="border-purple-700 text-purple-300 hover:bg-purple-800/20 border-dashed"
         >
           <Plus className="h-5 w-5 mr-2" />
-          Add Another Step
+          Add Another Lesson
         </Button>
       </motion.div>
     </div>
@@ -203,13 +204,20 @@ const SopCreator = () => {
         <CardContent className="p-4">
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-3">
-              <Badge variant="secondary" className="bg-zinc-800 text-zinc-300">
-                {sopDocument.steps.length} step{sopDocument.steps.length !== 1 ? 's' : ''}
+              <Badge variant="secondary" className="bg-purple-800 text-purple-300">
+                {sopDocument.steps.length} lesson{sopDocument.steps.length !== 1 ? 's' : ''}
               </Badge>
               
               {sopDocument.steps.length > 0 && (
                 <Badge variant="secondary" className="bg-green-600 text-white">
                   {getCompletedStepsCount()}/{sopDocument.steps.length} completed
+                </Badge>
+              )}
+              
+              {sopDocument.trainingMode && (
+                <Badge variant="secondary" className="bg-gradient-to-r from-purple-600 to-blue-600 text-white">
+                  <GraduationCap className="h-3 w-3 mr-1" />
+                  Training Mode
                 </Badge>
               )}
             </div>
@@ -237,10 +245,10 @@ const SopCreator = () => {
                 size="sm"
                 onClick={() => setShowExportPanel(!showExportPanel)}
                 disabled={sopDocument.steps.length === 0}
-                className="bg-[#007AFF] hover:bg-[#0069D9] text-white"
+                className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white"
               >
-                <Download className="h-4 w-4 mr-1" />
-                Export
+                <GraduationCap className="h-4 w-4 mr-1" />
+                Create Training Module
               </Button>
             </div>
           </div>
@@ -261,15 +269,46 @@ const SopCreator = () => {
           <Card className="bg-[#1E1E1E] border-zinc-800 rounded-2xl">
             <CardContent className="p-6">
               <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                <Settings className="h-5 w-5" />
-                Document Settings
+                <GraduationCap className="h-5 w-5 text-purple-400" />
+                Training Module Settings
               </h3>
               
               <div className="space-y-4">
+                <div className="p-4 bg-gradient-to-r from-purple-500/10 to-blue-500/10 border border-purple-500/30 rounded-lg">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-white flex items-center gap-2">
+                        <GraduationCap className="h-4 w-4 text-purple-400" />
+                        Interactive Training Mode
+                      </p>
+                      <p className="text-xs text-purple-300">Enable quizzes, learning objectives, and progress tracking for all lessons</p>
+                    </div>
+                    <Switch
+                      checked={sopDocument.trainingMode !== false}
+                      onCheckedChange={(checked) => {
+                        setTrainingMode(checked);
+                        // Auto-enable training mode for all steps when document mode is enabled
+                        if (checked) {
+                          sopDocument.steps.forEach(step => {
+                            if (!step.trainingMode) {
+                              updateStep(step.id, "trainingMode", true);
+                            }
+                          });
+                        }
+                      }}
+                    />
+                  </div>
+                  {!sopDocument.trainingMode && (
+                    <p className="text-xs text-yellow-400 mt-2">
+                      💡 Enable for the full training module experience with quizzes and certificates!
+                    </p>
+                  )}
+                </div>
+                
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-white">Table of Contents</p>
-                    <p className="text-xs text-zinc-400">Include navigation links in exports</p>
+                    <p className="text-sm font-medium text-white">Navigation Menu</p>
+                    <p className="text-xs text-zinc-400">Include table of contents in training modules</p>
                   </div>
                   <Switch
                     checked={sopDocument.tableOfContents}
@@ -279,36 +318,12 @@ const SopCreator = () => {
                 
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-white">Dark Mode</p>
-                    <p className="text-xs text-zinc-400">Use dark theme for exports</p>
+                    <p className="text-sm font-medium text-white">Dark Theme</p>
+                    <p className="text-xs text-zinc-400">Use dark theme for training modules</p>
                   </div>
                   <Switch
                     checked={sopDocument.darkMode}
                     onCheckedChange={setDarkMode}
-                  />
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-white flex items-center gap-2">
-                      <GraduationCap className="h-4 w-4 text-purple-400" />
-                      Training Module Mode
-                    </p>
-                    <p className="text-xs text-zinc-400">Enable interactive training features for all steps</p>
-                  </div>
-                  <Switch
-                    checked={sopDocument.trainingMode || false}
-                    onCheckedChange={(checked) => {
-                      setTrainingMode(checked);
-                      // Auto-enable training mode for all steps when document mode is enabled
-                      if (checked) {
-                        sopDocument.steps.forEach(step => {
-                          if (!step.trainingMode) {
-                            updateStep(step.id, "trainingMode", true);
-                          }
-                        });
-                      }
-                    }}
                   />
                 </div>
                 
@@ -381,11 +396,11 @@ const SopCreator = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <h1 className="text-3xl font-bold tracking-tight text-white mb-2">
-                    SOP Creator
+                    Interactive Training Module Creator
                   </h1>
                   <p className="text-zinc-400 text-lg">
-              Create professional Standard Operating Procedures with step-by-step 
-                    instructions, screenshots, and interactive elements.
+                    Build engaging, self-contained training modules with quizzes, progress tracking,
+                    and interactive learning experiences. Export as offline HTML packages.
                   </p>
                 </div>
                 

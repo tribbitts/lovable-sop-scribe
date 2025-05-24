@@ -76,6 +76,7 @@ const defaultSopDocument: SopDocument = {
   companyName: "Company Name",
   tableOfContents: true,
   darkMode: false,
+  trainingMode: true, // Default to training mode enabled
   progressTracking: {
     enabled: false
   }
@@ -136,7 +137,12 @@ export const SopProvider = ({ children }: { children: ReactNode }) => {
       tags: [],
       resources: [],
       screenshot: null,
-      completed: false
+      completed: false,
+      trainingMode: true, // Default new steps to training mode
+      learningObjectives: [],
+      quizQuestions: [],
+      requiredScore: 80,
+      allowRetakes: true
     };
 
     setSopDocument((prev) => ({
