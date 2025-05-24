@@ -27,6 +27,8 @@ import {
   ArrowRight,
   Sparkles
 } from "lucide-react";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 
 // Import our modular components
 import StepCard from "@/components/step-editor/StepCard";
@@ -48,7 +50,9 @@ const SopCreator = () => {
     setDarkMode,
     setTrainingMode,
     saveDocumentToJSON,
-    resetDocument
+    resetDocument,
+    setSopTitle,
+    setSopTopic
   } = useSopContext();
 
   const [activeStepId, setActiveStepId] = useState<string | null>(null);
@@ -291,6 +295,69 @@ const SopCreator = () => {
           )}
         </div>
 
+      </CardContent>
+    </Card>
+  );
+
+  // Module Title and Info Section
+  const renderModuleInfo = () => (
+    <Card className="bg-[#1E1E1E] border-zinc-800 rounded-2xl mb-6">
+      <CardContent className="p-6">
+        <div className="space-y-4">
+          <div className="flex items-center gap-2 mb-4">
+            <BookOpen className="h-5 w-5 text-purple-400" />
+            <h3 className="text-lg font-semibold text-white">Training Module Information</h3>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label className="text-sm font-medium text-zinc-300 mb-2 block">
+                Module Title <span className="text-red-400">*</span>
+              </Label>
+              <Input
+                value={sopDocument.title}
+                onChange={(e) => setSopTitle(e.target.value)}
+                placeholder="e.g., Customer Service Training, Safety Procedures..."
+                className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-500"
+              />
+              {!sopDocument.title && (
+                <p className="text-xs text-yellow-400 mt-1 flex items-center gap-1">
+                  <Zap className="h-3 w-3" />
+                  Required for export
+                </p>
+              )}
+            </div>
+            
+            <div>
+              <Label className="text-sm font-medium text-zinc-300 mb-2 block">
+                Topic/Category <span className="text-red-400">*</span>
+              </Label>
+              <Input
+                value={sopDocument.topic}
+                onChange={(e) => setSopTopic(e.target.value)}
+                placeholder="e.g., HR Training, Technical Skills, Compliance..."
+                className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-500"
+              />
+              {!sopDocument.topic && (
+                <p className="text-xs text-yellow-400 mt-1 flex items-center gap-1">
+                  <Zap className="h-3 w-3" />
+                  Required for export
+                </p>
+              )}
+            </div>
+          </div>
+          
+          {sopDocument.title && sopDocument.topic && (
+            <div className="mt-4 p-3 bg-green-600/10 border border-green-600/30 rounded-lg">
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="h-4 w-4 text-green-400" />
+                <p className="text-sm text-green-300">
+                  Ready to export: <strong>{sopDocument.title}</strong> - {sopDocument.topic}
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
       </CardContent>
     </Card>
   );
@@ -622,6 +689,9 @@ const SopCreator = () => {
         >
           {renderSimpleHeader()}
         </motion.div>
+
+        {/* Module Title and Info Section */}
+        {renderModuleInfo()}
 
         {/* Advanced Settings (Progressive Disclosure) */}
         {renderAdvancedSettings()}

@@ -1,4 +1,3 @@
-
 import { SopDocument } from "@/types/sop";
 import { toast } from "@/hooks/use-toast";
 
@@ -27,7 +26,7 @@ export const validateDocument = (sopDocument: SopDocument, isPro: boolean): bool
  */
 export const validateTitle = (sopDocument: SopDocument): boolean => {
   if (!sopDocument.title) {
-    showValidationError("SOP Title Required", "Please provide a title for your SOP document.");
+    showValidationError("Training Module Title Required", "Please provide a title for your training module in the 'Training Module Information' section above.");
     return false;
   }
   return true;
@@ -38,7 +37,7 @@ export const validateTitle = (sopDocument: SopDocument): boolean => {
  */
 export const validateTopic = (sopDocument: SopDocument): boolean => {
   if (!sopDocument.topic) {
-    showValidationError("Topic Required", "Please provide a topic for your SOP document.");
+    showValidationError("Topic Required", "Please provide a topic/category for your training module in the 'Training Module Information' section above.");
     return false;
   }
   return true;
@@ -50,7 +49,7 @@ export const validateTopic = (sopDocument: SopDocument): boolean => {
 export const validateSteps = (sopDocument: SopDocument): boolean => {
   // Validate that at least one step exists
   if (sopDocument.steps.length === 0) {
-    showValidationError("No Steps Found", "Please add at least one step to your SOP document.");
+    showValidationError("No Lessons Found", "Please add at least one lesson to your training module.");
     return false;
   }
 
@@ -59,8 +58,8 @@ export const validateSteps = (sopDocument: SopDocument): boolean => {
     const step = sopDocument.steps[i];
     if (!step.description) {
       showValidationError(
-        "Step Description Required", 
-        `Please provide a description for step ${i + 1}.`
+        "Lesson Description Required", 
+        `Please provide a description for lesson ${i + 1}.`
       );
       return false;
     }
