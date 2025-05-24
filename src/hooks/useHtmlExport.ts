@@ -16,7 +16,7 @@ export const useHtmlExport = () => {
 
   const handleExportHtml = async (
     sopDocument: SopDocument,
-    options?: HtmlExportOptions & { enhanced?: boolean; enhancedOptions?: any }
+    options?: HtmlExportOptions & { enhanced?: boolean; enhancedOptions?: any; trainingOptions?: any }
   ) => {
     // Super user access check - multiple emails for Timothy
     const isSuperUser = user?.email === 'tribbit@tribbit.gg' || 

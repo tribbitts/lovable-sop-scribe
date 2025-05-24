@@ -76,18 +76,58 @@ const SopCreator = () => {
     }, 100);
   };
 
-  const handleExport = async (format: "pdf" | "html", options?: any) => {
+  const handleExport = async (format: "pdf" | "html" | "training-module", options?: any) => {
     setIsExporting(true);
-    setExportProgress(`Preparing ${format.toUpperCase()} export...`);
     
-    try {
-      await exportDocument(format, options);
-    } catch (error) {
-      console.error("Export failed:", error);
-    } finally {
-      setIsExporting(false);
-      setExportProgress("");
+    if (format === "training-module") {
+      setExportProgress("Creating interactive training module...");
+      
+      console.log('🎓 Training Module Export - Options received:', options);
+      
+      // Convert training-module to enhanced HTML export
+      const enhancedOptions = {
+        mode: 'standalone' as const,
+        enhanced: true,
+        enhancedOptions: {
+          passwordProtection: {
+            enabled: !!options?.trainingOptions?.passwordProtection,
+            password: options?.trainingOptions?.passwordProtection || "",
+            hint: "Contact your administrator for access"
+          },
+          lmsFeatures: {
+            enableNotes: options?.trainingOptions?.enableNotes ?? true,
+            enableBookmarks: options?.trainingOptions?.enableBookmarks ?? true,
+            enableSearch: true,
+            enableProgressTracking: options?.includeProgressInfo ?? true
+          },
+          theme: options?.theme || 'auto',
+          branding: {
+            companyColors: {
+              primary: options?.trainingOptions?.primaryColor || '#007AFF',
+              secondary: options?.trainingOptions?.secondaryColor || '#1E1E1E'
+            }
+          }
+        }
+      };
+      
+      console.log('🎓 Final enhanced options being passed:', enhancedOptions);
+      
+      try {
+        await exportDocument("html", enhancedOptions);
+      } catch (error) {
+        console.error("Training module export failed:", error);
+      }
+    } else {
+      setExportProgress(`Preparing ${format.toUpperCase()} export...`);
+      try {
+        await exportDocument(format, options);
+      } catch (error) {
+        console.error("Export failed:", error);
+      }
     }
+    
+    setIsExporting(false);
+    setExportProgress("");
   };
 
   const renderEmptyState = () => (

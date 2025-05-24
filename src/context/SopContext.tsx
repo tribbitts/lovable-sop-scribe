@@ -51,7 +51,7 @@ interface SopContextType {
   resetDocument: () => void;
   
   // Export functionality
-  exportDocument: (format: ExportFormat, options?: ExportOptions) => Promise<void>;
+  exportDocument: (format: ExportFormat, options?: any) => Promise<void>;
   getPdfPreview: () => Promise<string>;
   
   // Progress tracking
@@ -558,33 +558,41 @@ export const SopProvider = ({ children }: { children: ReactNode }) => {
     });
   };
 
-  const exportDocument = async (format: ExportFormat, options?: ExportOptions): Promise<void> => {
+  const exportDocument = async (format: ExportFormat, options?: any): Promise<void> => {
     try {
       if (format === "pdf") {
         // Use existing PDF export functionality
         const { generatePDF } = await import("@/lib/pdf-generator");
         await generatePDF(sopDocument);
-      } else if (format === "html") {
+      } else if (format === "html" || format === "training-module") {
         // Use existing HTML export functionality
         const { exportSopAsHtml } = await import("@/lib/html-export");
-        // Convert ExportOptions to HtmlExportOptions
-        const htmlOptions: HtmlExportOptions = {
-          mode: options?.mode || 'standalone', // Use mode from options or default to standalone
+        
+        // Convert ExportOptions to HtmlExportOptions with enhanced support
+        const htmlOptions: any = {
+          mode: options?.mode || 'standalone',
           quality: 0.85,
-          includeTableOfContents: options?.includeTableOfContents
+          includeTableOfContents: options?.includeTableOfContents,
+          enhanced: options?.enhanced || false,
+          enhancedOptions: options?.enhancedOptions
         };
+        
+        console.log('🚀 Exporting with options:', htmlOptions);
+        
         await exportSopAsHtml(sopDocument, htmlOptions);
       }
       
+      const exportType = format === "training-module" ? "Training Module" : format.toUpperCase();
       toast({
         title: "Export Successful",
-        description: `Your SOP has been exported as ${format.toUpperCase()}`
+        description: `Your SOP has been exported as ${exportType}`
       });
     } catch (error) {
       console.error("Export error:", error);
+      const exportType = format === "training-module" ? "Training Module" : format.toUpperCase();
       toast({
         title: "Export Failed",
-        description: `Failed to export SOP as ${format.toUpperCase()}`,
+        description: `Failed to export SOP as ${exportType}`,
         variant: "destructive"
       });
       throw error;

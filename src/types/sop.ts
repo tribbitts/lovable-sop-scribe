@@ -72,7 +72,7 @@ export interface AppSettings {
 export type ExportFormat = "pdf" | "html" | "training-module";
 export type ExportTheme = "light" | "dark" | "auto";
 
-// Export options - now includes mode for HTML exports
+// Export options - now includes mode for HTML exports and enhanced training module options
 export interface ExportOptions {
   theme?: ExportTheme;
   includeTableOfContents?: boolean;
@@ -80,6 +80,18 @@ export interface ExportOptions {
   customFooter?: string;
   quality?: "low" | "medium" | "high";
   mode?: 'standalone' | 'zip'; // Added to make compatible with HtmlExportOptions
+  // Enhanced/Training module options
+  enhanced?: boolean;
+  enhancedOptions?: any;
+  trainingOptions?: {
+    enableQuizzes?: boolean;
+    enableCertificates?: boolean;
+    enableNotes?: boolean;
+    enableBookmarks?: boolean;
+    passwordProtection?: string;
+    primaryColor?: string;
+    secondaryColor?: string;
+  };
 }
 
 // Progress tracking

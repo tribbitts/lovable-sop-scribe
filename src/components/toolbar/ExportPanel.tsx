@@ -638,13 +638,16 @@ const ExportPanel: React.FC<ExportPanelProps> = ({
                 <p className="text-xs text-purple-200 text-center font-medium">
                   🎓 Training Module Features:
                 </p>
-                <ul className="text-xs text-purple-300 mt-2 space-y-1">
-                  <li>• Interactive step-by-step learning experience</li>
-                  <li>• Built-in progress tracking and completion status</li>
-                  <li>• User notes and bookmarking capabilities</li>
-                  <li>• Responsive design that works on any device</li>
-                  <li>• Self-contained HTML file - no server required</li>
-                </ul>
+                                  <ul className="text-xs text-purple-300 mt-2 space-y-1">
+                    <li>• Interactive step-by-step learning experience</li>
+                    <li>• {trainingOptions.enableNotes ? '✅ User notes and bookmarking' : '❌ User notes disabled'}</li>
+                    <li>• {exportOptions.includeProgressInfo ? '✅ Progress tracking enabled' : '❌ Progress tracking disabled'}</li>
+                    <li>• {trainingOptions.enableQuizzes ? '✅ Interactive quizzes included' : '❌ Quizzes disabled'}</li>
+                    <li>• {trainingOptions.enableCertificates ? '✅ Completion certificates' : '❌ Certificates disabled'}</li>
+                    <li>• {trainingOptions.passwordProtection ? '🔒 Password protected' : '🔓 No password protection'}</li>
+                    <li>• Responsive design that works on any device</li>
+                    <li>• Self-contained HTML file - no server required</li>
+                  </ul>
               </div>
               <p className="text-xs text-zinc-500 text-center">
                 Your Training Module will be downloaded as a complete HTML package
