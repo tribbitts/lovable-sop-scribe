@@ -286,10 +286,32 @@ function generateEnhancedStepHtml(step: any, index: number, lmsFeatures: any): s
             ${step.tags.map((tag: string) => `<span class="tag">${tag}</span>`).join('')}
           </div>
         ` : ''}
+        
+        ${step.estimatedTime ? `
+          <div class="step-time">
+            <svg viewBox="0 0 24 24" class="time-icon">
+              <circle cx="12" cy="12" r="10"/>
+              <polyline points="12,6 12,12 16,14"/>
+            </svg>
+            <span>~${step.estimatedTime} min</span>
+          </div>
+        ` : ''}
       </div>
       
       <div class="step-content">
         ${step.description ? `<div class="step-description">${step.description}</div>` : ''}
+        
+        ${step.keyTakeaway ? `
+          <div class="key-takeaway">
+            <div class="takeaway-header">
+              <svg viewBox="0 0 24 24" class="takeaway-icon">
+                <path d="M9 11H3v2h6l1-1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-4a2 2 0 0 0-2-2h-6a2 2 0 0 0-2 2v1l-1-1z"/>
+              </svg>
+              <h4>Key Takeaway</h4>
+            </div>
+            <p>${step.keyTakeaway}</p>
+          </div>
+        ` : ''}
         
         ${step.processedScreenshot ? `
           <div class="step-media">
@@ -307,6 +329,76 @@ function generateEnhancedStepHtml(step: any, index: number, lmsFeatures: any): s
         ${step.secondaryProcessedScreenshot ? `
           <div class="step-media secondary">
             <img src="${step.secondaryProcessedScreenshot}" alt="Step ${stepNumber} Additional Screenshot" class="step-image" />
+          </div>
+        ` : ''}
+        
+        ${step.quizQuestions && step.quizQuestions.length > 0 ? `
+          <div class="quiz-section">
+            <div class="quiz-header">
+              <svg viewBox="0 0 24 24" class="quiz-icon">
+                <circle cx="12" cy="12" r="10"/>
+                <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+                <path d="M12 17h.01"/>
+              </svg>
+              <h4>Knowledge Check</h4>
+            </div>
+            <div class="quiz-questions">
+              ${step.quizQuestions.map((question: any, qIndex: number) => `
+                <div class="quiz-question" data-question-id="${question.id}" data-step="${stepNumber}" data-question="${qIndex}">
+                  <div class="question-text">
+                    <span class="question-number">Q${qIndex + 1}:</span>
+                    <span class="question-content">${question.question}</span>
+                  </div>
+                  
+                  ${question.type === 'multiple-choice' && question.options ? `
+                    <div class="quiz-options">
+                      ${question.options.map((option: string, optIndex: number) => option.trim() ? `
+                        <label class="quiz-option">
+                          <input type="radio" name="question-${question.id}" value="${option}" data-question="${question.id}">
+                          <span class="option-text">${option}</span>
+                        </label>
+                      ` : '').join('')}
+                    </div>
+                  ` : question.type === 'true-false' ? `
+                    <div class="quiz-options">
+                      <label class="quiz-option">
+                        <input type="radio" name="question-${question.id}" value="True" data-question="${question.id}">
+                        <span class="option-text">True</span>
+                      </label>
+                      <label class="quiz-option">
+                        <input type="radio" name="question-${question.id}" value="False" data-question="${question.id}">
+                        <span class="option-text">False</span>
+                      </label>
+                    </div>
+                  ` : `
+                    <div class="quiz-text-answer">
+                      <textarea 
+                        placeholder="Enter your answer..." 
+                        data-question="${question.id}"
+                        class="quiz-textarea"
+                      ></textarea>
+                    </div>
+                  `}
+                  
+                  <div class="quiz-actions">
+                    <button class="quiz-submit-btn" data-question="${question.id}" data-answer="${question.correctAnswer}">
+                      Check Answer
+                    </button>
+                  </div>
+                  
+                  <div class="quiz-feedback" id="feedback-${question.id}" style="display: none;">
+                    <div class="feedback-content">
+                      <div class="feedback-text"></div>
+                      ${question.explanation ? `
+                        <div class="explanation">
+                          <strong>Explanation:</strong> ${question.explanation}
+                        </div>
+                      ` : ''}
+                    </div>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
           </div>
         ` : ''}
         
@@ -1635,6 +1727,259 @@ function generateEnhancedCSS(branding: any): string {
     .light-theme ::-webkit-scrollbar-thumb:hover {
       background: rgba(0, 0, 0, 0.3);
     }
+
+    /* Time Estimate Styles */
+    .step-time {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 12px;
+      background: rgba(255, 193, 7, 0.1);
+      border: 1px solid rgba(255, 193, 7, 0.3);
+      border-radius: 8px;
+      font-size: 13px;
+      color: var(--warning-color);
+      margin-top: 12px;
+      max-width: max-content;
+    }
+
+    .time-icon {
+      width: 14px;
+      height: 14px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 2;
+    }
+
+    /* Key Takeaway Styles */
+    .key-takeaway {
+      background: linear-gradient(135deg, rgba(76, 175, 80, 0.1), rgba(46, 125, 50, 0.1));
+      border: 1px solid rgba(76, 175, 80, 0.3);
+      border-radius: 12px;
+      padding: 16px;
+      margin: 20px 0;
+    }
+
+    .takeaway-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .takeaway-header h4 {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--success-color);
+      margin: 0;
+    }
+
+    .takeaway-icon {
+      width: 16px;
+      height: 16px;
+      stroke: var(--success-color);
+      fill: none;
+      stroke-width: 2;
+    }
+
+    .key-takeaway p {
+      margin: 0;
+      font-size: 14px;
+      line-height: 1.5;
+      color: var(--success-color);
+      font-weight: 500;
+    }
+
+    /* Quiz Section Styles */
+    .quiz-section {
+      background: linear-gradient(135deg, rgba(0, 122, 255, 0.05), rgba(88, 86, 214, 0.05));
+      border: 1px solid rgba(0, 122, 255, 0.2);
+      border-radius: 12px;
+      padding: 20px;
+      margin: 24px 0;
+    }
+
+    .quiz-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 20px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid rgba(0, 122, 255, 0.2);
+    }
+
+    .quiz-header h4 {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--primary-color);
+      margin: 0;
+    }
+
+    .quiz-icon {
+      width: 18px;
+      height: 18px;
+      stroke: var(--primary-color);
+      fill: none;
+      stroke-width: 2;
+    }
+
+    .quiz-questions {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .quiz-question {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      padding: 16px;
+    }
+
+    .light-theme .quiz-question {
+      background: rgba(0, 0, 0, 0.02);
+      border-color: rgba(0, 0, 0, 0.1);
+    }
+
+    .question-text {
+      margin-bottom: 16px;
+    }
+
+    .question-number {
+      font-weight: 600;
+      color: var(--primary-color);
+      margin-right: 8px;
+    }
+
+    .question-content {
+      font-size: 15px;
+      line-height: 1.5;
+    }
+
+    .quiz-options {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .quiz-option {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      cursor: pointer;
+      padding: 8px;
+      border-radius: 6px;
+      transition: background-color 0.2s ease;
+    }
+
+    .quiz-option:hover {
+      background: rgba(0, 122, 255, 0.1);
+    }
+
+    .quiz-option input[type="radio"] {
+      margin-top: 2px;
+      cursor: pointer;
+    }
+
+    .option-text {
+      font-size: 14px;
+      line-height: 1.4;
+      cursor: pointer;
+    }
+
+    .quiz-text-answer {
+      margin-bottom: 16px;
+    }
+
+    .quiz-textarea {
+      width: 100%;
+      min-height: 80px;
+      padding: 12px;
+      border: 1px solid var(--border-dark);
+      border-radius: 6px;
+      background: transparent;
+      color: currentColor;
+      font-size: 14px;
+      font-family: inherit;
+      resize: vertical;
+      outline: none;
+    }
+
+    .light-theme .quiz-textarea {
+      border-color: var(--border-light);
+    }
+
+    .quiz-textarea:focus {
+      border-color: var(--primary-color);
+    }
+
+    .quiz-actions {
+      margin-bottom: 12px;
+    }
+
+    .quiz-submit-btn {
+      background: var(--primary-color);
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+    }
+
+    .quiz-submit-btn:hover {
+      background: #0056b3;
+    }
+
+    .quiz-submit-btn:disabled {
+      background: rgba(255, 255, 255, 0.2);
+      cursor: not-allowed;
+    }
+
+    .quiz-feedback {
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 6px;
+      padding: 12px;
+      margin-top: 12px;
+    }
+
+    .light-theme .quiz-feedback {
+      background: rgba(0, 0, 0, 0.03);
+    }
+
+    .quiz-feedback.correct {
+      background: rgba(76, 175, 80, 0.1);
+      border: 1px solid rgba(76, 175, 80, 0.3);
+      color: var(--success-color);
+    }
+
+    .quiz-feedback.incorrect {
+      background: rgba(255, 59, 48, 0.1);
+      border: 1px solid rgba(255, 59, 48, 0.3);
+      color: var(--error-color);
+    }
+
+    .feedback-content {
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .feedback-text {
+      font-weight: 500;
+      margin-bottom: 8px;
+    }
+
+    .explanation {
+      font-size: 13px;
+      opacity: 0.9;
+    }
+
+    .explanation strong {
+      font-weight: 600;
+    }
   `;
 }
 
@@ -1666,6 +2011,7 @@ function generateEnhancedJavaScript(
         ${lmsFeatures.enableBookmarks ? 'this.initializeBookmarks();' : ''}
         ${lmsFeatures.enableSearch ? 'this.initializeSearch();' : ''}
         this.initializeTheme();
+        this.initializeQuizzes();
         
         // Start time tracking
         this.startTimeTracking();
@@ -2141,6 +2487,159 @@ function generateEnhancedJavaScript(
       }
       ` : ''}
       
+      // Quiz Functionality
+      initializeQuizzes() {
+        // Initialize quiz interactions
+        document.querySelectorAll('.quiz-submit-btn').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            const questionId = btn.dataset.question;
+            const correctAnswer = btn.dataset.answer;
+            this.checkQuizAnswer(questionId, correctAnswer);
+          });
+        });
+        
+        // Initialize quiz option clicks for better UX
+        document.querySelectorAll('.quiz-option input').forEach(input => {
+          input.addEventListener('change', () => {
+            // Enable submit button when an option is selected
+            const questionId = input.dataset.question;
+            const submitBtn = document.querySelector(\`.quiz-submit-btn[data-question="\${questionId}"]\`);
+            if (submitBtn) {
+              submitBtn.disabled = false;
+            }
+          });
+        });
+        
+        // Initialize text answer inputs
+        document.querySelectorAll('.quiz-textarea').forEach(textarea => {
+          textarea.addEventListener('input', () => {
+            const questionId = textarea.dataset.question;
+            const submitBtn = document.querySelector(\`.quiz-submit-btn[data-question="\${questionId}"]\`);
+            if (submitBtn) {
+              submitBtn.disabled = textarea.value.trim().length === 0;
+            }
+          });
+        });
+      }
+      
+      checkQuizAnswer(questionId, correctAnswer) {
+        const question = document.querySelector(\`.quiz-question[data-question-id="\${questionId}"]\`);
+        if (!question) return;
+        
+        const feedbackElement = document.getElementById(\`feedback-\${questionId}\`);
+        const submitBtn = question.querySelector('.quiz-submit-btn');
+        
+        // Get user's answer
+        let userAnswer = '';
+        const radioInputs = question.querySelectorAll('input[type="radio"]');
+        const textArea = question.querySelector('.quiz-textarea');
+        
+        if (radioInputs.length > 0) {
+          // Multiple choice or true/false
+          const checkedInput = question.querySelector('input[type="radio"]:checked');
+          if (checkedInput) {
+            userAnswer = checkedInput.value;
+          } else {
+            // No answer selected
+            this.showQuizFeedback(feedbackElement, false, 'Please select an answer first.');
+            return;
+          }
+        } else if (textArea) {
+          // Short answer
+          userAnswer = textArea.value.trim();
+          if (!userAnswer) {
+            this.showQuizFeedback(feedbackElement, false, 'Please provide an answer.');
+            return;
+          }
+        }
+        
+        // Check if answer is correct
+        const isCorrect = this.compareAnswers(userAnswer, correctAnswer);
+        
+        // Show feedback
+        const feedbackText = isCorrect 
+          ? '✅ Correct! Well done.' 
+          : \`❌ Incorrect. The correct answer is: \${correctAnswer}\`;
+        
+        this.showQuizFeedback(feedbackElement, isCorrect, feedbackText);
+        
+        // Disable submit button after answering
+        submitBtn.disabled = true;
+        submitBtn.textContent = isCorrect ? 'Correct!' : 'Try Again';
+        
+        // Disable all inputs for this question
+        question.querySelectorAll('input, textarea').forEach(input => {
+          input.disabled = true;
+        });
+        
+        // Track quiz completion for progress
+        this.trackQuizCompletion(question.dataset.step, questionId, isCorrect);
+      }
+      
+      compareAnswers(userAnswer, correctAnswer) {
+        // Normalize answers for comparison
+        const normalize = (str) => str.toLowerCase().trim();
+        
+        const normalizedUser = normalize(userAnswer);
+        const normalizedCorrect = normalize(correctAnswer);
+        
+        // Exact match
+        if (normalizedUser === normalizedCorrect) return true;
+        
+        // For short answers, check if the key concepts are present
+        if (normalizedCorrect.length > 10) {
+          // Split correct answer into key terms
+          const keyTerms = normalizedCorrect.split(/[\\s,]+/).filter(term => term.length > 2);
+          const matchedTerms = keyTerms.filter(term => normalizedUser.includes(term));
+          
+          // If most key terms are present, consider it correct
+          return matchedTerms.length >= Math.ceil(keyTerms.length * 0.6);
+        }
+        
+        return false;
+      }
+      
+      showQuizFeedback(feedbackElement, isCorrect, message) {
+        if (!feedbackElement) return;
+        
+        const feedbackContent = feedbackElement.querySelector('.feedback-text');
+        if (feedbackContent) {
+          feedbackContent.textContent = message;
+        }
+        
+        // Apply styling based on correctness
+        feedbackElement.className = \`quiz-feedback \${isCorrect ? 'correct' : 'incorrect'}\`;
+        feedbackElement.style.display = 'block';
+        
+        // Scroll feedback into view
+        feedbackElement.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+      
+      trackQuizCompletion(stepNumber, questionId, isCorrect) {
+        // Track individual quiz question results
+        if (!this.quizResults) this.quizResults = new Map();
+        
+        const stepResults = this.quizResults.get(stepNumber) || new Map();
+        stepResults.set(questionId, { isCorrect, timestamp: Date.now() });
+        this.quizResults.set(stepNumber, stepResults);
+        
+        // Save progress
+        this.saveProgress();
+        
+        // Check if all quizzes in this step are completed
+        const stepElement = document.getElementById(\`step-\${stepNumber}\`);
+        if (stepElement) {
+          const totalQuestions = stepElement.querySelectorAll('.quiz-question').length;
+          const completedQuestions = stepElement.querySelectorAll('.quiz-submit-btn:disabled').length;
+          
+          if (totalQuestions > 0 && completedQuestions === totalQuestions) {
+            // All questions in this step are completed
+            this.markStepCompleted(parseInt(stepNumber));
+          }
+        }
+      }
+      
       // Panel Management
       togglePanel(panelId) {
         const panel = document.getElementById(panelId);
@@ -2204,6 +2703,11 @@ function generateEnhancedJavaScript(
           completedSteps: Array.from(this.completedSteps),
           bookmarkedSteps: Array.from(this.bookmarkedSteps),
           userNotes: Object.fromEntries(this.userNotes),
+          quizResults: this.quizResults ? Object.fromEntries(
+            Array.from(this.quizResults.entries()).map(([stepNum, stepResults]) => [
+              stepNum, Object.fromEntries(stepResults)
+            ])
+          ) : {},
           currentStep: this.currentStep,
           timeSpent: this.timeSpent,
           lastAccessed: Date.now()
@@ -2224,6 +2728,14 @@ function generateEnhancedJavaScript(
           this.userNotes = new Map(Object.entries(data.userNotes || {}));
           this.currentStep = data.currentStep || 1;
           this.timeSpent = data.timeSpent || 0;
+          
+          // Load quiz results
+          if (data.quizResults) {
+            this.quizResults = new Map();
+            Object.entries(data.quizResults).forEach(([stepNum, stepResults]) => {
+              this.quizResults.set(stepNum, new Map(Object.entries(stepResults)));
+            });
+          }
           
           // Apply saved state to UI
           setTimeout(() => {
