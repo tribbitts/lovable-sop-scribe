@@ -102,8 +102,64 @@ export function generateEnhancedHtmlTemplate(
         ` : ''}
       </div>
       
-      <div class="content-body">
-        ${stepsHtml}
+      <!-- Carousel Navigation -->
+      <div class="carousel-controls">
+        <div class="carousel-nav">
+          <button class="carousel-btn prev-btn" id="prev-btn" disabled>
+            <svg viewBox="0 0 24 24" class="nav-arrow">
+              <path d="M15 18l-6-6 6-6"/>
+            </svg>
+            Previous
+          </button>
+          
+          <div class="step-indicator">
+            <span class="current-step">1</span> of <span class="total-steps">${processedSteps.length}</span>
+          </div>
+          
+          <button class="carousel-btn next-btn" id="next-btn" ${processedSteps.length <= 1 ? 'disabled' : ''}>
+            Next
+            <svg viewBox="0 0 24 24" class="nav-arrow">
+              <path d="M9 18l6-6-6-6"/>
+            </svg>
+          </button>
+        </div>
+        
+        <!-- Step dots -->
+        <div class="step-dots">
+          ${processedSteps.map((_, index) => `
+            <button class="step-dot ${index === 0 ? 'active' : ''}" data-step="${index + 1}">
+              ${index + 1}
+            </button>
+          `).join('')}
+        </div>
+      </div>
+      
+      <!-- Carousel Container -->
+      <div class="carousel-container">
+        <div class="carousel-track" id="carousel-track">
+          ${stepsHtml}
+        </div>
+        
+        <!-- Step Completion Panel -->
+        <div class="completion-panel" id="completion-panel">
+          <div class="completion-content">
+            <div class="completion-icon">
+              <svg viewBox="0 0 24 24" class="check-icon">
+                <path d="M20 6L9 17l-5-5"/>
+              </svg>
+            </div>
+            <h3 class="completion-title">Step Completed!</h3>
+            <p class="completion-message">Great job! Ready to move to the next step?</p>
+            <div class="completion-actions">
+              <button class="completion-btn review-btn" id="review-btn">
+                Review Step
+              </button>
+              <button class="completion-btn continue-btn" id="continue-btn">
+                Continue to Next
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   `;
@@ -257,7 +313,7 @@ function generateEnhancedStepHtml(step: any, index: number, lmsFeatures: any): s
   const stepNumber = index + 1;
   
   return `
-    <div class="training-step" id="step-${stepNumber}" data-step="${stepNumber}">
+    <div class="training-step carousel-slide ${index === 0 ? 'active' : ''}" id="step-${stepNumber}" data-step="${stepNumber}">
       <div class="step-header">
         <div class="step-meta">
           <span class="step-number">${stepNumber}</span>
@@ -350,7 +406,7 @@ function generateEnhancedStepHtml(step: any, index: number, lmsFeatures: any): s
                     <span class="question-content">${question.question}</span>
                   </div>
                   
-                  ${question.type === 'multiple-choice' && question.options ? `
+                  ${question.type === 'multiple-choice' ? `
                     <div class="quiz-options">
                       ${question.options.map((option: string, optIndex: number) => option.trim() ? `
                         <label class="quiz-option">
@@ -436,6 +492,16 @@ function generateEnhancedStepHtml(step: any, index: number, lmsFeatures: any): s
             ></textarea>
           </div>
         ` : ''}
+      </div>
+      
+      <!-- Step Completion Button -->
+      <div class="step-footer">
+        <button class="complete-step-btn" data-step="${stepNumber}">
+          <svg class="complete-icon" viewBox="0 0 24 24">
+            <path d="M20 6L9 17l-5-5"/>
+          </svg>
+          Mark Step Complete
+        </button>
       </div>
     </div>
   `;
@@ -918,7 +984,7 @@ function generateEnhancedCSS(branding: any): string {
     }
 
     .content-header {
-      padding: 40px;
+      padding: 30px 40px;
       border-bottom: 1px solid var(--border-dark);
       background: var(--surface-dark);
     }
@@ -929,14 +995,14 @@ function generateEnhancedCSS(branding: any): string {
     }
 
     .training-title {
-      font-size: 32px;
+      font-size: 28px;
       font-weight: 700;
       margin-bottom: 8px;
       line-height: 1.2;
     }
 
     .training-topic {
-      font-size: 18px;
+      font-size: 16px;
       opacity: 0.7;
       margin-bottom: 16px;
     }
@@ -944,7 +1010,7 @@ function generateEnhancedCSS(branding: any): string {
     .training-meta {
       display: flex;
       gap: 20px;
-      margin-bottom: 30px;
+      margin-bottom: 24px;
       font-size: 14px;
       opacity: 0.8;
     }
@@ -952,14 +1018,14 @@ function generateEnhancedCSS(branding: any): string {
     .progress-dashboard {
       display: flex;
       align-items: center;
-      gap: 30px;
+      gap: 24px;
       flex-wrap: wrap;
     }
 
     .progress-ring {
       position: relative;
-      width: 120px;
-      height: 120px;
+      width: 100px;
+      height: 100px;
     }
 
     .progress-circle {
@@ -971,7 +1037,7 @@ function generateEnhancedCSS(branding: any): string {
     .progress-track {
       fill: none;
       stroke: rgba(255, 255, 255, 0.1);
-      stroke-width: 8;
+      stroke-width: 6;
     }
 
     .light-theme .progress-track {
@@ -981,7 +1047,7 @@ function generateEnhancedCSS(branding: any): string {
     .progress-fill {
       fill: none;
       stroke: var(--primary-color);
-      stroke-width: 8;
+      stroke-width: 6;
       stroke-linecap: round;
       stroke-dasharray: 314;
       stroke-dashoffset: 314;
@@ -998,19 +1064,19 @@ function generateEnhancedCSS(branding: any): string {
 
     .progress-percentage {
       display: block;
-      font-size: 24px;
+      font-size: 20px;
       font-weight: 700;
       color: var(--primary-color);
     }
 
     .progress-label {
-      font-size: 12px;
+      font-size: 11px;
       opacity: 0.7;
     }
 
     .progress-stats {
       display: flex;
-      gap: 30px;
+      gap: 20px;
     }
 
     .stat {
@@ -1019,44 +1085,154 @@ function generateEnhancedCSS(branding: any): string {
 
     .stat-number {
       display: block;
-      font-size: 20px;
+      font-size: 18px;
       font-weight: 700;
       color: var(--primary-color);
       margin-bottom: 4px;
     }
 
     .stat-label {
-      font-size: 12px;
+      font-size: 11px;
       opacity: 0.7;
     }
 
-    .content-body {
-      padding: 40px;
+    /* Carousel Layout */
+    .carousel-controls {
+      padding: 20px 40px;
+      background: var(--surface-dark);
+      border-bottom: 1px solid var(--border-dark);
     }
 
-    /* Training Steps */
-    .training-step {
+    .light-theme .carousel-controls {
+      background: var(--surface-light);
+      border-bottom-color: var(--border-light);
+    }
+
+    .carousel-nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+
+    .carousel-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 20px;
+      background: var(--primary-color);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .carousel-btn:hover:not(:disabled) {
+      background: var(--primary-color);
+      opacity: 0.9;
+      transform: translateY(-1px);
+    }
+
+    .carousel-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .nav-arrow {
+      width: 16px;
+      height: 16px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 2;
+    }
+
+    .step-indicator {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--primary-color);
+    }
+
+    .step-dots {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+    }
+
+    .step-dot {
+      width: 40px;
+      height: 40px;
+      border: 2px solid var(--border-dark);
+      background: transparent;
+      border-radius: 50%;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      color: currentColor;
+    }
+
+    .light-theme .step-dot {
+      border-color: var(--border-light);
+    }
+
+    .step-dot:hover {
+      border-color: var(--primary-color);
+      color: var(--primary-color);
+    }
+
+    .step-dot.active {
+      background: var(--primary-color);
+      border-color: var(--primary-color);
+      color: white;
+    }
+
+    .step-dot.completed {
+      background: var(--success-color);
+      border-color: var(--success-color);
+      color: white;
+    }
+
+    .carousel-container {
+      position: relative;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 40px;
+      overflow: hidden;
+    }
+
+    .carousel-track {
+      display: flex;
+      transition: transform 0.4s ease;
+    }
+
+    /* Training Steps - Carousel Layout */
+    .training-step.carousel-slide {
+      min-width: 100%;
       background: var(--surface-dark);
       border-radius: 16px;
-      margin-bottom: 30px;
-      overflow: hidden;
       border: 1px solid var(--border-dark);
       transition: all 0.3s ease;
+      opacity: 0;
+      pointer-events: none;
     }
 
-    .light-theme .training-step {
+    .training-step.carousel-slide.active {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    .light-theme .training-step.carousel-slide {
       background: var(--surface-light);
       border-color: var(--border-light);
     }
 
-    .training-step.completed {
+    .training-step.carousel-slide.completed {
       border-color: var(--success-color);
       background: rgba(76, 175, 80, 0.05);
-    }
-
-    .training-step.active {
-      border-color: var(--primary-color);
-      box-shadow: 0 0 0 2px rgba(0, 122, 255, 0.2);
     }
 
     .step-header {
@@ -1089,7 +1265,7 @@ function generateEnhancedCSS(branding: any): string {
       flex-shrink: 0;
     }
 
-    .training-step.completed .step-number {
+    .training-step.carousel-slide.completed .step-number {
       background: var(--success-color);
     }
 
@@ -1097,9 +1273,171 @@ function generateEnhancedCSS(branding: any): string {
       flex: 1;
       font-size: 20px;
       font-weight: 600;
-      line-height: 1.3;
+    }
+    
+    /* Step Footer with Completion Button */
+    .step-footer {
+      padding: 24px;
+      text-align: center;
+      border-top: 1px solid var(--border-dark);
     }
 
+    .light-theme .step-footer {
+      border-top-color: var(--border-light);
+    }
+
+    .complete-step-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      padding: 16px 32px;
+      background: var(--success-color);
+      color: white;
+      border: none;
+      border-radius: 50px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+    }
+
+    .complete-step-btn:hover {
+      background: #45a049;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(76, 175, 80, 0.4);
+    }
+
+    .complete-step-btn.completed {
+      background: #45a049;
+      pointer-events: none;
+    }
+
+    .complete-step-btn.completed::before {
+      content: "✓ ";
+      font-weight: bold;
+    }
+
+    .complete-icon {
+      width: 20px;
+      height: 20px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 3;
+    }
+
+    /* Completion Panel */
+    .completion-panel {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(10px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+
+    .completion-panel.show {
+      display: flex;
+    }
+
+    .completion-content {
+      background: var(--surface-dark);
+      border-radius: 20px;
+      padding: 40px;
+      text-align: center;
+      max-width: 400px;
+      width: 90%;
+      border: 1px solid var(--border-dark);
+    }
+
+    .light-theme .completion-content {
+      background: var(--surface-light);
+      border-color: var(--border-light);
+    }
+
+    .completion-icon {
+      width: 80px;
+      height: 80px;
+      background: var(--success-color);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 20px;
+    }
+
+    .check-icon {
+      width: 40px;
+      height: 40px;
+      stroke: white;
+      fill: none;
+      stroke-width: 3;
+    }
+
+    .completion-title {
+      font-size: 24px;
+      font-weight: 700;
+      margin-bottom: 12px;
+      color: var(--success-color);
+    }
+
+    .completion-message {
+      font-size: 16px;
+      opacity: 0.8;
+      margin-bottom: 30px;
+      line-height: 1.5;
+    }
+
+    .completion-actions {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+    }
+
+    .completion-btn {
+      padding: 12px 24px;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .review-btn {
+      background: transparent;
+      color: currentColor;
+      border: 1px solid var(--border-dark);
+    }
+
+    .light-theme .review-btn {
+      border-color: var(--border-light);
+    }
+
+    .review-btn:hover {
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .light-theme .review-btn:hover {
+      background: rgba(0, 0, 0, 0.05);
+    }
+
+    .continue-btn {
+      background: var(--primary-color);
+      color: white;
+    }
+
+    .continue-btn:hover {
+      opacity: 0.9;
+      transform: translateY(-1px);
+    }
+
+    /* Step Content Styles */
     .step-actions {
       display: flex;
       gap: 8px;
@@ -1248,484 +1586,6 @@ function generateEnhancedCSS(branding: any): string {
       display: block;
       font-size: 14px;
       opacity: 0.7;
-    }
-
-    .user-notes {
-      margin-top: 24px;
-      padding: 20px;
-      background: rgba(255, 255, 255, 0.03);
-      border-radius: 12px;
-      border: 1px solid var(--border-dark);
-    }
-
-    .light-theme .user-notes {
-      background: rgba(0, 0, 0, 0.02);
-      border-color: var(--border-light);
-    }
-
-    .notes-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 12px;
-    }
-
-    .notes-header h4 {
-      font-size: 14px;
-      font-weight: 600;
-      opacity: 0.8;
-    }
-
-    .notes-save {
-      padding: 6px 12px;
-      background: var(--primary-color);
-      color: white;
-      border: none;
-      border-radius: 6px;
-      font-size: 12px;
-      cursor: pointer;
-      transition: all 0.2s ease;
-    }
-
-    .notes-save:hover {
-      background: #0056CC;
-    }
-
-    .notes-textarea {
-      width: 100%;
-      min-height: 80px;
-      padding: 12px;
-      border: 1px solid var(--border-dark);
-      border-radius: 8px;
-      background: transparent;
-      color: currentColor;
-      font-family: inherit;
-      resize: vertical;
-      outline: none;
-    }
-
-    .light-theme .notes-textarea {
-      border-color: var(--border-light);
-    }
-
-    .notes-textarea:focus {
-      border-color: var(--primary-color);
-    }
-
-    /* Panels */
-    .panel {
-      position: fixed;
-      top: 0;
-      right: 0;
-      width: var(--panel-width);
-      height: 100vh;
-      background: var(--surface-dark);
-      border-left: 1px solid var(--border-dark);
-      z-index: 200;
-      display: flex;
-      flex-direction: column;
-      transform: translateX(100%);
-      transition: transform 0.3s ease;
-    }
-
-    .light-theme .panel {
-      background: var(--surface-light);
-      border-left-color: var(--border-light);
-    }
-
-    .panel.open {
-      transform: translateX(0);
-    }
-
-    .panel-header {
-      padding: 20px;
-      border-bottom: 1px solid var(--border-dark);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    .light-theme .panel-header {
-      border-bottom-color: var(--border-light);
-    }
-
-    .panel-header h3 {
-      font-size: 18px;
-      font-weight: 600;
-    }
-
-    .panel-actions {
-      display: flex;
-      gap: 8px;
-    }
-
-    .panel-btn {
-      width: 36px;
-      height: 36px;
-      border: none;
-      background: transparent;
-      border-radius: 8px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      color: currentColor;
-    }
-
-    .panel-btn:hover {
-      background: rgba(255, 255, 255, 0.1);
-    }
-
-    .light-theme .panel-btn:hover {
-      background: rgba(0, 0, 0, 0.05);
-    }
-
-    .panel-btn svg {
-      width: 16px;
-      height: 16px;
-      stroke: currentColor;
-      fill: none;
-      stroke-width: 2;
-    }
-
-    .panel-content {
-      flex: 1;
-      padding: 20px;
-      overflow-y: auto;
-    }
-
-    .empty-state {
-      text-align: center;
-      padding: 40px 20px;
-      opacity: 0.6;
-    }
-
-    .empty-state p {
-      font-size: 14px;
-      line-height: 1.5;
-    }
-
-    /* Search Panel Specific */
-    .search-input-group {
-      position: relative;
-      margin-bottom: 20px;
-    }
-
-    .search-input {
-      width: 100%;
-      padding: 12px 16px;
-      padding-right: 40px;
-      border: 1px solid var(--border-dark);
-      border-radius: 8px;
-      background: transparent;
-      color: currentColor;
-      font-size: 14px;
-      outline: none;
-    }
-
-    .light-theme .search-input {
-      border-color: var(--border-light);
-    }
-
-    .search-input:focus {
-      border-color: var(--primary-color);
-    }
-
-    .search-clear {
-      position: absolute;
-      right: 8px;
-      top: 50%;
-      transform: translateY(-50%);
-      width: 24px;
-      height: 24px;
-      border: none;
-      background: transparent;
-      cursor: pointer;
-      border-radius: 4px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      opacity: 0.6;
-    }
-
-    .search-clear:hover {
-      opacity: 1;
-      background: rgba(255, 255, 255, 0.1);
-    }
-
-    .light-theme .search-clear:hover {
-      background: rgba(0, 0, 0, 0.05);
-    }
-
-    .search-clear svg {
-      width: 12px;
-      height: 12px;
-      stroke: currentColor;
-      fill: none;
-      stroke-width: 2;
-    }
-
-    .search-results {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-
-    .search-result {
-      padding: 12px;
-      background: rgba(255, 255, 255, 0.05);
-      border-radius: 8px;
-      cursor: pointer;
-      transition: all 0.2s ease;
-    }
-
-    .light-theme .search-result {
-      background: rgba(0, 0, 0, 0.03);
-    }
-
-    .search-result:hover {
-      background: var(--primary-color);
-      color: white;
-    }
-
-    .search-result-title {
-      font-size: 14px;
-      font-weight: 500;
-      margin-bottom: 4px;
-    }
-
-    .search-result-snippet {
-      font-size: 12px;
-      opacity: 0.7;
-      line-height: 1.4;
-    }
-
-    .search-highlight {
-      background: rgba(255, 255, 0, 0.3);
-      padding: 1px 2px;
-      border-radius: 2px;
-    }
-
-    /* Notes List */
-    .notes-list {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-
-    .note-item {
-      padding: 12px;
-      background: rgba(255, 255, 255, 0.05);
-      border-radius: 8px;
-      border-left: 3px solid var(--primary-color);
-    }
-
-    .light-theme .note-item {
-      background: rgba(0, 0, 0, 0.03);
-    }
-
-    .note-header {
-      font-size: 12px;
-      opacity: 0.7;
-      margin-bottom: 6px;
-    }
-
-    .note-content {
-      font-size: 14px;
-      line-height: 1.4;
-    }
-
-    /* Bookmarks List */
-    .bookmarks-list {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .bookmark-item {
-      padding: 12px;
-      background: rgba(255, 255, 255, 0.05);
-      border-radius: 8px;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .light-theme .bookmark-item {
-      background: rgba(0, 0, 0, 0.03);
-    }
-
-    .bookmark-item:hover {
-      background: var(--primary-color);
-      color: white;
-    }
-
-    .bookmark-number {
-      width: 24px;
-      height: 24px;
-      background: var(--primary-color);
-      color: white;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 12px;
-      font-weight: 600;
-      flex-shrink: 0;
-    }
-
-    .bookmark-title {
-      flex: 1;
-      font-size: 14px;
-      font-weight: 500;
-    }
-
-    /* Responsive Design */
-    @media (max-width: 1024px) {
-      :root {
-        --sidebar-width: 280px;
-        --panel-width: 320px;
-      }
-    }
-
-    @media (max-width: 768px) {
-      :root {
-        --sidebar-width: 100%;
-        --panel-width: 100%;
-      }
-
-      .sidebar {
-        transform: translateX(-100%);
-        transition: transform 0.3s ease;
-      }
-
-      .sidebar.open {
-        transform: translateX(0);
-      }
-
-      .main-content {
-        margin-left: 0;
-      }
-
-      .content-header {
-        padding: 20px;
-      }
-
-      .content-body {
-        padding: 20px;
-      }
-
-      .progress-dashboard {
-        flex-direction: column;
-        align-items: flex-start;
-      }
-
-      .progress-stats {
-        gap: 20px;
-      }
-
-      .training-step {
-        margin-bottom: 20px;
-      }
-
-      .step-header {
-        padding: 16px;
-      }
-
-      .step-content {
-        padding: 16px;
-      }
-
-      .step-meta {
-        flex-direction: column;
-        gap: 12px;
-      }
-
-      .step-actions {
-        align-self: flex-start;
-      }
-    }
-
-    /* Print Styles */
-    @media print {
-      .sidebar,
-      .panel {
-        display: none !important;
-      }
-
-      .main-content {
-        margin-left: 0;
-      }
-
-      .training-step {
-        break-inside: avoid;
-        margin-bottom: 20px;
-      }
-
-      .step-image {
-        max-height: 400px;
-        object-fit: contain;
-      }
-    }
-
-    /* Animations */
-    @keyframes fadeIn {
-      from {
-        opacity: 0;
-        transform: translateY(20px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
-    @keyframes slideIn {
-      from {
-        transform: translateX(20px);
-        opacity: 0;
-      }
-      to {
-        transform: translateX(0);
-        opacity: 1;
-      }
-    }
-
-    .fade-in {
-      animation: fadeIn 0.5s ease;
-    }
-
-    .slide-in {
-      animation: slideIn 0.3s ease;
-    }
-
-    /* Scrollbar Styling */
-    ::-webkit-scrollbar {
-      width: 8px;
-    }
-
-    ::-webkit-scrollbar-track {
-      background: transparent;
-    }
-
-    ::-webkit-scrollbar-thumb {
-      background: rgba(255, 255, 255, 0.2);
-      border-radius: 4px;
-    }
-
-    .light-theme ::-webkit-scrollbar-thumb {
-      background: rgba(0, 0, 0, 0.2);
-    }
-
-    ::-webkit-scrollbar-thumb:hover {
-      background: rgba(255, 255, 255, 0.3);
-    }
-
-    .light-theme ::-webkit-scrollbar-thumb:hover {
-      background: rgba(0, 0, 0, 0.3);
     }
 
     /* Time Estimate Styles */
@@ -1980,6 +1840,134 @@ function generateEnhancedCSS(branding: any): string {
     .explanation strong {
       font-weight: 600;
     }
+
+    /* Responsive Design - Optimized for 1080p */
+    @media (max-width: 1200px) {
+      .carousel-container {
+        max-width: 900px;
+        padding: 30px;
+      }
+      
+      .content-header {
+        padding: 25px 30px;
+      }
+      
+      .carousel-controls {
+        padding: 15px 30px;
+      }
+    }
+
+    @media (max-width: 1024px) {
+      :root {
+        --sidebar-width: 280px;
+      }
+      
+      .training-title {
+        font-size: 24px;
+      }
+      
+      .carousel-container {
+        padding: 20px;
+      }
+    }
+
+    @media (max-width: 768px) {
+      :root {
+        --sidebar-width: 100%;
+      }
+      
+      .sidebar {
+        transform: translateX(-100%);
+        transition: transform 0.3s ease;
+      }
+
+      .sidebar.open {
+        transform: translateX(0);
+      }
+
+      .main-content {
+        margin-left: 0;
+      }
+
+      .content-header {
+        padding: 20px;
+      }
+
+      .carousel-controls {
+        padding: 15px 20px;
+      }
+
+      .carousel-container {
+        padding: 15px;
+      }
+
+      .step-content {
+        padding: 20px;
+      }
+
+      .step-header {
+        padding: 20px;
+      }
+
+      .step-footer {
+        padding: 20px;
+      }
+
+      .step-meta {
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .step-actions {
+        align-self: flex-start;
+      }
+
+      .carousel-nav {
+        flex-direction: column;
+        gap: 15px;
+        margin-bottom: 15px;
+      }
+
+      .step-dots {
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+
+      .step-dot {
+        width: 32px;
+        height: 32px;
+        font-size: 12px;
+      }
+    }
+
+    /* Print Styles */
+    @media print {
+      .sidebar,
+      .carousel-controls,
+      .completion-panel {
+        display: none !important;
+      }
+
+      .main-content {
+        margin-left: 0;
+      }
+
+      .training-step.carousel-slide {
+        opacity: 1 !important;
+        pointer-events: all !important;
+        page-break-inside: avoid;
+        margin-bottom: 30px;
+      }
+
+      .step-footer {
+        display: none;
+      }
+
+      .step-image {
+        max-height: 400px;
+        object-fit: contain;
+      }
+    }
   `;
 }
 
@@ -2077,13 +2065,24 @@ function generateEnhancedJavaScript(
           });
         });
         
-        // Step completion buttons
+        // Step completion buttons (small ones in header)
         document.querySelectorAll('.complete-btn').forEach(btn => {
           btn.addEventListener('click', () => {
             const stepNumber = parseInt(btn.dataset.step);
             this.toggleStepCompletion(stepNumber);
           });
         });
+        
+        // Step completion buttons (large ones in footer)
+        document.querySelectorAll('.complete-step-btn').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const stepNumber = parseInt(btn.dataset.step);
+            this.markStepCompleted(stepNumber);
+          });
+        });
+        
+        // Carousel navigation
+        this.initializeCarousel();
         
         // Panel controls
         document.querySelectorAll('.control-btn').forEach(btn => {
@@ -2106,40 +2105,189 @@ function generateEnhancedJavaScript(
         });
       }
       
+      // Carousel functionality
+      initializeCarousel() {
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const stepDots = document.querySelectorAll('.step-dot');
+        const completionPanel = document.getElementById('completion-panel');
+        const reviewBtn = document.getElementById('review-btn');
+        const continueBtn = document.getElementById('continue-btn');
+        
+        // Previous/Next navigation
+        if (prevBtn) {
+          prevBtn.addEventListener('click', () => {
+            this.previousStep();
+          });
+        }
+        
+        if (nextBtn) {
+          nextBtn.addEventListener('click', () => {
+            this.nextStep();
+          });
+        }
+        
+        // Step dot navigation
+        stepDots.forEach(dot => {
+          dot.addEventListener('click', () => {
+            const stepNumber = parseInt(dot.dataset.step);
+            this.navigateToStep(stepNumber);
+          });
+        });
+        
+        // Completion panel interactions
+        if (reviewBtn) {
+          reviewBtn.addEventListener('click', () => {
+            this.hideCompletionPanel();
+          });
+        }
+        
+        if (continueBtn) {
+          continueBtn.addEventListener('click', () => {
+            this.hideCompletionPanel();
+            this.nextStep();
+          });
+        }
+        
+        // Initialize first step
+        this.updateCarouselDisplay();
+      }
+      
       navigateToStep(stepNumber) {
+        if (stepNumber < 1 || stepNumber > this.totalSteps) return;
+        
         // Update current step
         this.currentStep = stepNumber;
         
-        // Update navigation
-        document.querySelectorAll('.nav-item').forEach(item => {
-          item.classList.remove('active');
-        });
-        document.querySelector(\`[data-step="\${stepNumber}"]\`).classList.add('active');
+        // Update carousel display
+        this.updateCarouselDisplay();
         
-        // Scroll to step
-        const stepElement = document.getElementById(\`step-\${stepNumber}\`);
-        if (stepElement) {
-          stepElement.scrollIntoView({ 
-            behavior: 'smooth',
-            block: 'start',
-            inline: 'nearest'
-          });
-          
-          // Add highlight effect
-          stepElement.classList.add('active');
-          setTimeout(() => {
-            stepElement.classList.remove('active');
-          }, 2000);
-        }
+        // Update navigation
+        this.updateNavigationState();
         
         // Save current position
         this.saveProgress();
       }
       
+      nextStep() {
+        if (this.currentStep < this.totalSteps) {
+          this.navigateToStep(this.currentStep + 1);
+        }
+      }
+      
+      previousStep() {
+        if (this.currentStep > 1) {
+          this.navigateToStep(this.currentStep - 1);
+        }
+      }
+      
+      updateCarouselDisplay() {
+        // Update step visibility
+        document.querySelectorAll('.carousel-slide').forEach((slide, index) => {
+          if (index + 1 === this.currentStep) {
+            slide.classList.add('active');
+          } else {
+            slide.classList.remove('active');
+          }
+        });
+        
+        // Update step indicator
+        const currentStepSpan = document.querySelector('.current-step');
+        if (currentStepSpan) {
+          currentStepSpan.textContent = this.currentStep;
+        }
+        
+        // Update step dots
+        document.querySelectorAll('.step-dot').forEach((dot, index) => {
+          dot.classList.remove('active');
+          if (index + 1 === this.currentStep) {
+            dot.classList.add('active');
+          }
+          if (this.completedSteps.has(index + 1)) {
+            dot.classList.add('completed');
+          }
+        });
+        
+        // Update navigation buttons
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        
+        if (prevBtn) {
+          prevBtn.disabled = this.currentStep === 1;
+        }
+        
+        if (nextBtn) {
+          nextBtn.disabled = this.currentStep === this.totalSteps;
+        }
+        
+        // Scroll to top of content
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+      
+      updateNavigationState() {
+        // Update sidebar navigation
+        document.querySelectorAll('.nav-item').forEach(item => {
+          item.classList.remove('active');
+          const stepNumber = parseInt(item.dataset.step);
+          if (stepNumber === this.currentStep) {
+            item.classList.add('active');
+          }
+        });
+      }
+      
+      markStepCompleted(stepNumber) {
+        // Mark step as completed
+        this.completedSteps.add(stepNumber);
+        
+        // Update UI
+        this.updateStepCompletionUI(stepNumber);
+        this.updateProgress();
+        this.saveProgress();
+        
+        // Show completion panel
+        this.showCompletionPanel();
+      }
+      
+      showCompletionPanel() {
+        const completionPanel = document.getElementById('completion-panel');
+        if (completionPanel) {
+          completionPanel.classList.add('show');
+        }
+      }
+      
+      hideCompletionPanel() {
+        const completionPanel = document.getElementById('completion-panel');
+        if (completionPanel) {
+          completionPanel.classList.remove('show');
+        }
+      }
+      
+      updateStepCompletionUI(stepNumber) {
+        // Update step appearance
+        const stepElement = document.getElementById(\`step-\${stepNumber}\`);
+        const navItem = document.querySelector(\`.nav-item[data-step="\${stepNumber}"]\`);
+        const completeBtn = document.querySelector(\`.complete-btn[data-step="\${stepNumber}"]\`);
+        const completeStepBtn = document.querySelector(\`.complete-step-btn[data-step="\${stepNumber}"]\`);
+        
+        if (stepElement) stepElement.classList.add('completed');
+        if (navItem) navItem.classList.add('completed');
+        if (completeBtn) completeBtn.classList.add('active');
+        if (completeStepBtn) {
+          completeStepBtn.classList.add('completed');
+          completeStepBtn.innerHTML = \`
+            <svg class="complete-icon" viewBox="0 0 24 24">
+              <path d="M20 6L9 17l-5-5"/>
+            </svg>
+            Step Completed!
+          \`;
+        }
+      }
+
       toggleStepCompletion(stepNumber) {
         const stepElement = document.getElementById(\`step-\${stepNumber}\`);
         const navItem = document.querySelector(\`.nav-item[data-step="\${stepNumber}"]\`);
         const completeBtn = document.querySelector(\`.complete-btn[data-step="\${stepNumber}"]\`);
+        const completeStepBtn = document.querySelector(\`.complete-step-btn[data-step="\${stepNumber}"]\`);
         
         if (this.completedSteps.has(stepNumber)) {
           // Uncomplete
@@ -2147,12 +2295,18 @@ function generateEnhancedJavaScript(
           stepElement.classList.remove('completed');
           navItem.classList.remove('completed');
           completeBtn.classList.remove('active');
+          if (completeStepBtn) {
+            completeStepBtn.classList.remove('completed');
+            completeStepBtn.innerHTML = \`
+              <svg class="complete-icon" viewBox="0 0 24 24">
+                <path d="M20 6L9 17l-5-5"/>
+              </svg>
+              Mark Step Complete
+            \`;
+          }
         } else {
           // Complete
-          this.completedSteps.add(stepNumber);
-          stepElement.classList.add('completed');
-          navItem.classList.add('completed');
-          completeBtn.classList.add('active');
+          this.markStepCompleted(stepNumber);
         }
         
         this.updateProgress();
@@ -2308,6 +2462,18 @@ function generateEnhancedJavaScript(
         }
         
         notesList.innerHTML = notesHtml;
+      }
+      
+      loadNotes() {
+        try {
+          const savedNotes = localStorage.getItem('userNotes_' + location.pathname);
+          if (savedNotes) {
+            const notesData = JSON.parse(savedNotes);
+            this.userNotes = new Map(Object.entries(notesData).map(([k, v]) => [parseInt(k), v]));
+          }
+        } catch (error) {
+          console.warn('Could not load notes:', error);
+        }
       }
       ` : ''}
       
@@ -2489,160 +2655,69 @@ function generateEnhancedJavaScript(
       
       // Quiz Functionality
       initializeQuizzes() {
-        // Initialize quiz interactions
         document.querySelectorAll('.quiz-submit-btn').forEach(btn => {
           btn.addEventListener('click', (e) => {
-            e.preventDefault();
             const questionId = btn.dataset.question;
             const correctAnswer = btn.dataset.answer;
             this.checkQuizAnswer(questionId, correctAnswer);
           });
         });
-        
-        // Initialize quiz option clicks for better UX
-        document.querySelectorAll('.quiz-option input').forEach(input => {
-          input.addEventListener('change', () => {
-            // Enable submit button when an option is selected
-            const questionId = input.dataset.question;
-            const submitBtn = document.querySelector(\`.quiz-submit-btn[data-question="\${questionId}"]\`);
-            if (submitBtn) {
-              submitBtn.disabled = false;
-            }
-          });
-        });
-        
-        // Initialize text answer inputs
-        document.querySelectorAll('.quiz-textarea').forEach(textarea => {
-          textarea.addEventListener('input', () => {
-            const questionId = textarea.dataset.question;
-            const submitBtn = document.querySelector(\`.quiz-submit-btn[data-question="\${questionId}"]\`);
-            if (submitBtn) {
-              submitBtn.disabled = textarea.value.trim().length === 0;
-            }
-          });
-        });
       }
       
       checkQuizAnswer(questionId, correctAnswer) {
-        const question = document.querySelector(\`.quiz-question[data-question-id="\${questionId}"]\`);
-        if (!question) return;
+        const question = document.querySelector(\`[data-question-id="\${questionId}"]\`);
+        const feedback = document.getElementById(\`feedback-\${questionId}\`);
+        const submitBtn = document.querySelector(\`[data-question="\${questionId}"].quiz-submit-btn\`);
         
-        const feedbackElement = document.getElementById(\`feedback-\${questionId}\`);
-        const submitBtn = question.querySelector('.quiz-submit-btn');
-        
-        // Get user's answer
         let userAnswer = '';
-        const radioInputs = question.querySelectorAll('input[type="radio"]');
-        const textArea = question.querySelector('.quiz-textarea');
+        let isCorrect = false;
         
-        if (radioInputs.length > 0) {
-          // Multiple choice or true/false
-          const checkedInput = question.querySelector('input[type="radio"]:checked');
-          if (checkedInput) {
-            userAnswer = checkedInput.value;
-          } else {
-            // No answer selected
-            this.showQuizFeedback(feedbackElement, false, 'Please select an answer first.');
-            return;
-          }
-        } else if (textArea) {
-          // Short answer
-          userAnswer = textArea.value.trim();
-          if (!userAnswer) {
-            this.showQuizFeedback(feedbackElement, false, 'Please provide an answer.');
-            return;
-          }
+        // Get user answer based on question type
+        const radioInput = question.querySelector(\`input[name="question-\${questionId}"]:checked\`);
+        const textareaInput = question.querySelector(\`textarea[data-question="\${questionId}"]\`);
+        
+        if (radioInput) {
+          userAnswer = radioInput.value;
+          isCorrect = userAnswer.toLowerCase().trim() === correctAnswer.toLowerCase().trim();
+        } else if (textareaInput) {
+          userAnswer = textareaInput.value.trim();
+          // For text answers, we'll mark as correct if they provided an answer
+          isCorrect = userAnswer.length > 0;
         }
-        
-        // Check if answer is correct
-        const isCorrect = this.compareAnswers(userAnswer, correctAnswer);
         
         // Show feedback
-        const feedbackText = isCorrect 
-          ? '✅ Correct! Well done.' 
-          : \`❌ Incorrect. The correct answer is: \${correctAnswer}\`;
-        
-        this.showQuizFeedback(feedbackElement, isCorrect, feedbackText);
-        
-        // Disable submit button after answering
-        submitBtn.disabled = true;
-        submitBtn.textContent = isCorrect ? 'Correct!' : 'Try Again';
-        
-        // Disable all inputs for this question
-        question.querySelectorAll('input, textarea').forEach(input => {
-          input.disabled = true;
-        });
-        
-        // Track quiz completion for progress
-        this.trackQuizCompletion(question.dataset.step, questionId, isCorrect);
-      }
-      
-      compareAnswers(userAnswer, correctAnswer) {
-        // Normalize answers for comparison
-        const normalize = (str) => str.toLowerCase().trim();
-        
-        const normalizedUser = normalize(userAnswer);
-        const normalizedCorrect = normalize(correctAnswer);
-        
-        // Exact match
-        if (normalizedUser === normalizedCorrect) return true;
-        
-        // For short answers, check if the key concepts are present
-        if (normalizedCorrect.length > 10) {
-          // Split correct answer into key terms
-          const keyTerms = normalizedCorrect.split(/[\\s,]+/).filter(term => term.length > 2);
-          const matchedTerms = keyTerms.filter(term => normalizedUser.includes(term));
+        if (feedback) {
+          const feedbackText = feedback.querySelector('.feedback-text');
+          feedback.style.display = 'block';
+          feedback.className = \`quiz-feedback \${isCorrect ? 'correct' : 'incorrect'}\`;
           
-          // If most key terms are present, consider it correct
-          return matchedTerms.length >= Math.ceil(keyTerms.length * 0.6);
-        }
-        
-        return false;
-      }
-      
-      showQuizFeedback(feedbackElement, isCorrect, message) {
-        if (!feedbackElement) return;
-        
-        const feedbackContent = feedbackElement.querySelector('.feedback-text');
-        if (feedbackContent) {
-          feedbackContent.textContent = message;
-        }
-        
-        // Apply styling based on correctness
-        feedbackElement.className = \`quiz-feedback \${isCorrect ? 'correct' : 'incorrect'}\`;
-        feedbackElement.style.display = 'block';
-        
-        // Scroll feedback into view
-        feedbackElement.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-      }
-      
-      trackQuizCompletion(stepNumber, questionId, isCorrect) {
-        // Track individual quiz question results
-        if (!this.quizResults) this.quizResults = new Map();
-        
-        const stepResults = this.quizResults.get(stepNumber) || new Map();
-        stepResults.set(questionId, { isCorrect, timestamp: Date.now() });
-        this.quizResults.set(stepNumber, stepResults);
-        
-        // Save progress
-        this.saveProgress();
-        
-        // Check if all quizzes in this step are completed
-        const stepElement = document.getElementById(\`step-\${stepNumber}\`);
-        if (stepElement) {
-          const totalQuestions = stepElement.querySelectorAll('.quiz-question').length;
-          const completedQuestions = stepElement.querySelectorAll('.quiz-submit-btn:disabled').length;
-          
-          if (totalQuestions > 0 && completedQuestions === totalQuestions) {
-            // All questions in this step are completed
-            this.toggleStepCompletion(parseInt(stepNumber));
+          if (feedbackText) {
+            feedbackText.textContent = isCorrect 
+              ? '✓ Correct! Well done.' 
+              : \`✗ Incorrect. The correct answer is: \${correctAnswer}\`;
           }
         }
+        
+        // Disable submit button
+        if (submitBtn) {
+          submitBtn.disabled = true;
+          submitBtn.textContent = isCorrect ? '✓ Correct' : '✗ Incorrect';
+        }
+        
+        // Track completion (optional: mark step as requiring all quizzes to be answered)
+        this.trackQuizCompletion(questionId, isCorrect);
       }
       
-      // Mark step as completed (used by quiz system)
-      markStepCompleted(stepNumber) {
-        this.toggleStepCompletion(stepNumber);
+      trackQuizCompletion(questionId, isCorrect) {
+        // Store quiz results for progress tracking
+        if (!this.quizResults) {
+          this.quizResults = new Map();
+        }
+        this.quizResults.set(questionId, isCorrect);
+        
+        // Save to localStorage
+        const quizData = Object.fromEntries(this.quizResults);
+        localStorage.setItem('quizResults_' + location.pathname, JSON.stringify(quizData));
       }
       
       // Panel Management
@@ -2679,7 +2754,7 @@ function generateEnhancedJavaScript(
       
       // Theme Management
       initializeTheme() {
-        const savedTheme = localStorage.getItem('trainingTheme');
+        const savedTheme = localStorage.getItem('theme_' + location.pathname);
         if (savedTheme) {
           document.body.className = savedTheme;
         }
@@ -2687,19 +2762,15 @@ function generateEnhancedJavaScript(
       
       toggleTheme() {
         const body = document.body;
-        const currentTheme = body.className;
-        
-        let newTheme;
-        if (currentTheme.includes('light-theme')) {
-          newTheme = 'dark-theme';
-        } else if (currentTheme.includes('dark-theme')) {
-          newTheme = 'auto-theme';
+        if (body.classList.contains('dark-theme')) {
+          body.className = 'light-theme';
+        } else if (body.classList.contains('light-theme')) {
+          body.className = 'auto-theme';
         } else {
-          newTheme = 'light-theme';
+          body.className = 'dark-theme';
         }
         
-        body.className = newTheme;
-        localStorage.setItem('trainingTheme', newTheme);
+        localStorage.setItem('theme_' + location.pathname, body.className);
       }
       
       // Data Persistence

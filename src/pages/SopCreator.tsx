@@ -616,7 +616,7 @@ const SopCreator: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-zinc-900 via-zinc-800 to-zinc-900 p-4">
-      <div className="max-w-6xl mx-auto">
+      <div className="max-w-5xl mx-auto">
         {renderSimpleHeader()}
         {renderCarouselNavigation()}
         
