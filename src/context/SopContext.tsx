@@ -4,6 +4,7 @@ import { SopDocument, SopStep, ScreenshotData, Callout, StepResource, ExportForm
 import { saveAs } from "file-saver";
 import { toast } from "@/hooks/use-toast";
 import { HtmlExportOptions } from "@/lib/html-export";
+import { StorageManager } from "@/utils/storageManager";
 
 interface SopContextType {
   sopDocument: SopDocument;
@@ -86,21 +87,35 @@ export const SopContext = createContext<SopContextType>({} as SopContextType);
 
 export const SopProvider = ({ children }: { children: ReactNode }) => {
   const [sopDocument, setSopDocument] = useState<SopDocument>(() => {
-    // Try to load from localStorage on initial load
-    const saved = localStorage.getItem("sop-document-draft");
-    if (saved) {
+    // Try to load from localStorage on initial load with error handling
+    const savedDocument = StorageManager.loadDocument();
+    if (savedDocument) {
       try {
-        return { ...defaultSopDocument, ...JSON.parse(saved) };
+        return { ...defaultSopDocument, ...savedDocument };
       } catch (error) {
         console.error("Failed to load saved document:", error);
+        toast({
+          title: "Warning",
+          description: "Failed to load saved document. Starting fresh.",
+          variant: "destructive"
+        });
       }
     }
     return defaultSopDocument;
   });
 
-  // Auto-save to localStorage whenever document changes
+  // Auto-save to localStorage whenever document changes with quota management
   React.useEffect(() => {
-    localStorage.setItem("sop-document-draft", JSON.stringify(sopDocument));
+    const saveSuccess = StorageManager.saveDocument(sopDocument);
+    
+    if (!saveSuccess) {
+      // Show warning to user about storage issues
+      toast({
+        title: "Storage Warning",
+        description: "Document is too large for auto-save. Consider exporting to file.",
+        variant: "destructive"
+      });
+    }
   }, [sopDocument]);
 
   const setSopTitle = (title: string) => {
