@@ -245,6 +245,11 @@ const ExportFormatSelector: React.FC<ExportFormatSelectorProps> = ({
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          {/* DEBUG: Show format count */}
+          <div className="col-span-full bg-red-500 text-white p-2 rounded text-center font-bold">
+            🔍 DEBUG: {formatOptions.length} formats available | Admin: {userRole} | Legacy: {legacyFormat ? 'YES' : 'NO'}
+          </div>
+          
           {formatOptions.map((format) => {
             const Icon = format.icon;
             const isSelected = selectedFormat === format.id;
@@ -254,6 +259,7 @@ const ExportFormatSelector: React.FC<ExportFormatSelectorProps> = ({
                 key={format.id}
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
+                className={format.id === 'training-module' ? 'ring-4 ring-yellow-400' : ''}
               >
                 <Card 
                   className={`cursor-pointer transition-all duration-200 ${
@@ -291,6 +297,13 @@ const ExportFormatSelector: React.FC<ExportFormatSelectorProps> = ({
                     </div>
                   </CardHeader>
                   <CardContent className="pt-0">
+                    {/* DEBUG: Show training module specifically */}
+                    {format.id === 'training-module' && (
+                      <div className="bg-yellow-400 text-black p-2 rounded mb-2 font-bold text-center">
+                        🎓 THIS IS THE TRAINING MODULE! 🎓
+                      </div>
+                    )}
+                    
                     <div className="flex flex-wrap gap-1">
                       {format.features.slice(0, 2).map((feature, index) => (
                         <Badge key={index} variant="outline" className="text-xs border-zinc-600 text-zinc-300">
@@ -446,6 +459,11 @@ const ExportFormatSelector: React.FC<ExportFormatSelectorProps> = ({
 
       {/* Format Selection */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* DEBUG: Show format count for full interface */}
+        <div className="col-span-full bg-red-500 text-white p-2 rounded text-center font-bold">
+          🔍 FULL INTERFACE DEBUG: {formatOptions.length} formats | Admin: {userRole}
+        </div>
+        
         {formatOptions.map((format) => {
           const Icon = format.icon;
           const isSelected = selectedFormat === format.id;
@@ -455,6 +473,7 @@ const ExportFormatSelector: React.FC<ExportFormatSelectorProps> = ({
               key={format.id}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
+              className={format.id === 'training-module' ? 'ring-4 ring-yellow-400' : ''}
             >
               <Card 
                 className={`cursor-pointer transition-all duration-200 ${
@@ -495,6 +514,13 @@ const ExportFormatSelector: React.FC<ExportFormatSelectorProps> = ({
                   </div>
                 </CardHeader>
                 <CardContent className="pt-0">
+                  {/* DEBUG: Show training module specifically for full interface */}
+                  {format.id === 'training-module' && (
+                    <div className="bg-yellow-400 text-black p-2 rounded mb-2 font-bold text-center">
+                      🎓 THIS IS THE TRAINING MODULE! 🎓
+                    </div>
+                  )}
+                  
                   <div className="flex flex-wrap gap-1">
                     {format.features.map((feature, index) => (
                       <Badge key={index} variant="outline" className="text-xs border-zinc-600 text-zinc-300">
