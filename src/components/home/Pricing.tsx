@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
 import { useSubscription } from "@/context/SubscriptionContext";
-import { Loader2, FileText, Code, CheckCircle } from "lucide-react";
+import { Loader2, FileText, Code, CheckCircle, GraduationCap, Palette } from "lucide-react";
 import { useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { toast } from "@/hooks/use-toast";
@@ -129,39 +129,29 @@ const Pricing = () => {
   
   const freeTierFeatures = [
     { available: true, text: "Unlimited SOPs" },
-    { available: true, text: "PDF Export (1 per day)" },
+    { available: true, text: "1 HTML Export per day" },
+    { available: true, text: "1 PDF Export per day" },
     { available: true, text: "Basic Templates" },
-    { available: false, text: "HTML Export" },
-    { available: false, text: "Advanced Step Fields" },
-    { available: false, text: "Progress Tracking" }
+    { available: false, text: "Custom Backgrounds" },
+    { available: false, text: "Interactive Learning Modules" }
   ];
   
-  const proPdfFeatures = [
+  const proTierFeatures = [
     { available: true, text: "Everything in Free" },
     { available: true, text: "Unlimited PDF Exports" },
-    { available: true, text: "Premium Templates" },
-    { available: false, text: "HTML Export" },
-    { available: false, text: "Advanced Step Fields" },
-    { available: false, text: "Progress Tracking" }
+    { available: true, text: "Unlimited HTML Exports" },
+    { available: true, text: "Custom Backgrounds" },
+    { available: true, text: "Upload Custom Backgrounds" },
+    { available: false, text: "Interactive Learning Modules" }
   ];
   
-  const proHtmlFeatures = [
-    { available: true, text: "Everything in Free" },
-    { available: true, text: "HTML Export with Interactive Features" },
+  const proLearningFeatures = [
+    { available: true, text: "Everything in Pro" },
+    { available: true, text: "Interactive Learning Modules" },
+    { available: true, text: "Offline Training Content" },
     { available: true, text: "Progress Tracking" },
-    { available: true, text: "Advanced Step Fields" },
-    { available: false, text: "Unlimited PDF Exports" },
-    { available: true, text: "Premium Templates" }
-  ];
-  
-  const proCompleteFeatures = [
-    { available: true, text: "Everything in Free" },
-    { available: true, text: "Unlimited PDF Exports" },
-    { available: true, text: "HTML Export with Interactive Features" },
-    { available: true, text: "Progress Tracking" },
-    { available: true, text: "Advanced Step Fields" },
-    { available: true, text: "Premium Templates" },
-    { available: true, text: "Priority Support" }
+    { available: true, text: "Quiz Creation" },
+    { available: true, text: "Certification Features" }
   ];
 
   const handleFreeTier = () => {
@@ -218,11 +208,11 @@ const Pricing = () => {
         <div className="text-center mb-12">
           <h2 className="text-3xl font-semibold tracking-tight text-white mb-4">Plans for Every Need</h2>
           <p className="text-zinc-400 max-w-2xl mx-auto">
-            Choose the plan that best fits your workflow. All plans include unlimited SOPs and core features.
+            Choose the plan that best fits your workflow. Start free and upgrade as you grow.
           </p>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
           <PricingTier 
             title="Free" 
             price="$0" 
@@ -234,40 +224,28 @@ const Pricing = () => {
           />
           
           <PricingTier 
-            title="Pro PDF" 
-            price="$12" 
-            features={proPdfFeatures} 
+            title="Pro" 
+            price="$15" 
+            features={proTierFeatures} 
             theme="primary"
-            onSubscribe={() => handleSubscribe('pro-pdf')}
-            userTier={tier}
-            loading={loading && processingTier === "pro-pdf"}
-            tier="pro-pdf"
-            badgeText="NEW"
-          />
-          
-          <PricingTier 
-            title="Pro HTML" 
-            price="$12" 
-            features={proHtmlFeatures} 
-            theme="secondary"
-            onSubscribe={() => handleSubscribe('pro-html')}
-            userTier={tier}
-            loading={loading && processingTier === "pro-html"}
-            tier="pro-html"
-            badgeText="NEW"
-          />
-          
-          <PricingTier 
-            title="Pro Complete" 
-            price="$20" 
-            features={proCompleteFeatures} 
             isPopular={true}
-            theme="primary"
-            onSubscribe={() => handleSubscribe('pro-complete')}
+            onSubscribe={() => handleSubscribe('pro')}
             userTier={tier}
-            loading={loading && processingTier === "pro-complete"}
+            loading={loading && processingTier === "pro"}
             tier="pro-complete"
-            badgeText="BEST VALUE"
+            badgeText="POPULAR"
+          />
+          
+          <PricingTier 
+            title="Pro Learning" 
+            price="$25" 
+            features={proLearningFeatures} 
+            theme="secondary"
+            onSubscribe={() => handleSubscribe('pro-learning')}
+            userTier={tier}
+            loading={loading && processingTier === "pro-learning"}
+            tier="pro-complete"
+            badgeText="PREMIUM"
           />
         </div>
       </div>

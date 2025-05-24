@@ -1,4 +1,3 @@
-
 export type CalloutShape = "circle" | "rectangle" | "arrow" | "number";
 
 export interface Callout {
@@ -128,7 +127,7 @@ export interface ProgressSession {
 }
 
 // Subscription tiers
-export type SubscriptionTier = "free" | "pro-pdf" | "pro-html" | "pro-complete";
+export type SubscriptionTier = "free" | "pro" | "pro-learning";
 
 // Cropping types
 export interface CropArea {
