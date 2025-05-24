@@ -20,14 +20,14 @@ import {
   BookOpen,
   HelpCircle,
   Users,
-  Target
+  Target,
+  ArrowRight
 } from "lucide-react";
 import StepCard from "@/components/step-editor/StepCard";
 import ProgressTracker from "@/components/ProgressTracker";
 import ExportPanel from "@/components/toolbar/ExportPanel";
 import { useSopContext } from "@/context/SopContext";
-// import { toast } from "@/hooks/use-toast";
-// import { LessonTemplateModal } from "@/components/LessonTemplateModal";
+import { LessonTemplateModal } from "@/components/LessonTemplateModal";
 
 const SopCreator: React.FC = () => {
   const {
@@ -50,9 +50,11 @@ const SopCreator: React.FC = () => {
     setSopTopic,
     setSopCompanyName,
     setSopDate,
-    getStepIndex,
-    steps
+    getStepIndex
   } = useSopContext();
+
+  // Get steps from sopDocument
+  const steps = sopDocument.steps;
 
   const [activeStepId, setActiveStepId] = useState<string | null>(null);
   const [showExportPanel, setShowExportPanel] = useState(false);
@@ -101,15 +103,15 @@ const SopCreator: React.FC = () => {
 
   // Auto-expand first step when created and auto-enable training mode
   useEffect(() => {
-    if (sopDocument.steps.length === 1 && !activeStepId) {
-      setActiveStepId(sopDocument.steps[0].id);
+    if (steps.length === 1 && !activeStepId) {
+      setActiveStepId(steps[0].id);
     }
     
     // Auto-enable training mode if not set
     if (sopDocument.trainingMode === undefined) {
       setTrainingMode(true);
     }
-  }, [sopDocument.steps.length, activeStepId, sopDocument.trainingMode, setTrainingMode]);
+  }, [steps.length, activeStepId, sopDocument.trainingMode, setTrainingMode]);
 
   // Auto-save functionality
   useEffect(() => {
@@ -138,7 +140,7 @@ const SopCreator: React.FC = () => {
     
     // Auto-focus the new step
     setTimeout(() => {
-      const newStep = sopDocument.steps[sopDocument.steps.length - 1];
+      const newStep = steps[steps.length - 1];
       if (newStep) {
         setActiveStepId(newStep.id);
       }
@@ -246,8 +248,8 @@ const SopCreator: React.FC = () => {
     }
   };
 
-  // Get current step
-  const currentStep = steps[currentLessonIndex];
+  // Get current step safely
+  const currentStep = steps.length > 0 ? steps[currentLessonIndex] : null;
 
   // Simplified header with key info only
   const renderSimpleHeader = () => (
@@ -615,7 +617,7 @@ const SopCreator: React.FC = () => {
             >
               {renderEmptyState()}
             </motion.div>
-          ) : (
+          ) : currentStep ? (
             <motion.div
               key={`lesson-${currentLessonIndex}`}
               initial={{ opacity: 0, x: 50 }}
@@ -632,7 +634,7 @@ const SopCreator: React.FC = () => {
                 onDeleteStep={() => handleDeleteLesson(currentStep.id)}
               />
             </motion.div>
-          )}
+          ) : null}
         </AnimatePresence>
 
         {/* Export Panel Overlay */}
