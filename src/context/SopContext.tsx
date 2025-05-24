@@ -1,10 +1,11 @@
+
 import React, { createContext, useState, useContext, ReactNode } from "react";
-import { v4 as uuidv4 } from "uuid";
-import { SopDocument, SopStep, ScreenshotData, Callout, StepResource, ExportFormat, ExportOptions } from "../types/sop";
-import { saveAs } from "file-saver";
+import { SopDocument, SopStep, Callout, StepResource, ExportFormat } from "../types/sop";
 import { toast } from "@/hooks/use-toast";
-import { HtmlExportOptions } from "@/lib/html-export";
 import { StorageManager } from "@/utils/storageManager";
+import { DocumentManager } from "./managers/DocumentManager";
+import { StepManager } from "./managers/StepManager";
+import { ScreenshotManager } from "./managers/ScreenshotManager";
 
 interface SopContextType {
   sopDocument: SopDocument;
@@ -77,7 +78,7 @@ const defaultSopDocument: SopDocument = {
   companyName: "Company Name",
   tableOfContents: true,
   darkMode: false,
-  trainingMode: true, // Default to training mode enabled
+  trainingMode: true,
   progressTracking: {
     enabled: false
   }
@@ -87,7 +88,6 @@ export const SopContext = createContext<SopContextType>({} as SopContextType);
 
 export const SopProvider = ({ children }: { children: ReactNode }) => {
   const [sopDocument, setSopDocument] = useState<SopDocument>(() => {
-    // Try to load from localStorage on initial load with error handling
     const savedDocument = StorageManager.loadDocument();
     if (savedDocument) {
       try {
@@ -104,12 +104,10 @@ export const SopProvider = ({ children }: { children: ReactNode }) => {
     return defaultSopDocument;
   });
 
-  // Auto-save to localStorage whenever document changes with quota management
   React.useEffect(() => {
     const saveSuccess = StorageManager.saveDocument(sopDocument);
     
     if (!saveSuccess) {
-      // Show warning to user about storage issues
       toast({
         title: "Storage Warning",
         description: "Document is too large for auto-save. Consider exporting to file.",
@@ -118,513 +116,153 @@ export const SopProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [sopDocument]);
 
+  // Document operations
   const setSopTitle = (title: string) => {
-    setSopDocument((prev) => ({ ...prev, title }));
+    setSopDocument(prev => DocumentManager.updateTitle(prev, title));
   };
 
   const setSopTopic = (topic: string) => {
-    setSopDocument((prev) => ({ ...prev, topic }));
+    setSopDocument(prev => DocumentManager.updateTopic(prev, topic));
   };
 
   const setSopDate = (date: string) => {
-    setSopDocument((prev) => ({ ...prev, date }));
+    setSopDocument(prev => DocumentManager.updateDate(prev, date));
   };
 
   const setLogo = (logo: string | null) => {
-    setSopDocument((prev) => ({ ...prev, logo }));
+    setSopDocument(prev => DocumentManager.updateLogo(prev, logo));
   };
   
   const setBackgroundImage = (image: string | null) => {
-    setSopDocument((prev) => ({ ...prev, backgroundImage: image }));
+    setSopDocument(prev => DocumentManager.updateBackgroundImage(prev, image));
   };
 
   const setCompanyName = (companyName: string) => {
-    setSopDocument((prev) => ({ ...prev, companyName }));
+    setSopDocument(prev => DocumentManager.updateCompanyName(prev, companyName));
   };
 
+  const setTableOfContents = (enabled: boolean) => {
+    setSopDocument(prev => DocumentManager.updateTableOfContents(prev, enabled));
+  };
+
+  const setDarkMode = (enabled: boolean) => {
+    setSopDocument(prev => DocumentManager.updateDarkMode(prev, enabled));
+  };
+
+  const setTrainingMode = (enabled: boolean) => {
+    setSopDocument(prev => DocumentManager.updateTrainingMode(prev, enabled));
+  };
+
+  const enableProgressTracking = (sessionName?: string) => {
+    setSopDocument(prev => DocumentManager.enableProgressTracking(prev, sessionName));
+  };
+
+  const disableProgressTracking = () => {
+    setSopDocument(prev => DocumentManager.disableProgressTracking(prev));
+  };
+
+  // Step operations
   const addStep = () => {
-    addStepFromTemplate("standard");
+    setSopDocument(prev => StepManager.addStep(prev));
   };
 
-  // Add step from template - new method for structured lesson creation
   const addStepFromTemplate = (templateType: "standard" | "knowledge-check" | "scenario" | "resource-focus") => {
-    const baseStep: SopStep = {
-      id: uuidv4(),
-      title: "",
-      description: "",
-      screenshot: null,
-      completed: false,
-      trainingMode: sopDocument.trainingMode !== false,
-    };
-
-    let templatedStep: SopStep;
-    
-    switch (templateType) {
-      case "knowledge-check":
-        templatedStep = {
-          ...baseStep,
-          title: "Knowledge Check",
-          description: "Test understanding of the previous concepts",
-          estimatedTime: 3,
-          keyTakeaway: "Verify comprehension before moving forward",
-          quizQuestions: [{
-            id: uuidv4(),
-            question: "",
-            type: "multiple-choice",
-            options: ["", "", "", ""],
-            correctAnswer: "",
-            explanation: ""
-          }]
-        };
-        break;
-        
-      case "scenario":
-        templatedStep = {
-          ...baseStep,
-          title: "Real-World Scenario",
-          description: "See how this applies in a practical situation",
-          estimatedTime: 5,
-          keyTakeaway: "Understanding practical application is key to retention",
-          detailedInstructions: "Describe a specific scenario where this knowledge would be applied...",
-        };
-        break;
-        
-      case "resource-focus":
-        templatedStep = {
-          ...baseStep,
-          title: "Additional Resources",
-          description: "Explore supporting materials and references",
-          estimatedTime: 10,
-          keyTakeaway: "These resources provide deeper insights for continued learning",
-          resources: [{
-            id: uuidv4(),
-            type: "link",
-            title: "",
-            url: "",
-            description: ""
-          }]
-        };
-        break;
-        
-      default: // "standard"
-        templatedStep = {
-          ...baseStep,
-          title: "",
-          description: "",
-          estimatedTime: 5,
-        };
-        break;
-    }
-
-    setSopDocument(prev => ({
-      ...prev,
-      steps: [...prev.steps, templatedStep]
-    }));
+    setSopDocument(prev => StepManager.addStepFromTemplate(prev, templateType));
   };
 
   const updateStep = (stepId: string, field: keyof SopStep, value: any) => {
-    setSopDocument((prev) => ({
-      ...prev,
-      steps: prev.steps.map((step) =>
-        step.id === stepId ? { ...step, [field]: value } : step
-      ),
-    }));
+    setSopDocument(prev => StepManager.updateStep(prev, stepId, field, value));
   };
 
   const moveStepUp = (stepId: string) => {
-    setSopDocument((prev) => {
-      const stepIndex = prev.steps.findIndex((step) => step.id === stepId);
-      if (stepIndex <= 0) return prev;
-
-      const newSteps = [...prev.steps];
-      const temp = newSteps[stepIndex];
-      newSteps[stepIndex] = newSteps[stepIndex - 1];
-      newSteps[stepIndex - 1] = temp;
-
-      return { ...prev, steps: newSteps };
-    });
+    setSopDocument(prev => StepManager.moveStepUp(prev, stepId));
   };
 
   const moveStepDown = (stepId: string) => {
-    setSopDocument((prev) => {
-      const stepIndex = prev.steps.findIndex((step) => step.id === stepId);
-      if (stepIndex === -1 || stepIndex >= prev.steps.length - 1) return prev;
-
-      const newSteps = [...prev.steps];
-      const temp = newSteps[stepIndex];
-      newSteps[stepIndex] = newSteps[stepIndex + 1];
-      newSteps[stepIndex + 1] = temp;
-
-      return { ...prev, steps: newSteps };
-    });
+    setSopDocument(prev => StepManager.moveStepDown(prev, stepId));
   };
 
   const deleteStep = (stepId: string) => {
-    setSopDocument((prev) => ({
-      ...prev,
-      steps: prev.steps.filter((step) => step.id !== stepId),
-    }));
+    setSopDocument(prev => StepManager.deleteStep(prev, stepId));
   };
 
   const duplicateStep = (stepId: string) => {
-    setSopDocument((prev) => {
-      const stepIndex = prev.steps.findIndex((step) => step.id === stepId);
-      if (stepIndex === -1) return prev;
-
-      const originalStep = prev.steps[stepIndex];
-      const duplicatedStep: SopStep = {
-        ...originalStep,
-        id: uuidv4(),
-        title: originalStep.title ? `${originalStep.title} (Copy)` : "",
-        completed: false,
-        screenshot: originalStep.screenshot ? {
-          ...originalStep.screenshot,
-          id: uuidv4(),
-          callouts: originalStep.screenshot.callouts.map(callout => ({
-            ...callout,
-            id: uuidv4()
-          })),
-          secondaryCallouts: originalStep.screenshot.secondaryCallouts?.map(callout => ({
-            ...callout,
-            id: uuidv4()
-          }))
-        } : null,
-        resources: originalStep.resources?.map(resource => ({
-          ...resource,
-          id: uuidv4()
-        }))
-      };
-
-      const newSteps = [...prev.steps];
-      newSteps.splice(stepIndex + 1, 0, duplicatedStep);
-
-      return { ...prev, steps: newSteps };
-    });
+    setSopDocument(prev => StepManager.duplicateStep(prev, stepId));
   };
 
   const toggleStepCompletion = (stepId: string) => {
-    setSopDocument((prev) => ({
-      ...prev,
-      steps: prev.steps.map((step) =>
-        step.id === stepId ? { ...step, completed: !step.completed } : step
-      ),
-    }));
-  };
-
-  
-  const setStepScreenshot = (stepId: string, dataUrl: string) => {
-    setSopDocument((prev) => ({
-      ...prev,
-      steps: prev.steps.map((step) => {
-        if (step.id === stepId) {
-          return {
-            ...step,
-            screenshot: {
-              id: uuidv4(),
-              dataUrl,
-              originalDataUrl: dataUrl,
-              callouts: step.screenshot?.callouts || [],
-              secondaryDataUrl: step.screenshot?.secondaryDataUrl,
-              secondaryCallouts: step.screenshot?.secondaryCallouts || [],
-              isCropped: false
-            },
-          };
-        }
-        return step;
-      }),
-    }));
-  };
-  
-  const setStepSecondaryScreenshot = (stepId: string, dataUrl: string) => {
-    setSopDocument((prev) => ({
-      ...prev,
-      steps: prev.steps.map((step) => {
-        if (step.id === stepId) {
-          return {
-            ...step,
-            screenshot: {
-              id: step.screenshot?.id || uuidv4(),
-              dataUrl: step.screenshot?.dataUrl || '',
-              originalDataUrl: step.screenshot?.originalDataUrl,
-              callouts: step.screenshot?.callouts || [],
-              secondaryDataUrl: dataUrl,
-              secondaryCallouts: step.screenshot?.secondaryCallouts || [],
-              isCropped: step.screenshot?.isCropped || false
-            },
-          };
-        }
-        return step;
-      }),
-    }));
-  };
-
-  const cropStepScreenshot = (stepId: string, croppedDataUrl: string) => {
-    setSopDocument((prev) => ({
-      ...prev,
-      steps: prev.steps.map((step) => {
-        if (step.id === stepId && step.screenshot) {
-          return {
-            ...step,
-            screenshot: {
-              ...step.screenshot,
-              dataUrl: croppedDataUrl,
-              isCropped: true
-            },
-          };
-        }
-        return step;
-      }),
-    }));
-  };
-
-  const undoCropStepScreenshot = (stepId: string) => {
-    setSopDocument((prev) => ({
-      ...prev,
-      steps: prev.steps.map((step) => {
-        if (step.id === stepId && step.screenshot?.originalDataUrl) {
-          return {
-            ...step,
-            screenshot: {
-              ...step.screenshot,
-              dataUrl: step.screenshot.originalDataUrl,
-              isCropped: false
-            },
-          };
-        }
-        return step;
-      }),
-    }));
-  };
-
-  const addCallout = (stepId: string, callout: Omit<Callout, "id">) => {
-    setSopDocument((prev) => ({
-      ...prev,
-      steps: prev.steps.map((step) => {
-        if (step.id === stepId && step.screenshot) {
-          return {
-            ...step,
-            screenshot: {
-              ...step.screenshot,
-              callouts: [
-                ...step.screenshot.callouts,
-                { ...callout, id: uuidv4() },
-              ],
-            },
-          };
-        }
-        return step;
-      }),
-    }));
-  };
-
-  const updateCallout = (stepId: string, callout: Callout) => {
-    setSopDocument((prev) => ({
-      ...prev,
-      steps: prev.steps.map((step) => {
-        if (step.id === stepId && step.screenshot) {
-          return {
-            ...step,
-            screenshot: {
-              ...step.screenshot,
-              callouts: step.screenshot.callouts.map((c) =>
-                c.id === callout.id ? callout : c
-              ),
-            },
-          };
-        }
-        return step;
-      }),
-    }));
-  };
-
-  const deleteCallout = (stepId: string, calloutId: string) => {
-    setSopDocument((prev) => ({
-      ...prev,
-      steps: prev.steps.map((step) => {
-        if (step.id === stepId && step.screenshot) {
-          return {
-            ...step,
-            screenshot: {
-              ...step.screenshot,
-              callouts: step.screenshot.callouts.filter((c) => c.id !== calloutId),
-            },
-          };
-        }
-        return step;
-      }),
-    }));
-  };
-
-  const addSecondaryCallout = (stepId: string, callout: Omit<Callout, "id">) => {
-    setSopDocument((prev) => ({
-      ...prev,
-      steps: prev.steps.map((step) => {
-        if (step.id === stepId && step.screenshot) {
-          return {
-            ...step,
-            screenshot: {
-              ...step.screenshot,
-              secondaryCallouts: [
-                ...(step.screenshot.secondaryCallouts || []),
-                { ...callout, id: uuidv4() },
-              ],
-            },
-          };
-        }
-        return step;
-      }),
-    }));
-  };
-
-  const updateSecondaryCallout = (stepId: string, callout: Callout) => {
-    setSopDocument((prev) => ({
-      ...prev,
-      steps: prev.steps.map((step) => {
-        if (step.id === stepId && step.screenshot) {
-          return {
-            ...step,
-            screenshot: {
-              ...step.screenshot,
-              secondaryCallouts: (step.screenshot.secondaryCallouts || []).map((c) =>
-                c.id === callout.id ? callout : c
-              ),
-            },
-          };
-        }
-        return step;
-      }),
-    }));
-  };
-
-  const deleteSecondaryCallout = (stepId: string, calloutId: string) => {
-    setSopDocument((prev) => ({
-      ...prev,
-      steps: prev.steps.map((step) => {
-        if (step.id === stepId && step.screenshot) {
-          return {
-            ...step,
-            screenshot: {
-              ...step.screenshot,
-              secondaryCallouts: (step.screenshot.secondaryCallouts || []).filter(
-                (c) => c.id !== calloutId
-              ),
-            },
-          };
-        }
-        return step;
-      }),
-    }));
+    setSopDocument(prev => StepManager.toggleStepCompletion(prev, stepId));
   };
 
   const addStepTag = (stepId: string, tag: string) => {
-    setSopDocument((prev) => ({
-      ...prev,
-      steps: prev.steps.map((step) => {
-        if (step.id === stepId) {
-          const currentTags = step.tags || [];
-          if (!currentTags.includes(tag)) {
-            return { ...step, tags: [...currentTags, tag] };
-          }
-        }
-        return step;
-      }),
-    }));
+    setSopDocument(prev => StepManager.addStepTag(prev, stepId, tag));
   };
 
   const removeStepTag = (stepId: string, tag: string) => {
-    setSopDocument((prev) => ({
-      ...prev,
-      steps: prev.steps.map((step) => {
-        if (step.id === stepId) {
-          const currentTags = step.tags || [];
-          return { ...step, tags: currentTags.filter(t => t !== tag) };
-        }
-        return step;
-      }),
-    }));
+    setSopDocument(prev => StepManager.removeStepTag(prev, stepId, tag));
   };
 
   const addStepResource = (stepId: string, resource: StepResource) => {
-    setSopDocument((prev) => ({
-      ...prev,
-      steps: prev.steps.map((step) => {
-        if (step.id === stepId) {
-          const currentResources = step.resources || [];
-          return { ...step, resources: [...currentResources, resource] };
-        }
-        return step;
-      }),
-    }));
+    setSopDocument(prev => StepManager.addStepResource(prev, stepId, resource));
   };
 
   const removeStepResource = (stepId: string, resourceId: string) => {
-    setSopDocument((prev) => ({
-      ...prev,
-      steps: prev.steps.map((step) => {
-        if (step.id === stepId) {
-          const currentResources = step.resources || [];
-          return { ...step, resources: currentResources.filter(r => r.id !== resourceId) };
-        }
-        return step;
-      }),
-    }));
+    setSopDocument(prev => StepManager.removeStepResource(prev, stepId, resourceId));
   };
 
   const updateStepResource = (stepId: string, resourceId: string, updates: Partial<StepResource>) => {
-    setSopDocument((prev) => ({
-      ...prev,
-      steps: prev.steps.map((step) => {
-        if (step.id === stepId) {
-          const currentResources = step.resources || [];
-          return {
-            ...step,
-            resources: currentResources.map(r =>
-              r.id === resourceId ? { ...r, ...updates } : r
-            )
-          };
-        }
-        return step;
-      }),
-    }));
+    setSopDocument(prev => StepManager.updateStepResource(prev, stepId, resourceId, updates));
   };
 
+  // Screenshot operations
+  const setStepScreenshot = (stepId: string, dataUrl: string) => {
+    setSopDocument(prev => ScreenshotManager.setStepScreenshot(prev, stepId, dataUrl));
+  };
+
+  const setStepSecondaryScreenshot = (stepId: string, dataUrl: string) => {
+    setSopDocument(prev => ScreenshotManager.setStepSecondaryScreenshot(prev, stepId, dataUrl));
+  };
+
+  const cropStepScreenshot = (stepId: string, croppedDataUrl: string) => {
+    setSopDocument(prev => ScreenshotManager.cropStepScreenshot(prev, stepId, croppedDataUrl));
+  };
+
+  const undoCropStepScreenshot = (stepId: string) => {
+    setSopDocument(prev => ScreenshotManager.undoCropStepScreenshot(prev, stepId));
+  };
+
+  const addCallout = (stepId: string, callout: Omit<Callout, "id">) => {
+    setSopDocument(prev => ScreenshotManager.addCallout(prev, stepId, callout));
+  };
+
+  const updateCallout = (stepId: string, callout: Callout) => {
+    setSopDocument(prev => ScreenshotManager.updateCallout(prev, stepId, callout));
+  };
+
+  const deleteCallout = (stepId: string, calloutId: string) => {
+    setSopDocument(prev => ScreenshotManager.deleteCallout(prev, stepId, calloutId));
+  };
+
+  const addSecondaryCallout = (stepId: string, callout: Omit<Callout, "id">) => {
+    setSopDocument(prev => ScreenshotManager.addSecondaryCallout(prev, stepId, callout));
+  };
+
+  const updateSecondaryCallout = (stepId: string, callout: Callout) => {
+    setSopDocument(prev => ScreenshotManager.updateSecondaryCallout(prev, stepId, callout));
+  };
+
+  const deleteSecondaryCallout = (stepId: string, calloutId: string) => {
+    setSopDocument(prev => ScreenshotManager.deleteSecondaryCallout(prev, stepId, calloutId));
+  };
+
+  // Document management
   const saveDocumentToJSON = () => {
-    try {
-      const jsonData = JSON.stringify(sopDocument, null, 2);
-      const blob = new Blob([jsonData], { type: "application/json" });
-      const fileName = `${sopDocument.title || "SOP"}_${new Date().toISOString().split("T")[0]}.json`;
-      saveAs(blob, fileName);
-      
-      toast({
-        title: "SOP Saved",
-        description: "Your SOP has been saved as JSON file"
-      });
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to save SOP document",
-        variant: "destructive"
-      });
-    }
+    DocumentManager.saveToJSON(sopDocument);
   };
 
   const loadDocumentFromJSON = (jsonData: string) => {
-    try {
-      const parsedData = JSON.parse(jsonData) as SopDocument;
-      // Ensure the document has all required fields
-      setSopDocument({ ...defaultSopDocument, ...parsedData });
-      
-      toast({
-        title: "SOP Loaded",
-        description: "Your SOP has been loaded successfully"
-      });
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to load SOP document",
-        variant: "destructive"
-      });
-    }
+    const loadedDocument = DocumentManager.loadFromJSON(jsonData, defaultSopDocument);
+    setSopDocument(loadedDocument);
   };
 
   const resetDocument = () => {
@@ -637,95 +275,19 @@ export const SopProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const exportDocument = async (format: ExportFormat, options?: any): Promise<void> => {
-    try {
-      if (format === "pdf") {
-        // Use existing PDF export functionality
-        const { generatePDF } = await import("@/lib/pdf-generator");
-        await generatePDF(sopDocument);
-      } else if (format === "html" || format === "training-module") {
-        // Use existing HTML export functionality
-        const { exportSopAsHtml } = await import("@/lib/html-export");
-        
-        // Convert ExportOptions to HtmlExportOptions with enhanced support
-        const htmlOptions: any = {
-          mode: options?.mode || 'standalone',
-          quality: 0.85,
-          includeTableOfContents: options?.includeTableOfContents,
-          enhanced: options?.enhanced || false,
-          enhancedOptions: options?.enhancedOptions
-        };
-        
-        console.log('🚀 Exporting with options:', htmlOptions);
-        
-        await exportSopAsHtml(sopDocument, htmlOptions);
-      }
-      
-      const exportType = format === "training-module" ? "Training Module" : format.toUpperCase();
-      toast({
-        title: "Export Successful",
-        description: `Your SOP has been exported as ${exportType}`
-      });
-    } catch (error) {
-      console.error("Export error:", error);
-      const exportType = format === "training-module" ? "Training Module" : format.toUpperCase();
-      toast({
-        title: "Export Failed",
-        description: `Failed to export SOP as ${exportType}`,
-        variant: "destructive"
-      });
-      throw error;
-    }
+    return DocumentManager.exportDocument(sopDocument, format, options);
   };
   
   const getPdfPreview = async (): Promise<string> => {
-    try {
-      const { generatePDF } = await import("@/lib/pdf-generator");
-      return await generatePDF(sopDocument);
-    } catch (error) {
-      console.error("PDF preview error:", error);
-      throw error;
-    }
+    return DocumentManager.getPdfPreview(sopDocument);
   };
 
   const getCompletedStepsCount = (): number => {
-    return sopDocument.steps.filter(step => step.completed).length;
+    return DocumentManager.getProgressInfo(sopDocument).completed;
   };
 
   const getProgressPercentage = (): number => {
-    if (sopDocument.steps.length === 0) return 0;
-    return Math.round((getCompletedStepsCount() / sopDocument.steps.length) * 100);
-  };
-
-  const setTableOfContents = (enabled: boolean) => {
-    setSopDocument((prev) => ({ ...prev, tableOfContents: enabled }));
-  };
-
-  const setDarkMode = (enabled: boolean) => {
-    setSopDocument((prev) => ({ ...prev, darkMode: enabled }));
-  };
-
-  const setTrainingMode = (enabled: boolean) => {
-    setSopDocument((prev) => ({ ...prev, trainingMode: enabled }));
-  };
-
-  const enableProgressTracking = (sessionName?: string) => {
-    setSopDocument((prev) => ({
-      ...prev,
-      progressTracking: {
-        enabled: true,
-        sessionName,
-        lastSaved: new Date().toISOString()
-      }
-    }));
-  };
-
-  const disableProgressTracking = () => {
-    setSopDocument((prev) => ({
-      ...prev,
-      progressTracking: {
-        enabled: false
-      }
-    }));
+    return DocumentManager.getProgressInfo(sopDocument).percentage;
   };
 
   const contextValue: SopContextType = {
