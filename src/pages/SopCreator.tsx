@@ -28,6 +28,7 @@ import ProgressTracker from "@/components/ProgressTracker";
 import ExportPanel from "@/components/toolbar/ExportPanel";
 import { useSopContext } from "@/context/SopContext";
 import { LessonTemplateModal } from "@/components/LessonTemplateModal";
+import { SopStep } from "@/types/sop";
 
 const SopCreator: React.FC = () => {
   const {
@@ -48,13 +49,13 @@ const SopCreator: React.FC = () => {
     resetDocument,
     setSopTitle,
     setSopTopic,
-    setCompanyName, // Fixed function name
+    setCompanyName,
     setSopDate,
-    setSopDescription // Added description setter
+    setSopDescription
   } = useSopContext();
 
   // Get steps from sopDocument
-  const steps = sopDocument.steps;
+  const steps = sopDocument?.steps || [];
 
   const [activeStepId, setActiveStepId] = useState<string | null>(null);
   const [showExportPanel, setShowExportPanel] = useState(false);
@@ -108,10 +109,10 @@ const SopCreator: React.FC = () => {
     }
     
     // Auto-enable training mode if not set
-    if (sopDocument.trainingMode === undefined) {
+    if (sopDocument?.trainingMode === undefined) {
       setTrainingMode(true);
     }
-  }, [steps.length, activeStepId, sopDocument.trainingMode, setTrainingMode]);
+  }, [steps.length, activeStepId, sopDocument?.trainingMode, setTrainingMode]);
 
   // Auto-save functionality
   useEffect(() => {
@@ -259,7 +260,7 @@ const SopCreator: React.FC = () => {
           <div className="flex-1">
             <div className="flex items-center gap-3 mb-2">
               <h1 className="text-2xl font-bold text-white">Training Module Creator</h1>
-              {sopDocument.trainingMode && (
+              {sopDocument?.trainingMode && (
                 <Badge className="bg-gradient-to-r from-purple-600 to-blue-600 text-white">
                   <GraduationCap className="h-3 w-3 mr-1" />
                   Interactive Mode
@@ -302,7 +303,7 @@ const SopCreator: React.FC = () => {
               </Label>
               <Input
                 id="title"
-                value={sopDocument.title || ""}
+                value={sopDocument?.title || ""}
                 onChange={(e) => setSopTitle(e.target.value)}
                 placeholder="Enter your training module title..."
                 className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-500"
@@ -315,7 +316,7 @@ const SopCreator: React.FC = () => {
               </Label>
               <Input
                 id="topic"
-                value={sopDocument.topic || ""}
+                value={sopDocument?.topic || ""}
                 onChange={(e) => setSopTopic(e.target.value)}
                 placeholder="e.g., Sales Training, Safety Protocol..."
                 className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-500"
@@ -330,7 +331,7 @@ const SopCreator: React.FC = () => {
               </Label>
               <Input
                 id="company"
-                value={sopDocument.companyName || ""}
+                value={sopDocument?.companyName || ""}
                 onChange={(e) => setCompanyName(e.target.value)}
                 placeholder="Your organization name..."
                 className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-500"
@@ -344,7 +345,7 @@ const SopCreator: React.FC = () => {
               <Input
                 id="date"
                 type="date"
-                value={sopDocument.date || new Date().toISOString().split('T')[0]}
+                value={sopDocument?.date || new Date().toISOString().split('T')[0]}
                 onChange={(e) => setSopDate(e.target.value)}
                 className="bg-zinc-800 border-zinc-700 text-white"
               />
@@ -369,7 +370,7 @@ const SopCreator: React.FC = () => {
                 </Label>
                 <Textarea
                   id="description"
-                  value={sopDocument.description || ""}
+                  value={sopDocument?.description || ""}
                   onChange={(e) => setSopDescription(e.target.value)}
                   placeholder="Provide a detailed description of this training module..."
                   className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-500 min-h-[100px]"
@@ -466,7 +467,6 @@ const SopCreator: React.FC = () => {
     </Card>
   );
 
-  // Empty state when no lessons
   const renderEmptyState = () => (
     <Card className="bg-[#1E1E1E] border-zinc-800 rounded-2xl">
       <CardContent className="p-12 text-center">
