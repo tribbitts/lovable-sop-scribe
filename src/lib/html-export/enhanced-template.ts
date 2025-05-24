@@ -2635,9 +2635,14 @@ function generateEnhancedJavaScript(
           
           if (totalQuestions > 0 && completedQuestions === totalQuestions) {
             // All questions in this step are completed
-            this.markStepCompleted(parseInt(stepNumber));
+            this.toggleStepCompletion(parseInt(stepNumber));
           }
         }
+      }
+      
+      // Mark step as completed (used by quiz system)
+      markStepCompleted(stepNumber) {
+        this.toggleStepCompletion(stepNumber);
       }
       
       // Panel Management

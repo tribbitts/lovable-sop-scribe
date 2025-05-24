@@ -331,7 +331,7 @@ const StepCard: React.FC<StepCardProps> = ({
         
         {/* Action Buttons */}
         <div className="flex items-center gap-2">
-          {!step.completed && (
+          {!step.completed && step.title?.toLowerCase().includes('knowledge check') && (
             <Button
               size="sm"
               variant="outline"
@@ -339,9 +339,23 @@ const StepCard: React.FC<StepCardProps> = ({
               className="text-zinc-300 border-zinc-700 hover:text-white hover:bg-zinc-800 text-xs"
             >
               <GraduationCap className="h-3 w-3 mr-1" />
-              Advanced Learning Tools
+              Quiz Tools
             </Button>
           )}
+          
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => {
+              if (window.confirm("Are you sure you want to delete this lesson?")) {
+                // Delete functionality - will be handled by parent
+                console.log("Delete lesson requested");
+              }
+            }}
+            className="text-red-400 border-red-800 hover:text-red-300 hover:bg-red-900/20 text-xs"
+          >
+            <Trash2 className="h-3 w-3" />
+          </Button>
           
           <Button
             size="sm"
