@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useContext, ReactNode } from "react";
 import { SopDocument, SopStep, Callout, StepResource, ExportFormat } from "../types/sop";
 import { toast } from "@/hooks/use-toast";
@@ -105,6 +104,9 @@ export const SopProvider = ({ children }: { children: ReactNode }) => {
   });
 
   React.useEffect(() => {
+    // TEMPORARILY DISABLED: Auto-save causing infinite loop
+    // TODO: Fix StorageManager.clearOldData() to not clear auth tokens
+    /*
     const saveSuccess = StorageManager.saveDocument(sopDocument);
     
     if (!saveSuccess) {
@@ -114,6 +116,7 @@ export const SopProvider = ({ children }: { children: ReactNode }) => {
         variant: "destructive"
       });
     }
+    */
   }, [sopDocument]);
 
   // Document operations
