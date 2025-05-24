@@ -132,6 +132,14 @@ const ExportManager = () => {
   const stepCount = sopDocument.steps.length;
   const sopTitle = sopDocument.title || "Untitled SOP";
   
+  // Debug logging for interface detection
+  console.log('🔍 ExportManager Debug:', {
+    showLegacyInterface,
+    sopTitle,
+    stepCount,
+    hasLegacyProps: !!(format && setFormat)
+  });
+  
   return (
     <div className="flex flex-col gap-6">
       {/* Toggle between interfaces for development */}

@@ -104,15 +104,7 @@ const ExportFormatSelector: React.FC<ExportFormatSelectorProps> = ({
     adminAccess: userRole === 'admin'
   });
 
-  // Debug logging
-  console.log('🔍 Enhanced Export Format Selector Debug:', {
-    userEmail: user?.email,
-    tier,
-    isAdmin,
-    canUseHtmlExport,
-    determinedRole: userRole,
-    adminAccess: options.adminAccess
-  });
+  // Debug logging (moved after formatOptions declaration)
 
   const formatOptions = [
     {
@@ -157,6 +149,19 @@ const ExportFormatSelector: React.FC<ExportFormatSelectorProps> = ({
       requiresAdmin: false
     }
   ];
+
+  // Debug logging
+  console.log('🔍 Enhanced Export Format Selector Debug:', {
+    userEmail: user?.email,
+    tier,
+    isAdmin,
+    canUseHtmlExport,
+    determinedRole: userRole,
+    adminAccess: options.adminAccess,
+    isLegacyMode: !!(legacyFormat && legacyOnFormatChange),
+    formatOptionsCount: formatOptions.length,
+    trainingModuleVisible: formatOptions.find(f => f.id === 'training-module') ? true : false
+  });
 
   const qualityOptions = [
     { value: 'draft', label: 'Draft (Fast)', description: 'Quick preview quality' },
@@ -227,10 +232,15 @@ const ExportFormatSelector: React.FC<ExportFormatSelectorProps> = ({
         <div className="text-center space-y-2">
           <h3 className="text-lg font-medium text-white">Choose Export Format</h3>
           {userRole === 'admin' && (
-            <Badge className="bg-purple-600 text-white">
-              <GraduationCap className="h-3 w-3 mr-1" />
-              Admin Access - All features available
-            </Badge>
+            <div className="space-y-2">
+              <Badge className="bg-purple-600 text-white">
+                <GraduationCap className="h-3 w-3 mr-1" />
+                Admin Access - All features available
+              </Badge>
+              <p className="text-xs text-purple-300">
+                🎓 Training Module with LMS features available below
+              </p>
+            </div>
           )}
         </div>
 
@@ -249,7 +259,9 @@ const ExportFormatSelector: React.FC<ExportFormatSelectorProps> = ({
                   className={`cursor-pointer transition-all duration-200 ${
                     isSelected 
                       ? 'border-[#007AFF] bg-[#007AFF]/10 shadow-lg shadow-[#007AFF]/20' 
-                      : 'border-zinc-700 bg-zinc-900/50 hover:border-zinc-600'
+                      : format.id === 'training-module' && userRole === 'admin'
+                        ? 'border-purple-500 bg-purple-500/10 hover:border-purple-400 shadow-lg shadow-purple-500/10'
+                        : 'border-zinc-700 bg-zinc-900/50 hover:border-zinc-600'
                   }`}
                   onClick={() => handleFormatSelect(format.id as ExportOptions['format'])}
                 >
