@@ -309,16 +309,16 @@ const SopCreator = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
           className="mb-6"
-        >
-          <Card className="mb-6 bg-[#1E1E1E] border-zinc-800 overflow-hidden rounded-2xl">
-            <CardContent className="p-8">
+      >
+        <Card className="mb-6 bg-[#1E1E1E] border-zinc-800 overflow-hidden rounded-2xl">
+          <CardContent className="p-8">
               <div className="flex items-center justify-between">
                 <div>
                   <h1 className="text-3xl font-bold tracking-tight text-white mb-2">
                     SOP Creator
                   </h1>
                   <p className="text-zinc-400 text-lg">
-                    Create professional Standard Operating Procedures with step-by-step 
+              Create professional Standard Operating Procedures with step-by-step 
                     instructions, screenshots, and interactive elements.
                   </p>
                 </div>
@@ -344,21 +344,21 @@ const SopCreator = () => {
                     <span className="text-zinc-400">Overall Progress</span>
                     <span className="text-white font-medium">{getProgressPercentage()}%</span>
                   </div>
-                </div>
+            </div>
               )}
-            </CardContent>
-          </Card>
-        </motion.div>
+          </CardContent>
+        </Card>
+      </motion.div>
 
         {/* Organization Header */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.1 }}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.1 }}
           className="mb-6"
-        >
-          <OrganizationHeader />
-        </motion.div>
+      >
+        <OrganizationHeader />
+      </motion.div>
 
         {/* Quick Actions */}
         {renderQuickActions()}
@@ -370,46 +370,46 @@ const SopCreator = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Steps Column */}
           <div className="lg:col-span-2 space-y-6">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-            >
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.2 }}
+      >
               <Header />
-            </motion.div>
+      </motion.div>
 
             {/* Steps List or Empty State */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.3 }}
-            >
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.3 }}
+        >
               {sopDocument.steps.length === 0 ? renderEmptyState() : renderStepsList()}
-            </motion.div>
+        </motion.div>
           </div>
 
           {/* Sidebar */}
           <div className="space-y-6">
             {/* Progress Tracker */}
-            {sopDocument.steps.length > 0 && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
+        {sopDocument.steps.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.4 }}
-              >
-                <ProgressTracker
+          >
+            <ProgressTracker 
                   completed={getCompletedStepsCount()}
-                  total={sopDocument.steps.length}
+              total={sopDocument.steps.length} 
                   variant="bar"
                   showPercentage={true}
-                />
-              </motion.div>
-            )}
+            />
+          </motion.div>
+        )}
 
             {/* Additional sidebar content can go here */}
           </div>
         </div>
-
+        
         {/* Footer */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}

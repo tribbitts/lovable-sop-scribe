@@ -18,7 +18,7 @@ const ProgressTracker: React.FC<ProgressTrackerProps> = ({
   const [currentSession, setCurrentSession] = useState<string | null>(null);
   
   const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
-
+  
   // Load sessions from localStorage on mount
   useEffect(() => {
     const savedSessions = localStorage.getItem("sop-progress-sessions");
@@ -151,7 +151,7 @@ const ProgressTracker: React.FC<ProgressTrackerProps> = ({
             animate={{ strokeDashoffset }}
             transition={{ duration: 1, ease: "easeInOut" }}
             strokeLinecap="round"
-          />
+        />
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center">
           <span className="text-2xl font-bold text-white">{percentage}%</span>
