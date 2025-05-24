@@ -280,12 +280,14 @@ const SopCreator: React.FC = () => {
               <Settings className="h-4 w-4 mr-2" />
               Settings
             </Button>
-            <ExportPanel 
-              document={sopDocument}
-              onExport={handleExport}
-              isExporting={isExporting}
-              exportProgress={exportProgress}
-            />
+            <Button
+              onClick={() => setShowExportPanel(true)}
+              disabled={!sopDocument?.title || !sopDocument?.topic || steps.length === 0}
+              className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white"
+            >
+              <Save className="h-4 w-4 mr-2" />
+              Export Module
+            </Button>
           </div>
         </div>
 
@@ -496,30 +498,33 @@ const SopCreator: React.FC = () => {
   const renderExportPanel = () => (
     <AnimatePresence>
       {showExportPanel && (
-        <motion.div
-          initial={{ opacity: 0, x: 300 }}
-          animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: -300 }}
-          className="fixed right-6 top-6 bottom-6 w-96 z-50"
-        >
-          <div className="h-full overflow-y-auto">
-            <ExportPanel
-              document={sopDocument}
-              onExport={handleExport}
-              isExporting={isExporting}
-              exportProgress={exportProgress}
-            />
-          </div>
-          
+        <>
           {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/20 backdrop-blur-sm -z-10"
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[9998]"
             onClick={() => setShowExportPanel(false)}
           />
-        </motion.div>
+          
+          {/* Export Panel */}
+          <motion.div
+            initial={{ opacity: 0, x: 400 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 400 }}
+            className="fixed right-0 top-0 h-full w-96 z-[9999] overflow-hidden"
+          >
+            <div className="h-full overflow-y-auto bg-[#1E1E1E] border-l border-zinc-800">
+              <ExportPanel
+                document={sopDocument}
+                onExport={handleExport}
+                isExporting={isExporting}
+                exportProgress={exportProgress}
+              />
+            </div>
+          </motion.div>
+        </>
       )}
     </AnimatePresence>
   );
