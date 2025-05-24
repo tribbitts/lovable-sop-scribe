@@ -64,6 +64,21 @@ const ExportPanel: React.FC<ExportPanelProps> = ({
     customFooter: "",
     quality: "high"
   });
+  
+  // Training module specific options
+  const [trainingOptions, setTrainingOptions] = useState({
+    enableQuizzes: true,
+    enableCertificates: true,
+    enableNotes: true,
+    enableBookmarks: true,
+    passwordProtection: "",
+    primaryColor: "#007AFF",
+    secondaryColor: "#1E1E1E"
+  });
+
+  const updateTrainingOption = <K extends keyof typeof trainingOptions>(key: K, value: typeof trainingOptions[K]) => {
+    setTrainingOptions(prev => ({ ...prev, [key]: value }));
+  };
 
   const allFormatOptions = [
     {
@@ -115,7 +130,18 @@ const ExportPanel: React.FC<ExportPanelProps> = ({
   };
 
   const handleExport = () => {
-    onExport(selectedFormat, exportOptions);
+    if (selectedFormat === 'training-module') {
+      // For training modules, combine regular options with training-specific options
+      const combinedOptions = {
+        ...exportOptions,
+        trainingOptions,
+        mode: 'standalone' as const,
+        enableInteractive: true
+      };
+      onExport(selectedFormat, combinedOptions);
+    } else {
+      onExport(selectedFormat, exportOptions);
+    }
   };
 
   const canExport = document.steps.length > 0 && document.title.trim().length > 0;
@@ -199,9 +225,144 @@ const ExportPanel: React.FC<ExportPanelProps> = ({
     </div>
   );
 
+  const renderTrainingModuleOptions = () => (
+    <AnimatePresence>
+      {selectedFormat === 'training-module' && (
+        <motion.div
+          initial={{ height: 0, opacity: 0 }}
+          animate={{ height: "auto", opacity: 1 }}
+          exit={{ height: 0, opacity: 0 }}
+          transition={{ duration: 0.3 }}
+          className="space-y-6 overflow-hidden"
+        >
+          <div className="p-4 bg-gradient-to-r from-purple-500/10 to-blue-500/10 border border-purple-500/30 rounded-lg">
+            <div className="flex items-center gap-2 mb-3">
+              <GraduationCap className="h-5 w-5 text-purple-400" />
+              <h4 className="font-medium text-white">Training Module Configuration</h4>
+              {userRole === 'admin' && (
+                <Badge className="bg-purple-600 text-white text-xs">Admin</Badge>
+              )}
+            </div>
+            
+            <div className="space-y-4">
+              {/* Progress Tracking */}
+              <div className="flex items-center justify-between p-3 bg-zinc-800/50 rounded-lg">
+                <div className="flex items-center gap-3">
+                  <CheckCircle2 className="h-4 w-4 text-green-400" />
+                  <div>
+                    <p className="text-sm font-medium text-white">Progress Tracking</p>
+                    <p className="text-xs text-zinc-400">Track user completion and time spent</p>
+                  </div>
+                </div>
+                <Switch
+                  checked={exportOptions.includeProgressInfo}
+                  onCheckedChange={(checked) => updateOption("includeProgressInfo", checked)}
+                />
+              </div>
+              
+                             {/* Interactive Quizzes */}
+               <div className="flex items-center justify-between p-3 bg-zinc-800/50 rounded-lg">
+                 <div className="flex items-center gap-3">
+                   <Sparkles className="h-4 w-4 text-blue-400" />
+                   <div>
+                     <p className="text-sm font-medium text-white">Interactive Quizzes</p>
+                     <p className="text-xs text-zinc-400">Add knowledge checks between steps</p>
+                   </div>
+                 </div>
+                 <Switch
+                   checked={trainingOptions.enableQuizzes}
+                   onCheckedChange={(checked) => updateTrainingOption("enableQuizzes", checked)}
+                 />
+               </div>
+               
+               {/* Completion Certificates */}
+               <div className="flex items-center justify-between p-3 bg-zinc-800/50 rounded-lg">
+                 <div className="flex items-center gap-3">
+                   <Badge className="h-4 w-4 text-yellow-400" />
+                   <div>
+                     <p className="text-sm font-medium text-white">Completion Certificates</p>
+                     <p className="text-xs text-zinc-400">Generate certificates when training is completed</p>
+                   </div>
+                 </div>
+                 <Switch
+                   checked={trainingOptions.enableCertificates}
+                   onCheckedChange={(checked) => updateTrainingOption("enableCertificates", checked)}
+                 />
+               </div>
+               
+               {/* User Notes & Bookmarks */}
+               <div className="flex items-center justify-between p-3 bg-zinc-800/50 rounded-lg">
+                 <div className="flex items-center gap-3">
+                   <FileText className="h-4 w-4 text-orange-400" />
+                   <div>
+                     <p className="text-sm font-medium text-white">User Notes & Bookmarks</p>
+                     <p className="text-xs text-zinc-400">Allow users to take notes and bookmark steps</p>
+                   </div>
+                 </div>
+                 <Switch
+                   checked={trainingOptions.enableNotes && trainingOptions.enableBookmarks}
+                   onCheckedChange={(checked) => {
+                     updateTrainingOption("enableNotes", checked);
+                     updateTrainingOption("enableBookmarks", checked);
+                   }}
+                 />
+               </div>
+              
+                             {/* Password Protection */}
+               <div className="space-y-3">
+                 <label className="text-sm font-medium text-zinc-300 flex items-center gap-2">
+                   <Settings className="h-4 w-4" />
+                   Password Protection (Optional)
+                 </label>
+                 <div className="space-y-2">
+                   <input
+                     type="text"
+                     placeholder="Enter password for training module"
+                     value={trainingOptions.passwordProtection}
+                     className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded text-white text-sm"
+                     onChange={(e) => updateTrainingOption("passwordProtection", e.target.value)}
+                   />
+                   <p className="text-xs text-zinc-500">Leave empty for no password protection</p>
+                 </div>
+               </div>
+               
+               {/* Company Branding */}
+               <div className="space-y-3">
+                 <label className="text-sm font-medium text-zinc-300 flex items-center gap-2">
+                   <Palette className="h-4 w-4" />
+                   Company Branding
+                 </label>
+                 <div className="grid grid-cols-2 gap-3">
+                   <div>
+                     <label className="text-xs text-zinc-400">Primary Color</label>
+                     <input
+                       type="color"
+                       value={trainingOptions.primaryColor}
+                       onChange={(e) => updateTrainingOption("primaryColor", e.target.value)}
+                       className="w-full h-8 bg-zinc-800 border border-zinc-700 rounded"
+                     />
+                   </div>
+                   <div>
+                     <label className="text-xs text-zinc-400">Secondary Color</label>
+                     <input
+                       type="color"
+                       value={trainingOptions.secondaryColor}
+                       onChange={(e) => updateTrainingOption("secondaryColor", e.target.value)}
+                       className="w-full h-8 bg-zinc-800 border border-zinc-700 rounded"
+                     />
+                   </div>
+                 </div>
+               </div>
+            </div>
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+
   const renderAdvancedOptions = () => (
     <AnimatePresence>
-      {showAdvanced && (
+      {showAdvanced && selectedFormat !== 'training-module' && (
         <motion.div
           initial={{ height: 0, opacity: 0 }}
           animate={{ height: "auto", opacity: 1 }}
@@ -404,24 +565,29 @@ const ExportPanel: React.FC<ExportPanelProps> = ({
         {renderDocumentPreview()}
         {renderFormatSelector()}
         
-        {/* Advanced Options Toggle */}
-        <div className="flex items-center justify-between">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setShowAdvanced(!showAdvanced)}
-            className="text-zinc-400 hover:text-white hover:bg-zinc-800 p-0"
-          >
-            <Settings className="h-4 w-4 mr-2" />
-            Advanced Options
-            <motion.div
-              animate={{ rotate: showAdvanced ? 180 : 0 }}
-              className="ml-2"
+        {/* Training Module Options - Always show when selected */}
+        {renderTrainingModuleOptions()}
+        
+        {/* Advanced Options Toggle - Only for non-training formats */}
+        {selectedFormat !== 'training-module' && (
+          <div className="flex items-center justify-between">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowAdvanced(!showAdvanced)}
+              className="text-zinc-400 hover:text-white hover:bg-zinc-800 p-0"
             >
-              ▼
-            </motion.div>
-          </Button>
-        </div>
+              <Settings className="h-4 w-4 mr-2" />
+              Advanced Options
+              <motion.div
+                animate={{ rotate: showAdvanced ? 180 : 0 }}
+                className="ml-2"
+              >
+                ▼
+              </motion.div>
+            </Button>
+          </div>
+        )}
         
         {renderAdvancedOptions()}
         {renderExportProgress()}
@@ -442,7 +608,9 @@ const ExportPanel: React.FC<ExportPanelProps> = ({
             disabled={!canExport || isExporting}
             className={`w-full ${
               canExport && !isExporting
-                ? "bg-[#007AFF] hover:bg-[#0069D9] text-white"
+                ? selectedFormat === 'training-module'
+                  ? "bg-purple-600 hover:bg-purple-700 text-white"
+                  : "bg-[#007AFF] hover:bg-[#0069D9] text-white"
                 : "bg-zinc-700 text-zinc-400 cursor-not-allowed"
             }`}
             size="lg"
@@ -450,19 +618,43 @@ const ExportPanel: React.FC<ExportPanelProps> = ({
             {isExporting ? (
               <>
                 <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
-                Generating {selectedFormat.toUpperCase()}...
+                Generating {selectedFormat === 'training-module' ? 'Training Module' : selectedFormat.toUpperCase()}...
               </>
             ) : (
               <>
-                <Download className="h-4 w-4 mr-2" />
-                Export as {selectedFormat.toUpperCase()}
+                {selectedFormat === 'training-module' ? (
+                  <GraduationCap className="h-4 w-4 mr-2" />
+                ) : (
+                  <Download className="h-4 w-4 mr-2" />
+                )}
+                {selectedFormat === 'training-module' ? 'Create Training Module' : `Export as ${selectedFormat.toUpperCase()}`}
               </>
             )}
           </Button>
           
-          <p className="text-xs text-zinc-500 text-center">
-            Your {selectedFormat.toUpperCase()} will be downloaded automatically when ready
-          </p>
+          {selectedFormat === 'training-module' ? (
+            <div className="space-y-2">
+              <div className="p-3 bg-purple-500/10 border border-purple-500/30 rounded-lg">
+                <p className="text-xs text-purple-200 text-center font-medium">
+                  🎓 Training Module Features:
+                </p>
+                <ul className="text-xs text-purple-300 mt-2 space-y-1">
+                  <li>• Interactive step-by-step learning experience</li>
+                  <li>• Built-in progress tracking and completion status</li>
+                  <li>• User notes and bookmarking capabilities</li>
+                  <li>• Responsive design that works on any device</li>
+                  <li>• Self-contained HTML file - no server required</li>
+                </ul>
+              </div>
+              <p className="text-xs text-zinc-500 text-center">
+                Your Training Module will be downloaded as a complete HTML package
+              </p>
+            </div>
+          ) : (
+            <p className="text-xs text-zinc-500 text-center">
+              Your {selectedFormat.toUpperCase()} will be downloaded automatically when ready
+            </p>
+          )}
         </div>
       </CardContent>
     </Card>
