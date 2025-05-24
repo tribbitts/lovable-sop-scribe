@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { useAuth } from "./AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -12,6 +11,8 @@ interface SubscriptionContextType {
   isAdmin: boolean;
   canGeneratePdf: boolean;
   canUseHtmlExport: boolean;
+  canUseBasicTraining: boolean;
+  canUseAdvancedTraining: boolean;
   refreshSubscription: () => Promise<void>;
   dailyPdfExports: number;
   incrementDailyPdfExport: () => void;
@@ -35,6 +36,8 @@ const SubscriptionContext = createContext<SubscriptionContextType>({
   isAdmin: false,
   canGeneratePdf: true,
   canUseHtmlExport: false,
+  canUseBasicTraining: false,
+  canUseAdvancedTraining: false,
   refreshSubscription: async () => {},
   dailyPdfExports: 0,
   incrementDailyPdfExport: () => {},
@@ -124,7 +127,7 @@ export const SubscriptionProvider: React.FC<SubscriptionProviderProps> = ({ chil
 
       // If user is admin, they have all permissions
       if (userIsAdmin) {
-        setTier("pro-complete");
+        setTier("pro-learning");
         setLoading(false);
         return;
       }
@@ -143,7 +146,7 @@ export const SubscriptionProvider: React.FC<SubscriptionProviderProps> = ({ chil
         // Make sure status is active
         if (data.status === 'active') {
           // Validate that tier is one of the expected values
-          const validTiers: SubscriptionTier[] = ["free", "pro-pdf", "pro-html", "pro-complete"];
+          const validTiers: SubscriptionTier[] = ["free", "pro", "pro-learning"];
           const validTier = validTiers.includes(data.tier as SubscriptionTier) 
             ? data.tier as SubscriptionTier 
             : "free";
@@ -178,8 +181,8 @@ export const SubscriptionProvider: React.FC<SubscriptionProviderProps> = ({ chil
 
   // Increment daily PDF exports
   const incrementDailyPdfExport = () => {
-    // Admins are not limited by daily exports
-    if (isAdmin) return;
+    // Admins and pro users are not limited by daily exports
+    if (isAdmin || tier === "pro" || tier === "pro-learning") return;
     
     checkAndResetDailyCounters();
     const newCount = dailyPdfExports + 1;
@@ -189,8 +192,8 @@ export const SubscriptionProvider: React.FC<SubscriptionProviderProps> = ({ chil
 
   // Increment daily HTML exports
   const incrementDailyHtmlExport = () => {
-    // Admins are not limited by daily exports
-    if (isAdmin) return;
+    // Admins and pro users are not limited by daily exports
+    if (isAdmin || tier === "pro" || tier === "pro-learning") return;
     
     checkAndResetDailyCounters();
     const newCount = dailyHtmlExports + 1;
@@ -201,7 +204,7 @@ export const SubscriptionProvider: React.FC<SubscriptionProviderProps> = ({ chil
   // Determine if user can generate PDF
   const canGeneratePdf = () => {
     if (isAdmin) return true;
-    if (tier === "pro-pdf" || tier === "pro-complete") return true;
+    if (tier === "pro" || tier === "pro-learning") return true;
     if (tier === "free" && dailyPdfExports < 1) return true;
     return false;
   };
@@ -209,13 +212,26 @@ export const SubscriptionProvider: React.FC<SubscriptionProviderProps> = ({ chil
   // Determine if user can use HTML export
   const canUseHtmlExport = () => {
     if (isAdmin) return true; 
-    if (tier === "pro-html" || tier === "pro-complete") return true;
+    if (tier === "pro" || tier === "pro-learning") return true;
+    if (tier === "free" && dailyHtmlExports < 1) return true;
     return false;
+  };
+
+  // Determine if user can use basic training modules (Pro tier)
+  const canUseBasicTraining = () => {
+    if (isAdmin) return true;
+    return tier === "pro" || tier === "pro-learning";
+  };
+
+  // Determine if user can use full interactive training features (Pro Learning tier)
+  const canUseAdvancedTraining = () => {
+    if (isAdmin) return true;
+    return tier === "pro-learning";
   };
 
   // Helper function to check if user has any pro tier
   const isPro = () => {
-    return tier === "pro-pdf" || tier === "pro-html" || tier === "pro-complete" || isAdmin;
+    return tier === "pro" || tier === "pro-learning" || isAdmin;
   };
 
   // Alias for incrementDailyPdfExport to match expected function name
@@ -238,6 +254,8 @@ export const SubscriptionProvider: React.FC<SubscriptionProviderProps> = ({ chil
     isAdmin,
     canGeneratePdf: canGeneratePdf(),
     canUseHtmlExport: canUseHtmlExport(),
+    canUseBasicTraining: canUseBasicTraining(),
+    canUseAdvancedTraining: canUseAdvancedTraining(),
     refreshSubscription,
     dailyPdfExports,
     incrementDailyPdfExport,

@@ -37,12 +37,25 @@ export interface QuizQuestion {
   options?: string[];
   correctAnswer: string;
   explanation?: string;
+  detailedFeedback?: {
+    correctFeedback?: string;
+    incorrectFeedback?: string;
+    optionFeedback?: { [key: string]: string }; // Feedback for each multiple choice option
+  };
 }
 
 export interface LearningObjective {
   id: string;
   text: string;
   category?: "knowledge" | "skill" | "behavior";
+}
+
+// New content block types for enhanced engagement
+export interface ContentBlock {
+  id: string;
+  type: "text" | "key-takeaway" | "scenario" | "checklist";
+  content: string;
+  title?: string; // For titled blocks like scenarios
 }
 
 export interface SopStep {
@@ -57,6 +70,11 @@ export interface SopStep {
   completed?: boolean;
   fileLink?: string; // Adding this property to fix the error
   fileLinkText?: string; // Adding this property to fix the error
+  
+  // Enhanced content blocks
+  contentBlocks?: ContentBlock[];
+  keyTakeaway?: string; // Quick key takeaway field
+  estimatedTime?: number; // Estimated time in minutes
   
   // Training module properties
   trainingMode?: boolean;

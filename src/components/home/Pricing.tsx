@@ -1,4 +1,3 @@
-
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
@@ -128,30 +127,30 @@ const Pricing = () => {
   const navigate = useNavigate();
   
   const freeTierFeatures = [
-    { available: true, text: "Unlimited SOPs" },
+    { available: true, text: "Basic Training Documents" },
     { available: true, text: "1 HTML Export per day" },
     { available: true, text: "1 PDF Export per day" },
-    { available: true, text: "Basic Templates" },
-    { available: false, text: "Custom Backgrounds" },
-    { available: false, text: "Interactive Learning Modules" }
+    { available: true, text: "Screenshot Annotation" },
+    { available: false, text: "Interactive Training Modules" },
+    { available: false, text: "Progress Tracking & Quizzes" }
   ];
   
   const proTierFeatures = [
     { available: true, text: "Everything in Free" },
-    { available: true, text: "Unlimited PDF Exports" },
-    { available: true, text: "Unlimited HTML Exports" },
-    { available: true, text: "Custom Backgrounds" },
-    { available: true, text: "Upload Custom Backgrounds" },
-    { available: false, text: "Interactive Learning Modules" }
+    { available: true, text: "Unlimited PDF & HTML Exports" },
+    { available: true, text: "Basic Training Modules" },
+    { available: true, text: "Custom Branding & Backgrounds" },
+    { available: true, text: "Callout Tools & Annotations" },
+    { available: false, text: "Interactive Quizzes & Certificates" }
   ];
   
   const proLearningFeatures = [
     { available: true, text: "Everything in Pro" },
     { available: true, text: "Interactive Learning Modules" },
-    { available: true, text: "Offline Training Content" },
-    { available: true, text: "Progress Tracking" },
-    { available: true, text: "Quiz Creation" },
-    { available: true, text: "Certification Features" }
+    { available: true, text: "Progress Tracking & Bookmarks" },
+    { available: true, text: "Quiz Creation & Assessment" },
+    { available: true, text: "Completion Certificates" },
+    { available: true, text: "Offline Training Content" }
   ];
 
   const handleFreeTier = () => {
@@ -232,7 +231,7 @@ const Pricing = () => {
             onSubscribe={() => handleSubscribe('pro')}
             userTier={tier}
             loading={loading && processingTier === "pro"}
-            tier="pro-complete"
+            tier="pro"
             badgeText="POPULAR"
           />
           
@@ -244,7 +243,7 @@ const Pricing = () => {
             onSubscribe={() => handleSubscribe('pro-learning')}
             userTier={tier}
             loading={loading && processingTier === "pro-learning"}
-            tier="pro-complete"
+            tier="pro-learning"
             badgeText="PREMIUM"
           />
         </div>

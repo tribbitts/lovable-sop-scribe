@@ -34,7 +34,8 @@ import {
   Eye,
   Upload,
   Zap,
-  ArrowRight
+  ArrowRight,
+  Clock
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import ImageCropper from "./ImageCropper";
@@ -235,7 +236,7 @@ const StepCard: React.FC<StepCardProps> = ({
     <CardHeader className="pb-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4 flex-1">
-          {/* Step Number Badge */}
+          {/* Lesson Number Badge */}
           <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold transition-all ${
             step.completed 
               ? "bg-green-500 text-white shadow-lg" 
@@ -275,6 +276,20 @@ const StepCard: React.FC<StepCardProps> = ({
                       <Badge className="bg-gradient-to-r from-purple-600 to-blue-600 text-white text-xs">
                         <GraduationCap className="h-3 w-3 mr-1" />
                         Interactive
+                      </Badge>
+                    )}
+                    
+                    {step.estimatedTime && (
+                      <Badge variant="secondary" className="bg-blue-600/20 text-blue-300 border-blue-600/30 text-xs">
+                        <Clock className="h-3 w-3 mr-1" />
+                        {step.estimatedTime}min
+                      </Badge>
+                    )}
+                    
+                    {step.keyTakeaway && (
+                      <Badge variant="secondary" className="bg-yellow-600/20 text-yellow-300 border-yellow-600/30 text-xs">
+                        <Award className="h-3 w-3 mr-1" />
+                        Key Point
                       </Badge>
                     )}
                     
@@ -460,7 +475,7 @@ const StepCard: React.FC<StepCardProps> = ({
           <div className="relative bg-zinc-800 rounded-lg overflow-hidden" style={{ overflow: isEditingCallouts ? 'visible' : 'hidden' }}>
             <img
               src={step.screenshot.dataUrl}
-              alt={`Step ${index + 1} visual guide`}
+              alt={`Lesson ${index + 1} visual guide`}
               className="w-full h-auto block rounded-lg"
             />
             <div className="absolute inset-0">
@@ -514,6 +529,78 @@ const StepCard: React.FC<StepCardProps> = ({
         onChange={handleImageUpload}
         className="hidden"
       />
+
+      {/* Key Takeaway - Special highlight section */}
+      <div className="space-y-3">
+        <div className="flex items-center gap-2">
+          <label className="text-sm font-medium text-white flex items-center gap-2">
+            <Award className="h-4 w-4 text-yellow-400" />
+            Key Takeaway
+          </label>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger>
+                <HelpCircle className="h-3 w-3 text-zinc-400" />
+              </TooltipTrigger>
+              <TooltipContent>
+                <p className="text-xs">Highlight the most important point learners should remember</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
+        <Textarea
+          value={step.keyTakeaway || ""}
+          onChange={(e) => handleFieldChange("keyTakeaway", e.target.value)}
+          placeholder="What's the most important thing learners should remember from this lesson?"
+          className="bg-gradient-to-r from-yellow-500/10 to-orange-500/10 border-yellow-500/30 text-white min-h-[80px] resize-none placeholder:text-yellow-200/60"
+        />
+        {step.keyTakeaway && (
+          <div className="p-3 bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border border-yellow-500/40 rounded-lg">
+            <div className="flex items-start gap-2">
+              <Award className="h-4 w-4 text-yellow-400 mt-0.5 flex-shrink-0" />
+              <div className="text-sm text-yellow-100">{step.keyTakeaway}</div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Estimated Time - Help learners manage expectations */}
+      <div className="space-y-3">
+        <div className="flex items-center gap-2">
+          <label className="text-sm font-medium text-white flex items-center gap-2">
+            <Clock className="h-4 w-4 text-blue-400" />
+            Estimated Time
+          </label>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger>
+                <HelpCircle className="h-3 w-3 text-zinc-400" />
+              </TooltipTrigger>
+              <TooltipContent>
+                <p className="text-xs">How long should this lesson take to complete?</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
+        <div className="flex items-center gap-3">
+          <Input
+            type="number"
+            min="1"
+            max="120"
+            value={step.estimatedTime || ""}
+            onChange={(e) => handleFieldChange("estimatedTime", e.target.value ? parseInt(e.target.value) : undefined)}
+            placeholder="5"
+            className="bg-zinc-800 border-zinc-700 text-white w-20"
+          />
+          <span className="text-sm text-zinc-400">minutes</span>
+          {step.estimatedTime && (
+            <Badge variant="secondary" className="bg-blue-600/20 text-blue-300 border-blue-600/30">
+              <Clock className="h-3 w-3 mr-1" />
+              {step.estimatedTime}min
+            </Badge>
+          )}
+        </div>
+      </div>
 
       {/* Enhanced Instructions - Promoted to main area */}
       <div className="space-y-3">
@@ -782,12 +869,56 @@ const StepCard: React.FC<StepCardProps> = ({
                             placeholder="Enter your question..."
                             className="bg-zinc-800 border-zinc-700 text-white text-sm"
                           />
+                          
+                          <Select
+                            value={newQuizQuestion.type}
+                            onValueChange={(value: "multiple-choice" | "true-false" | "short-answer") => 
+                              setNewQuizQuestion(prev => ({ ...prev, type: value, options: value === "multiple-choice" ? ["", "", "", ""] : [] }))
+                            }
+                          >
+                            <SelectTrigger className="bg-zinc-800 border-zinc-700 text-white text-sm">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent className="bg-zinc-800 border-zinc-700">
+                              <SelectItem value="multiple-choice" className="text-white">Multiple Choice</SelectItem>
+                              <SelectItem value="true-false" className="text-white">True/False</SelectItem>
+                              <SelectItem value="short-answer" className="text-white">Short Answer</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          
+                          {newQuizQuestion.type === "multiple-choice" && (
+                            <div className="space-y-2">
+                              <label className="text-xs text-zinc-400">Answer Options:</label>
+                              {newQuizQuestion.options.map((option, index) => (
+                                <Input
+                                  key={index}
+                                  value={option}
+                                  onChange={(e) => {
+                                    const newOptions = [...newQuizQuestion.options];
+                                    newOptions[index] = e.target.value;
+                                    setNewQuizQuestion(prev => ({ ...prev, options: newOptions }));
+                                  }}
+                                  placeholder={`Option ${index + 1}`}
+                                  className="bg-zinc-800 border-zinc-700 text-white text-sm"
+                                />
+                              ))}
+                            </div>
+                          )}
+                          
                           <Input
                             value={newQuizQuestion.correctAnswer}
                             onChange={(e) => setNewQuizQuestion(prev => ({ ...prev, correctAnswer: e.target.value }))}
-                            placeholder="Correct answer..."
+                            placeholder={newQuizQuestion.type === "true-false" ? "True or False" : "Correct answer..."}
                             className="bg-zinc-800 border-zinc-700 text-white text-sm"
                           />
+                          
+                          <Textarea
+                            value={newQuizQuestion.explanation}
+                            onChange={(e) => setNewQuizQuestion(prev => ({ ...prev, explanation: e.target.value }))}
+                            placeholder="Explain why this is correct (optional)..."
+                            className="bg-zinc-800 border-zinc-700 text-white text-sm min-h-[60px] resize-none"
+                          />
+                          
                           <div className="flex gap-2">
                             <Button
                               size="sm"
@@ -871,7 +1002,7 @@ const StepCard: React.FC<StepCardProps> = ({
                 <Eye className="h-5 w-5 text-purple-400" />
                 <div>
                   <h3 className="text-lg font-semibold text-white">
-                    Full Size Callout Editor - Step {index + 1}
+                    Full Size Callout Editor - Lesson {index + 1}
                   </h3>
                   <p className="text-sm text-zinc-400 mt-1">
                     Large view for precise callout placement • Click anywhere to add callouts
@@ -892,7 +1023,7 @@ const StepCard: React.FC<StepCardProps> = ({
               <div className="relative bg-zinc-800 rounded-lg overflow-visible border border-zinc-700">
                 <img
                   src={step.screenshot.dataUrl}
-                  alt={`Step ${index + 1} screenshot`}
+                  alt={`Lesson ${index + 1} screenshot`}
                   className="w-full h-auto block rounded-lg max-h-[75vh] object-contain"
                 />
                 <div className="absolute inset-0">

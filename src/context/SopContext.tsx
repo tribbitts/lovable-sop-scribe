@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useContext, ReactNode } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { SopDocument, SopStep, ScreenshotData, Callout, StepResource, ExportFormat, ExportOptions } from "../types/sop";
@@ -17,6 +16,7 @@ interface SopContextType {
   
   // Step management
   addStep: () => void;
+  addStepFromTemplate: (templateType: "standard" | "knowledge-check" | "scenario" | "resource-focus") => void;
   updateStep: (stepId: string, field: keyof SopStep, value: any) => void;
   moveStepUp: (stepId: string) => void;
   moveStepDown: (stepId: string) => void;
@@ -128,26 +128,82 @@ export const SopProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const addStep = () => {
-    const newStep: SopStep = {
+    addStepFromTemplate("standard");
+  };
+
+  // Add step from template - new method for structured lesson creation
+  const addStepFromTemplate = (templateType: "standard" | "knowledge-check" | "scenario" | "resource-focus") => {
+    const baseStep: SopStep = {
       id: uuidv4(),
       title: "",
       description: "",
-      detailedInstructions: "",
-      notes: "",
-      tags: [],
-      resources: [],
       screenshot: null,
       completed: false,
-      trainingMode: true, // Default new steps to training mode
-      learningObjectives: [],
-      quizQuestions: [],
-      requiredScore: 80,
-      allowRetakes: true
+      trainingMode: sopDocument.trainingMode !== false,
     };
 
-    setSopDocument((prev) => ({
+    let templatedStep: SopStep;
+    
+    switch (templateType) {
+      case "knowledge-check":
+        templatedStep = {
+          ...baseStep,
+          title: "Knowledge Check",
+          description: "Test understanding of the previous concepts",
+          estimatedTime: 3,
+          keyTakeaway: "Verify comprehension before moving forward",
+          quizQuestions: [{
+            id: uuidv4(),
+            question: "",
+            type: "multiple-choice",
+            options: ["", "", "", ""],
+            correctAnswer: "",
+            explanation: ""
+          }]
+        };
+        break;
+        
+      case "scenario":
+        templatedStep = {
+          ...baseStep,
+          title: "Real-World Scenario",
+          description: "See how this applies in a practical situation",
+          estimatedTime: 5,
+          keyTakeaway: "Understanding practical application is key to retention",
+          detailedInstructions: "Describe a specific scenario where this knowledge would be applied...",
+        };
+        break;
+        
+      case "resource-focus":
+        templatedStep = {
+          ...baseStep,
+          title: "Additional Resources",
+          description: "Explore supporting materials and references",
+          estimatedTime: 10,
+          keyTakeaway: "These resources provide deeper insights for continued learning",
+          resources: [{
+            id: uuidv4(),
+            type: "link",
+            title: "",
+            url: "",
+            description: ""
+          }]
+        };
+        break;
+        
+      default: // "standard"
+        templatedStep = {
+          ...baseStep,
+          title: "",
+          description: "",
+          estimatedTime: 5,
+        };
+        break;
+    }
+
+    setSopDocument(prev => ({
       ...prev,
-      steps: [...prev.steps, newStep],
+      steps: [...prev.steps, templatedStep]
     }));
   };
 
@@ -668,6 +724,7 @@ export const SopProvider = ({ children }: { children: ReactNode }) => {
     
     // Step management
     addStep,
+    addStepFromTemplate,
     updateStep,
     moveStepUp,
     moveStepDown,

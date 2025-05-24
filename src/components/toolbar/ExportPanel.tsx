@@ -39,7 +39,7 @@ const ExportPanel: React.FC<ExportPanelProps> = ({
   isExporting = false,
   exportProgress
 }) => {
-  const { tier, isAdmin, canUseHtmlExport } = useSubscription();
+  const { tier, isAdmin, canUseHtmlExport, canUseBasicTraining, canUseAdvancedTraining } = useSubscription();
   const { user } = useAuth();
   
   // Determine user role - enhanced logic for admin detection
@@ -54,11 +54,11 @@ const ExportPanel: React.FC<ExportPanelProps> = ({
         ? 'editor' 
         : 'user';
   
-  console.log('🎓 ExportPanel Admin Debug:', {
+  console.log('🎓 ExportPanel Training Features Debug:', {
     userEmail: user?.email,
     tier,
-    isAdmin,
-    canUseHtmlExport,
+    canUseBasicTraining,
+    canUseAdvancedTraining,
     determinedRole: userRole
   });
   
@@ -75,10 +75,10 @@ const ExportPanel: React.FC<ExportPanelProps> = ({
   
   // Training module specific options with smart defaults
   const [trainingOptions, setTrainingOptions] = useState({
-    enableQuizzes: true,
-    enableCertificates: true,
-    enableNotes: true,
-    enableBookmarks: true,
+    enableQuizzes: canUseAdvancedTraining,
+    enableCertificates: canUseAdvancedTraining,
+    enableNotes: canUseBasicTraining,
+    enableBookmarks: canUseBasicTraining,
     passwordProtection: "",
     primaryColor: "#007AFF",
     secondaryColor: "#1E1E1E"
@@ -93,11 +93,20 @@ const ExportPanel: React.FC<ExportPanelProps> = ({
       format: "training-module" as ExportFormat,
       icon: GraduationCap,
       label: "Interactive Training Module",
-      description: "Complete offline learning experience with quizzes, progress tracking, and certificates",
-      features: ["Quiz Integration", "Progress Tracking", "Completion Certificates", "Self-contained HTML", "Works Offline", "No server required"],
-      badge: "Recommended",
+      description: canUseAdvancedTraining 
+        ? "Complete offline learning experience with quizzes, progress tracking, and certificates"
+        : canUseBasicTraining
+        ? "Basic training module with progress tracking and notes (Upgrade to Pro Learning for quizzes & certificates)"
+        : "Upgrade to Pro for training module creation",
+      features: canUseAdvancedTraining 
+        ? ["Quiz Integration", "Progress Tracking", "Completion Certificates", "Self-contained HTML", "Works Offline", "No server required"]
+        : canUseBasicTraining
+        ? ["Progress Tracking", "User Notes", "Self-contained HTML", "Works Offline", "Basic interactivity"]
+        : ["Requires Pro subscription"],
+      badge: canUseBasicTraining ? "Recommended" : "Pro Required",
       requiresAdmin: false,
-      isPrimary: true
+      isPrimary: true,
+      requiresSubscription: !canUseBasicTraining
     },
     {
       format: "pdf" as ExportFormat,
@@ -107,7 +116,8 @@ const ExportPanel: React.FC<ExportPanelProps> = ({
       features: ["Print optimized", "Static format", "Widely compatible"],
       badge: "Utility",
       requiresAdmin: false,
-      isPrimary: false
+      isPrimary: false,
+      requiresSubscription: false
     },
     {
       format: "html" as ExportFormat,
@@ -117,7 +127,8 @@ const ExportPanel: React.FC<ExportPanelProps> = ({
       features: ["Basic web format", "No interactivity", "Lightweight"],
       badge: "Utility", 
       requiresAdmin: false,
-      isPrimary: false
+      isPrimary: false,
+      requiresSubscription: false
     }
   ];
   
@@ -183,23 +194,31 @@ const ExportPanel: React.FC<ExportPanelProps> = ({
       
       <div className="space-y-4">
         {/* Primary Export Option */}
-        {formatOptions.filter(option => option.isPrimary).map(({ format, icon: Icon, label, description, features, badge }) => (
+        {formatOptions.filter(option => option.isPrimary).map(({ format, icon: Icon, label, description, features, badge, requiresSubscription }) => (
           <motion.div
             key={format}
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
+            whileHover={{ scale: requiresSubscription ? 1.01 : 1.02 }}
+            whileTap={{ scale: requiresSubscription ? 0.99 : 0.98 }}
             className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${
-              selectedFormat === format
+              selectedFormat === format && !requiresSubscription
                 ? "border-purple-500 bg-gradient-to-r from-purple-500/10 to-blue-500/10 shadow-lg"
+                : requiresSubscription
+                ? "border-orange-600/50 bg-gradient-to-r from-orange-600/5 to-red-600/5 hover:border-orange-500/70"
                 : "border-purple-600/50 bg-gradient-to-r from-purple-600/5 to-blue-600/5 hover:border-purple-500/70"
             }`}
-            onClick={() => setSelectedFormat(format)}
+            onClick={() => {
+              if (!requiresSubscription) {
+                setSelectedFormat(format);
+              }
+            }}
           >
             <div className="flex items-start justify-between">
               <div className="flex items-start gap-3">
                 <div className={`p-2.5 rounded-lg ${
-                  selectedFormat === format 
+                  selectedFormat === format && !requiresSubscription
                     ? "bg-gradient-to-r from-purple-600 to-blue-600 text-white shadow-lg" 
+                    : requiresSubscription
+                    ? "bg-gradient-to-r from-orange-600/20 to-red-600/20 text-orange-300"
                     : "bg-gradient-to-r from-purple-600/20 to-blue-600/20 text-purple-300"
                 }`}>
                   <Icon className="h-5 w-5" />
@@ -207,24 +226,38 @@ const ExportPanel: React.FC<ExportPanelProps> = ({
                 
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-2">
-                    <h4 className="font-semibold text-white">{label}</h4>
-                    <Badge className="bg-gradient-to-r from-purple-600 to-blue-600 text-white text-xs">
-                      ⭐ {badge}
+                    <h4 className={`font-semibold ${requiresSubscription ? 'text-orange-200' : 'text-white'}`}>{label}</h4>
+                    <Badge className={`text-xs ${
+                      requiresSubscription 
+                        ? 'bg-orange-600 text-white' 
+                        : 'bg-gradient-to-r from-purple-600 to-blue-600 text-white'
+                    }`}>
+                      {requiresSubscription ? '🔒' : '⭐'} {badge}
                     </Badge>
                   </div>
-                  <p className="text-zinc-400 text-sm mb-3">{description}</p>
+                  <p className={`text-sm mb-3 ${requiresSubscription ? 'text-orange-300' : 'text-zinc-400'}`}>{description}</p>
                   
                   <div className="flex flex-wrap gap-1">
                     {features.slice(0, 3).map((feature, index) => (
-                      <span key={index} className="text-xs px-2 py-1 bg-purple-600/20 rounded-full text-purple-200">
+                      <span key={index} className={`text-xs px-2 py-1 rounded-full ${
+                        requiresSubscription 
+                          ? 'bg-orange-600/20 text-orange-200' 
+                          : 'bg-purple-600/20 text-purple-200'
+                      }`}>
                         {feature}
                       </span>
                     ))}
                   </div>
+                  
+                  {requiresSubscription && (
+                    <div className="mt-3 p-2 bg-orange-500/10 border border-orange-500/30 rounded text-xs text-orange-200">
+                      💡 Upgrade to Pro to unlock training module creation
+                    </div>
+                  )}
                 </div>
               </div>
               
-              {selectedFormat === format && (
+              {selectedFormat === format && !requiresSubscription && (
                 <motion.div
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
@@ -773,7 +806,7 @@ const ExportPanel: React.FC<ExportPanelProps> = ({
             <div className="flex items-center gap-2 p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
               <AlertCircle className="h-4 w-4 text-yellow-500" />
               <p className="text-sm text-yellow-200">
-                Add a title and at least one step to enable export
+                Add a title and at least one lesson to enable export
               </p>
             </div>
           )}
@@ -828,7 +861,7 @@ const ExportPanel: React.FC<ExportPanelProps> = ({
                   ) : (
                     <Code className="h-4 w-4 mr-2" />
                   )}
-                  {selectedFormat === 'training-module' ? 'Create with Custom Settings' : `Export as ${selectedFormat.toUpperCase()}`}
+                  {selectedFormat === 'training-module' ? 'Customize & Export Training Module' : `Export as ${selectedFormat.toUpperCase()}`}
                 </>
               )}
             </Button>
