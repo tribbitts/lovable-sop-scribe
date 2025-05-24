@@ -48,9 +48,9 @@ const SopCreator: React.FC = () => {
     resetDocument,
     setSopTitle,
     setSopTopic,
-    setSopCompanyName,
+    setCompanyName, // Fixed function name
     setSopDate,
-    getStepIndex
+    setSopDescription // Added description setter
   } = useSopContext();
 
   // Get steps from sopDocument
@@ -122,7 +122,7 @@ const SopCreator: React.FC = () => {
     return () => clearTimeout(autoSave);
   }, [sopDocument]);
 
-  const handleStepChange = (stepId: string, field: string, value: any) => {
+  const handleStepChange = (stepId: string, field: keyof SopStep, value: any) => {
     updateStep(stepId, field, value);
   };
 
@@ -279,7 +279,12 @@ const SopCreator: React.FC = () => {
               <Settings className="h-4 w-4 mr-2" />
               Settings
             </Button>
-            <ExportPanel />
+            <ExportPanel 
+              document={sopDocument}
+              onExport={handleExport}
+              isExporting={isExporting}
+              exportProgress={exportProgress}
+            />
           </div>
         </div>
 
@@ -326,7 +331,7 @@ const SopCreator: React.FC = () => {
               <Input
                 id="company"
                 value={sopDocument.companyName || ""}
-                onChange={(e) => setSopCompanyName(e.target.value)}
+                onChange={(e) => setCompanyName(e.target.value)}
                 placeholder="Your organization name..."
                 className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-500"
               />
@@ -365,7 +370,7 @@ const SopCreator: React.FC = () => {
                 <Textarea
                   id="description"
                   value={sopDocument.description || ""}
-                  onChange={(e) => setSopCompanyName(e.target.value)} // Note: Update this to proper description handler
+                  onChange={(e) => setSopDescription(e.target.value)}
                   placeholder="Provide a detailed description of this training module..."
                   className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-500 min-h-[100px]"
                 />
@@ -377,14 +382,17 @@ const SopCreator: React.FC = () => {
         {/* Lesson Progress Overview */}
         {steps.length > 0 && (
           <div className="mt-6">
-            <ProgressTracker />
+            <ProgressTracker 
+              completed={getCompletedStepsCount()} 
+              total={steps.length}
+              showPercentage={true}
+            />
           </div>
         )}
       </CardContent>
     </Card>
   );
 
-  // Carousel Navigation
   const renderCarouselNavigation = () => (
     <Card className="bg-[#1E1E1E] border-zinc-800 rounded-2xl mb-6">
       <CardContent className="p-4">
@@ -491,7 +499,7 @@ const SopCreator: React.FC = () => {
         <motion.div
           initial={{ opacity: 0, x: 300 }}
           animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: 300 }}
+          exit={{ opacity: 0, x: -300 }}
           className="fixed right-6 top-6 bottom-6 w-96 z-50"
         >
           <div className="h-full overflow-y-auto">

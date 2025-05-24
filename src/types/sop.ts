@@ -1,3 +1,4 @@
+
 // Training Module Creator - Enhanced Types
 // Sync test: Updated for Lovable platform integration
 export type CalloutShape = "circle" | "rectangle" | "arrow" | "number";
@@ -90,6 +91,7 @@ export interface SopDocument {
   title: string;
   topic: string;
   date: string;
+  description?: string; // Added description property
   logo: string | null;
   backgroundImage?: string | null;
   steps: SopStep[];
@@ -164,6 +166,7 @@ export interface StepCardProps {
   isActive?: boolean;
   onStepChange?: (stepId: string, field: keyof SopStep, value: any) => void;
   onStepComplete?: (stepId: string, completed: boolean) => void;
+  onDeleteStep?: (stepId: string) => void; // Added onDeleteStep property
 }
 
 export interface CalloutOverlayProps {

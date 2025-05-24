@@ -1,3 +1,4 @@
+
 import React, { createContext, useState, useContext, ReactNode } from "react";
 import { SopDocument, SopStep, Callout, StepResource, ExportFormat } from "../types/sop";
 import { toast } from "@/hooks/use-toast";
@@ -11,9 +12,10 @@ interface SopContextType {
   setSopTitle: (title: string) => void;
   setSopTopic: (topic: string) => void;
   setSopDate: (date: string) => void;
+  setSopDescription: (description: string) => void; // Added description setter
   setLogo: (logo: string | null) => void;
   setBackgroundImage: (image: string | null) => void;
-  setCompanyName: (name: string) => void;
+  setCompanyName: (name: string) => void; // Fixed function name
   
   // Step management
   addStep: () => void;
@@ -71,6 +73,7 @@ const defaultSopDocument: SopDocument = {
   title: "",
   topic: "",
   date: new Date().toISOString().split("T")[0],
+  description: "", // Added description
   logo: null,
   backgroundImage: null,
   steps: [],
@@ -130,6 +133,10 @@ export const SopProvider = ({ children }: { children: ReactNode }) => {
 
   const setSopDate = (date: string) => {
     setSopDocument(prev => DocumentManager.updateDate(prev, date));
+  };
+
+  const setSopDescription = (description: string) => {
+    setSopDocument(prev => ({ ...prev, description }));
   };
 
   const setLogo = (logo: string | null) => {
@@ -298,6 +305,7 @@ export const SopProvider = ({ children }: { children: ReactNode }) => {
     setSopTitle,
     setSopTopic,
     setSopDate,
+    setSopDescription,
     setLogo,
     setBackgroundImage,
     setCompanyName,
