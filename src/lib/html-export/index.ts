@@ -24,6 +24,7 @@ export interface HtmlExportResult {
 interface ProcessedStep extends SopStep {
   processedScreenshot?: string;
   secondaryProcessedScreenshot?: string;
+  processedScreenshots?: string[]; // Add support for multiple screenshots
 }
 
 /**
@@ -42,7 +43,7 @@ export async function exportSopAsHtml(
         // Create a copy of the step that we can modify
         const processedStep: ProcessedStep = { ...step };
         
-        // Process primary screenshot if available
+        // Process primary screenshot if available (legacy support)
         if (step.screenshot?.dataUrl) {
           try {
             const processedImage = await createBase64ImageWithCallouts(
@@ -55,16 +56,32 @@ export async function exportSopAsHtml(
           }
         }
         
-        // Process secondary screenshot if available
-        if (step.screenshot?.secondaryDataUrl) {
+        // Process multiple screenshots if available
+        if (step.screenshots && step.screenshots.length > 0) {
           try {
-            const processedSecondaryImage = await createBase64ImageWithCallouts(
-              step.screenshot.secondaryDataUrl,
-              step.screenshot.secondaryCallouts || []
+            const processedScreenshots = await Promise.all(
+              step.screenshots.map(async (screenshot) => {
+                try {
+                  return await createBase64ImageWithCallouts(
+                    screenshot.dataUrl,
+                    screenshot.callouts || []
+                  );
+                } catch (error) {
+                  console.error(`Error processing screenshot ${screenshot.id} for step ${step.title}:`, error);
+                  return null;
+                }
+              })
             );
-            processedStep.secondaryProcessedScreenshot = processedSecondaryImage;
+            
+            // Filter out null results from failed processing
+            processedStep.processedScreenshots = processedScreenshots.filter(Boolean) as string[];
+            
+            // Also set the first screenshot as the primary one for backward compatibility
+            if (processedStep.processedScreenshots.length > 0 && !processedStep.processedScreenshot) {
+              processedStep.processedScreenshot = processedStep.processedScreenshots[0];
+            }
           } catch (error) {
-            console.error(`Error processing secondary screenshot for step ${step.title}:`, error);
+            console.error(`Error processing screenshots for step ${step.title}:`, error);
           }
         }
         
@@ -111,11 +128,14 @@ function calculateEnhancedTemplateSize(processedSteps: ProcessedStep[]): number 
   let totalSize = 0;
   
   processedSteps.forEach(step => {
-    if (step.processedScreenshot) {
+    if (step.processedScreenshots && step.processedScreenshots.length > 0) {
+      // Multiple screenshots
+      step.processedScreenshots.forEach(screenshot => {
+        totalSize += estimateBase64ImageSize(screenshot);
+      });
+    } else if (step.processedScreenshot) {
+      // Legacy single screenshot
       totalSize += estimateBase64ImageSize(step.processedScreenshot);
-    }
-    if (step.secondaryProcessedScreenshot) {
-      totalSize += estimateBase64ImageSize(step.secondaryProcessedScreenshot);
     }
   });
   
@@ -148,29 +168,38 @@ function generateSopHtml(
       ? `<div class="sop-tags">${step.tags.map(tag => `<span class="sop-tag clickable-tag" data-tag="${tag}" title="Click to highlight related steps">${tag}</span>`).join('')}</div>`
       : '';
     
-    // Process screenshots
+    // Process screenshots - handle both legacy and new multiple screenshots
     let screenshotHtml = '';
-    if (step.processedScreenshot) {
-      // Estimate size for tracking
+    
+    // Check if we have multiple screenshots
+    if (step.processedScreenshots && step.processedScreenshots.length > 0) {
+      // Multiple screenshots mode
+      screenshotHtml = step.processedScreenshots.map((screenshotData, screenshotIndex) => {
+        // Estimate size for tracking
+        const screenshotSize = estimateBase64ImageSize(screenshotData);
+        totalEstimatedSize += screenshotSize;
+        
+        // Get the original screenshot metadata for title/description
+        const originalScreenshot = step.screenshots?.[screenshotIndex];
+        const screenshotTitle = originalScreenshot?.title || `Screenshot ${screenshotIndex + 1}`;
+        const screenshotDescription = originalScreenshot?.description;
+        
+        return `
+          <div class="sop-screenshot ${screenshotIndex > 0 ? 'sop-additional-screenshot' : ''}">
+            ${screenshotTitle !== `Screenshot ${screenshotIndex + 1}` ? `<h4 class="screenshot-title">${screenshotTitle}</h4>` : ''}
+            <img src="${screenshotData}" alt="${screenshotTitle}" />
+            ${screenshotDescription ? `<p class="screenshot-description">${screenshotDescription}</p>` : ''}
+          </div>
+        `;
+      }).join('');
+    } else if (step.processedScreenshot) {
+      // Legacy single screenshot mode
       const screenshotSize = estimateBase64ImageSize(step.processedScreenshot);
       totalEstimatedSize += screenshotSize;
       
       screenshotHtml = `
         <div class="sop-screenshot">
           <img src="${step.processedScreenshot}" alt="Step ${index + 1} Screenshot" />
-        </div>
-      `;
-    }
-    
-    // Process secondary screenshot if available
-    let secondaryScreenshotHtml = '';
-    if (step.secondaryProcessedScreenshot) {
-      const secondarySize = estimateBase64ImageSize(step.secondaryProcessedScreenshot);
-      totalEstimatedSize += secondarySize;
-      
-      secondaryScreenshotHtml = `
-        <div class="sop-secondary-screenshot">
-          <img src="${step.secondaryProcessedScreenshot}" alt="Step ${index + 1} Additional Screenshot" />
         </div>
       `;
     }
@@ -220,8 +249,6 @@ function generateSopHtml(
               <p>${step.detailedInstructions}</p>
             </div>
           ` : ''}
-          
-          ${secondaryScreenshotHtml}
           
           ${step.notes ? `
             <div class="step-notes">
@@ -473,12 +500,40 @@ function generateSopHtml(
     
     /* Screenshot styles */
     .sop-screenshot,
-    .sop-secondary-screenshot {
+    .sop-additional-screenshot {
       margin: 20px 0;
     }
     
+    .sop-additional-screenshot {
+      margin-top: 30px;
+      padding-top: 20px;
+      border-top: 1px solid #333;
+    }
+    
+    .light-mode .sop-additional-screenshot {
+      border-top-color: #eee;
+    }
+    
+    .screenshot-title {
+      font-size: 16px;
+      font-weight: 600;
+      margin: 0 0 10px 0;
+      color: var(--primary-color);
+    }
+    
+    .screenshot-description {
+      font-size: 14px;
+      color: #aaa;
+      margin: 10px 0 0 0;
+      font-style: italic;
+    }
+    
+    .light-mode .screenshot-description {
+      color: #666;
+    }
+    
     .sop-screenshot img,
-    .sop-secondary-screenshot img {
+    .sop-additional-screenshot img {
       width: 100%;
       height: auto;
       display: block;
@@ -487,7 +542,7 @@ function generateSopHtml(
     }
     
     .light-mode .sop-screenshot img,
-    .light-mode .sop-secondary-screenshot img {
+    .light-mode .sop-additional-screenshot img {
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     }
     
@@ -1011,14 +1066,20 @@ async function createHtmlZipPackage(
     
     // Add screenshots to assets
     processedSteps.forEach((step, index) => {
-      if (step.processedScreenshot) {
+      if (step.processedScreenshots && step.processedScreenshots.length > 0) {
+        // Multiple screenshots
+        step.processedScreenshots.forEach((screenshot, screenshotIndex) => {
+          const imageData = screenshot.split(",")[1];
+          if (imageData) {
+            assets?.file(`screenshot_${index + 1}_${screenshotIndex + 1}.jpg`, imageData, { base64: true });
+          }
+        });
+      } else if (step.processedScreenshot) {
+        // Legacy single screenshot
         const imageData = step.processedScreenshot.split(",")[1];
-        assets?.file(`screenshot_${index + 1}.jpg`, imageData, { base64: true });
-      }
-      
-      if (step.secondaryProcessedScreenshot) {
-        const imageData = step.secondaryProcessedScreenshot.split(",")[1];
-        assets?.file(`screenshot_${index + 1}_2.jpg`, imageData, { base64: true });
+        if (imageData) {
+          assets?.file(`screenshot_${index + 1}.jpg`, imageData, { base64: true });
+        }
       }
     });
     
@@ -1050,14 +1111,16 @@ function createZipFriendlyHtml(
   
   // Replace screenshots
   processedSteps.forEach((step, index) => {
-    if (step.processedScreenshot) {
+    if (step.processedScreenshots && step.processedScreenshots.length > 0) {
+      // Multiple screenshots
+      step.processedScreenshots.forEach((screenshot, screenshotIndex) => {
+        const regex = new RegExp(`<img src="${escapeRegExp(screenshot)}"`, 'g');
+        zipHtml = zipHtml.replace(regex, `<img src="assets/screenshot_${index + 1}_${screenshotIndex + 1}.jpg"`);
+      });
+    } else if (step.processedScreenshot) {
+      // Legacy single screenshot
       const regex = new RegExp(`<img src="${escapeRegExp(step.processedScreenshot)}"`, 'g');
       zipHtml = zipHtml.replace(regex, `<img src="assets/screenshot_${index + 1}.jpg"`);
-    }
-    
-    if (step.secondaryProcessedScreenshot) {
-      const regex = new RegExp(`<img src="${escapeRegExp(step.secondaryProcessedScreenshot)}"`, 'g');
-      zipHtml = zipHtml.replace(regex, `<img src="assets/screenshot_${index + 1}_2.jpg"`);
     }
   });
   
