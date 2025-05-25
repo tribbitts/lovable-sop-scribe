@@ -1,5 +1,6 @@
 
 import { SopDocument } from "@/types/sop";
+import { setFontSafe, getStringWidthSafe } from "./font-handler";
 
 /**
  * Add main content (title, subtitle, date, company) to cover page
@@ -15,11 +16,7 @@ export function addCoverPageContent(
   const centerY = height / 2;
   
   // Main Title - SOPify branded styling
-  try {
-    pdf.setFont("Inter", "bold");
-  } catch (fontError) {
-    pdf.setFont("helvetica", "bold");
-  }
+  setFontSafe(pdf, "helvetica", "bold");
   
   pdf.setFontSize(36);
   pdf.setTextColor(0, 122, 255); // SOPify blue
@@ -27,36 +24,20 @@ export function addCoverPageContent(
   const title = sopDocument.title || "Untitled SOP";
   
   // Center title with proper measurement
-  let titleWidth;
-  try {
-    titleWidth = pdf.getStringUnitWidth(title) * 36 / pdf.internal.scaleFactor;
-  } catch (e) {
-    titleWidth = title.length * 7; // Estimate for fallback
-  }
-  
+  const titleWidth = getStringWidthSafe(pdf, title, 36);
   const titleX = (width - titleWidth) / 2;
   const titleY = centerY - logoOffset + 10;
   pdf.text(title, titleX, titleY);
   
   // Subtitle line with SOPify professional styling
-  try {
-    pdf.setFont("Inter", "normal");
-  } catch (fontError) {
-    pdf.setFont("helvetica", "normal");
-  }
+  setFontSafe(pdf, "helvetica", "normal");
   
   pdf.setFontSize(16);
   pdf.setTextColor(44, 62, 80); // Professional dark gray
   
   const subtitle = `${sopDocument.topic ? sopDocument.topic.toUpperCase() : 'STANDARD OPERATING PROCEDURE'}`;
   
-  let subtitleWidth;
-  try {
-    subtitleWidth = pdf.getStringUnitWidth(subtitle) * 16 / pdf.internal.scaleFactor;
-  } catch (e) {
-    subtitleWidth = subtitle.length * 3;
-  }
-  
+  const subtitleWidth = getStringWidthSafe(pdf, subtitle, 16);
   const subtitleX = (width - subtitleWidth) / 2;
   const subtitleY = titleY + 22;
   pdf.text(subtitle, subtitleX, subtitleY);
@@ -93,11 +74,7 @@ function addDateAndCompanyInfo(pdf: any, sopDocument: SopDocument, width: number
   const lineY = subtitleY + 18;
   
   // Date and version info with enhanced styling
-  try {
-    pdf.setFont("Inter", "normal");
-  } catch (fontError) {
-    pdf.setFont("helvetica", "normal");
-  }
+  setFontSafe(pdf, "helvetica", "normal");
   
   pdf.setFontSize(12);
   pdf.setTextColor(127, 140, 141); // Professional light gray
@@ -108,13 +85,7 @@ function addDateAndCompanyInfo(pdf: any, sopDocument: SopDocument, width: number
     day: 'numeric' 
   });
   
-  let dateWidth;
-  try {
-    dateWidth = pdf.getStringUnitWidth(dateText) * 12 / pdf.internal.scaleFactor;
-  } catch (e) {
-    dateWidth = dateText.length * 2.2;
-  }
-  
+  const dateWidth = getStringWidthSafe(pdf, dateText, 12);
   const dateX = (width - dateWidth) / 2;
   const dateY = lineY + 35;
   pdf.text(dateText, dateX, dateY);
@@ -125,13 +96,7 @@ function addDateAndCompanyInfo(pdf: any, sopDocument: SopDocument, width: number
     pdf.setTextColor(160, 160, 160);
     
     const companyText = sopDocument.companyName.toUpperCase();
-    let companyWidth;
-    try {
-      companyWidth = pdf.getStringUnitWidth(companyText) * 11 / pdf.internal.scaleFactor;
-    } catch (e) {
-      companyWidth = companyText.length * 2;
-    }
-    
+    const companyWidth = getStringWidthSafe(pdf, companyText, 11);
     const companyX = (width - companyWidth) / 2;
     pdf.text(companyText, companyX, dateY + 15);
   }

@@ -1,10 +1,11 @@
 
 import { jsPDF } from "jspdf";
 import { SopDocument } from "@/types/sop";
-import { generatePdfFilename, registerInterFont } from "@/lib/pdf/utils";
+import { generatePdfFilename } from "@/lib/pdf/utils";
 import { addCoverPage } from "@/lib/pdf/cover-page";
 import { addContentPageDesign, addPageFooters } from "@/lib/pdf/content-page";
 import { renderSteps } from "@/lib/pdf/step-renderer";
+import { initializePdfFonts, setFontSafe, getStringWidthSafe } from "@/lib/pdf/font-handler";
 
 // Add enhanced table of contents page with SOPify branding
 function addTableOfContents(
@@ -21,11 +22,7 @@ function addTableOfContents(
   const { steps } = sopDocument;
   
   // SOPify branded title design
-  try {
-    pdf.setFont("Inter", "bold");
-  } catch (fontError) {
-    pdf.setFont("helvetica", "bold");
-  }
+  setFontSafe(pdf, "helvetica", "bold");
   
   pdf.setFontSize(28);
   pdf.setTextColor(0, 122, 255); // SOPify blue
@@ -37,11 +34,7 @@ function addTableOfContents(
   pdf.line(margin.left, margin.top + 28, margin.left + 100, margin.top + 28);
   
   // Enhanced subtitle with SOPify styling
-  try {
-    pdf.setFont("Inter", "normal");
-  } catch (fontError) {
-    pdf.setFont("helvetica", "normal");
-  }
+  setFontSafe(pdf, "helvetica", "normal");
   
   pdf.setFontSize(12);
   pdf.setTextColor(127, 140, 141); // Professional gray
@@ -92,30 +85,16 @@ function addTableOfContents(
     pdf.circle(circleX, circleY, circleRadius - 2, "F");
     
     // Step number
-    try {
-      pdf.setFont("Inter", "bold");
-    } catch (fontError) {
-      pdf.setFont("helvetica", "bold");
-    }
+    setFontSafe(pdf, "helvetica", "bold");
     pdf.setFontSize(11);
     pdf.setTextColor(0, 122, 255);
     
     const numberStr = String(stepNumber);
-    let numberWidth;
-    try {
-      numberWidth = pdf.getStringUnitWidth(numberStr) * 11 / pdf.internal.scaleFactor;
-    } catch (e) {
-      numberWidth = numberStr.length * 2;
-    }
-    
+    const numberWidth = getStringWidthSafe(pdf, numberStr, 11);
     pdf.text(numberStr, circleX - (numberWidth / 2), circleY + 2);
     
     // Enhanced step title with SOPify typography
-    try {
-      pdf.setFont("Inter", "semibold");
-    } catch (fontError) {
-      pdf.setFont("helvetica", "bold");
-    }
+    setFontSafe(pdf, "helvetica", "bold");
     pdf.setFontSize(12);
     pdf.setTextColor(44, 62, 80); // Professional dark gray
     
@@ -131,21 +110,11 @@ function addTableOfContents(
     pdf.text(displayTitle, titleX, currentY + 4);
     
     // Enhanced page number with SOPify styling
-    try {
-      pdf.setFont("Inter", "normal");
-    } catch (fontError) {
-      pdf.setFont("helvetica", "normal");
-    }
+    setFontSafe(pdf, "helvetica", "normal");
     pdf.setFontSize(10);
     
     const pageNumText = String(pageNumber);
-    let pageNumWidth;
-    try {
-      pageNumWidth = pdf.getStringUnitWidth(pageNumText) * 10 / pdf.internal.scaleFactor;
-    } catch (e) {
-      pageNumWidth = pageNumText.length * 1.8;
-    }
-    
+    const pageNumWidth = getStringWidthSafe(pdf, pageNumText, 10);
     const pageNumX = width - margin.right - 18;
     
     // SOPify branded page number background
@@ -158,7 +127,7 @@ function addTableOfContents(
     // Enhanced connecting line with SOPify styling
     pdf.setDrawColor(0, 122, 255, 0.2);
     pdf.setLineWidth(0.5);
-    const lineStartX = titleX + pdf.getStringUnitWidth(displayTitle) * 12 / pdf.internal.scaleFactor + 10;
+    const lineStartX = titleX + getStringWidthSafe(pdf, displayTitle, 12) + 10;
     const lineEndX = pageNumX - 15;
     if (lineEndX > lineStartX) {
       // Leader dots for professional appearance
@@ -191,14 +160,10 @@ export async function generatePDF(sopDocument: SopDocument): Promise<string> {
         floatPrecision: "smart"
       });
 
-      // Try to register custom fonts but fallback gracefully to system fonts
-      try {
-        await registerInterFont(pdf);
-        console.log("SOPify custom fonts registered successfully");
-      } catch (error) {
-        console.error("Using system fonts instead of custom fonts due to error:", error);
-        // Explicitly set a system font to ensure we have a font to use
-        pdf.setFont("helvetica", "normal");
+      // Initialize fonts with proper error handling
+      const fontsInitialized = initializePdfFonts(pdf);
+      if (!fontsInitialized) {
+        console.warn("Font initialization failed, proceeding with defaults");
       }
       
       // Get PDF dimensions
@@ -266,12 +231,6 @@ export async function generatePDF(sopDocument: SopDocument): Promise<string> {
         const filename = generatePdfFilename(sopDocument);
         console.log(`Saving SOPify PDF as: ${filename}`);
         
-        // Use high quality settings for SOPify professional output
-        const options = {
-          quality: 0.98,
-          compression: 'FAST'
-        };
-        
         try {
           pdf.save(filename);
           console.log("SOPify PDF saved successfully");
@@ -283,11 +242,11 @@ export async function generatePDF(sopDocument: SopDocument): Promise<string> {
         }
       } catch (error) {
         console.error("Error in SOPify PDF creation process:", error);
-        reject(error);
+        reject(new Error(`PDF generation failed: ${error instanceof Error ? error.message : String(error)}`));
       }
     } catch (error) {
       console.error("SOPify PDF generation error:", error);
-      reject(error);
+      reject(new Error(`PDF initialization failed: ${error instanceof Error ? error.message : String(error)}`));
     }
   });
 }

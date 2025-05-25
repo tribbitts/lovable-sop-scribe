@@ -1,4 +1,6 @@
 
+import { setFontSafe, getStringWidthSafe } from "./font-handler";
+
 /**
  * Add professional SOPify branded footer to cover page
  */
@@ -11,23 +13,13 @@ export function addSopifyBrandedFooter(pdf: any, width: number, height: number, 
   pdf.line(margin.left, footerY - 8, width - margin.right, footerY - 8);
   
   // Footer text with SOPify branding
-  try {
-    pdf.setFont("Inter", "normal");
-  } catch (fontError) {
-    pdf.setFont("helvetica", "normal");
-  }
+  setFontSafe(pdf, "helvetica", "normal");
   
   pdf.setFontSize(9);
   pdf.setTextColor(0, 122, 255); // SOPify blue
   
   const footerText = "Powered by SOPify • Professional SOP Management Platform";
-  let footerWidth;
-  try {
-    footerWidth = pdf.getStringUnitWidth(footerText) * 9 / pdf.internal.scaleFactor;
-  } catch (e) {
-    footerWidth = footerText.length * 1.6;
-  }
-  
+  const footerWidth = getStringWidthSafe(pdf, footerText, 9);
   const footerX = (width - footerWidth) / 2;
   pdf.text(footerText, footerX, footerY);
 }
@@ -37,22 +29,12 @@ export function addSopifyBrandedFooter(pdf: any, width: number, height: number, 
  */
 export function addSopifyWatermark(pdf: any, width: number, height: number) {
   // Add subtle SOPify text watermark in bottom right
-  try {
-    pdf.setFont("Inter", "normal");
-  } catch (fontError) {
-    pdf.setFont("helvetica", "normal");
-  }
+  setFontSafe(pdf, "helvetica", "normal");
   
   pdf.setFontSize(8);
   pdf.setTextColor(0, 122, 255, 0.3); // Very subtle SOPify blue
   
   const watermarkText = "SOPify";
-  let watermarkWidth;
-  try {
-    watermarkWidth = pdf.getStringUnitWidth(watermarkText) * 8 / pdf.internal.scaleFactor;
-  } catch (e) {
-    watermarkWidth = watermarkText.length * 1.4;
-  }
-  
+  const watermarkWidth = getStringWidthSafe(pdf, watermarkText, 8);
   pdf.text(watermarkText, width - watermarkWidth - 15, height - 10);
 }
