@@ -49,6 +49,54 @@ export const pdfThemes: Record<string, PdfTheme> = {
     },
     borderRadius: 8
   },
+  elegant: {
+    name: "Elegant",
+    colors: {
+      primary: "#8B5CF6",
+      secondary: "#374151",
+      accent: "#F59E0B",
+      background: "#FFFFFF",
+      text: "#1F2937",
+      textLight: "#9CA3AF",
+      border: "#F3F4F6"
+    },
+    fonts: {
+      primary: "Inter",
+      secondary: "Inter",
+      accent: "Inter"
+    },
+    spacing: {
+      small: 10,
+      medium: 20,
+      large: 30,
+      xlarge: 40
+    },
+    borderRadius: 12
+  },
+  technical: {
+    name: "Technical",
+    colors: {
+      primary: "#0891B2",
+      secondary: "#0F172A",
+      accent: "#059669",
+      background: "#F1F5F9",
+      text: "#334155",
+      textLight: "#64748B",
+      border: "#CBD5E1"
+    },
+    fonts: {
+      primary: "Inter",
+      secondary: "Inter",
+      accent: "Inter"
+    },
+    spacing: {
+      small: 6,
+      medium: 14,
+      large: 22,
+      xlarge: 28
+    },
+    borderRadius: 6
+  },
   modern: {
     name: "Modern",
     colors: {

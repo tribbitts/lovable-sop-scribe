@@ -54,7 +54,12 @@ const ExportPanel: React.FC<ExportPanelProps> = ({
     customPrimaryColor: "#007AFF",
     customSecondaryColor: "#1E1E1E",
     includeResources: true,
-    bundleName: document.title || "Training-Package"
+    bundleName: document.title || "Training-Package",
+    includeStyleGuide: true,
+    includeQuickReference: true,
+    includeVideoPlaceholders: false,
+    generateThumbnails: true,
+    createFolderStructure: true
   });
 
   const exportFormats = [
@@ -98,6 +103,8 @@ const ExportPanel: React.FC<ExportPanelProps> = ({
 
   const pdfThemes = [
     { id: "professional", name: "Professional", description: "Clean, business-focused design" },
+    { id: "elegant", name: "Elegant", description: "Sophisticated purple and gold styling" },
+    { id: "technical", name: "Technical", description: "Clean, engineering-focused design" },
     { id: "modern", name: "Modern", description: "Contemporary styling with bold accents" },
     { id: "corporate", name: "Corporate", description: "Traditional, formal appearance" },
     { id: "custom", name: "Custom", description: "Use your brand colors" }
@@ -307,16 +314,69 @@ const ExportPanel: React.FC<ExportPanelProps> = ({
               </div>
             )}
 
-            {/* Include Resources */}
-            <div className="flex items-center justify-between">
-              <div>
-                <Label className="text-sm font-medium text-zinc-300">Include Resources</Label>
-                <p className="text-xs text-zinc-500">Add logos, backgrounds, and style guides to bundle</p>
+            {/* Enhanced Bundle Options */}
+            <div className="space-y-4">
+              <h4 className="text-sm font-medium text-zinc-300 flex items-center gap-2">
+                <Package className="h-4 w-4" />
+                Bundle Contents
+              </h4>
+              
+              <div className="grid gap-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label className="text-sm font-medium text-zinc-300">Include Resources</Label>
+                    <p className="text-xs text-zinc-500">Add logos, backgrounds, and media files</p>
+                  </div>
+                  <Switch
+                    checked={bundleOptions.includeResources}
+                    onCheckedChange={(checked) => setBundleOptions(prev => ({ ...prev, includeResources: checked }))}
+                  />
+                </div>
+                
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label className="text-sm font-medium text-zinc-300">Style Guide</Label>
+                    <p className="text-xs text-zinc-500">Generate a visual style guide document</p>
+                  </div>
+                  <Switch
+                    checked={bundleOptions.includeStyleGuide}
+                    onCheckedChange={(checked) => setBundleOptions(prev => ({ ...prev, includeStyleGuide: checked }))}
+                  />
+                </div>
+                
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label className="text-sm font-medium text-zinc-300">Quick Reference</Label>
+                    <p className="text-xs text-zinc-500">Create a condensed cheat sheet</p>
+                  </div>
+                  <Switch
+                    checked={bundleOptions.includeQuickReference}
+                    onCheckedChange={(checked) => setBundleOptions(prev => ({ ...prev, includeQuickReference: checked }))}
+                  />
+                </div>
+                
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label className="text-sm font-medium text-zinc-300">Organized Folders</Label>
+                    <p className="text-xs text-zinc-500">Structure content in professional folders</p>
+                  </div>
+                  <Switch
+                    checked={bundleOptions.createFolderStructure}
+                    onCheckedChange={(checked) => setBundleOptions(prev => ({ ...prev, createFolderStructure: checked }))}
+                  />
+                </div>
+                
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label className="text-sm font-medium text-zinc-300">Generate Thumbnails</Label>
+                    <p className="text-xs text-zinc-500">Create preview images for all screenshots</p>
+                  </div>
+                  <Switch
+                    checked={bundleOptions.generateThumbnails}
+                    onCheckedChange={(checked) => setBundleOptions(prev => ({ ...prev, generateThumbnails: checked }))}
+                  />
+                </div>
               </div>
-              <Switch
-                checked={bundleOptions.includeResources}
-                onCheckedChange={(checked) => setBundleOptions(prev => ({ ...prev, includeResources: checked }))}
-              />
             </div>
           </div>
         )}
@@ -398,9 +458,29 @@ const ExportPanel: React.FC<ExportPanelProps> = ({
         </Button>
         
         {selectedFormat === "bundle" && (
-          <p className="text-xs text-zinc-500 text-center mt-2">
-            Bundle will include both PDF manual and interactive HTML module
-          </p>
+          <div className="mt-3 space-y-2">
+            <div className="flex items-center justify-between text-xs text-zinc-400">
+              <span>Estimated size:</span>
+              <span className="font-mono">{document.steps.length > 10 ? '15-25 MB' : '5-15 MB'}</span>
+            </div>
+            <div className="text-xs text-zinc-500 text-center">
+              Complete training package with PDF manual, interactive module, and resources
+            </div>
+            <div className="flex items-center justify-center gap-2 text-xs">
+              <div className="flex items-center gap-1 text-green-400">
+                <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+                <span>PDF Manual</span>
+              </div>
+              <div className="flex items-center gap-1 text-blue-400">
+                <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
+                <span>Interactive Module</span>
+              </div>
+              <div className="flex items-center gap-1 text-purple-400">
+                <div className="w-2 h-2 bg-purple-400 rounded-full"></div>
+                <span>Resources</span>
+              </div>
+            </div>
+          </div>
         )}
       </div>
     </div>

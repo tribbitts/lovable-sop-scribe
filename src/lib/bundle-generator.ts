@@ -10,6 +10,10 @@ export interface BundleOptions {
   htmlOptions?: HtmlExportOptions;
   includeResources?: boolean;
   bundleName?: string;
+  includeStyleGuide?: boolean;
+  includeQuickReference?: boolean;
+  generateThumbnails?: boolean;
+  createFolderStructure?: boolean;
 }
 
 export async function generateTrainingBundle(
@@ -75,9 +79,26 @@ export async function generateTrainingBundle(
     
     updateProgress("Adding resources and documentation...");
     
-    // Add resources if requested
+    // Add enhanced resources if requested
     if (options.includeResources) {
       await addBundleResources(zip, sopDocument);
+    }
+    
+    // Add style guide if requested
+    if (options.includeStyleGuide) {
+      const styleGuide = generateStyleGuide(sopDocument);
+      zip.file("resources/style-guide.html", styleGuide);
+    }
+    
+    // Add quick reference if requested
+    if (options.includeQuickReference) {
+      const quickRef = generateQuickReference(sopDocument);
+      zip.file("resources/quick-reference.md", quickRef);
+    }
+    
+    // Generate thumbnails if requested
+    if (options.generateThumbnails) {
+      await generateThumbnails(zip, sopDocument);
     }
     
     // Add README file
@@ -357,6 +378,71 @@ ${sopDocument.companyName ? `
 }
 ` : ''}
 `;
+}
+
+function generateQuickReference(sopDocument: SopDocument): string {
+  const stepsText = sopDocument.steps.map((step, index) => {
+    const stepNumber = index + 1;
+    return `${stepNumber}. ${step.title || `Step ${stepNumber}`}\n   ${step.description || 'No description available'}`;
+  }).join('\n\n');
+  
+  return `# Quick Reference Guide: ${sopDocument.title || 'Training Module'}
+
+## Overview
+${sopDocument.description || 'No description available'}
+
+## Steps Summary
+${stepsText}
+
+## Key Information
+- Total Steps: ${sopDocument.steps.length}
+- Company: ${sopDocument.companyName || 'Not specified'}
+- Topic: ${sopDocument.topic || 'Not specified'}
+- Created: ${sopDocument.date || new Date().toLocaleDateString()}
+
+## Notes
+This quick reference is designed for easy lookup during training or as a refresher after completing the full module.
+`;
+}
+
+async function generateThumbnails(zip: JSZip, sopDocument: SopDocument): Promise<void> {
+  try {
+    const thumbnailsFolder = zip.folder("resources/thumbnails");
+    
+    for (let i = 0; i < sopDocument.steps.length; i++) {
+      const step = sopDocument.steps[i];
+      const stepNumber = i + 1;
+      
+      // Handle both single screenshot and multiple screenshots
+      const screenshots = step.screenshots && step.screenshots.length > 0 
+        ? step.screenshots 
+        : step.screenshot ? [step.screenshot] : [];
+      
+      for (let j = 0; j < screenshots.length; j++) {
+        const screenshot = screenshots[j];
+        if (screenshot && screenshot.dataUrl) {
+          try {
+            // Convert data URL to blob for thumbnail
+            const blob = dataURItoBlob(screenshot.dataUrl);
+            
+            // Create a simple filename for the thumbnail
+            const filename = `step-${stepNumber}${screenshots.length > 1 ? `-${j + 1}` : ''}-thumb.jpg`;
+            
+            // For now, just use the original image as thumbnail
+            // In a more advanced implementation, you could resize the image
+            thumbnailsFolder?.file(filename, blob);
+            
+            console.log(`Generated thumbnail: ${filename}`);
+          } catch (error) {
+            console.warn(`Failed to generate thumbnail for step ${stepNumber}, screenshot ${j + 1}:`, error);
+          }
+        }
+      }
+    }
+  } catch (error) {
+    console.error("Error generating thumbnails:", error);
+    throw error;
+  }
 }
 
 function dataURItoBlob(dataURI: string): Blob {
