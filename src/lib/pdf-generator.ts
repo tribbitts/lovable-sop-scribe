@@ -1,4 +1,3 @@
-
 import { jsPDF } from "jspdf";
 import { SopDocument } from "@/types/sop";
 import { generatePdfFilename } from "@/lib/pdf/utils";
@@ -7,7 +6,7 @@ import { addContentPageDesign, addPageFooters } from "@/lib/pdf/content-page";
 import { renderSteps } from "@/lib/pdf/step-renderer";
 import { initializePdfFonts, setFontSafe, getStringWidthSafe } from "@/lib/pdf/font-handler";
 
-// Add enhanced table of contents page with SOPify branding
+// Add enhanced table of contents page with SOPify branding - blue only, no red
 function addTableOfContents(
   pdf: any,
   sopDocument: SopDocument,
@@ -28,12 +27,12 @@ function addTableOfContents(
   pdf.setTextColor(0, 122, 255); // SOPify blue
   pdf.text("Table of Contents", margin.left, margin.top + 18);
   
-  // SOPify branded header line with enhanced styling
+  // SOPify branded header line - blue only
   pdf.setDrawColor(0, 122, 255);
   pdf.setLineWidth(3);
   pdf.line(margin.left, margin.top + 28, margin.left + 100, margin.top + 28);
   
-  // Enhanced subtitle with SOPify styling
+  // Clean subtitle with SOPify styling
   setFontSafe(pdf, "helvetica", "normal");
   
   pdf.setFontSize(12);
@@ -42,7 +41,7 @@ function addTableOfContents(
   
   let currentY = margin.top + 60;
   
-  // Add each step to the table of contents with enhanced SOPify design
+  // Add each step to the table of contents with clean SOPify design - no red elements
   steps.forEach((step, index) => {
     const stepNumber = index + 1;
     const stepTitle = step.title || `Step ${stepNumber}`;
@@ -55,93 +54,72 @@ function addTableOfContents(
       currentY = margin.top + 30;
     }
     
-    const itemHeight = 22; // Increased for better spacing
-    const cardPadding = 10;
+    const itemHeight = 20;
+    const cardPadding = 8;
     
-    // Enhanced card design with SOPify styling
-    pdf.setFillColor(0, 0, 0, 0.02); // Very subtle shadow
-    pdf.roundedRect(margin.left + 1, currentY - cardPadding + 1, width - margin.left - margin.right, itemHeight, 8, 8, 'F');
+    // Clean card design - white only, no red
+    pdf.setFillColor(250, 250, 250); // Very light gray background
+    pdf.roundedRect(margin.left, currentY - cardPadding, width - margin.left - margin.right, itemHeight, 6, 6, 'F');
     
-    // Main card background
-    pdf.setFillColor(255, 255, 255);
-    pdf.roundedRect(margin.left, currentY - cardPadding, width - margin.left - margin.right, itemHeight, 8, 8, 'F');
-    
-    // SOPify blue card border
+    // Professional border - blue only
     pdf.setDrawColor(0, 122, 255, 0.15);
     pdf.setLineWidth(0.6);
-    pdf.roundedRect(margin.left, currentY - cardPadding, width - margin.left - margin.right, itemHeight, 8, 8, 'S');
+    pdf.roundedRect(margin.left, currentY - cardPadding, width - margin.left - margin.right, itemHeight, 6, 6, 'S');
     
-    // Enhanced step number with SOPify branding
-    const circleX = margin.left + 18;
+    // Clean step number with SOPify branding - blue only
+    const circleX = margin.left + 15;
     const circleY = currentY + 2;
-    const circleRadius = 9;
+    const circleRadius = 8;
     
-    // SOPify blue background circle
-    pdf.setFillColor(0, 122, 255);
+    // SOPify blue background circle only
+    pdf.setFillColor(0, 122, 255); // SOPify blue only
     pdf.circle(circleX, circleY, circleRadius, "F");
     
-    // White inner circle for depth
-    pdf.setFillColor(255, 255, 255);
-    pdf.circle(circleX, circleY, circleRadius - 2, "F");
-    
-    // Step number
+    // Step number text
     setFontSafe(pdf, "helvetica", "bold");
-    pdf.setFontSize(11);
-    pdf.setTextColor(0, 122, 255);
+    pdf.setFontSize(10);
+    pdf.setTextColor(255, 255, 255);
     
     const numberStr = String(stepNumber);
-    const numberWidth = getStringWidthSafe(pdf, numberStr, 11);
+    const numberWidth = getStringWidthSafe(pdf, numberStr, 10);
     pdf.text(numberStr, circleX - (numberWidth / 2), circleY + 2);
     
-    // Enhanced step title with SOPify typography
-    setFontSafe(pdf, "helvetica", "bold");
-    pdf.setFontSize(12);
-    pdf.setTextColor(44, 62, 80); // Professional dark gray
+    // Step title
+    setFontSafe(pdf, "helvetica", "normal");
+    pdf.setFontSize(11);
+    pdf.setTextColor(44, 62, 80);
     
-    const titleX = circleX + circleRadius + 12;
+    const titleX = circleX + circleRadius + 10;
     
-    // Improved title truncation
     let displayTitle = stepTitle;
-    const maxTitleLength = 65; // Increased for better readability
+    const maxTitleLength = 60;
     if (stepTitle.length > maxTitleLength) {
       displayTitle = stepTitle.substring(0, maxTitleLength - 3) + "...";
     }
     
-    pdf.text(displayTitle, titleX, currentY + 4);
+    pdf.text(displayTitle, titleX, currentY + 3);
     
-    // Enhanced page number with SOPify styling
+    // Page number - blue only, no red background
     setFontSafe(pdf, "helvetica", "normal");
     pdf.setFontSize(10);
+    pdf.setTextColor(0, 122, 255);
     
     const pageNumText = String(pageNumber);
     const pageNumWidth = getStringWidthSafe(pdf, pageNumText, 10);
-    const pageNumX = width - margin.right - 18;
+    const pageNumX = width - margin.right - 15;
     
-    // SOPify branded page number background
-    pdf.setFillColor(0, 122, 255, 0.1);
-    pdf.circle(pageNumX, circleY, 8, "F");
+    pdf.text(pageNumText, pageNumX - (pageNumWidth / 2), currentY + 3);
     
-    pdf.setTextColor(0, 122, 255);
-    pdf.text(pageNumText, pageNumX - (pageNumWidth / 2), circleY + 1.5);
-    
-    // Enhanced connecting line with SOPify styling
+    // Simple connecting line with SOPify styling - blue only
     pdf.setDrawColor(0, 122, 255, 0.2);
     pdf.setLineWidth(0.5);
-    const lineStartX = titleX + getStringWidthSafe(pdf, displayTitle, 12) + 10;
-    const lineEndX = pageNumX - 15;
+    const lineStartX = titleX + getStringWidthSafe(pdf, displayTitle, 11) + 8;
+    const lineEndX = pageNumX - 20;
     if (lineEndX > lineStartX) {
-      // Leader dots for professional appearance
-      const dotSpacing = 3;
-      const numDots = Math.floor((lineEndX - lineStartX) / dotSpacing);
-      
-      pdf.setFillColor(0, 122, 255, 0.3);
-      for (let i = 0; i < numDots; i++) {
-        const dotX = lineStartX + (i * dotSpacing);
-        pdf.circle(dotX, circleY, 0.3, 'F');
-      }
+      pdf.line(lineStartX, circleY, lineEndX, circleY);
     }
     
-    currentY += itemHeight + 8; // Enhanced spacing between items
+    currentY += itemHeight + 6;
   });
 }
 

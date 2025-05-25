@@ -8,11 +8,11 @@ export function addContentPageDesign(
   margin: any,
   backgroundImage: string | null = null
 ) {
-  // SOPify branded professional background
-  pdf.setFillColor(250, 251, 252); // Clean SOPify white-blue
+  // Clean professional white background
+  pdf.setFillColor(255, 255, 255); // Pure white
   pdf.rect(0, 0, width, height, 'F');
   
-  // Add subtle SOPify branded page elements
+  // Add minimal SOPify branded page elements - blue only
   addSopifyPageAccents(pdf, width, height, margin);
   
   // If there's a background image, add it with SOPify branding overlay
@@ -32,7 +32,7 @@ export function addContentPageDesign(
       });
       
       // SOPify branded overlay for readability
-      pdf.setFillColor(250, 251, 252);
+      pdf.setFillColor(255, 255, 255);
       pdf.setGState(new pdf.GState({ opacity: 0.92 })); // Professional opacity
       pdf.rect(0, 0, width, height, 'F');
       pdf.setGState(new pdf.GState({ opacity: 1 })); // Reset opacity
@@ -47,46 +47,18 @@ export function addContentPageDesign(
   addContentPageWatermark(pdf, width, height);
 }
 
-// Add SOPify branded page accents for visual interest
+// Add minimal SOPify branded page accents - blue only, no shapes
 function addSopifyPageAccents(pdf: any, width: number, height: number, margin: any) {
-  // SOPify blue header accent line
+  // SOPify blue header accent line only
   pdf.setDrawColor(0, 122, 255, 0.3); // SOPify blue with transparency
   pdf.setLineWidth(1.5);
   pdf.line(margin.left, margin.top - 10, width - margin.right, margin.top - 10);
-  
-  // Subtle SOPify branded flowing elements
-  pdf.setFillColor(0, 122, 255, 0.04); // Very subtle SOPify blue
-  
-  // Modern geometric accent in top-right
-  pdf.roundedRect(width - 35, 0, 35, 25, 12, 12, 'F');
-  
-  // Complementary bottom-left accent in success green
-  pdf.setFillColor(39, 174, 96, 0.03); // SOPify success green, very subtle
-  pdf.roundedRect(0, height - 20, 30, 20, 10, 10, 'F');
-  
-  // SOPify branded floating elements for texture
-  pdf.setFillColor(0, 122, 255, 0.025);
-  const sopifyTexture = [
-    { x: width * 0.18, y: height * 0.22, r: 1.2 },
-    { x: width * 0.82, y: height * 0.78, r: 1.5 },
-    { x: width * 0.12, y: height * 0.88, r: 0.8 },
-    { x: width * 0.88, y: height * 0.12, r: 1 }
-  ];
-  
-  sopifyTexture.forEach(dot => {
-    pdf.circle(dot.x, dot.y, dot.r, 'F');
-  });
-  
-  // Subtle SOPify geometric pattern
-  pdf.setFillColor(0, 122, 255, 0.015);
-  pdf.roundedRect(width * 0.75, height * 0.25, 8, 8, 2, 2, 'F');
-  pdf.roundedRect(width * 0.2, height * 0.75, 6, 6, 1, 1, 'F');
 }
 
 // Add SOPify watermark to content pages
 function addContentPageWatermark(pdf: any, width: number, height: number) {
   try {
-    pdf.setFont("Inter", "normal");
+    pdf.setFont("helvetica", "normal");
   } catch (fontError) {
     pdf.setFont("helvetica", "normal");
   }
@@ -108,21 +80,21 @@ function addContentPageWatermark(pdf: any, width: number, height: number) {
 export function addPageFooters(pdf: any, sopDocument: SopDocument, width: number, height: number, margin: any) {
   const pageCount = pdf.internal.getNumberOfPages();
   const currentYear = new Date().getFullYear();
-  const companyNameToUse = sopDocument.companyName || "SOPify"; // Fixed typo from "SOPity"
+  const companyNameToUse = sopDocument.companyName || "SOPify";
 
   for (let i = 1; i <= pageCount; i++) {
     pdf.setPage(i);
     
     const footerY = height - margin.bottom + 8;
     
-    // SOPify branded footer design with professional line
+    // Clean SOPify branded footer design with professional line - blue only
     pdf.setDrawColor(0, 122, 255, 0.4); // SOPify blue
     pdf.setLineWidth(0.8);
     pdf.line(margin.left, footerY - 10, width - margin.right, footerY - 10);
     
     // Footer content layout with SOPify typography
     try {
-      pdf.setFont("Inter", "normal");
+      pdf.setFont("helvetica", "normal");
     } catch (fontError) {
       pdf.setFont("helvetica", "normal");
     }
@@ -137,7 +109,7 @@ export function addPageFooters(pdf: any, sopDocument: SopDocument, width: number
     // Center - Document title (if not cover page) with SOPify styling
     if (i > 1) {
       const centerText = sopDocument.title || "Standard Operating Procedure";
-      const maxCenterTextLength = 45; // Increased for better readability
+      const maxCenterTextLength = 45;
       const displayCenterText = centerText.length > maxCenterTextLength 
         ? centerText.substring(0, maxCenterTextLength - 3) + "..."
         : centerText;
@@ -154,7 +126,7 @@ export function addPageFooters(pdf: any, sopDocument: SopDocument, width: number
       pdf.text(displayCenterText, centerX, footerY);
     }
     
-    // Right side - Page number with SOPify styling
+    // Right side - Page number with clean SOPify styling - no background shapes
     const pageText = `Page ${i} of ${pageCount}`;
     let pageTextWidth;
     try {
@@ -164,12 +136,6 @@ export function addPageFooters(pdf: any, sopDocument: SopDocument, width: number
     }
     
     const pageX = width - margin.right - pageTextWidth;
-    
-    // Page number background with SOPify branding
-    if (i > 1) {
-      pdf.setFillColor(0, 122, 255, 0.08); // Subtle SOPify blue background
-      pdf.roundedRect(pageX - 4, footerY - 6, pageTextWidth + 8, 10, 3, 3, 'F');
-    }
     
     pdf.setTextColor(0, 122, 255); // SOPify blue for page numbers
     pdf.text(pageText, pageX, footerY);

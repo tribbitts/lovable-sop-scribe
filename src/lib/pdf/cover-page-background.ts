@@ -15,7 +15,7 @@ export function addSopifyBrandedDesign(
   pdf.setFillColor(255, 255, 255); // Pure white
   pdf.rect(0, 0, width, height, 'F');
   
-  // Add minimal SOPify branded accents
+  // Add minimal SOPify branded accents - blue only
   addMinimalBrandedAccents(pdf, width, height);
   
   // If there's a background image, add it with professional overlay
@@ -48,14 +48,10 @@ export function addSopifyBrandedDesign(
 }
 
 /**
- * Add minimal SOPify branded accents - clean and professional
+ * Add minimal SOPify branded accents - clean and professional, blue only
  */
 function addMinimalBrandedAccents(pdf: any, width: number, height: number) {
   // Simple SOPify blue accent line at top
   pdf.setFillColor(0, 122, 255); // SOPify blue only
   pdf.rect(0, 0, width, 3, 'F'); // Thin top border
-  
-  // Minimal corner accent - very subtle
-  pdf.setFillColor(0, 122, 255, 0.05); // Very subtle SOPify blue
-  pdf.roundedRect(width - 40, 0, 40, 25, 10, 10, 'F');
 }
