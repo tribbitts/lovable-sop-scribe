@@ -127,7 +127,7 @@ export function generateEnhancedHtmlTemplate(
         <!-- Step dots -->
         <div class="step-dots">
           ${processedSteps.map((_, index) => `
-            <button class="step-dot ${index === 0 ? 'active' : ''}" data-step="${index + 1}">
+            <button class="step-dot" data-step="${index + 1}">
               ${index + 1}
             </button>
           `).join('')}
@@ -313,7 +313,7 @@ function generateEnhancedStepHtml(step: any, index: number, lmsFeatures: any): s
   const stepNumber = index + 1;
   
   return `
-    <div class="training-step carousel-slide ${index === 0 ? 'active' : ''}" id="step-${stepNumber}" data-step="${stepNumber}">
+    <div class="training-step carousel-slide" id="step-${stepNumber}" data-step="${stepNumber}">
       <div class="step-header">
         <div class="step-meta">
           <span class="step-number">${stepNumber}</span>
@@ -1216,13 +1216,7 @@ function generateEnhancedCSS(branding: any): string {
       border-radius: 16px;
       border: 1px solid var(--border-dark);
       transition: all 0.3s ease;
-      opacity: 0;
-      pointer-events: none;
-    }
-
-    .training-step.carousel-slide.active {
-      opacity: 1;
-      pointer-events: all;
+      flex-shrink: 0;
     }
 
     .light-theme .training-step.carousel-slide {
@@ -1233,6 +1227,10 @@ function generateEnhancedCSS(branding: any): string {
     .training-step.carousel-slide.completed {
       border-color: var(--success-color);
       background: rgba(76, 175, 80, 0.05);
+    }
+
+    .training-step.carousel-slide.active {
+      /* Active styling can be added here if needed */
     }
 
     .step-header {
@@ -2182,12 +2180,20 @@ function generateEnhancedJavaScript(
       }
       
       updateCarouselDisplay() {
-        // Update step visibility
+        // Update step visibility with sliding animation
+        const carouselTrack = document.getElementById('carousel-track');
+        if (carouselTrack) {
+          const slideOffset = -(this.currentStep - 1) * 100;
+          carouselTrack.style.transform = \`translateX(\${slideOffset}%)\`;
+        }
+        
+        // Update all slides to be visible (remove opacity-based hiding)
         document.querySelectorAll('.carousel-slide').forEach((slide, index) => {
+          // Remove opacity-based active class since we're using transform now
+          slide.classList.remove('active');
+          // Add active class to current step for styling purposes
           if (index + 1 === this.currentStep) {
             slide.classList.add('active');
-          } else {
-            slide.classList.remove('active');
           }
         });
         
