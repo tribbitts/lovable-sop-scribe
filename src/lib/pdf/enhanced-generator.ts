@@ -3,6 +3,7 @@ import { jsPDF } from "jspdf";
 import { SopDocument } from "@/types/sop";
 import { PdfTheme, pdfThemes, getCustomTheme } from "./enhanced-themes";
 import { registerInterFont } from "./utils";
+import { registerInterFontFallback, setFontWithFallback } from "./font-fallback";
 
 export interface EnhancedPdfOptions {
   theme?: string;
@@ -30,13 +31,9 @@ export async function generateEnhancedPDF(
         floatPrecision: "smart"
       });
 
-      // Register fonts
-      try {
-        await registerInterFont(pdf);
-      } catch (error) {
-        console.warn("Using system fonts:", error);
-        pdf.setFont("helvetica", "normal");
-      }
+      // Use system fonts for reliability
+      console.log("Using Helvetica fonts for reliable PDF generation");
+      pdf.setFont("helvetica", "normal");
 
       // Get theme
       const theme = options.customColors 
@@ -106,7 +103,7 @@ async function addEnhancedCoverPage(
   // Title section with enhanced typography
   const titleY = height * 0.35;
   
-  pdf.setFont("Inter", "bold");
+  pdf.setFont("helvetica", "bold");
   pdf.setFontSize(32);
   pdf.setTextColor(theme.colors.text);
   
@@ -116,7 +113,7 @@ async function addEnhancedCoverPage(
   
   // Subtitle/Topic
   if (sopDocument.topic) {
-    pdf.setFont("Inter", "normal");
+    pdf.setFont("helvetica", "normal");
     pdf.setFontSize(18);
     pdf.setTextColor(theme.colors.textLight);
     pdf.text(sopDocument.topic, margin.left, titleY + 15);
@@ -125,7 +122,7 @@ async function addEnhancedCoverPage(
   // Description if available
   if (sopDocument.description) {
     const descY = titleY + (sopDocument.topic ? 35 : 25);
-    pdf.setFont("Inter", "normal");
+    pdf.setFont("helvetica", "normal");
     pdf.setFontSize(12);
     pdf.setTextColor(theme.colors.textLight);
     const descLines = pdf.splitTextToSize(sopDocument.description, width - margin.left - margin.right - 40);
@@ -137,12 +134,12 @@ async function addEnhancedCoverPage(
   pdf.setFillColor(theme.colors.primary, 0.1);
   pdf.roundedRect(margin.left, statsY, width - margin.left - margin.right, 40, 8, 8, 'F');
   
-  pdf.setFont("Inter", "semibold");
+  pdf.setFont("helvetica", "bold");
   pdf.setFontSize(14);
   pdf.setTextColor(theme.colors.text);
   pdf.text("Training Overview", margin.left + 10, statsY + 12);
   
-  pdf.setFont("Inter", "normal");
+  pdf.setFont("helvetica", "normal");
   pdf.setFontSize(11);
   pdf.setTextColor(theme.colors.textLight);
   pdf.text(`${sopDocument.steps.length} Learning Steps`, margin.left + 10, statsY + 22);
@@ -152,7 +149,7 @@ async function addEnhancedCoverPage(
   }
   
   // Footer
-  pdf.setFont("Inter", "normal");
+  pdf.setFont("helvetica", "normal");
   pdf.setFontSize(10);
   pdf.setTextColor(theme.colors.textLight);
   const date = sopDocument.date || new Date().toLocaleDateString();
@@ -168,7 +165,7 @@ async function addEnhancedTableOfContents(
   margin: any
 ) {
   // Enhanced TOC design
-  pdf.setFont("Inter", "bold");
+  pdf.setFont("helvetica", "bold");
   pdf.setFontSize(24);
   pdf.setTextColor(theme.colors.text);
   pdf.text("Table of Contents", margin.left, margin.top + 15);
@@ -197,19 +194,19 @@ async function addEnhancedTableOfContents(
     pdf.setFillColor(theme.colors.primary);
     pdf.circle(margin.left + 6, currentY + 2, 4, "F");
     
-    pdf.setFont("Inter", "bold");
+    pdf.setFont("helvetica", "bold");
     pdf.setFontSize(9);
     pdf.setTextColor(255, 255, 255);
     pdf.text(String(stepNumber), margin.left + 4, currentY + 3.5);
     
     // Step title
-    pdf.setFont("Inter", "normal");
+    pdf.setFont("helvetica", "normal");
     pdf.setFontSize(11);
     pdf.setTextColor(theme.colors.text);
     pdf.text(stepTitle, margin.left + 15, currentY + 4);
     
     // Page number
-    pdf.setFont("Inter", "normal");
+    pdf.setFont("helvetica", "normal");
     pdf.setFontSize(10);
     pdf.setTextColor(theme.colors.textLight);
     pdf.text(String(pageNumber), width - margin.right - 10, currentY + 4);
@@ -262,13 +259,13 @@ async function renderEnhancedSteps(
     pdf.setFillColor(theme.colors.primary);
     pdf.circle(margin.left + 15, currentY + 12, 8, "F");
     
-    pdf.setFont("Inter", "bold");
+    pdf.setFont("helvetica", "bold");
     pdf.setFontSize(12);
     pdf.setTextColor(255, 255, 255);
     pdf.text(String(stepNumber), margin.left + 12, currentY + 14);
     
     // Step title
-    pdf.setFont("Inter", "semibold");
+    pdf.setFont("helvetica", "bold");
     pdf.setFontSize(16);
     pdf.setTextColor(theme.colors.text);
     const title = step.title || `Step ${stepNumber}`;
@@ -278,7 +275,7 @@ async function renderEnhancedSteps(
     
     // Step description
     if (step.description) {
-      pdf.setFont("Inter", "normal");
+      pdf.setFont("helvetica", "normal");
       pdf.setFontSize(11);
       pdf.setTextColor(theme.colors.text);
       const descLines = pdf.splitTextToSize(step.description, width - margin.left - margin.right - 20);
@@ -306,7 +303,7 @@ async function renderEnhancedSteps(
           
           // Screenshot caption
           if (screenshot.title) {
-            pdf.setFont("Inter", "normal");
+            pdf.setFont("helvetica", "normal");
             pdf.setFontSize(9);
             pdf.setTextColor(theme.colors.textLight);
             pdf.text(screenshot.title, margin.left + 10, currentY + imgHeight + 8);
@@ -340,13 +337,13 @@ async function renderEnhancedSteps(
     
     // Additional step content
     if (step.detailedInstructions) {
-      pdf.setFont("Inter", "semibold");
+      pdf.setFont("helvetica", "bold");
       pdf.setFontSize(11);
       pdf.setTextColor(theme.colors.text);
       pdf.text("Detailed Instructions:", margin.left + 10, currentY);
       currentY += 8;
       
-      pdf.setFont("Inter", "normal");
+      pdf.setFont("helvetica", "normal");
       pdf.setFontSize(10);
       const instructionLines = pdf.splitTextToSize(step.detailedInstructions, width - margin.left - margin.right - 20);
       pdf.text(instructionLines, margin.left + 10, currentY);
@@ -354,13 +351,13 @@ async function renderEnhancedSteps(
     }
     
     if (step.notes) {
-      pdf.setFont("Inter", "semibold"); 
+      pdf.setFont("helvetica", "bold"); 
       pdf.setFontSize(11);
       pdf.setTextColor(theme.colors.text);
       pdf.text("Notes:", margin.left + 10, currentY);
       currentY += 8;
       
-      pdf.setFont("Inter", "normal");
+      pdf.setFont("helvetica", "normal");
       pdf.setFontSize(10);
       const noteLines = pdf.splitTextToSize(step.notes, width - margin.left - margin.right - 20);
       pdf.text(noteLines, margin.left + 10, currentY);
@@ -391,7 +388,7 @@ function addEnhancedFooters(
     pdf.line(margin.left, height - margin.bottom + 5, width - margin.right, height - margin.bottom + 5);
     
     // Footer text
-    pdf.setFont("Inter", "normal");
+    pdf.setFont("helvetica", "normal");
     pdf.setFontSize(8);
     pdf.setTextColor(theme.colors.textLight);
     
