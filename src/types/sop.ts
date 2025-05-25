@@ -1,3 +1,4 @@
+
 // Training Module Creator - Enhanced Types
 // Sync test: Updated for Lovable platform integration
 export type CalloutShape = "circle" | "rectangle" | "arrow" | "number";
@@ -23,6 +24,9 @@ export interface ScreenshotData {
   isCropped?: boolean;
   title?: string; // Optional title for the screenshot
   description?: string; // Optional description
+  // Legacy secondary screenshot properties for backward compatibility
+  secondaryDataUrl?: string;
+  secondaryCallouts?: Callout[];
 }
 
 // Updated interface to support multiple screenshots
