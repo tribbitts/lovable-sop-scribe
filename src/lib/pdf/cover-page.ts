@@ -1,3 +1,4 @@
+
 import { SopDocument } from "@/types/sop";
 import { compressImage } from "./utils";
 
@@ -9,10 +10,10 @@ export async function addCoverPage(
   margin: any,
   backgroundImage: string | null = null
 ) {
-  // Add sophisticated background design
-  addCoverPageDesign(pdf, width, height, margin, backgroundImage || sopDocument.backgroundImage);
+  // Add sophisticated SOPify-branded background design
+  addSopifyBrandedDesign(pdf, width, height, margin, backgroundImage || sopDocument.backgroundImage);
   
-  // Add logo with refined positioning
+  // Add logo with refined positioning and SOPify branding
   if (sopDocument.logo) {
     try {
       console.log("Adding logo to cover page");
@@ -25,71 +26,78 @@ export async function addCoverPage(
   
   // Calculate vertical positioning for professional layout
   const centerY = height / 2;
-  const logoOffset = sopDocument.logo ? 40 : 0;
+  const logoOffset = sopDocument.logo ? 50 : 0;
   
-  // Main Title - Large and bold
+  // Main Title - SOPify branded styling
   try {
     pdf.setFont("Inter", "bold");
   } catch (fontError) {
     pdf.setFont("helvetica", "bold");
   }
   
-  pdf.setFontSize(32);
-  pdf.setTextColor(45, 45, 45); // Rich dark gray
+  pdf.setFontSize(36);
+  pdf.setTextColor(0, 122, 255); // SOPify blue
   
   const title = sopDocument.title || "Untitled SOP";
   
   // Center title with proper measurement
   let titleWidth;
   try {
-    titleWidth = pdf.getStringUnitWidth(title) * 32 / pdf.internal.scaleFactor;
+    titleWidth = pdf.getStringUnitWidth(title) * 36 / pdf.internal.scaleFactor;
   } catch (e) {
-    titleWidth = title.length * 6; // Estimate for fallback
+    titleWidth = title.length * 7; // Estimate for fallback
   }
   
   const titleX = (width - titleWidth) / 2;
-  const titleY = centerY - logoOffset;
+  const titleY = centerY - logoOffset + 10;
   pdf.text(title, titleX, titleY);
   
-  // Subtitle line with improved typography
+  // Subtitle line with SOPify professional styling
   try {
     pdf.setFont("Inter", "normal");
   } catch (fontError) {
     pdf.setFont("helvetica", "normal");
   }
   
-  pdf.setFontSize(14);
-  pdf.setTextColor(95, 95, 95); // Medium gray
+  pdf.setFontSize(16);
+  pdf.setTextColor(44, 62, 80); // Professional dark gray
   
   const subtitle = `${sopDocument.topic ? sopDocument.topic.toUpperCase() : 'STANDARD OPERATING PROCEDURE'}`;
   
   let subtitleWidth;
   try {
-    subtitleWidth = pdf.getStringUnitWidth(subtitle) * 14 / pdf.internal.scaleFactor;
+    subtitleWidth = pdf.getStringUnitWidth(subtitle) * 16 / pdf.internal.scaleFactor;
   } catch (e) {
-    subtitleWidth = subtitle.length * 2.5;
+    subtitleWidth = subtitle.length * 3;
   }
   
   const subtitleX = (width - subtitleWidth) / 2;
-  const subtitleY = titleY + 18;
+  const subtitleY = titleY + 22;
   pdf.text(subtitle, subtitleX, subtitleY);
   
-  // Elegant divider line with gradient effect
-  pdf.setDrawColor(0, 122, 255); // Apple Blue
-  pdf.setLineWidth(1.5);
-  const lineWidth = Math.min(80, width * 0.2);
-  const lineY = subtitleY + 15;
+  // SOPify branded divider line with gradient effect
+  pdf.setDrawColor(0, 122, 255); // SOPify blue
+  pdf.setLineWidth(3);
+  const lineWidth = Math.min(120, width * 0.3);
+  const lineY = subtitleY + 18;
   pdf.line((width - lineWidth) / 2, lineY, (width + lineWidth) / 2, lineY);
   
-  // Date and version info
+  // Add subtle accent dots in SOPify blue
+  pdf.setFillColor(0, 122, 255);
+  const dotY = lineY + 8;
+  pdf.circle((width - lineWidth) / 2 - 5, dotY, 1.5, 'F');
+  pdf.circle((width + lineWidth) / 2 + 5, dotY, 1.5, 'F');
+  pdf.circle(width / 2, dotY, 2, 'F');
+  
+  // Date and version info with enhanced styling
   try {
     pdf.setFont("Inter", "normal");
   } catch (fontError) {
     pdf.setFont("helvetica", "normal");
   }
   
-  pdf.setFontSize(11);
-  pdf.setTextColor(130, 130, 130); // Light gray
+  pdf.setFontSize(12);
+  pdf.setTextColor(127, 140, 141); // Professional light gray
   
   const dateText = sopDocument.date || new Date().toLocaleDateString('en-US', { 
     year: 'numeric', 
@@ -99,52 +107,55 @@ export async function addCoverPage(
   
   let dateWidth;
   try {
-    dateWidth = pdf.getStringUnitWidth(dateText) * 11 / pdf.internal.scaleFactor;
+    dateWidth = pdf.getStringUnitWidth(dateText) * 12 / pdf.internal.scaleFactor;
   } catch (e) {
-    dateWidth = dateText.length * 2;
+    dateWidth = dateText.length * 2.2;
   }
   
   const dateX = (width - dateWidth) / 2;
-  const dateY = lineY + 25;
+  const dateY = lineY + 35;
   pdf.text(dateText, dateX, dateY);
   
-  // Company name if available
+  // Company name with SOPify branding
   if (sopDocument.companyName) {
-    pdf.setFontSize(10);
+    pdf.setFontSize(11);
     pdf.setTextColor(160, 160, 160);
     
     const companyText = sopDocument.companyName.toUpperCase();
     let companyWidth;
     try {
-      companyWidth = pdf.getStringUnitWidth(companyText) * 10 / pdf.internal.scaleFactor;
+      companyWidth = pdf.getStringUnitWidth(companyText) * 11 / pdf.internal.scaleFactor;
     } catch (e) {
-      companyWidth = companyText.length * 1.8;
+      companyWidth = companyText.length * 2;
     }
     
     const companyX = (width - companyWidth) / 2;
-    pdf.text(companyText, companyX, dateY + 12);
+    pdf.text(companyText, companyX, dateY + 15);
   }
   
-  // Footer with professional branding
-  addCoverFooter(pdf, width, height, margin);
+  // Enhanced footer with proper SOPify branding
+  addSopifyBrandedFooter(pdf, width, height, margin);
+  
+  // Add SOPify watermark
+  addSopifyWatermark(pdf, width, height);
 }
 
-// Add minimal background elements for the cover page
-function addCoverPageDesign(
+// Add SOPify-branded background elements
+function addSopifyBrandedDesign(
   pdf: any, 
   width: number, 
   height: number, 
   margin: any,
   backgroundImage: string | null = null
 ) {
-  // Clean, warm business background
-  pdf.setFillColor(252, 251, 249); // Same warm beige as content pages
+  // Clean, professional SOPify background
+  pdf.setFillColor(250, 251, 252); // Clean, professional white-blue
   pdf.rect(0, 0, width, height, 'F');
   
-  // Add very subtle cover accents
-  addCoverAccents(pdf, width, height);
+  // Add SOPify branded cover accents
+  addSopifyBrandedAccents(pdf, width, height);
   
-  // If there's a background image, add it with professional overlay
+  // If there's a background image, add it with SOPify branding overlay
   if (backgroundImage) {
     try {
       console.log("Adding background image to cover page");
@@ -160,9 +171,9 @@ function addCoverPageDesign(
         rotation: 0
       });
       
-      // Strong overlay for text readability
-      pdf.setFillColor(252, 251, 249);
-      pdf.setGState(new pdf.GState({ opacity: 0.92 })); // Higher opacity for better text contrast
+      // SOPify branded overlay for text readability
+      pdf.setFillColor(250, 251, 252);
+      pdf.setGState(new pdf.GState({ opacity: 0.94 })); // High opacity for better contrast
       pdf.rect(0, 0, width, height, 'F');
       pdf.setGState(new pdf.GState({ opacity: 1 })); // Reset opacity
       
@@ -173,41 +184,71 @@ function addCoverPageDesign(
   }
 }
 
-// Add very subtle cover accents - much more minimal
-function addCoverAccents(pdf: any, width: number, height: number) {
-  // Ultra-subtle flowing elements in earth tones only
-  pdf.setFillColor(205, 195, 185, 0.02); // Extremely subtle warm tone
+// Add SOPify branded cover accents
+function addSopifyBrandedAccents(pdf: any, width: number, height: number) {
+  // SOPify blue gradient elements
+  pdf.setFillColor(0, 122, 255, 0.08); // SOPify blue, very subtle
   
-  // Minimal top-right organic accent
-  pdf.roundedRect(width - 30, 0, 30, 20, 15, 15, 'F');
+  // Modern top-right geometric accent
+  pdf.roundedRect(width - 60, 0, 60, 40, 20, 20, 'F');
   
-  // Minimal bottom-left organic accent  
-  pdf.setFillColor(190, 180, 170, 0.015);
-  pdf.roundedRect(0, height - 15, 25, 15, 10, 10, 'F');
+  // Complementary bottom-left accent
+  pdf.setFillColor(39, 174, 96, 0.06); // Success green accent
+  pdf.roundedRect(0, height - 30, 50, 30, 15, 15, 'F');
   
-  // Just a few tiny accent dots for texture
-  pdf.setFillColor(185, 175, 165, 0.01);
-  const subtleDots = [
-    { x: width * 0.2, y: height * 0.25, r: 0.8 },
-    { x: width * 0.8, y: height * 0.75, r: 1 },
-    { x: width * 0.15, y: height * 0.85, r: 0.6 }
+  // SOPify branded floating elements
+  pdf.setFillColor(0, 122, 255, 0.04);
+  const sopifyAccents = [
+    { x: width * 0.15, y: height * 0.2, r: 2 },
+    { x: width * 0.85, y: height * 0.8, r: 2.5 },
+    { x: width * 0.1, y: height * 0.9, r: 1.5 },
+    { x: width * 0.9, y: height * 0.1, r: 1.8 }
   ];
   
-  subtleDots.forEach(dot => {
-    pdf.circle(dot.x, dot.y, dot.r, 'F');
+  sopifyAccents.forEach(accent => {
+    pdf.circle(accent.x, accent.y, accent.r, 'F');
   });
+  
+  // Subtle SOPify geometric pattern
+  pdf.setFillColor(0, 122, 255, 0.02);
+  pdf.roundedRect(width * 0.7, height * 0.3, 15, 15, 3, 3, 'F');
+  pdf.roundedRect(width * 0.25, height * 0.7, 12, 12, 2, 2, 'F');
 }
 
-// Add professional footer to cover page
-function addCoverFooter(pdf: any, width: number, height: number, margin: any) {
+// Add professional SOPify branded footer to cover page
+function addSopifyBrandedFooter(pdf: any, width: number, height: number, margin: any) {
   const footerY = height - margin.bottom - 15;
   
-  // Footer line in warm earth tone
-  pdf.setDrawColor(160, 155, 150, 0.4); // Warm gray instead of blue
-  pdf.setLineWidth(0.5);
-  pdf.line(margin.left, footerY - 5, width - margin.right, footerY - 5);
+  // SOPify branded footer line
+  pdf.setDrawColor(0, 122, 255, 0.6); // SOPify blue
+  pdf.setLineWidth(1);
+  pdf.line(margin.left, footerY - 8, width - margin.right, footerY - 8);
   
-  // Footer text
+  // Footer text with SOPify branding
+  try {
+    pdf.setFont("Inter", "normal");
+  } catch (fontError) {
+    pdf.setFont("helvetica", "normal");
+  }
+  
+  pdf.setFontSize(9);
+  pdf.setTextColor(0, 122, 255); // SOPify blue
+  
+  const footerText = "Powered by SOPify • Professional SOP Management Platform";
+  let footerWidth;
+  try {
+    footerWidth = pdf.getStringUnitWidth(footerText) * 9 / pdf.internal.scaleFactor;
+  } catch (e) {
+    footerWidth = footerText.length * 1.6;
+  }
+  
+  const footerX = (width - footerWidth) / 2;
+  pdf.text(footerText, footerX, footerY);
+}
+
+// Add SOPify watermark
+function addSopifyWatermark(pdf: any, width: number, height: number) {
+  // Add subtle SOPify text watermark in bottom right
   try {
     pdf.setFont("Inter", "normal");
   } catch (fontError) {
@@ -215,21 +256,20 @@ function addCoverFooter(pdf: any, width: number, height: number, margin: any) {
   }
   
   pdf.setFontSize(8);
-  pdf.setTextColor(120, 115, 110); // Warm gray text color
+  pdf.setTextColor(0, 122, 255, 0.3); // Very subtle SOPify blue
   
-  const footerText = "Generated by SOPify • Professional SOP Management";
-  let footerWidth;
+  const watermarkText = "SOPify";
+  let watermarkWidth;
   try {
-    footerWidth = pdf.getStringUnitWidth(footerText) * 8 / pdf.internal.scaleFactor;
+    watermarkWidth = pdf.getStringUnitWidth(watermarkText) * 8 / pdf.internal.scaleFactor;
   } catch (e) {
-    footerWidth = footerText.length * 1.5;
+    watermarkWidth = watermarkText.length * 1.4;
   }
   
-  const footerX = (width - footerWidth) / 2;
-  pdf.text(footerText, footerX, footerY);
+  pdf.text(watermarkText, width - watermarkWidth - 15, height - 10);
 }
 
-// Add logo to the cover page with proper aspect ratio
+// Add logo to the cover page with proper aspect ratio and SOPify branding
 async function addLogoToCover(pdf: any, sopDocument: SopDocument, width: number, height: number) {
   if (!sopDocument.logo) {
     return; // No logo to add
@@ -264,9 +304,9 @@ async function addLogoToCover(pdf: any, sopDocument: SopDocument, width: number,
             return;
           }
           
-          // Maximum width limited to 300px as specified
-          const maxLogoWidth = Math.min(300, width * 0.5);
-          const maxLogoHeight = height * 0.15; // 15% of page height
+          // Optimized logo sizing for SOPify brand presence
+          const maxLogoWidth = Math.min(200, width * 0.4); // Reduced for better balance
+          const maxLogoHeight = height * 0.12; // 12% of page height
           
           // Calculate scaled dimensions while preserving aspect ratio
           let logoWidth, logoHeight;
@@ -282,9 +322,13 @@ async function addLogoToCover(pdf: any, sopDocument: SopDocument, width: number,
             logoWidth = logoHeight * imgAspectRatio;
           }
           
-          // Center horizontally and position at the top with proper spacing
+          // Center horizontally and position at the top with SOPify styling
           const logoX = (width - logoWidth) / 2;
-          const logoY = height / 5 - logoHeight / 2; // Position in the upper area
+          const logoY = height / 6 - logoHeight / 2; // Position in upper area with better spacing
+          
+          // Add subtle shadow effect for logo
+          pdf.setFillColor(0, 0, 0, 0.1);
+          pdf.roundedRect(logoX + 2, logoY + 2, logoWidth, logoHeight, 5, 5, 'F');
           
           // Add the logo with proper proportions
           pdf.addImage(
@@ -295,7 +339,7 @@ async function addLogoToCover(pdf: any, sopDocument: SopDocument, width: number,
             logoWidth, 
             logoHeight
           );
-          console.log("Logo added successfully with dimensions:", logoWidth, "x", logoHeight);
+          console.log("Logo added successfully with SOPify branding:", logoWidth, "x", logoHeight);
           resolve();
         } catch (error) {
           console.error("Error processing logo dimensions:", error);
