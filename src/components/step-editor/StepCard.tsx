@@ -35,7 +35,8 @@ import {
   Upload,
   Zap,
   ArrowRight,
-  Clock
+  Clock,
+  ImagePlus
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import ImageCropper from "./ImageCropper";
@@ -44,6 +45,7 @@ import { useSopContext } from "@/context/SopContext";
 import { v4 as uuidv4 } from "uuid";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import MultipleScreenshotsManager from "./MultipleScreenshotsManager";
 
 const StepCard: React.FC<StepCardProps> = ({
   step,
@@ -59,6 +61,7 @@ const StepCard: React.FC<StepCardProps> = ({
   const [isEditingCallouts, setIsEditingCallouts] = useState(false);
   const [showScreenshotModal, setShowScreenshotModal] = useState(false);
   const [quickMode, setQuickMode] = useState(true); // New: Quick vs Advanced mode
+  const [useMultipleScreenshots, setUseMultipleScreenshots] = useState(false); // New: Toggle between single and multiple screenshots
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   // Training module state
@@ -421,14 +424,50 @@ const StepCard: React.FC<StepCardProps> = ({
         )}
       </div>
 
-      {/* Screenshot Section - Prominent */}
-      {step.screenshot ? (
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h4 className="text-sm font-medium text-white flex items-center gap-2">
-              <Camera className="h-4 w-4" />
-              Visual Guide
-            </h4>
+      {/* Screenshot Section - Enhanced with Multiple Support */}
+      <div className="space-y-4">
+        {/* Header with mode toggle */}
+        <div className="flex items-center justify-between">
+          <h4 className="text-sm font-medium text-white flex items-center gap-2">
+            <Camera className="h-4 w-4" />
+            Visual Guides
+          </h4>
+          
+          {(step.screenshot || (step.screenshots && step.screenshots.length > 0)) && (
+            <div className="flex items-center gap-2">
+              <Badge 
+                variant="secondary" 
+                className={`text-xs cursor-pointer transition-all ${
+                  useMultipleScreenshots 
+                    ? 'bg-purple-600/20 text-purple-300 border-purple-600/30' 
+                    : 'bg-zinc-700 text-zinc-400 border-zinc-600'
+                }`}
+                onClick={() => setUseMultipleScreenshots(!useMultipleScreenshots)}
+              >
+                {useMultipleScreenshots ? 'Multiple Mode' : 'Single Mode'}
+              </Badge>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => setUseMultipleScreenshots(!useMultipleScreenshots)}
+                className="border-zinc-700 text-zinc-300 hover:bg-zinc-800 text-xs"
+              >
+                {useMultipleScreenshots ? 'Switch to Single' : 'Enable Multiple'}
+              </Button>
+            </div>
+          )}
+        </div>
+
+        {/* Conditional rendering based on mode */}
+        {useMultipleScreenshots || (step.screenshots && step.screenshots.length > 1) ? (
+          // Multiple Screenshots Mode
+          <MultipleScreenshotsManager
+            stepId={step.id}
+            screenshots={step.screenshots || (step.screenshot ? [step.screenshot] : [])}
+          />
+        ) : step.screenshot ? (
+          // Single Screenshot Mode (Legacy)
+          <div className="space-y-4">
             <div className="flex items-center gap-2 flex-wrap">
               <Button
                 size="sm"
@@ -483,58 +522,88 @@ const StepCard: React.FC<StepCardProps> = ({
                 <Trash2 className="h-3 w-3 mr-1" />
                 Remove
               </Button>
+              
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => setUseMultipleScreenshots(true)}
+                className="border-purple-600 text-purple-300 hover:bg-purple-600/10 text-xs"
+              >
+                <Plus className="h-3 w-3 mr-1" />
+                Add More
+              </Button>
             </div>
-          </div>
-          
-          <div className="relative bg-zinc-800 rounded-lg overflow-hidden" style={{ overflow: isEditingCallouts ? 'visible' : 'hidden' }}>
-            <img
-              src={step.screenshot.dataUrl}
-              alt={`Lesson ${index + 1} visual guide`}
-              className="w-full h-auto block rounded-lg"
-            />
-            <div className="absolute inset-0">
-              <CalloutOverlay
-                screenshot={step.screenshot}
-                isEditing={isEditingCallouts}
-                onCalloutAdd={handleCalloutAdd}
-                onCalloutUpdate={handleCalloutUpdate}
-                onCalloutDelete={handleCalloutDelete}
+            
+            <div className="relative bg-zinc-800 rounded-lg overflow-hidden" style={{ overflow: isEditingCallouts ? 'visible' : 'hidden' }}>
+              <img
+                src={step.screenshot.dataUrl}
+                alt={`Lesson ${index + 1} visual guide`}
+                className="w-full h-auto block rounded-lg"
               />
-            </div>
-            
-
-          </div>
-          
-          <div className="flex items-center justify-between">
-            {step.screenshot.callouts && step.screenshot.callouts.length > 0 && (
-              <div className="text-xs text-zinc-400 flex items-center gap-1">
-                <Eye className="h-3 w-3" />
-                {step.screenshot.callouts.length} callout{step.screenshot.callouts.length !== 1 ? 's' : ''} added
+              <div className="absolute inset-0">
+                <CalloutOverlay
+                  screenshot={step.screenshot}
+                  isEditing={isEditingCallouts}
+                  onCalloutAdd={handleCalloutAdd}
+                  onCalloutUpdate={handleCalloutUpdate}
+                  onCalloutDelete={handleCalloutDelete}
+                />
               </div>
-            )}
+            </div>
             
-            <div className="text-xs text-zinc-500 flex items-center gap-1">
-              <Sparkles className="h-3 w-3" />
-              <span>Tip: Use "Full Size" for precise callout placement</span>
+            <div className="flex items-center justify-between">
+              {step.screenshot.callouts && step.screenshot.callouts.length > 0 && (
+                <div className="text-xs text-zinc-400 flex items-center gap-1">
+                  <Eye className="h-3 w-3" />
+                  {step.screenshot.callouts.length} callout{step.screenshot.callouts.length !== 1 ? 's' : ''} added
+                </div>
+              )}
+              
+              <div className="text-xs text-zinc-500 flex items-center gap-1">
+                <Sparkles className="h-3 w-3" />
+                <span>Tip: Use "Full Size" for precise callout placement</span>
+              </div>
             </div>
           </div>
-        </div>
-      ) : (
-        <div 
-          className="border-2 border-dashed border-zinc-700 rounded-lg p-8 text-center cursor-pointer hover:border-purple-600/50 hover:bg-purple-600/5 transition-all group"
-          onClick={() => fileInputRef.current?.click()}
-        >
-          <div className="space-y-3">
-            <div className="w-12 h-12 bg-zinc-800 rounded-xl flex items-center justify-center mx-auto group-hover:bg-purple-600/20 transition-colors">
-              <Camera className="h-6 w-6 text-zinc-500 group-hover:text-purple-400" />
-            </div>
-            <div>
-              <p className="text-zinc-300 font-medium mb-1">Add a screenshot</p>
-              <p className="text-sm text-zinc-500">Visual guides help learners follow along</p>
+        ) : (
+          // Empty state with options
+          <div className="space-y-4">
+            <div className="flex items-center justify-center gap-4">
+              <div 
+                className="flex-1 border-2 border-dashed border-zinc-700 rounded-lg p-6 text-center cursor-pointer hover:border-purple-600/50 hover:bg-purple-600/5 transition-all group"
+                onClick={() => fileInputRef.current?.click()}
+              >
+                <div className="space-y-3">
+                  <div className="w-10 h-10 bg-zinc-800 rounded-xl flex items-center justify-center mx-auto group-hover:bg-purple-600/20 transition-colors">
+                    <Camera className="h-5 w-5 text-zinc-500 group-hover:text-purple-400" />
+                  </div>
+                  <div>
+                    <p className="text-zinc-300 font-medium text-sm mb-1">Single Screenshot</p>
+                    <p className="text-xs text-zinc-500">Add one main visual guide</p>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="text-xs text-zinc-500">or</div>
+              
+              <div 
+                className="flex-1 border-2 border-dashed border-purple-600/50 rounded-lg p-6 text-center cursor-pointer hover:border-purple-600 hover:bg-purple-600/5 transition-all group"
+                onClick={() => setUseMultipleScreenshots(true)}
+              >
+                <div className="space-y-3">
+                  <div className="w-10 h-10 bg-purple-600/20 rounded-xl flex items-center justify-center mx-auto group-hover:bg-purple-600/30 transition-colors">
+                    <ImagePlus className="h-5 w-5 text-purple-400" />
+                  </div>
+                  <div>
+                    <p className="text-purple-300 font-medium text-sm mb-1">Multiple Screenshots</p>
+                    <p className="text-xs text-purple-400/70">Add several images with titles</p>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
       
       <input
         ref={fileInputRef}

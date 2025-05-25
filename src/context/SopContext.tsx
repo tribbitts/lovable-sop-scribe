@@ -33,6 +33,14 @@ interface SopContextType {
   cropStepScreenshot: (stepId: string, croppedDataUrl: string) => void;
   undoCropStepScreenshot: (stepId: string) => void;
   
+  // Multiple screenshots management
+  addStepScreenshot: (stepId: string, dataUrl: string, title?: string, description?: string) => void;
+  updateStepScreenshot: (stepId: string, screenshotId: string, updates: Partial<any>) => void;
+  deleteStepScreenshot: (stepId: string, screenshotId: string) => void;
+  reorderStepScreenshots: (stepId: string, fromIndex: number, toIndex: number) => void;
+  cropSpecificScreenshot: (stepId: string, screenshotId: string, croppedDataUrl: string) => void;
+  undoCropSpecificScreenshot: (stepId: string, screenshotId: string) => void;
+  
   // Callout management
   addCallout: (stepId: string, callout: Omit<Callout, "id">) => void;
   updateCallout: (stepId: string, callout: Callout) => void;
@@ -234,11 +242,46 @@ export const SopProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const cropStepScreenshot = (stepId: string, croppedDataUrl: string) => {
-    setSopDocument(prev => ScreenshotManager.cropStepScreenshot(prev, stepId, croppedDataUrl));
+    // Use the first screenshot ID for backward compatibility
+    const step = sopDocument.steps.find(s => s.id === stepId);
+    const screenshotId = step?.screenshot?.id || step?.screenshots?.[0]?.id;
+    if (screenshotId) {
+      setSopDocument(prev => ScreenshotManager.cropStepScreenshot(prev, stepId, screenshotId, croppedDataUrl));
+    }
   };
 
   const undoCropStepScreenshot = (stepId: string) => {
-    setSopDocument(prev => ScreenshotManager.undoCropStepScreenshot(prev, stepId));
+    // Use the first screenshot ID for backward compatibility
+    const step = sopDocument.steps.find(s => s.id === stepId);
+    const screenshotId = step?.screenshot?.id || step?.screenshots?.[0]?.id;
+    if (screenshotId) {
+      setSopDocument(prev => ScreenshotManager.undoCropStepScreenshot(prev, stepId, screenshotId));
+    }
+  };
+
+  // Multiple screenshots management
+  const addStepScreenshot = (stepId: string, dataUrl: string, title?: string, description?: string) => {
+    setSopDocument(prev => ScreenshotManager.addStepScreenshot(prev, stepId, dataUrl, title, description));
+  };
+
+  const updateStepScreenshot = (stepId: string, screenshotId: string, updates: Partial<any>) => {
+    setSopDocument(prev => ScreenshotManager.updateStepScreenshot(prev, stepId, screenshotId, updates));
+  };
+
+  const deleteStepScreenshot = (stepId: string, screenshotId: string) => {
+    setSopDocument(prev => ScreenshotManager.deleteStepScreenshot(prev, stepId, screenshotId));
+  };
+
+  const reorderStepScreenshots = (stepId: string, fromIndex: number, toIndex: number) => {
+    setSopDocument(prev => ScreenshotManager.reorderStepScreenshots(prev, stepId, fromIndex, toIndex));
+  };
+
+  const cropSpecificScreenshot = (stepId: string, screenshotId: string, croppedDataUrl: string) => {
+    setSopDocument(prev => ScreenshotManager.cropStepScreenshot(prev, stepId, screenshotId, croppedDataUrl));
+  };
+
+  const undoCropSpecificScreenshot = (stepId: string, screenshotId: string) => {
+    setSopDocument(prev => ScreenshotManager.undoCropStepScreenshot(prev, stepId, screenshotId));
   };
 
   const addCallout = (stepId: string, callout: Omit<Callout, "id">) => {
@@ -325,6 +368,14 @@ export const SopProvider = ({ children }: { children: ReactNode }) => {
     setStepSecondaryScreenshot,
     cropStepScreenshot,
     undoCropStepScreenshot,
+    
+    // Multiple screenshots management
+    addStepScreenshot,
+    updateStepScreenshot,
+    deleteStepScreenshot,
+    reorderStepScreenshots,
+    cropSpecificScreenshot,
+    undoCropSpecificScreenshot,
     
     // Callout management
     addCallout,

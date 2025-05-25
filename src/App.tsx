@@ -12,6 +12,7 @@ import Auth from "./pages/Auth";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
 import CookiePolicy from "./pages/CookiePolicy";
+import ClickToRevealDemo from "./components/demo/ClickToRevealDemo";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { SubscriptionProvider } from "./context/SubscriptionContext";
 
@@ -44,6 +45,7 @@ const AppContent = () => {
       <Route path="/privacy-policy" element={<PrivacyPolicy />} />
       <Route path="/terms-of-service" element={<TermsOfService />} />
       <Route path="/cookie-policy" element={<CookiePolicy />} />
+      <Route path="/demo" element={<ClickToRevealDemo />} />
       <Route path="/app" element={
         <ProtectedRoute>
           <AppLayout>

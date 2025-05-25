@@ -11,7 +11,10 @@ import {
   Palette, 
   Trash2,
   Plus,
-  Settings
+  Settings,
+  X,
+  Eye,
+  MessageCircle
 } from "lucide-react";
 import { v4 as uuidv4 } from "uuid";
 
@@ -29,6 +32,12 @@ const CalloutOverlay: React.FC<CalloutOverlayProps> = ({
   const [showToolbar, setShowToolbar] = useState(false);
   const [revealTextInput, setRevealTextInput] = useState("");
   const [showRevealTextDialog, setShowRevealTextDialog] = useState(false);
+  
+  // Click-to-reveal functionality
+  const [revealedCallouts, setRevealedCallouts] = useState<Set<string>>(new Set());
+  const [activeReveal, setActiveReveal] = useState<string | null>(null);
+  const [revealPosition, setRevealPosition] = useState({ x: 0, y: 0 });
+  
   const overlayRef = useRef<HTMLDivElement>(null);
 
   const colors = [
@@ -43,16 +52,18 @@ const CalloutOverlay: React.FC<CalloutOverlayProps> = ({
   // Handle escape key to cancel callout placement
   React.useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape' && isAddingCallout) {
-        setIsAddingCallout(false);
+      if (event.key === 'Escape') {
+        if (isAddingCallout) {
+          setIsAddingCallout(false);
+        } else if (activeReveal) {
+          setActiveReveal(null);
+        }
       }
     };
 
-    if (isEditing) {
-      document.addEventListener('keydown', handleKeyDown);
-      return () => document.removeEventListener('keydown', handleKeyDown);
-    }
-  }, [isEditing, isAddingCallout]);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [isAddingCallout, activeReveal]);
 
   const handleOverlayClick = useCallback((event: React.MouseEvent<HTMLDivElement>) => {
     if (!isEditing || !isAddingCallout || !overlayRef.current || !onCalloutAdd) return;
@@ -94,12 +105,37 @@ const CalloutOverlay: React.FC<CalloutOverlayProps> = ({
     }
   }, [isEditing, isAddingCallout, selectedTool, selectedColor, screenshot.callouts.length, onCalloutAdd]);
 
-  const handleCalloutClick = useCallback((calloutId: string, event: React.MouseEvent) => {
+  const handleCalloutClick = useCallback((callout: Callout, event: React.MouseEvent) => {
     event.stopPropagation();
+    
     if (isEditing) {
-      setEditingCallout(editingCallout === calloutId ? null : calloutId);
+      setEditingCallout(editingCallout === callout.id ? null : callout.id);
+    } else {
+      // Click-to-reveal functionality for viewing mode
+      if (callout.shape === "number" && callout.revealText) {
+        const rect = overlayRef.current?.getBoundingClientRect();
+        if (rect) {
+          // Calculate position for reveal popup
+          const calloutCenterX = (callout.x + callout.width / 2) / 100 * rect.width;
+          const calloutCenterY = (callout.y + callout.height / 2) / 100 * rect.height;
+          
+          setRevealPosition({
+            x: calloutCenterX,
+            y: calloutCenterY
+          });
+          
+          if (activeReveal === callout.id) {
+            // Close if clicking the same callout
+            setActiveReveal(null);
+          } else {
+            // Show reveal for this callout
+            setActiveReveal(callout.id);
+            setRevealedCallouts(prev => new Set([...prev, callout.id]));
+          }
+        }
+      }
     }
-  }, [isEditing, editingCallout]);
+  }, [isEditing, editingCallout, activeReveal]);
 
   const deleteCallout = useCallback((calloutId: string) => {
     if (onCalloutDelete) {
@@ -136,7 +172,9 @@ const CalloutOverlay: React.FC<CalloutOverlayProps> = ({
   }, []);
 
   const renderCallout = (callout: Callout) => {
-    const isEditing = editingCallout === callout.id;
+    const isEditingThis = editingCallout === callout.id;
+    const hasBeenRevealed = revealedCallouts.has(callout.id);
+    const isInteractive = callout.shape === "number" && callout.revealText && !isEditing;
     
     const style: React.CSSProperties = {
       position: 'absolute',
@@ -144,7 +182,7 @@ const CalloutOverlay: React.FC<CalloutOverlayProps> = ({
       top: `${callout.y}%`,
       width: `${callout.width}%`,
       height: `${callout.height}%`,
-      cursor: 'pointer',
+      cursor: isInteractive ? 'pointer' : isEditing ? 'pointer' : 'default',
       zIndex: 10,
     };
 
@@ -154,8 +192,10 @@ const CalloutOverlay: React.FC<CalloutOverlayProps> = ({
           return (
             <div
               className={`w-full h-full rounded-full border-2 ${
-                isEditing ? 'border-white' : 'border-opacity-80'
-              } flex items-center justify-center`}
+                isEditingThis ? 'border-white' : 'border-opacity-80'
+              } flex items-center justify-center transition-all duration-200 ${
+                isInteractive ? 'hover:scale-110 hover:shadow-lg' : ''
+              }`}
               style={{ 
                 backgroundColor: `${callout.color}40`,
                 borderColor: callout.color,
@@ -176,8 +216,8 @@ const CalloutOverlay: React.FC<CalloutOverlayProps> = ({
           return (
             <div
               className={`w-full h-full border-2 ${
-                isEditing ? 'border-white' : 'border-opacity-80'
-              } flex items-center justify-center`}
+                isEditingThis ? 'border-white' : 'border-opacity-80'
+              } flex items-center justify-center transition-all duration-200`}
               style={{ 
                 backgroundColor: `${callout.color}40`,
                 borderColor: callout.color,
@@ -194,8 +234,12 @@ const CalloutOverlay: React.FC<CalloutOverlayProps> = ({
         case "number":
           return (
             <div
-              className={`w-full h-full rounded-full border-2 flex items-center justify-center font-bold text-white ${
+              className={`w-full h-full rounded-full border-2 flex items-center justify-center font-bold text-white transition-all duration-200 ${
+                isInteractive ? 'hover:scale-110 hover:shadow-lg cursor-pointer' : ''
+              } ${
                 callout.revealText ? 'bg-gradient-to-br from-blue-500 to-purple-600' : ''
+              } ${
+                hasBeenRevealed && !isEditing ? 'ring-2 ring-yellow-400 ring-opacity-60' : ''
               }`}
               style={{ 
                 backgroundColor: callout.revealText ? undefined : callout.color,
@@ -206,8 +250,12 @@ const CalloutOverlay: React.FC<CalloutOverlayProps> = ({
                 {callout.number}
               </span>
               {callout.revealText && (
-                <div className="absolute -top-1 -right-1 w-3 h-3 bg-yellow-400 rounded-full flex items-center justify-center">
-                  <span className="text-xs text-black font-bold">?</span>
+                <div className={`absolute -top-1 -right-1 w-3 h-3 rounded-full flex items-center justify-center transition-all duration-200 ${
+                  hasBeenRevealed ? 'bg-yellow-400' : 'bg-blue-400 animate-pulse'
+                }`}>
+                  <span className="text-xs text-black font-bold">
+                    {hasBeenRevealed ? '✓' : '?'}
+                  </span>
                 </div>
               )}
             </div>
@@ -235,14 +283,14 @@ const CalloutOverlay: React.FC<CalloutOverlayProps> = ({
         animate={{ scale: 1 }}
         exit={{ scale: 0 }}
         style={style}
-        onClick={(e) => handleCalloutClick(callout.id, e)}
-        className={`group ${isEditing ? 'ring-2 ring-white ring-opacity-50' : ''}`}
+        onClick={(e) => handleCalloutClick(callout, e)}
+        className={`group ${isEditingThis ? 'ring-2 ring-white ring-opacity-50' : ''}`}
       >
         {renderShape()}
         
         {/* Minimal Edit Controls */}
         <AnimatePresence>
-          {isEditing && (
+          {isEditingThis && (
             <motion.div
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -264,6 +312,23 @@ const CalloutOverlay: React.FC<CalloutOverlayProps> = ({
                 />
               ))}
               
+              {/* Edit Reveal Text Button (for numbered callouts) */}
+              {callout.shape === "number" && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setRevealTextInput(callout.revealText || "");
+                    setEditingCallout(callout.id);
+                    setShowRevealTextDialog(true);
+                    (window as any).tempCalloutData = callout;
+                  }}
+                  className="text-blue-400 hover:text-blue-300 hover:bg-blue-400/20 rounded p-1"
+                  title="Edit reveal text"
+                >
+                  <MessageCircle className="h-3 w-3" />
+                </button>
+              )}
+              
               {/* Delete Button */}
               <button
                 onClick={(e) => {
@@ -283,7 +348,58 @@ const CalloutOverlay: React.FC<CalloutOverlayProps> = ({
 
   return (
     <div className="relative w-full h-full">
-      {/* Reveal Text Dialog */}
+      {/* Click-to-Reveal Popup */}
+      <AnimatePresence>
+        {activeReveal && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8, y: 10 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.8, y: 10 }}
+            className="absolute z-50"
+            style={{
+              left: revealPosition.x,
+              top: revealPosition.y,
+              transform: 'translate(-50%, -100%)',
+              marginTop: '-10px'
+            }}
+          >
+            <div className="bg-zinc-900 border border-zinc-700 rounded-lg shadow-2xl max-w-xs w-64">
+              {/* Arrow pointing down */}
+              <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-4 h-4 bg-zinc-900 border-r border-b border-zinc-700 rotate-45"></div>
+              
+              <div className="p-4">
+                <div className="flex items-start justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <div className="w-6 h-6 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-sm font-bold">
+                      {screenshot.callouts.find(c => c.id === activeReveal)?.number}
+                    </div>
+                    <span className="text-xs text-zinc-400 font-medium">Click-to-Reveal</span>
+                  </div>
+                  <button
+                    onClick={() => setActiveReveal(null)}
+                    className="text-zinc-400 hover:text-white transition-colors"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+                
+                <div className="text-sm text-white leading-relaxed">
+                  {screenshot.callouts.find(c => c.id === activeReveal)?.revealText}
+                </div>
+                
+                <div className="mt-3 pt-2 border-t border-zinc-700">
+                  <div className="flex items-center text-xs text-zinc-500">
+                    <Eye className="h-3 w-3 mr-1" />
+                    Click callout again to close
+                  </div>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Reveal Text Dialog for Editing */}
       {showRevealTextDialog && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <motion.div
@@ -291,7 +407,10 @@ const CalloutOverlay: React.FC<CalloutOverlayProps> = ({
             animate={{ opacity: 1, scale: 1 }}
             className="bg-zinc-800 rounded-lg p-6 max-w-md w-full mx-4 border border-zinc-700"
           >
-            <h3 className="text-lg font-semibold text-white mb-4">Add Click-to-Reveal Text</h3>
+            <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+              <MessageCircle className="h-5 w-5 text-purple-400" />
+              {editingCallout ? 'Edit Click-to-Reveal Text' : 'Add Click-to-Reveal Text'}
+            </h3>
             <p className="text-sm text-zinc-400 mb-4">
               Users will see the number first, then click it to reveal this text:
             </p>
@@ -304,13 +423,26 @@ const CalloutOverlay: React.FC<CalloutOverlayProps> = ({
             />
             <div className="flex gap-3 mt-4">
               <Button
-                onClick={handleRevealTextSubmit}
+                onClick={editingCallout ? () => {
+                  // Update existing callout
+                  const callout = screenshot.callouts.find(c => c.id === editingCallout);
+                  if (callout && onCalloutUpdate) {
+                    onCalloutUpdate({ ...callout, revealText: revealTextInput.trim() || undefined });
+                  }
+                  setShowRevealTextDialog(false);
+                  setRevealTextInput("");
+                  setEditingCallout(null);
+                } : handleRevealTextSubmit}
                 className="flex-1 bg-purple-600 hover:bg-purple-700 text-white"
               >
-                Add Callout
+                {editingCallout ? 'Update Callout' : 'Add Callout'}
               </Button>
               <Button
-                onClick={handleRevealTextCancel}
+                onClick={editingCallout ? () => {
+                  setShowRevealTextDialog(false);
+                  setRevealTextInput("");
+                  setEditingCallout(null);
+                } : handleRevealTextCancel}
                 variant="outline"
                 className="border-zinc-600 text-zinc-300 hover:bg-zinc-700"
               >
@@ -420,6 +552,14 @@ const CalloutOverlay: React.FC<CalloutOverlayProps> = ({
           {screenshot.callouts.map(renderCallout)}
         </AnimatePresence>
       </div>
+      
+      {/* Interactive Callouts Indicator */}
+      {!isEditing && screenshot.callouts.some(c => c.shape === "number" && c.revealText) && (
+        <div className="absolute top-2 left-2 bg-black/80 backdrop-blur-sm rounded-lg px-2 py-1 text-xs text-white border border-zinc-600 flex items-center gap-2">
+          <MessageCircle className="h-3 w-3 text-blue-400" />
+          <span>Click numbered callouts to reveal more info</span>
+        </div>
+      )}
       
       {/* Minimal Status Indicators */}
       {isAddingCallout && (

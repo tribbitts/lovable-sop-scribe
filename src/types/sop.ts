@@ -20,9 +20,17 @@ export interface ScreenshotData {
   dataUrl: string;
   originalDataUrl?: string; // Store original before cropping
   callouts: Callout[];
+  isCropped?: boolean;
+  title?: string; // Optional title for the screenshot
+  description?: string; // Optional description
+}
+
+// Updated interface to support multiple screenshots
+export interface StepScreenshots {
+  screenshots: ScreenshotData[];
+  // Keep legacy properties for backward compatibility
   secondaryDataUrl?: string;
   secondaryCallouts?: Callout[];
-  isCropped?: boolean;
 }
 
 export interface StepResource {
@@ -69,7 +77,8 @@ export interface SopStep {
   notes?: string;
   tags?: string[];
   resources?: StepResource[];
-  screenshot: ScreenshotData | null;
+  screenshot: ScreenshotData | null; // Keep for backward compatibility
+  screenshots?: ScreenshotData[]; // New array for multiple screenshots
   completed?: boolean;
   fileLink?: string; // Adding this property to fix the error
   fileLinkText?: string; // Adding this property to fix the error
