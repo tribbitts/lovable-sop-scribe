@@ -1,4 +1,3 @@
-
 import JSZip from "jszip";
 import { saveAs } from "file-saver";
 import { SopDocument } from "@/types/sop";
@@ -21,7 +20,7 @@ export async function generateTrainingBundle(
   options: BundleOptions = {}
 ): Promise<void> {
   try {
-    console.log("Starting training bundle generation");
+    console.log("Starting training bundle generation with consistent PDF styling");
     console.log("SOP Document:", sopDocument);
     console.log("Bundle Options:", options);
     
@@ -33,9 +32,9 @@ export async function generateTrainingBundle(
       console.log(`Bundle Progress: ${message}`);
     };
     
-    updateProgress("Generating enhanced PDF manual...");
+    updateProgress("Generating consistent PDF manual...");
     
-    // Define options outside try-catch for use in package info
+    // Use enhanced PDF generator with professional styling for consistency
     const pdfOptions: EnhancedPdfOptions = {
       theme: 'professional',
       includeTableOfContents: true,
@@ -45,24 +44,23 @@ export async function generateTrainingBundle(
     };
     
     try {
-      // Generate enhanced PDF
-      
-      console.log("PDF Options:", pdfOptions);
+      console.log("Using enhanced PDF generator for consistency:", pdfOptions);
       const pdfBase64 = await generateEnhancedPDF(sopDocument, pdfOptions);
-      console.log("PDF generation completed, base64 length:", pdfBase64.length);
+      console.log("Consistent PDF generation completed, base64 length:", pdfBase64.length);
       
       const pdfBlob = dataURItoBlob(pdfBase64);
       console.log("PDF blob created, size:", pdfBlob.size);
       
       // Add PDF to zip
       zip.file("manual/training-manual.pdf", pdfBlob);
-      console.log("PDF added to ZIP");
+      console.log("Consistent PDF added to ZIP");
     } catch (pdfError: any) {
       console.error("PDF generation failed:", pdfError);
       throw new Error(`PDF generation failed: ${pdfError.message}`);
     }
     
     updateProgress("Generating interactive HTML module...");
+    
     
     // Define HTML options
     const htmlOptions: HtmlExportOptions = {
@@ -135,7 +133,7 @@ export async function generateTrainingBundle(
     const filename = `${bundleName.replace(/[^a-z0-9]/gi, '-').toLowerCase()}-training-bundle.zip`;
     saveAs(zipBlob, filename);
     
-    console.log(`Training bundle created successfully: ${filename}`);
+    console.log(`Training bundle created successfully with consistent PDF: ${filename}`);
     
   } catch (error) {
     console.error("Error generating training bundle:", error);

@@ -2,8 +2,10 @@
 import { jsPDF } from "jspdf";
 import { SopDocument } from "@/types/sop";
 import { PdfTheme, pdfThemes, getCustomTheme } from "./enhanced-themes";
-import { registerInterFont } from "./utils";
-import { registerInterFontFallback, setFontWithFallback } from "./font-fallback";
+import { initializePdfFonts, setFontSafe, getStringWidthSafe } from "./font-handler";
+import { addCoverPage } from "./cover-page";
+import { addContentPageDesign, addPageFooters } from "./content-page";
+import { renderSteps } from "./step-renderer";
 
 export interface EnhancedPdfOptions {
   theme?: string;
@@ -19,7 +21,7 @@ export async function generateEnhancedPDF(
 ): Promise<string> {
   return new Promise(async (resolve, reject) => {
     try {
-      console.log("Starting enhanced PDF generation");
+      console.log("Starting enhanced PDF generation with consistent styling");
       
       // Create PDF with enhanced settings
       const pdf = new jsPDF({
@@ -31,39 +33,48 @@ export async function generateEnhancedPDF(
         floatPrecision: "smart"
       });
 
-      // Use system fonts for reliability
-      console.log("Using Helvetica fonts for reliable PDF generation");
-      pdf.setFont("helvetica", "normal");
-
-      // Get theme
-      const theme = options.customColors 
-        ? getCustomTheme(options.customColors)
-        : pdfThemes[options.theme || 'professional'];
+      // Initialize fonts with proper error handling
+      const fontsInitialized = initializePdfFonts(pdf);
+      if (!fontsInitialized) {
+        console.warn("Font initialization failed, proceeding with defaults");
+      }
 
       // PDF dimensions
       const width = pdf.internal.pageSize.getWidth();
       const height = pdf.internal.pageSize.getHeight();
-      const margin = { top: 25, right: 20, bottom: 25, left: 20 };
+      const margin = { top: 28, right: 22, bottom: 28, left: 22 };
 
-      // Generate enhanced cover page
-      await addEnhancedCoverPage(pdf, sopDocument, theme, width, height, margin);
+      // Use the same cover page as main PDF generator
+      console.log("Creating consistent cover page");
+      await addCoverPage(pdf, sopDocument, width, height, margin, sopDocument.backgroundImage);
 
       // Add table of contents if requested
       if (options.includeTableOfContents && sopDocument.steps.length > 0) {
         pdf.addPage();
-        await addEnhancedTableOfContents(pdf, sopDocument, theme, width, height, margin);
+        await addConsistentTableOfContents(pdf, sopDocument, width, height, margin);
       }
 
-      // Add content pages
+      // Add content pages using same styling as main generator
       pdf.addPage();
-      await renderEnhancedSteps(pdf, sopDocument, theme, width, height, margin, options.quality || 'high');
+      addContentPageDesign(pdf, width, height, margin, sopDocument.backgroundImage);
+      
+      await renderSteps(
+        pdf, 
+        sopDocument.steps, 
+        width, 
+        height, 
+        margin, 
+        width - margin.left - margin.right,
+        addContentPageDesign,
+        sopDocument.backgroundImage
+      );
 
-      // Add enhanced footers
-      addEnhancedFooters(pdf, sopDocument, theme, width, height, margin);
+      // Add consistent footers
+      addPageFooters(pdf, sopDocument, width, height, margin);
 
       const pdfBase64 = pdf.output('datauristring');
       
-      console.log("Enhanced PDF generated successfully");
+      console.log("Enhanced PDF generated with consistent styling");
       resolve(pdfBase64);
     } catch (error) {
       console.error("Enhanced PDF generation error:", error);
@@ -72,338 +83,116 @@ export async function generateEnhancedPDF(
   });
 }
 
-async function addEnhancedCoverPage(
+async function addConsistentTableOfContents(
   pdf: any,
   sopDocument: SopDocument,
-  theme: PdfTheme,
   width: number,
   height: number,
   margin: any
 ) {
-  // Enhanced cover page with modern design
+  // Use consistent styling with main PDF generator
+  addContentPageDesign(pdf, width, height, margin, sopDocument.backgroundImage);
   
-  // Background gradient effect
-  pdf.setFillColor(theme.colors.background);
-  pdf.rect(0, 0, width, height, 'F');
+  const { steps } = sopDocument;
   
-  // Header accent bar
-  pdf.setFillColor(theme.colors.primary);
-  pdf.rect(0, 0, width, 8, 'F');
+  // Professional title design
+  setFontSafe(pdf, "helvetica", "bold");
   
-  // Company logo if available
-  if (sopDocument.logo) {
-    try {
-      const logoSize = 25;
-      pdf.addImage(sopDocument.logo, 'JPEG', margin.left, margin.top, logoSize, logoSize);
-    } catch (error) {
-      console.warn("Logo rendering failed:", error);
-    }
-  }
+  pdf.setFontSize(28);
+  pdf.setTextColor(0, 122, 255); // SOPify blue only
+  pdf.text("Table of Contents", margin.left, margin.top + 18);
   
-  // Title section with enhanced typography
-  const titleY = height * 0.35;
-  
-  pdf.setFont("helvetica", "bold");
-  pdf.setFontSize(32);
-  pdf.setTextColor(theme.colors.text);
-  
-  const title = sopDocument.title || "Training Manual";
-  const titleLines = pdf.splitTextToSize(title, width - margin.left - margin.right);
-  pdf.text(titleLines, margin.left, titleY);
-  
-  // Subtitle/Topic
-  if (sopDocument.topic) {
-    pdf.setFont("helvetica", "normal");
-    pdf.setFontSize(18);
-    pdf.setTextColor(theme.colors.textLight);
-    pdf.text(sopDocument.topic, margin.left, titleY + 15);
-  }
-  
-  // Description if available
-  if (sopDocument.description) {
-    const descY = titleY + (sopDocument.topic ? 35 : 25);
-    pdf.setFont("helvetica", "normal");
-    pdf.setFontSize(12);
-    pdf.setTextColor(theme.colors.textLight);
-    const descLines = pdf.splitTextToSize(sopDocument.description, width - margin.left - margin.right - 40);
-    pdf.text(descLines, margin.left, descY);
-  }
-  
-  // Stats section
-  const statsY = height * 0.7;
-  pdf.setFillColor(theme.colors.primary, 0.1);
-  pdf.roundedRect(margin.left, statsY, width - margin.left - margin.right, 40, 8, 8, 'F');
-  
-  pdf.setFont("helvetica", "bold");
-  pdf.setFontSize(14);
-  pdf.setTextColor(theme.colors.text);
-  pdf.text("Training Overview", margin.left + 10, statsY + 12);
-  
-  pdf.setFont("helvetica", "normal");
-  pdf.setFontSize(11);
-  pdf.setTextColor(theme.colors.textLight);
-  pdf.text(`${sopDocument.steps.length} Learning Steps`, margin.left + 10, statsY + 22);
-  
-  if (sopDocument.companyName) {
-    pdf.text(`Organization: ${sopDocument.companyName}`, margin.left + 10, statsY + 30);
-  }
-  
-  // Footer
-  pdf.setFont("helvetica", "normal");
-  pdf.setFontSize(10);
-  pdf.setTextColor(theme.colors.textLight);
-  const date = sopDocument.date || new Date().toLocaleDateString();
-  pdf.text(`Created: ${date}`, margin.left, height - margin.bottom + 5);
-}
-
-async function addEnhancedTableOfContents(
-  pdf: any,
-  sopDocument: SopDocument,
-  theme: PdfTheme,
-  width: number,
-  height: number,
-  margin: any
-) {
-  // Enhanced TOC design
-  pdf.setFont("helvetica", "bold");
-  pdf.setFontSize(24);
-  pdf.setTextColor(theme.colors.text);
-  pdf.text("Table of Contents", margin.left, margin.top + 15);
-  
-  // Decorative line
-  pdf.setDrawColor(theme.colors.primary);
+  // Simple professional header line
+  pdf.setDrawColor(0, 122, 255);
   pdf.setLineWidth(3);
-  pdf.line(margin.left, margin.top + 22, margin.left + 60, margin.top + 22);
+  pdf.line(margin.left, margin.top + 28, margin.left + 100, margin.top + 28);
   
-  let currentY = margin.top + 45;
+  // Clean subtitle
+  setFontSafe(pdf, "helvetica", "normal");
   
-  sopDocument.steps.forEach((step, index) => {
-    if (currentY > height - margin.bottom - 20) {
-      pdf.addPage();
-      currentY = margin.top + 20;
-    }
-    
+  pdf.setFontSize(12);
+  pdf.setTextColor(127, 140, 141); // Professional gray
+  pdf.text(`${steps.length} Step${steps.length !== 1 ? 's' : ''} • ${sopDocument.topic || 'Standard Operating Procedure'}`, margin.left, margin.top + 40);
+  
+  let currentY = margin.top + 60;
+  
+  // Add each step with clean, professional design
+  steps.forEach((step, index) => {
     const stepNumber = index + 1;
     const stepTitle = step.title || `Step ${stepNumber}`;
     const pageNumber = stepNumber + 2;
     
-    // Step item with modern styling
-    const itemHeight = 12;
+    // Check if we need a new page
+    if (currentY > height - margin.bottom - 40) {
+      pdf.addPage();
+      addContentPageDesign(pdf, width, height, margin, sopDocument.backgroundImage);
+      currentY = margin.top + 30;
+    }
     
-    // Step number circle
-    pdf.setFillColor(theme.colors.primary);
-    pdf.circle(margin.left + 6, currentY + 2, 4, "F");
+    const itemHeight = 20;
+    const cardPadding = 8;
     
-    pdf.setFont("helvetica", "bold");
-    pdf.setFontSize(9);
+    // Clean card design
+    pdf.setFillColor(250, 250, 250); // Very light gray background
+    pdf.roundedRect(margin.left, currentY - cardPadding, width - margin.left - margin.right, itemHeight, 6, 6, 'F');
+    
+    // Professional border
+    pdf.setDrawColor(220, 220, 220);
+    pdf.setLineWidth(0.5);
+    pdf.roundedRect(margin.left, currentY - cardPadding, width - margin.left - margin.right, itemHeight, 6, 6, 'S');
+    
+    // Step number circle - blue only
+    const circleX = margin.left + 15;
+    const circleY = currentY + 2;
+    const circleRadius = 8;
+    
+    pdf.setFillColor(0, 122, 255); // SOPify blue only
+    pdf.circle(circleX, circleY, circleRadius, "F");
+    
+    // Step number text
+    setFontSafe(pdf, "helvetica", "bold");
+    pdf.setFontSize(10);
     pdf.setTextColor(255, 255, 255);
-    pdf.text(String(stepNumber), margin.left + 4, currentY + 3.5);
+    
+    const numberStr = String(stepNumber);
+    const numberWidth = getStringWidthSafe(pdf, numberStr, 10);
+    pdf.text(numberStr, circleX - (numberWidth / 2), circleY + 2);
     
     // Step title
-    pdf.setFont("helvetica", "normal");
+    setFontSafe(pdf, "helvetica", "normal");
     pdf.setFontSize(11);
-    pdf.setTextColor(theme.colors.text);
-    pdf.text(stepTitle, margin.left + 15, currentY + 4);
+    pdf.setTextColor(44, 62, 80);
+    
+    const titleX = circleX + circleRadius + 10;
+    
+    let displayTitle = stepTitle;
+    const maxTitleLength = 60;
+    if (stepTitle.length > maxTitleLength) {
+      displayTitle = stepTitle.substring(0, maxTitleLength - 3) + "...";
+    }
+    
+    pdf.text(displayTitle, titleX, currentY + 3);
     
     // Page number
-    pdf.setFont("helvetica", "normal");
+    setFontSafe(pdf, "helvetica", "normal");
     pdf.setFontSize(10);
-    pdf.setTextColor(theme.colors.textLight);
-    pdf.text(String(pageNumber), width - margin.right - 10, currentY + 4);
+    pdf.setTextColor(100, 100, 100);
     
-    // Connecting dots
-    pdf.setTextColor(theme.colors.border);
-    const dotsStart = margin.left + 15 + pdf.getStringUnitWidth(stepTitle) * 11 / pdf.internal.scaleFactor + 5;
-    const dotsEnd = width - margin.right - 15;
+    const pageNumText = String(pageNumber);
+    const pageNumWidth = getStringWidthSafe(pdf, pageNumText, 10);
+    const pageNumX = width - margin.right - 15;
     
-    if (dotsEnd > dotsStart) {
-      const dotCount = Math.floor((dotsEnd - dotsStart) / 3);
-      for (let i = 0; i < dotCount; i++) {
-        pdf.text(".", dotsStart + (i * 3), currentY + 4);
-      }
-    }
+    pdf.text(pageNumText, pageNumX - (pageNumWidth / 2), currentY + 3);
     
-    currentY += itemHeight;
-  });
-}
-
-async function renderEnhancedSteps(
-  pdf: any,
-  sopDocument: SopDocument,
-  theme: PdfTheme,
-  width: number,
-  height: number,
-  margin: any,
-  quality: string
-) {
-  // Enhanced step rendering with better visual hierarchy
-  let currentY = margin.top + 20;
-  
-  sopDocument.steps.forEach((step, index) => {
-    // Check if we need a new page
-    if (currentY > height - margin.bottom - 60) {
-      pdf.addPage();
-      currentY = margin.top + 20;
-    }
-    
-    const stepNumber = index + 1;
-    
-    // Step header with enhanced design
-    const headerHeight = 25;
-    
-    // Header background
-    pdf.setFillColor(theme.colors.primary, 0.1);
-    pdf.roundedRect(margin.left, currentY, width - margin.left - margin.right, headerHeight, theme.borderRadius, theme.borderRadius, 'F');
-    
-    // Step number badge
-    pdf.setFillColor(theme.colors.primary);
-    pdf.circle(margin.left + 15, currentY + 12, 8, "F");
-    
-    pdf.setFont("helvetica", "bold");
-    pdf.setFontSize(12);
-    pdf.setTextColor(255, 255, 255);
-    pdf.text(String(stepNumber), margin.left + 12, currentY + 14);
-    
-    // Step title
-    pdf.setFont("helvetica", "bold");
-    pdf.setFontSize(16);
-    pdf.setTextColor(theme.colors.text);
-    const title = step.title || `Step ${stepNumber}`;
-    pdf.text(title, margin.left + 30, currentY + 14);
-    
-    currentY += headerHeight + theme.spacing.medium;
-    
-    // Step description
-    if (step.description) {
-      pdf.setFont("helvetica", "normal");
-      pdf.setFontSize(11);
-      pdf.setTextColor(theme.colors.text);
-      const descLines = pdf.splitTextToSize(step.description, width - margin.left - margin.right - 20);
-      pdf.text(descLines, margin.left + 10, currentY);
-      currentY += (descLines.length * 5) + theme.spacing.small;
-    }
-    
-    // Screenshot handling with enhanced styling
-    if (step.screenshots && step.screenshots.length > 0) {
-      step.screenshots.forEach((screenshot, screenshotIndex) => {
-        if (currentY > height - margin.bottom - 80) {
-          pdf.addPage();
-          currentY = margin.top + 20;
-        }
-        
-        try {
-          const imgWidth = Math.min(120, width - margin.left - margin.right - 20);
-          const imgHeight = imgWidth * 0.75; // Maintain aspect ratio
-          
-          // Screenshot border/shadow effect
-          pdf.setFillColor(0, 0, 0, 0.1);
-          pdf.roundedRect(margin.left + 12, currentY + 2, imgWidth, imgHeight, 4, 4, 'F');
-          
-          pdf.addImage(screenshot.dataUrl, 'JPEG', margin.left + 10, currentY, imgWidth, imgHeight);
-          
-          // Screenshot caption
-          if (screenshot.title) {
-            pdf.setFont("helvetica", "normal");
-            pdf.setFontSize(9);
-            pdf.setTextColor(theme.colors.textLight);
-            pdf.text(screenshot.title, margin.left + 10, currentY + imgHeight + 8);
-          }
-          
-          currentY += imgHeight + theme.spacing.large;
-        } catch (error) {
-          console.warn("Screenshot rendering failed:", error);
-        }
-      });
-    } else if (step.screenshot) {
-      // Legacy single screenshot support
-      if (currentY > height - margin.bottom - 80) {
-        pdf.addPage();
-        currentY = margin.top + 20;
-      }
-      
-      try {
-        const imgWidth = Math.min(120, width - margin.left - margin.right - 20);
-        const imgHeight = imgWidth * 0.75;
-        
-        pdf.setFillColor(0, 0, 0, 0.1);
-        pdf.roundedRect(margin.left + 12, currentY + 2, imgWidth, imgHeight, 4, 4, 'F');
-        
-        pdf.addImage(step.screenshot.dataUrl, 'JPEG', margin.left + 10, currentY, imgWidth, imgHeight);
-        currentY += imgHeight + theme.spacing.large;
-      } catch (error) {
-        console.warn("Screenshot rendering failed:", error);
-      }
-    }
-    
-    // Additional step content
-    if (step.detailedInstructions) {
-      pdf.setFont("helvetica", "bold");
-      pdf.setFontSize(11);
-      pdf.setTextColor(theme.colors.text);
-      pdf.text("Detailed Instructions:", margin.left + 10, currentY);
-      currentY += 8;
-      
-      pdf.setFont("helvetica", "normal");
-      pdf.setFontSize(10);
-      const instructionLines = pdf.splitTextToSize(step.detailedInstructions, width - margin.left - margin.right - 20);
-      pdf.text(instructionLines, margin.left + 10, currentY);
-      currentY += (instructionLines.length * 4) + theme.spacing.small;
-    }
-    
-    if (step.notes) {
-      pdf.setFont("helvetica", "bold"); 
-      pdf.setFontSize(11);
-      pdf.setTextColor(theme.colors.text);
-      pdf.text("Notes:", margin.left + 10, currentY);
-      currentY += 8;
-      
-      pdf.setFont("helvetica", "normal");
-      pdf.setFontSize(10);
-      const noteLines = pdf.splitTextToSize(step.notes, width - margin.left - margin.right - 20);
-      pdf.text(noteLines, margin.left + 10, currentY);
-      currentY += (noteLines.length * 4) + theme.spacing.medium;
-    }
-    
-    // Step separator
-    currentY += theme.spacing.large;
-  });
-}
-
-function addEnhancedFooters(
-  pdf: any,
-  sopDocument: SopDocument,
-  theme: PdfTheme,
-  width: number,
-  height: number,
-  margin: any
-) {
-  const totalPages = pdf.internal.getNumberOfPages();
-  
-  for (let i = 1; i <= totalPages; i++) {
-    pdf.setPage(i);
-    
-    // Footer line
-    pdf.setDrawColor(theme.colors.border);
+    // Simple connecting line
+    pdf.setDrawColor(200, 200, 200);
     pdf.setLineWidth(0.5);
-    pdf.line(margin.left, height - margin.bottom + 5, width - margin.right, height - margin.bottom + 5);
-    
-    // Footer text
-    pdf.setFont("helvetica", "normal");
-    pdf.setFontSize(8);
-    pdf.setTextColor(theme.colors.textLight);
-    
-    // Left side - document title
-    const title = sopDocument.title || "Training Manual";
-    pdf.text(title, margin.left, height - margin.bottom + 12);
-    
-    // Right side - page number
-    pdf.text(`Page ${i} of ${totalPages}`, width - margin.right - 20, height - margin.bottom + 12);
-    
-    // Center - company name if available
-    if (sopDocument.companyName) {
-      const centerX = width / 2;
-      const textWidth = pdf.getStringUnitWidth(sopDocument.companyName) * 8 / pdf.internal.scaleFactor;
-      pdf.text(sopDocument.companyName, centerX - textWidth / 2, height - margin.bottom + 12);
+    const lineStartX = titleX + getStringWidthSafe(pdf, displayTitle, 11) + 8;
+    const lineEndX = pageNumX - 20;
+    if (lineEndX > lineStartX) {
+      pdf.line(lineStartX, circleY, lineEndX, circleY);
     }
-  }
+    
+    currentY += itemHeight + 6;
+  });
 }

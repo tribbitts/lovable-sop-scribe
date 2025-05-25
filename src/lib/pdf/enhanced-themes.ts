@@ -28,18 +28,18 @@ export const pdfThemes: Record<string, PdfTheme> = {
   professional: {
     name: "Professional",
     colors: {
-      primary: "#007AFF",
+      primary: "#007AFF", // SOPify blue
       secondary: "#1E1E1E", 
-      accent: "#4CAF50",
-      background: "#FAFAFA",
+      accent: "#007AFF", // Changed from green to blue for consistency
+      background: "#FFFFFF", // Pure white
       text: "#2D2D2D",
       textLight: "#6B7280",
       border: "#E5E5E5"
     },
     fonts: {
-      primary: "Inter",
-      secondary: "Inter", 
-      accent: "Inter"
+      primary: "helvetica", // Use safe font
+      secondary: "helvetica", 
+      accent: "helvetica"
     },
     spacing: {
       small: 8,
@@ -52,18 +52,18 @@ export const pdfThemes: Record<string, PdfTheme> = {
   elegant: {
     name: "Elegant",
     colors: {
-      primary: "#8B5CF6",
+      primary: "#007AFF", // Changed to SOPify blue
       secondary: "#374151",
-      accent: "#F59E0B",
+      accent: "#007AFF", // Changed to blue
       background: "#FFFFFF",
       text: "#1F2937",
       textLight: "#9CA3AF",
       border: "#F3F4F6"
     },
     fonts: {
-      primary: "Inter",
-      secondary: "Inter",
-      accent: "Inter"
+      primary: "helvetica",
+      secondary: "helvetica",
+      accent: "helvetica"
     },
     spacing: {
       small: 10,
@@ -76,18 +76,18 @@ export const pdfThemes: Record<string, PdfTheme> = {
   technical: {
     name: "Technical",
     colors: {
-      primary: "#0891B2",
+      primary: "#007AFF", // Changed to SOPify blue
       secondary: "#0F172A",
-      accent: "#059669",
-      background: "#F1F5F9",
+      accent: "#007AFF", // Changed to blue
+      background: "#F8F9FA", // Light gray instead of blue
       text: "#334155",
       textLight: "#64748B",
       border: "#CBD5E1"
     },
     fonts: {
-      primary: "Inter",
-      secondary: "Inter",
-      accent: "Inter"
+      primary: "helvetica",
+      secondary: "helvetica",
+      accent: "helvetica"
     },
     spacing: {
       small: 6,
@@ -100,18 +100,18 @@ export const pdfThemes: Record<string, PdfTheme> = {
   modern: {
     name: "Modern",
     colors: {
-      primary: "#6366F1",
+      primary: "#007AFF", // Changed to SOPify blue
       secondary: "#0F172A",
-      accent: "#10B981", 
+      accent: "#007AFF", // Changed to blue
       background: "#F8FAFC",
       text: "#1E293B",
       textLight: "#64748B",
       border: "#CBD5E1"
     },
     fonts: {
-      primary: "Inter",
-      secondary: "Inter",
-      accent: "Inter"
+      primary: "helvetica",
+      secondary: "helvetica",
+      accent: "helvetica"
     },
     spacing: {
       small: 10,
@@ -126,16 +126,16 @@ export const pdfThemes: Record<string, PdfTheme> = {
     colors: {
       primary: "#1F2937",
       secondary: "#374151",
-      accent: "#DC2626",
+      accent: "#007AFF", // Changed from red to blue
       background: "#FFFFFF", 
       text: "#111827",
       textLight: "#6B7280",
       border: "#D1D5DB"
     },
     fonts: {
-      primary: "Inter",
-      secondary: "Inter",
-      accent: "Inter"
+      primary: "helvetica",
+      secondary: "helvetica",
+      accent: "helvetica"
     },
     spacing: {
       small: 6,
