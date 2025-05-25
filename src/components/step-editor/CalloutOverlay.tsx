@@ -27,6 +27,8 @@ const CalloutOverlay: React.FC<CalloutOverlayProps> = ({
   const [isAddingCallout, setIsAddingCallout] = useState(false);
   const [editingCallout, setEditingCallout] = useState<string | null>(null);
   const [showToolbar, setShowToolbar] = useState(false);
+  const [revealTextInput, setRevealTextInput] = useState("");
+  const [showRevealTextDialog, setShowRevealTextDialog] = useState(false);
   const overlayRef = useRef<HTMLDivElement>(null);
 
   const colors = [
@@ -71,7 +73,7 @@ const CalloutOverlay: React.FC<CalloutOverlayProps> = ({
       height = 8;
     }
 
-    const newCallout: Omit<Callout, "id"> = {
+    const calloutData = {
       shape: selectedTool,
       color: selectedColor,
       x: Math.max(0, Math.min(95, x - width / 2)),
@@ -81,8 +83,15 @@ const CalloutOverlay: React.FC<CalloutOverlayProps> = ({
       number: selectedTool === "number" ? (screenshot.callouts.length + 1) : undefined,
     };
 
-    onCalloutAdd(newCallout);
-    // Keep adding mode active - user can add multiple callouts
+    // If it's a numbered callout, show dialog for reveal text
+    if (selectedTool === "number") {
+      setShowRevealTextDialog(true);
+      setRevealTextInput("");
+      // Store the callout data for later use
+      (window as any).tempCalloutData = calloutData;
+    } else {
+      onCalloutAdd(calloutData);
+    }
   }, [isEditing, isAddingCallout, selectedTool, selectedColor, screenshot.callouts.length, onCalloutAdd]);
 
   const handleCalloutClick = useCallback((calloutId: string, event: React.MouseEvent) => {
@@ -105,6 +114,26 @@ const CalloutOverlay: React.FC<CalloutOverlayProps> = ({
       onCalloutUpdate({ ...callout, color });
     }
   }, [screenshot.callouts, onCalloutUpdate]);
+
+  const handleRevealTextSubmit = useCallback(() => {
+    const calloutData = (window as any).tempCalloutData;
+    if (calloutData && onCalloutAdd) {
+      const newCallout: Omit<Callout, "id"> = {
+        ...calloutData,
+        revealText: revealTextInput.trim() || undefined,
+      };
+      onCalloutAdd(newCallout);
+      setShowRevealTextDialog(false);
+      setRevealTextInput("");
+      (window as any).tempCalloutData = null;
+    }
+  }, [revealTextInput, onCalloutAdd]);
+
+  const handleRevealTextCancel = useCallback(() => {
+    setShowRevealTextDialog(false);
+    setRevealTextInput("");
+    (window as any).tempCalloutData = null;
+  }, []);
 
   const renderCallout = (callout: Callout) => {
     const isEditing = editingCallout === callout.id;
@@ -165,15 +194,22 @@ const CalloutOverlay: React.FC<CalloutOverlayProps> = ({
         case "number":
           return (
             <div
-              className="w-full h-full rounded-full border-2 flex items-center justify-center font-bold text-white"
+              className={`w-full h-full rounded-full border-2 flex items-center justify-center font-bold text-white ${
+                callout.revealText ? 'bg-gradient-to-br from-blue-500 to-purple-600' : ''
+              }`}
               style={{ 
-                backgroundColor: callout.color,
+                backgroundColor: callout.revealText ? undefined : callout.color,
                 borderColor: callout.color,
               }}
             >
               <span style={{ fontSize: `${Math.max(10, callout.width * 0.6)}px` }}>
                 {callout.number}
               </span>
+              {callout.revealText && (
+                <div className="absolute -top-1 -right-1 w-3 h-3 bg-yellow-400 rounded-full flex items-center justify-center">
+                  <span className="text-xs text-black font-bold">?</span>
+                </div>
+              )}
             </div>
           );
         
@@ -247,6 +283,47 @@ const CalloutOverlay: React.FC<CalloutOverlayProps> = ({
 
   return (
     <div className="relative w-full h-full">
+      {/* Reveal Text Dialog */}
+      {showRevealTextDialog && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-zinc-800 rounded-lg p-6 max-w-md w-full mx-4 border border-zinc-700"
+          >
+            <h3 className="text-lg font-semibold text-white mb-4">Add Click-to-Reveal Text</h3>
+            <p className="text-sm text-zinc-400 mb-4">
+              Users will see the number first, then click it to reveal this text:
+            </p>
+            <textarea
+              value={revealTextInput}
+              onChange={(e) => setRevealTextInput(e.target.value)}
+              placeholder="Enter the text that will be revealed when users click the numbered callout..."
+              className="w-full h-32 bg-zinc-900 border border-zinc-600 rounded-lg p-3 text-white placeholder-zinc-500 resize-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
+              autoFocus
+            />
+            <div className="flex gap-3 mt-4">
+              <Button
+                onClick={handleRevealTextSubmit}
+                className="flex-1 bg-purple-600 hover:bg-purple-700 text-white"
+              >
+                Add Callout
+              </Button>
+              <Button
+                onClick={handleRevealTextCancel}
+                variant="outline"
+                className="border-zinc-600 text-zinc-300 hover:bg-zinc-700"
+              >
+                Cancel
+              </Button>
+            </div>
+            <div className="mt-3 text-xs text-zinc-500">
+              Tip: Leave empty to create a regular numbered callout without reveal text
+            </div>
+          </motion.div>
+        </div>
+      )}
+
       {/* Minimal Floating Toolbar - Only when editing */}
       {isEditing && (
         <div className="absolute top-2 left-2 z-50 flex items-center gap-2">

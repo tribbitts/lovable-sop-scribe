@@ -1,4 +1,3 @@
-
 // Training Module Creator - Enhanced Types
 // Sync test: Updated for Lovable platform integration
 export type CalloutShape = "circle" | "rectangle" | "arrow" | "number";
@@ -13,6 +12,7 @@ export interface Callout {
   height: number;
   number?: number; // For numbered callouts
   text?: string; // For text callouts
+  revealText?: string; // For click-to-reveal functionality on numbered callouts
 }
 
 export interface ScreenshotData {

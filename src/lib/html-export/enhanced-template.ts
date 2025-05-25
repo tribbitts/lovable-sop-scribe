@@ -55,7 +55,14 @@ export function generateEnhancedHtmlTemplate(
 
   // Generate step content with enhanced features
   const stepsHtml = processedSteps.map((step, index) => {
-    return generateEnhancedStepHtml(step, index, lmsFeatures);
+    // For enhanced template, we want clean images without callouts
+    // since we overlay them as interactive HTML elements
+    const cleanStep = {
+      ...step,
+      processedScreenshot: step.screenshot?.dataUrl || step.processedScreenshot,
+      secondaryProcessedScreenshot: step.screenshot?.secondaryDataUrl || step.secondaryProcessedScreenshot
+    };
+    return generateEnhancedStepHtml(cleanStep, index, lmsFeatures);
   }).join('');
 
   // Generate navigation sidebar
@@ -371,7 +378,106 @@ function generateEnhancedStepHtml(step: any, index: number, lmsFeatures: any): s
         
         ${step.processedScreenshot ? `
           <div class="step-media">
-            <img src="${step.processedScreenshot}" alt="Step ${stepNumber} Screenshot" class="step-image" />
+            <div class="image-container" style="position: relative; display: inline-block;">
+              <img src="${step.processedScreenshot}" alt="Step ${stepNumber} Screenshot" class="step-image" />
+              ${step.screenshot && step.screenshot.callouts ? step.screenshot.callouts.map(callout => `
+                <div 
+                  class="callout-overlay ${callout.revealText ? 'callout-reveal has-reveal-text' : ''}"
+                  style="
+                    position: absolute;
+                    left: ${callout.x}%;
+                    top: ${callout.y}%;
+                    width: ${callout.width}%;
+                    height: ${callout.height}%;
+                    cursor: ${callout.revealText ? 'pointer' : 'default'};
+                    z-index: 10;
+                  "
+                  ${callout.revealText ? `data-reveal-text="${callout.revealText}" data-callout-number="${callout.number || 'Info'}"` : ''}
+                >
+                  ${callout.shape === 'number' ? `
+                    <div style="
+                      width: 100%;
+                      height: 100%;
+                      border-radius: 50%;
+                      background: ${callout.revealText ? 'linear-gradient(135deg, #4F46E5, #7C3AED)' : callout.color};
+                      border: 2px solid ${callout.color};
+                      display: flex;
+                      align-items: center;
+                      justify-content: center;
+                      color: white;
+                      font-weight: bold;
+                      font-size: ${Math.max(10, callout.width * 0.6)}px;
+                      position: relative;
+                    ">
+                      ${callout.number || '1'}
+                      ${callout.revealText ? `
+                        <div style="
+                          position: absolute;
+                          top: -2px;
+                          right: -2px;
+                          width: 12px;
+                          height: 12px;
+                          background: #FCD34D;
+                          color: #000;
+                          border-radius: 50%;
+                          font-size: 8px;
+                          font-weight: bold;
+                          display: flex;
+                          align-items: center;
+                          justify-content: center;
+                        ">?</div>
+                      ` : ''}
+                    </div>
+                  ` : callout.shape === 'circle' ? `
+                    <div style="
+                      width: 100%;
+                      height: 100%;
+                      border-radius: 50%;
+                      border: 3px solid ${callout.color};
+                      background: ${callout.color}40;
+                      display: flex;
+                      align-items: center;
+                      justify-content: center;
+                      color: white;
+                      font-weight: bold;
+                      font-size: ${Math.max(8, callout.width * 0.8)}px;
+                    ">
+                      ${callout.number || ''}
+                    </div>
+                  ` : callout.shape === 'rectangle' ? `
+                    <div style="
+                      width: 100%;
+                      height: 100%;
+                      border: 3px solid ${callout.color};
+                      background: ${callout.color}40;
+                      display: flex;
+                      align-items: center;
+                      justify-content: center;
+                      color: ${callout.color};
+                      font-weight: bold;
+                      font-size: ${Math.max(10, callout.width * 0.1)}px;
+                      text-align: center;
+                      padding: 2px;
+                    ">
+                      ${callout.text || ''}
+                    </div>
+                  ` : callout.shape === 'arrow' ? `
+                    <div style="
+                      width: 100%;
+                      height: 100%;
+                      display: flex;
+                      align-items: center;
+                      justify-content: center;
+                      color: ${callout.color};
+                    ">
+                      <svg viewBox="0 0 24 24" style="width: 100%; height: 100%; fill: currentColor;">
+                        <path d="M7 14l5-5 5 5z"/>
+                      </svg>
+                    </div>
+                  ` : ''}
+                </div>
+              `).join('') : ''}
+            </div>
           </div>
         ` : ''}
         
@@ -384,7 +490,106 @@ function generateEnhancedStepHtml(step: any, index: number, lmsFeatures: any): s
         
         ${step.secondaryProcessedScreenshot ? `
           <div class="step-media secondary">
-            <img src="${step.secondaryProcessedScreenshot}" alt="Step ${stepNumber} Additional Screenshot" class="step-image" />
+            <div class="image-container" style="position: relative; display: inline-block;">
+              <img src="${step.secondaryProcessedScreenshot}" alt="Step ${stepNumber} Additional Screenshot" class="step-image" />
+              ${step.screenshot && step.screenshot.secondaryCallouts ? step.screenshot.secondaryCallouts.map(callout => `
+                <div 
+                  class="callout-overlay ${callout.revealText ? 'callout-reveal has-reveal-text' : ''}"
+                  style="
+                    position: absolute;
+                    left: ${callout.x}%;
+                    top: ${callout.y}%;
+                    width: ${callout.width}%;
+                    height: ${callout.height}%;
+                    cursor: ${callout.revealText ? 'pointer' : 'default'};
+                    z-index: 10;
+                  "
+                  ${callout.revealText ? `data-reveal-text="${callout.revealText}" data-callout-number="${callout.number || 'Info'}"` : ''}
+                >
+                  ${callout.shape === 'number' ? `
+                    <div style="
+                      width: 100%;
+                      height: 100%;
+                      border-radius: 50%;
+                      background: ${callout.revealText ? 'linear-gradient(135deg, #4F46E5, #7C3AED)' : callout.color};
+                      border: 2px solid ${callout.color};
+                      display: flex;
+                      align-items: center;
+                      justify-content: center;
+                      color: white;
+                      font-weight: bold;
+                      font-size: ${Math.max(10, callout.width * 0.6)}px;
+                      position: relative;
+                    ">
+                      ${callout.number || '1'}
+                      ${callout.revealText ? `
+                        <div style="
+                          position: absolute;
+                          top: -2px;
+                          right: -2px;
+                          width: 12px;
+                          height: 12px;
+                          background: #FCD34D;
+                          color: #000;
+                          border-radius: 50%;
+                          font-size: 8px;
+                          font-weight: bold;
+                          display: flex;
+                          align-items: center;
+                          justify-content: center;
+                        ">?</div>
+                      ` : ''}
+                    </div>
+                  ` : callout.shape === 'circle' ? `
+                    <div style="
+                      width: 100%;
+                      height: 100%;
+                      border-radius: 50%;
+                      border: 3px solid ${callout.color};
+                      background: ${callout.color}40;
+                      display: flex;
+                      align-items: center;
+                      justify-content: center;
+                      color: white;
+                      font-weight: bold;
+                      font-size: ${Math.max(8, callout.width * 0.8)}px;
+                    ">
+                      ${callout.number || ''}
+                    </div>
+                  ` : callout.shape === 'rectangle' ? `
+                    <div style="
+                      width: 100%;
+                      height: 100%;
+                      border: 3px solid ${callout.color};
+                      background: ${callout.color}40;
+                      display: flex;
+                      align-items: center;
+                      justify-content: center;
+                      color: ${callout.color};
+                      font-weight: bold;
+                      font-size: ${Math.max(10, callout.width * 0.1)}px;
+                      text-align: center;
+                      padding: 2px;
+                    ">
+                      ${callout.text || ''}
+                    </div>
+                  ` : callout.shape === 'arrow' ? `
+                    <div style="
+                      width: 100%;
+                      height: 100%;
+                      display: flex;
+                      align-items: center;
+                      justify-content: center;
+                      color: ${callout.color};
+                    ">
+                      <svg viewBox="0 0 24 24" style="width: 100%; height: 100%; fill: currentColor;">
+                        <path d="M7 14l5-5 5 5z"/>
+                      </svg>
+                    </div>
+                  ` : ''}
+                </div>
+              `).join('') : ''}
+            </div>
           </div>
         ` : ''}
         
@@ -1968,6 +2173,103 @@ function generateEnhancedCSS(branding: any): string {
         object-fit: contain;
       }
     }
+
+    /* Click-to-Reveal Callouts */
+    .callout-reveal {
+      position: relative;
+      cursor: pointer;
+    }
+
+    .callout-reveal.has-reveal-text {
+      background: linear-gradient(135deg, #4F46E5, #7C3AED) !important;
+    }
+
+    .callout-reveal.has-reveal-text::after {
+      content: "?";
+      position: absolute;
+      top: -2px;
+      right: -2px;
+      width: 12px;
+      height: 12px;
+      background: #FCD34D;
+      color: #000;
+      border-radius: 50%;
+      font-size: 8px;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .reveal-panel {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(0, 0, 0, 0.95);
+      backdrop-filter: blur(10px);
+      color: white;
+      padding: 20px;
+      border-radius: 12px;
+      max-width: 400px;
+      width: 90%;
+      z-index: 1000;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+      opacity: 0;
+      scale: 0.9;
+      transition: all 0.3s ease;
+    }
+
+    .reveal-panel.show {
+      opacity: 1;
+      scale: 1;
+    }
+
+    .reveal-panel-header {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 12px;
+      color: #4F46E5;
+    }
+
+    .reveal-panel-content {
+      font-size: 14px;
+      line-height: 1.6;
+      margin-bottom: 16px;
+    }
+
+    .reveal-panel-close {
+      background: #4F46E5;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 500;
+      transition: background 0.2s ease;
+    }
+
+    .reveal-panel-close:hover {
+      background: #3730A3;
+    }
+
+    .reveal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 999;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .reveal-overlay.show {
+      opacity: 1;
+    }
   `;
 }
 
@@ -2898,6 +3200,90 @@ function generateEnhancedJavaScript(
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
       }
+      
+      // Initialize training module when DOM is loaded
+      initializeTrainingModule() {
+        // Initialize carousel
+        this.initializeCarousel();
+        
+        // Initialize callout reveal functionality
+        this.initializeCalloutReveals();
+        
+        console.log('Training Module initialized with click-to-reveal callouts');
+      }
+      
+      // Click-to-reveal callout functionality
+      initializeCalloutReveals() {
+        // Add click handlers to all numbered callouts with reveal text
+        document.addEventListener('click', (e) => {
+          const target = e.target.closest('[data-reveal-text]');
+          if (target) {
+            e.preventDefault();
+            e.stopPropagation();
+            const revealText = target.getAttribute('data-reveal-text');
+            const calloutNumber = target.getAttribute('data-callout-number') || 'Info';
+            this.showRevealPanel(calloutNumber, revealText);
+          }
+        });
+      }
+      
+      showRevealPanel(number, text) {
+        // Remove any existing panels
+        this.hideRevealPanel();
+        
+        // Create overlay
+        const overlay = document.createElement('div');
+        overlay.className = 'reveal-overlay';
+        overlay.id = 'reveal-overlay';
+        
+        // Create panel
+        const panel = document.createElement('div');
+        panel.className = 'reveal-panel';
+        panel.id = 'reveal-panel';
+        panel.innerHTML = \`
+          <div class="reveal-panel-header">Callout \${number}</div>
+          <div class="reveal-panel-content">\${text}</div>
+          <button class="reveal-panel-close" onclick="trainingModule.hideRevealPanel()">Close</button>
+        \`;
+        
+        document.body.appendChild(overlay);
+        document.body.appendChild(panel);
+        
+        // Show with animation
+        setTimeout(() => {
+          overlay.classList.add('show');
+          panel.classList.add('show');
+        }, 10);
+        
+        // Close on overlay click
+        overlay.addEventListener('click', () => {
+          this.hideRevealPanel();
+        });
+        
+        // Close on escape key
+        const handleEscape = (e) => {
+          if (e.key === 'Escape') {
+            this.hideRevealPanel();
+            document.removeEventListener('keydown', handleEscape);
+          }
+        };
+        document.addEventListener('keydown', handleEscape);
+      }
+      
+      hideRevealPanel() {
+        const overlay = document.getElementById('reveal-overlay');
+        const panel = document.getElementById('reveal-panel');
+        
+        if (overlay && panel) {
+          overlay.classList.remove('show');
+          panel.classList.remove('show');
+          
+          setTimeout(() => {
+            overlay.remove();
+            panel.remove();
+          }, 300);
+        }
+      }
     }
     
     // Initialize training module when DOM is loaded
@@ -2906,9 +3292,11 @@ function generateEnhancedJavaScript(
     if (document.readyState === 'loading') {
       document.addEventListener('DOMContentLoaded', () => {
         trainingModule = new TrainingModule();
+        trainingModule.initializeTrainingModule();
       });
     } else {
       trainingModule = new TrainingModule();
+      trainingModule.initializeTrainingModule();
     }
     
     // Export notes functionality

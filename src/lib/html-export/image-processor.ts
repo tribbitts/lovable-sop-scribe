@@ -84,7 +84,40 @@ function renderCalloutsOnCanvas(
     ctx.save();
     
     switch (callout.shape) {
-      case "circle":
+      case "circle": {
+        const radius = Math.max(width, height) / 2;
+        const centerX = x + width / 2;
+        const centerY = y + height / 2;
+        
+        // Draw glow effect
+        ctx.shadowColor = callout.color;
+        ctx.shadowBlur = 8;
+        ctx.shadowOffsetX = 0;
+        ctx.shadowOffsetY = 0;
+        
+        // Draw circle with border (no fill for regular circles)
+        ctx.strokeStyle = callout.color;
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
+        ctx.stroke();
+        
+        // Add number if present
+        if (callout.number) {
+          ctx.shadowBlur = 0;
+          ctx.fillStyle = "white";
+          ctx.font = `bold ${Math.max(12, radius * 0.8)}px sans-serif`;
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.fillText(
+            String(callout.number), 
+            centerX, 
+            centerY
+          );
+        }
+        break;
+      }
+        
       case "number": {
         const radius = Math.max(width, height) / 2;
         const centerX = x + width / 2;
@@ -96,31 +129,49 @@ function renderCalloutsOnCanvas(
         ctx.shadowOffsetX = 0;
         ctx.shadowOffsetY = 0;
         
-        // Draw circle with border
+        // Draw circle with special styling for reveal text
         ctx.strokeStyle = callout.color;
         ctx.lineWidth = 3;
         ctx.beginPath();
         ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
         
-        if (callout.shape === "number") {
-          // Fill for numbered callouts
+        // Use gradient fill for reveal text callouts
+        if (callout.revealText) {
+          const gradient = ctx.createLinearGradient(centerX - radius, centerY - radius, centerX + radius, centerY + radius);
+          gradient.addColorStop(0, '#4F46E5');
+          gradient.addColorStop(1, '#7C3AED');
+          ctx.fillStyle = gradient;
+        } else {
           ctx.fillStyle = callout.color;
+        }
+        ctx.fill();
+        
+        // Add number text
+        ctx.shadowBlur = 0;
+        ctx.fillStyle = "white";
+        ctx.font = `bold ${Math.max(12, radius * 0.8)}px sans-serif`;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(
+          String(callout.number || index + 1), 
+          centerX, 
+          centerY
+        );
+        
+        // Add question mark indicator for reveal text
+        if (callout.revealText) {
+          const indicatorRadius = radius * 0.3;
+          const indicatorX = centerX + radius * 0.7;
+          const indicatorY = centerY - radius * 0.7;
+          
+          ctx.fillStyle = "#FCD34D";
+          ctx.beginPath();
+          ctx.arc(indicatorX, indicatorY, indicatorRadius, 0, 2 * Math.PI);
           ctx.fill();
           
-          // Add number text
-          ctx.shadowBlur = 0;
-          ctx.fillStyle = "white";
-          ctx.font = `bold ${Math.max(12, radius * 0.8)}px sans-serif`;
-          ctx.textAlign = "center";
-          ctx.textBaseline = "middle";
-          ctx.fillText(
-            String(callout.number || index + 1), 
-            centerX, 
-            centerY
-          );
-        } else {
-          // Just stroke for circle callouts
-          ctx.stroke();
+          ctx.fillStyle = "black";
+          ctx.font = `bold ${Math.max(8, indicatorRadius)}px sans-serif`;
+          ctx.fillText("?", indicatorX, indicatorY);
         }
         break;
       }
