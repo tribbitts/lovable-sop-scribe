@@ -144,20 +144,72 @@ export async function generateTrainingBundle(
 }
 
 async function generateHtmlForBundle(sopDocument: SopDocument, options: HtmlExportOptions): Promise<string> {
-  // We need to modify the exportSopAsHtml function to return HTML content without saving
-  // For now, we'll use a workaround to capture the HTML content
-  
-  // This is a simplified version - in practice, you'd want to refactor exportSopAsHtml
-  // to separate content generation from file saving
   try {
-    const { exportSopAsHtml } = await import("./html-export");
+    console.log("Generating enhanced HTML for bundle...", options);
     
-    // Create a modified version that returns HTML instead of saving
-    const htmlContent = await createStandaloneHtml(sopDocument, options);
+    // Import the enhanced template generator
+    const { generateEnhancedHtmlTemplate } = await import("./html-export/enhanced-template");
+    
+    // Process steps for HTML with callout processing
+    const { createBase64ImageWithCallouts } = await import("./html-export/image-processor");
+    
+    const processedSteps = await Promise.all(
+      sopDocument.steps.map(async (step, index) => {
+        const processedStep: any = { ...step };
+        
+        // Process main screenshot with callouts
+        if (step.screenshot?.dataUrl) {
+          try {
+            processedStep.processedScreenshot = await createBase64ImageWithCallouts(
+              step.screenshot.dataUrl,
+              step.screenshot.callouts || []
+            );
+          } catch (error) {
+            console.warn(`Failed to process screenshot for step ${index + 1}:`, error);
+            processedStep.processedScreenshot = step.screenshot.dataUrl;
+          }
+        }
+        
+        // Process multiple screenshots with callouts
+        if (step.screenshots && step.screenshots.length > 0) {
+          try {
+            processedStep.processedScreenshots = await Promise.all(
+              step.screenshots.map(async (screenshot) => {
+                try {
+                  return await createBase64ImageWithCallouts(
+                    screenshot.dataUrl,
+                    screenshot.callouts || []
+                  );
+                } catch (error) {
+                  console.warn(`Failed to process screenshot ${screenshot.id}:`, error);
+                  return screenshot.dataUrl;
+                }
+              })
+            );
+          } catch (error) {
+            console.warn(`Failed to process screenshots for step ${index + 1}:`, error);
+            processedStep.processedScreenshots = step.screenshots?.map(s => s.dataUrl) || [];
+          }
+        }
+        
+        return processedStep;
+      })
+    );
+    
+    // Generate the enhanced HTML content
+    const htmlContent = generateEnhancedHtmlTemplate(
+      sopDocument, 
+      processedSteps, 
+      options.enhancedOptions || {}
+    );
+    
+    console.log("Enhanced HTML generated successfully for bundle");
     return htmlContent;
+    
   } catch (error) {
-    console.error("Error generating HTML for bundle:", error);
-    throw error;
+    console.error("Error generating enhanced HTML for bundle:", error);
+    // Fallback to basic template if enhanced fails
+    return await createStandaloneHtml(sopDocument, options);
   }
 }
 

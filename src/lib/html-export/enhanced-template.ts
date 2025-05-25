@@ -2498,10 +2498,10 @@ function generateEnhancedJavaScript(
         const carouselContainer = document.getElementById('carousel-container');
         
         if (carouselTrack && carouselContainer) {
-          // Get the inner width of the container (excluding padding)
-          const containerInnerWidth = carouselContainer.clientWidth - 80; // 40px padding each side
-          // Calculate slide offset based on container inner width and current step
-          const slideOffset = -(this.currentStep - 1) * containerInnerWidth;
+          // Get the full width of the container - each slide is 100% of this width
+          const containerWidth = carouselContainer.clientWidth;
+          // Calculate slide offset based on current step (0-indexed for calculation)
+          const slideOffset = -(this.currentStep - 1) * containerWidth;
           carouselTrack.style.transform = \`translateX(\${slideOffset}px)\`;
         }
         
