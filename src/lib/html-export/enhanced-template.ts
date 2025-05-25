@@ -135,7 +135,7 @@ export function generateEnhancedHtmlTemplate(
       </div>
       
       <!-- Carousel Container -->
-      <div class="carousel-container">
+      <div class="carousel-container" id="carousel-container">
         <div class="carousel-track" id="carousel-track">
           ${stepsHtml}
         </div>
@@ -1212,11 +1212,13 @@ function generateEnhancedCSS(branding: any): string {
     /* Training Steps - Carousel Layout */
     .training-step.carousel-slide {
       min-width: 100%;
+      width: 100%;
       background: var(--surface-dark);
       border-radius: 16px;
       border: 1px solid var(--border-dark);
       transition: all 0.3s ease;
       flex-shrink: 0;
+      box-sizing: border-box;
     }
 
     .light-theme .training-step.carousel-slide {
@@ -2149,6 +2151,15 @@ function generateEnhancedJavaScript(
         
         // Initialize first step
         this.updateCarouselDisplay();
+        
+        // Handle window resize to recalculate carousel positions
+        window.addEventListener('resize', () => {
+          // Debounce resize events
+          clearTimeout(this.resizeTimeout);
+          this.resizeTimeout = setTimeout(() => {
+            this.updateCarouselDisplay();
+          }, 250);
+        });
       }
       
       navigateToStep(stepNumber) {
@@ -2182,16 +2193,19 @@ function generateEnhancedJavaScript(
       updateCarouselDisplay() {
         // Update step visibility with sliding animation
         const carouselTrack = document.getElementById('carousel-track');
-        if (carouselTrack) {
-          const slideOffset = -(this.currentStep - 1) * 100;
-          carouselTrack.style.transform = \`translateX(\${slideOffset}%)\`;
+        const carouselContainer = document.getElementById('carousel-container');
+        
+        if (carouselTrack && carouselContainer) {
+          // Get the inner width of the container (excluding padding)
+          const containerInnerWidth = carouselContainer.clientWidth - 80; // 40px padding each side
+          // Calculate slide offset based on container inner width and current step
+          const slideOffset = -(this.currentStep - 1) * containerInnerWidth;
+          carouselTrack.style.transform = \`translateX(\${slideOffset}px)\`;
         }
         
-        // Update all slides to be visible (remove opacity-based hiding)
+        // Update all slides styling
         document.querySelectorAll('.carousel-slide').forEach((slide, index) => {
-          // Remove opacity-based active class since we're using transform now
           slide.classList.remove('active');
-          // Add active class to current step for styling purposes
           if (index + 1 === this.currentStep) {
             slide.classList.add('active');
           }
