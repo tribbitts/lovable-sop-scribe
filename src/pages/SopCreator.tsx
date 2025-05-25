@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -7,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { toast } from "@/hooks/use-toast";
 import { 
   Settings, 
   Save, 
@@ -25,7 +27,7 @@ import {
 } from "lucide-react";
 import StepCard from "@/components/step-editor/StepCard";
 import ProgressTracker from "@/components/ProgressTracker";
-import ExportPanel from "@/components/toolbar/ExportPanel";
+import ExportPanel from "@/components/step-editor/ExportPanel";
 import { useSopContext } from "@/context/SopContext";
 import { LessonTemplateModal } from "@/components/LessonTemplateModal";
 import { SopStep } from "@/types/sop";
