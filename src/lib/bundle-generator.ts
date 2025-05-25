@@ -22,6 +22,8 @@ export async function generateTrainingBundle(
 ): Promise<void> {
   try {
     console.log("Starting training bundle generation");
+    console.log("SOP Document:", sopDocument);
+    console.log("Bundle Options:", options);
     
     const zip = new JSZip();
     const bundleName = options.bundleName || sopDocument.title || "Training-Package";
@@ -33,7 +35,7 @@ export async function generateTrainingBundle(
     
     updateProgress("Generating enhanced PDF manual...");
     
-    // Generate enhanced PDF
+    // Define options outside try-catch for use in package info
     const pdfOptions: EnhancedPdfOptions = {
       theme: 'professional',
       includeTableOfContents: true,
@@ -42,15 +44,27 @@ export async function generateTrainingBundle(
       ...options.pdfOptions
     };
     
-    const pdfBase64 = await generateEnhancedPDF(sopDocument, pdfOptions);
-    const pdfBlob = dataURItoBlob(pdfBase64);
-    
-    // Add PDF to zip
-    zip.file("manual/training-manual.pdf", pdfBlob);
+    try {
+      // Generate enhanced PDF
+      
+      console.log("PDF Options:", pdfOptions);
+      const pdfBase64 = await generateEnhancedPDF(sopDocument, pdfOptions);
+      console.log("PDF generation completed, base64 length:", pdfBase64.length);
+      
+      const pdfBlob = dataURItoBlob(pdfBase64);
+      console.log("PDF blob created, size:", pdfBlob.size);
+      
+      // Add PDF to zip
+      zip.file("manual/training-manual.pdf", pdfBlob);
+      console.log("PDF added to ZIP");
+    } catch (pdfError: any) {
+      console.error("PDF generation failed:", pdfError);
+      throw new Error(`PDF generation failed: ${pdfError.message}`);
+    }
     
     updateProgress("Generating interactive HTML module...");
     
-    // Generate interactive HTML
+    // Define HTML options
     const htmlOptions: HtmlExportOptions = {
       mode: 'standalone',
       enhanced: true,

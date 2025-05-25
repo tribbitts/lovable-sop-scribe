@@ -167,32 +167,30 @@ export async function registerInterFont(pdf: jsPDF) {
   try {
     console.log("Attempting to register Inter font...");
     
+    // Check if fonts are already registered to avoid duplicate registration
     try {
-      console.log("Checking if fonts are already available in the VFS");
-      // Check if fonts are already registered to avoid duplicate registration
       const fontList = pdf.getFontList();
       if (fontList['Inter'] && fontList['Inter'].indexOf('normal') >= 0) {
         console.log("Inter font already registered, skipping registration");
         return;
       }
-      
-      const interRegularBase64 = await fetchFontAsBase64('/fonts/Inter-Regular.ttf');
-      const interBoldBase64 = await fetchFontAsBase64('/fonts/Inter-Bold.ttf');
-
-      pdf.addFileToVFS('Inter-Regular.ttf', interRegularBase64);
-      pdf.addFont('Inter-Regular.ttf', 'Inter', 'normal');
-
-      pdf.addFileToVFS('Inter-Bold.ttf', interBoldBase64);
-      pdf.addFont('Inter-Bold.ttf', 'Inter', 'bold');
-
-      console.log("Inter font registered successfully.");
-    } catch (error) {
-      console.error("Failed to load or register Inter font:", error);
-      console.warn("Falling back to Helvetica due to font loading error.");
-      throw error; // Re-throw to trigger fallback
+    } catch (e) {
+      console.warn("Could not check font list, proceeding with registration");
     }
+    
+    const interRegularBase64 = await fetchFontAsBase64('/fonts/Inter-Regular.ttf');
+    const interBoldBase64 = await fetchFontAsBase64('/fonts/Inter-Bold.ttf');
+
+    pdf.addFileToVFS('Inter-Regular.ttf', interRegularBase64);
+    pdf.addFont('Inter-Regular.ttf', 'Inter', 'normal');
+
+    pdf.addFileToVFS('Inter-Bold.ttf', interBoldBase64);
+    pdf.addFont('Inter-Bold.ttf', 'Inter', 'bold');
+
+    console.log("Inter font registered successfully.");
   } catch (error) {
-    // No additional handling needed, we're already logging the error
-    // and the code will naturally fall back to the default fonts
+    console.error("Failed to load or register Inter font:", error);
+    console.warn("Falling back to Helvetica. This won't affect functionality but may change appearance.");
+    // Don't throw error - let the PDF generation continue with system fonts
   }
 }

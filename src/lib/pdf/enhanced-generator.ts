@@ -66,10 +66,7 @@ export async function generateEnhancedPDF(
 
       const pdfBase64 = pdf.output('datauristring');
       
-      // Save with enhanced filename
-      const filename = `${sopDocument.title || 'Training-Manual'}.pdf`;
-      pdf.save(filename);
-      
+      console.log("Enhanced PDF generated successfully");
       resolve(pdfBase64);
     } catch (error) {
       console.error("Enhanced PDF generation error:", error);
