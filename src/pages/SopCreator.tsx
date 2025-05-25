@@ -154,10 +154,19 @@ const SopCreator: React.FC = () => {
     setShowExportPanel(true);
   };
 
-  const handleExport = async (format: "pdf" | "html" | "training-module", options?: any) => {
+  const handleExport = async (format: "pdf" | "html" | "training-module" | "bundle", options?: any) => {
     setIsExporting(true);
     
-    if (format === "training-module") {
+    if (format === "bundle") {
+      setExportProgress("Creating bundled training package...");
+      console.log('🎯 SopCreator handling bundle export with options:', options);
+      
+      try {
+        await exportDocument(format, options);
+      } catch (error) {
+        console.error("Bundle export failed:", error);
+      }
+    } else if (format === "training-module") {
       setExportProgress("Creating interactive training module...");
       
       const enhancedOptions = {

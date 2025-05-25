@@ -100,7 +100,7 @@ export class DocumentManager {
     }
   }
 
-  static async exportDocument(document: SopDocument, format: ExportFormat, options?: any): Promise<void> {
+  static async exportDocument(document: SopDocument, format: ExportFormat | "bundle", options?: any): Promise<void> {
     try {
       if (format === "pdf") {
         const { generatePDF } = await import("@/lib/pdf-generator");
@@ -119,16 +119,54 @@ export class DocumentManager {
         console.log('🚀 Exporting with options:', htmlOptions);
         
         await exportSopAsHtml(document, htmlOptions);
+      } else if (format === "bundle") {
+        console.log('🎯 Bundle export triggered with options:', options);
+        const { generateTrainingBundle } = await import("@/lib/bundle-generator");
+        
+        // Map the ExportPanel options to BundleOptions format
+        const bundleOptions = {
+          pdfOptions: options?.bundleOptions?.pdfOptions || {
+            theme: 'professional',
+            includeTableOfContents: true,
+            includeProgressInfo: true,
+            quality: 'high'
+          },
+          htmlOptions: options?.bundleOptions?.htmlOptions || {
+            mode: 'standalone',
+            enhanced: true,
+            enhancedOptions: {
+              theme: 'auto',
+              lmsFeatures: {
+                enableNotes: true,
+                enableBookmarks: true,
+                enableSearch: true,
+                enableProgressTracking: true
+              }
+            }
+          },
+          includeResources: options?.bundleOptions?.includeResources ?? true,
+          bundleName: options?.bundleOptions?.bundleName || document.title || "Training-Package",
+          includeStyleGuide: options?.includeStyleGuide ?? true,
+          includeQuickReference: options?.includeQuickReference ?? true,
+          generateThumbnails: options?.generateThumbnails ?? true,
+          createFolderStructure: options?.createFolderStructure ?? true
+        };
+        
+        console.log('📦 Generating bundle with options:', bundleOptions);
+        
+        await generateTrainingBundle(document, bundleOptions);
       }
       
-      const exportType = format === "training-module" ? "Training Module" : format.toUpperCase();
+      const exportType = format === "training-module" ? "Training Module" : 
+                        format === "bundle" ? "Bundled Training Package" : format.toUpperCase();
       toast({
         title: "Export Successful",
         description: `Your SOP has been exported as ${exportType}`
       });
     } catch (error) {
       console.error("Export error:", error);
-      const exportType = format === "training-module" ? "Training Module" : format.toUpperCase();
+      const exportType = format === "training-module" ? "Training Module" : 
+                        format === "bundle" ? "Bundled Training Package" : format.toUpperCase();
       toast({
         title: "Export Failed",
         description: `Failed to export SOP as ${exportType}`,

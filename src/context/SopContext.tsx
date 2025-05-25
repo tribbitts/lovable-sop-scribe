@@ -62,7 +62,7 @@ interface SopContextType {
   resetDocument: () => void;
   
   // Export functionality
-  exportDocument: (format: ExportFormat, options?: any) => Promise<void>;
+  exportDocument: (format: ExportFormat | "bundle", options?: any) => Promise<void>;
   getPdfPreview: () => Promise<string>;
   
   // Progress tracking
@@ -327,7 +327,7 @@ export const SopProvider = ({ children }: { children: ReactNode }) => {
     });
   };
 
-  const exportDocument = async (format: ExportFormat, options?: any): Promise<void> => {
+  const exportDocument = async (format: ExportFormat | "bundle", options?: any): Promise<void> => {
     return DocumentManager.exportDocument(sopDocument, format, options);
   };
   

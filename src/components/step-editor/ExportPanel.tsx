@@ -111,9 +111,9 @@ const ExportPanel: React.FC<ExportPanelProps> = ({
   ];
 
   const handleExport = () => {
-    const options: ExportOptions = {
-      ...exportOptions,
-      ...(selectedFormat === "bundle" && {
+    if (selectedFormat === "bundle") {
+      // For bundle exports, pass the options in a format the DocumentManager expects
+      const bundleExportOptions = {
         bundleOptions: {
           pdfOptions: {
             theme: bundleOptions.pdfTheme,
@@ -140,11 +140,23 @@ const ExportPanel: React.FC<ExportPanelProps> = ({
           },
           includeResources: bundleOptions.includeResources,
           bundleName: bundleOptions.bundleName
-        }
-      })
-    };
-
-    onExport(selectedFormat, options);
+        },
+        // Add bundle-specific options at root level for easier access
+        includeStyleGuide: bundleOptions.includeStyleGuide,
+        includeQuickReference: bundleOptions.includeQuickReference,
+        generateThumbnails: bundleOptions.generateThumbnails,
+        createFolderStructure: bundleOptions.createFolderStructure
+      };
+      
+      console.log('🎯 ExportPanel sending bundle options:', bundleExportOptions);
+      onExport(selectedFormat, bundleExportOptions as any);
+    } else {
+      // For other formats, use the original structure
+      const options: ExportOptions = {
+        ...exportOptions
+      };
+      onExport(selectedFormat, options);
+    }
   };
 
   const canExport = document.title && document.topic && document.steps.length > 0;
