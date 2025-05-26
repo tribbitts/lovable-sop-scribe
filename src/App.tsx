@@ -1,78 +1,68 @@
 
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { HelmetProvider } from "react-helmet-async";
+import { AuthProvider } from "./context/AuthContext";
+import { SubscriptionProvider } from "./context/SubscriptionContext";
+import { Toaster } from "./components/ui/sonner";
 import HomePage from "./pages/HomePage";
-import AppLayout from "./layouts/AppLayout";
+import Index from "./pages/Index";
 import SopCreator from "./pages/SopCreator";
-import NotFound from "./pages/NotFound";
 import Auth from "./pages/Auth";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
 import CookiePolicy from "./pages/CookiePolicy";
-import ClickToRevealDemo from "./components/demo/ClickToRevealDemo";
-import { AuthProvider, useAuth } from "./context/AuthContext";
-import { SubscriptionProvider } from "./context/SubscriptionContext";
+import NotFound from "./pages/NotFound";
+import AppLayout from "./layouts/AppLayout";
+import { useAuth } from "./context/AuthContext";
 
 const queryClient = new QueryClient();
 
-// Protected route component
+// Protected Route wrapper
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useAuth();
   
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-[#121212]">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#007AFF]"></div>
-      </div>
-    );
+    return <div>Loading...</div>;
   }
   
   if (!user) {
-    return <Navigate to="/auth" replace />;
+    return <Auth />;
   }
   
-  return <>{children}</>;
+  return <AppLayout>{children}</AppLayout>;
 };
 
-const AppContent = () => {
+function App() {
   return (
-    <Routes>
-      <Route path="/" element={<HomePage />} />
-      <Route path="/auth" element={<Auth />} />
-      <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-      <Route path="/terms-of-service" element={<TermsOfService />} />
-      <Route path="/cookie-policy" element={<CookiePolicy />} />
-      <Route path="/demo" element={<ClickToRevealDemo />} />
-      <Route path="/app" element={
-        <ProtectedRoute>
-          <AppLayout>
-            <SopCreator />
-          </AppLayout>
-        </ProtectedRoute>
-      } />
-      {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-      <Route path="*" element={<NotFound />} />
-    </Routes>
-  );
-};
-
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
+    <HelmetProvider>
+      <QueryClientProvider client={queryClient}>
         <AuthProvider>
           <SubscriptionProvider>
-            <AppContent />
+            <Router>
+              <Routes>
+                <Route path="/" element={<HomePage />} />
+                <Route path="/auth" element={<Auth />} />
+                <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+                <Route path="/terms-of-service" element={<TermsOfService />} />
+                <Route path="/cookie-policy" element={<CookiePolicy />} />
+                <Route 
+                  path="/app" 
+                  element={
+                    <ProtectedRoute>
+                      <SopCreator />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+              <Toaster />
+            </Router>
           </SubscriptionProvider>
         </AuthProvider>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+      </QueryClientProvider>
+    </HelmetProvider>
+  );
+}
 
 export default App;

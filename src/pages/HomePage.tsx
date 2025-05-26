@@ -5,15 +5,57 @@ import Features from "@/components/home/Features";
 import Testimonials from "@/components/home/Testimonials";
 import Pricing from "@/components/home/Pricing";
 import Footer from "@/components/home/Footer";
+import SEOHead from "@/components/SEOHead";
+import { seoPages } from "@/lib/seo";
 
 const HomePage = () => {
+  const faqSchema = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "What is SOPify?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "SOPify is a professional SOP (Standard Operating Procedure) creation tool that helps businesses create step-by-step documentation with screenshots, annotations, and interactive training modules."
+        }
+      },
+      {
+        "@type": "Question", 
+        "name": "How much does SOPify cost?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "SOPify offers a free tier with basic features, SOP Essentials at $25/month, and SOPify Business at $75/month with advanced features like interactive training modules."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Can I export my SOPs to PDF?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Yes, SOPify allows you to export your Standard Operating Procedures to professional PDF documents and HTML formats for easy sharing and distribution."
+        }
+      }
+    ]
+  };
+
   return (
     <div className="min-h-screen bg-[#121212] text-[#F1F1F1] dark">
+      <SEOHead 
+        metadata={{
+          ...seoPages["/"],
+          schemaMarkup: faqSchema
+        }} 
+        path="/" 
+      />
       <Header />
-      <Hero />
-      <Features />
-      <Testimonials />
-      <Pricing />
+      <main>
+        <Hero />
+        <Features />
+        <Testimonials />
+        <Pricing />
+      </main>
       <Footer />
     </div>
   );

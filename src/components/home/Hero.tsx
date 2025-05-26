@@ -5,23 +5,52 @@ import { Button } from "@/components/ui/button";
 const Hero = () => {
   return (
     <section className="pt-32 pb-20 container mx-auto px-4">
-      <div className="max-w-3xl mx-auto text-center animate-fade-in">
+      <div className="max-w-4xl mx-auto text-center animate-fade-in">
         <h1 className="text-5xl md:text-6xl font-semibold tracking-tight leading-tight text-gradient mb-6">
-          Create Interactive<br />Training Modules
+          Create Professional SOPs with Screenshots & Training Modules
         </h1>
-        <p className="text-lg text-zinc-400 mb-8 max-w-2xl mx-auto">
-          Build engaging, offline training experiences with quizzes, progress tracking, and completion certificates. 
-          Perfect for employee onboarding, process training, and educational content.
+        <p className="text-xl text-zinc-400 mb-8 max-w-3xl mx-auto leading-relaxed">
+          Transform your business processes into professional Standard Operating Procedures with step-by-step instructions, 
+          annotated screenshots, and interactive training modules. Export to PDF, HTML, and create engaging learning experiences 
+          for your team. All data stays secure in your browser.
         </p>
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-12">
           <Link to="/app">
-            <Button className="bg-gradient-to-r from-purple-600 to-blue-600 text-white hover:from-purple-700 hover:to-blue-700 rounded-xl px-8 py-6 text-base w-full sm:w-auto">
-              Create Your First Module
+            <Button className="bg-[#007AFF] text-white hover:bg-[#0062CC] rounded-xl px-8 py-6 text-lg w-full sm:w-auto font-medium">
+              Start Creating SOPs Free
             </Button>
           </Link>
-          <Button variant="outline" className="border-zinc-700 text-zinc-300 hover:bg-zinc-800 rounded-xl px-8 py-6 text-base w-full sm:w-auto">
-            View Demo
+          <Button 
+            variant="outline" 
+            className="border-zinc-700 text-zinc-300 hover:bg-zinc-800 rounded-xl px-8 py-6 text-lg w-full sm:w-auto"
+            asChild
+          >
+            <a href="#how-it-works">
+              See How It Works
+            </a>
           </Button>
+        </div>
+        
+        {/* Trust indicators */}
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-6 text-sm text-zinc-500">
+          <div className="flex items-center gap-2">
+            <svg className="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+            </svg>
+            <span>No Credit Card Required</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <svg className="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+            </svg>
+            <span>Privacy-First Design</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <svg className="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+            </svg>
+            <span>Export to PDF & HTML</span>
+          </div>
         </div>
       </div>
     </section>

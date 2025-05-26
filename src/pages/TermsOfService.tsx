@@ -1,10 +1,15 @@
+
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
+import SEOHead from "@/components/SEOHead";
+import { seoPages } from "@/lib/seo";
 
 const TermsOfService = () => {
   return (
     <div className="min-h-screen bg-[#121212] text-[#F1F1F1]">
+      <SEOHead metadata={seoPages["/terms-of-service"]} path="/terms-of-service" />
+      
       {/* Header */}
       <div className="container mx-auto px-4 py-8">
         <Link to="/">
