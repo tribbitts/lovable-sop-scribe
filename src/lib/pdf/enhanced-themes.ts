@@ -1,4 +1,3 @@
-
 export interface PdfTheme {
   name: string;
   colors: {
@@ -9,6 +8,10 @@ export interface PdfTheme {
     text: string;
     textLight: string;
     border: string;
+    // Healthcare-specific colors
+    criticalSafety?: string;
+    hipaaAlert?: string;
+    patientCommunication?: string;
   };
   fonts: {
     primary: string;
@@ -22,6 +25,12 @@ export interface PdfTheme {
     xlarge: number;
   };
   borderRadius: number;
+  // Healthcare-specific properties
+  healthcare?: {
+    enabled: boolean;
+    organizationLogo?: string;
+    complianceLevel?: "basic" | "hipaa" | "joint-commission";
+  };
 }
 
 export const pdfThemes: Record<string, PdfTheme> = {
@@ -34,7 +43,10 @@ export const pdfThemes: Record<string, PdfTheme> = {
       background: "#FFFFFF", // Pure white
       text: "#2D2D2D",
       textLight: "#6B7280",
-      border: "#E5E5E5"
+      border: "#E5E5E5",
+      criticalSafety: "#DC2626",
+      hipaaAlert: "#2563EB",
+      patientCommunication: "#16A34A"
     },
     fonts: {
       primary: "helvetica", // Use safe font
@@ -48,6 +60,37 @@ export const pdfThemes: Record<string, PdfTheme> = {
       xlarge: 32
     },
     borderRadius: 8
+  },
+  healthcare: {
+    name: "Healthcare Professional",
+    colors: {
+      primary: "#007AFF", // SOPify blue
+      secondary: "#1E1E1E",
+      accent: "#16A34A", // Healthcare green
+      background: "#FFFFFF",
+      text: "#1F2937",
+      textLight: "#6B7280",
+      border: "#E5E7EB",
+      criticalSafety: "#DC2626", // Red for critical safety
+      hipaaAlert: "#2563EB", // Blue for HIPAA
+      patientCommunication: "#16A34A" // Green for communication
+    },
+    fonts: {
+      primary: "helvetica",
+      secondary: "helvetica",
+      accent: "helvetica"
+    },
+    spacing: {
+      small: 10,
+      medium: 18,
+      large: 26,
+      xlarge: 34
+    },
+    borderRadius: 8,
+    healthcare: {
+      enabled: true,
+      complianceLevel: "hipaa"
+    }
   },
   elegant: {
     name: "Elegant",
@@ -159,6 +202,29 @@ export function getCustomTheme(customColors?: { primary?: string; secondary?: st
       ...baseTheme.colors,
       primary: customColors.primary || baseTheme.colors.primary,
       secondary: customColors.secondary || baseTheme.colors.secondary
+    }
+  };
+}
+
+export function getHealthcareTheme(
+  organizationColors?: { primary?: string; secondary?: string; accent?: string },
+  organizationLogo?: string
+): PdfTheme {
+  const baseTheme = pdfThemes.healthcare;
+  
+  return {
+    ...baseTheme,
+    name: "Healthcare Custom",
+    colors: {
+      ...baseTheme.colors,
+      primary: organizationColors?.primary || baseTheme.colors.primary,
+      secondary: organizationColors?.secondary || baseTheme.colors.secondary,
+      accent: organizationColors?.accent || baseTheme.colors.accent
+    },
+    healthcare: {
+      enabled: true,
+      organizationLogo: organizationLogo,
+      complianceLevel: "hipaa"
     }
   };
 }
