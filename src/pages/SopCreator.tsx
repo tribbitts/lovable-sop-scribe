@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -222,6 +221,39 @@ const SopCreator: React.FC = () => {
     setShowLessonTemplateModal(false);
     
     console.log(`${templateType.replace('-', ' ')} lesson template has been added.`);
+  };
+
+  const handleAddHealthcareTemplate = (templateId: string) => {
+    // Import the healthcare template service
+    import("@/services/healthcare-template-service").then(({ HealthcareTemplateService }) => {
+      try {
+        const templateSteps = HealthcareTemplateService.createStepsFromTemplate(templateId);
+        const template = HealthcareTemplateService.getTemplateById(templateId);
+        
+        // Add all steps from the template
+        templateSteps.forEach(step => {
+          // Use addStep method to add each step to the SOP
+          addStep();
+          // Then update the step with template data
+          const stepIndex = steps.length;
+          updateStep(step.id, "title", step.title);
+          updateStep(step.id, "description", step.description);
+          updateStep(step.id, "detailedInstructions", step.detailedInstructions);
+          updateStep(step.id, "estimatedTime", step.estimatedTime);
+          updateStep(step.id, "tags", step.tags);
+          updateStep(step.id, "trainingMode", step.trainingMode);
+          updateStep(step.id, "healthcareContent", step.healthcareContent);
+          updateStep(step.id, "quizQuestions", step.quizQuestions);
+        });
+        
+        setCurrentLessonIndex(0); // Start with first lesson
+        setShowLessonTemplateModal(false);
+        
+        console.log(`${template?.name} template has been applied with ${templateSteps.length} lessons.`);
+      } catch (error) {
+        console.error("Failed to apply healthcare template:", error);
+      }
+    });
   };
 
   const handleDeleteLesson = (stepId: string) => {
@@ -672,6 +704,7 @@ const SopCreator: React.FC = () => {
           isOpen={showLessonTemplateModal}
           onClose={() => setShowLessonTemplateModal(false)}
           onSelectTemplate={handleAddLessonFromTemplate}
+          onSelectHealthcareTemplate={handleAddHealthcareTemplate}
         />
       </div>
     </div>
