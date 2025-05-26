@@ -126,105 +126,65 @@ function addTableOfContents(
 export async function generatePDF(sopDocument: SopDocument): Promise<string> {
   return new Promise(async (resolve, reject) => {
     try {
-      console.log("Starting SOPify-enhanced PDF generation process");
+      console.log("Using beautiful enhanced PDF generator for consistent theme");
       
-      // Create a new PDF with optimal settings for SOPify branding
-      const pdf = new jsPDF({
-        orientation: "portrait",
-        unit: "mm",
-        format: "a4",
-        compress: true,
-        putOnlyUsedFonts: true, 
-        floatPrecision: "smart"
-      });
-
-      // Initialize fonts with proper error handling
-      const fontsInitialized = initializePdfFonts(pdf);
-      if (!fontsInitialized) {
-        console.warn("Font initialization failed, proceeding with defaults");
-      }
+      // Import the enhanced PDF generator
+      const { generateEnhancedPDF } = await import("./pdf/enhanced-generator");
       
-      // Get PDF dimensions
-      const width = pdf.internal.pageSize.getWidth();
-      const height = pdf.internal.pageSize.getHeight();
-      
-      // SOPify optimized margins for better layout
-      const margin = {
-        top: 28,
-        right: 22,
-        bottom: 28,
-        left: 22
+      // Use the beautiful enhanced PDF generator with all the stunning features
+      const enhancedOptions = {
+        theme: 'professional',
+        includeTableOfContents: sopDocument.tableOfContents || false,
+        includeProgressInfo: true,
+        quality: 'high' as const,
+        branding: {
+          companyColors: {
+            primary: '#007AFF',
+            secondary: '#5856D6'
+          }
+        }
       };
       
-      // Calculate content width
-      const contentWidth = width - (margin.left + margin.right);
+      console.log("Generating beautiful PDF with enhanced theme:", enhancedOptions);
       
-      // Get background image
-      const backgroundImage = sopDocument.backgroundImage || null;
+      // Generate the beautiful PDF
+      const pdfBase64 = await generateEnhancedPDF(sopDocument, enhancedOptions);
       
-      console.log("Creating SOPify-branded cover page");
+      // Extract the PDF blob from base64 for saving
+      const base64Data = pdfBase64.split(',')[1];
+      const byteCharacters = atob(base64Data);
+      const byteNumbers = new Array(byteCharacters.length);
+      for (let i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i);
+      }
+      const byteArray = new Uint8Array(byteNumbers);
+      const blob = new Blob([byteArray], { type: 'application/pdf' });
+      
+      // Save the beautiful PDF with SOPify standardized filename
+      const filename = generatePdfFilename(sopDocument);
+      console.log(`Saving beautiful SOPify PDF as: ${filename}`);
       
       try {
-        // Create enhanced SOPify cover page with error handling
-        await addCoverPage(pdf, sopDocument, width, height, margin, backgroundImage);
-        console.log("SOPify cover page created successfully");
+        // Create download link and trigger download
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
         
-        // Add enhanced table of contents if enabled
-        if (sopDocument.tableOfContents && sopDocument.steps.length > 0) {
-          pdf.addPage();
-          console.log("Adding SOPify-branded table of contents");
-          addTableOfContents(pdf, sopDocument, width, height, margin, backgroundImage);
-          console.log("SOPify table of contents added successfully");
-        }
-        
-        // Add new page for steps content
-        pdf.addPage();
-        
-        // Add the SOPify branded background to the content page
-        addContentPageDesign(pdf, width, height, margin, backgroundImage);
-        
-        console.log(`Rendering ${sopDocument.steps.length} steps with SOPify styling`);
-        
-        // Render all steps with enhanced SOPify styling
-        await renderSteps(
-          pdf, 
-          sopDocument.steps, 
-          width, 
-          height, 
-          margin, 
-          contentWidth,
-          addContentPageDesign,
-          backgroundImage
-        );
-        
-        console.log("Steps rendered successfully with SOPify branding");
-        
-        // Add enhanced SOPify footer on each page
-        addPageFooters(pdf, sopDocument, width, height, margin);
-        
-        // Generate base64 string for preview
-        const pdfBase64 = pdf.output('datauristring');
-        
-        // Save the PDF with SOPify standardized filename
-        const filename = generatePdfFilename(sopDocument);
-        console.log(`Saving SOPify PDF as: ${filename}`);
-        
-        try {
-          pdf.save(filename);
-          console.log("SOPify PDF saved successfully");
-          resolve(pdfBase64);
-        } catch (saveError) {
-          console.error("Error saving SOPify PDF:", saveError);
-          // Even if saving fails, try to return the base64 for preview
-          resolve(pdfBase64);
-        }
-      } catch (error) {
-        console.error("Error in SOPify PDF creation process:", error);
-        reject(new Error(`PDF generation failed: ${error instanceof Error ? error.message : String(error)}`));
+        console.log("Beautiful SOPify PDF saved successfully");
+        resolve(pdfBase64);
+      } catch (saveError) {
+        console.error("Error saving beautiful SOPify PDF:", saveError);
+        // Even if saving fails, return the base64 for preview
+        resolve(pdfBase64);
       }
     } catch (error) {
-      console.error("SOPify PDF generation error:", error);
-      reject(new Error(`PDF initialization failed: ${error instanceof Error ? error.message : String(error)}`));
+      console.error("Beautiful PDF generation error:", error);
+      reject(new Error(`PDF generation failed: ${error instanceof Error ? error.message : String(error)}`));
     }
   });
 }
