@@ -1,12 +1,12 @@
-
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { BookOpen, HelpCircle, Users, Target, ArrowRight, UserPlus, Shield, MessageCircle } from "lucide-react";
+import { BookOpen, HelpCircle, Users, Target, ArrowRight, UserPlus, Shield, MessageCircle, ArrowLeft } from "lucide-react";
 import { HealthcareTemplateService } from "@/services/healthcare-template-service";
 import { HealthcareTemplate } from "@/types/healthcare-templates";
+import { HealthcareTemplateIntegration } from "@/components/healthcare/HealthcareTemplateIntegration";
 
 interface LessonTemplateModalProps {
   isOpen: boolean;
@@ -22,6 +22,7 @@ export const LessonTemplateModal: React.FC<LessonTemplateModalProps> = ({
   onSelectHealthcareTemplate
 }) => {
   const [selectedTab, setSelectedTab] = useState("standard");
+  const [selectedHealthcareTemplate, setSelectedHealthcareTemplate] = useState<HealthcareTemplate | null>(null);
 
   const standardTemplates = [
     {
@@ -86,6 +87,19 @@ export const LessonTemplateModal: React.FC<LessonTemplateModalProps> = ({
     );
   };
 
+  const handleHealthcareTemplateSelect = (template: HealthcareTemplate) => {
+    setSelectedHealthcareTemplate(template);
+  };
+
+  const handleApplyHealthcareTemplate = (templateId: string) => {
+    onSelectHealthcareTemplate?.(templateId);
+    onClose();
+  };
+
+  const handleBackToTemplates = () => {
+    setSelectedHealthcareTemplate(null);
+  };
+
   const renderTemplateCard = (template: any, onClick: () => void, isHealthcare = false) => (
     <motion.div
       whileHover={{ scale: 1.02 }}
@@ -127,6 +141,36 @@ export const LessonTemplateModal: React.FC<LessonTemplateModalProps> = ({
       </div>
     </motion.div>
   );
+
+  if (selectedHealthcareTemplate) {
+    return (
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[9999] flex items-center justify-center p-4"
+            onClick={onClose}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="bg-[#1E1E1E] rounded-2xl border border-zinc-800 p-6 max-w-5xl w-full max-h-[90vh] overflow-y-auto"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <HealthcareTemplateIntegration
+                template={selectedHealthcareTemplate}
+                onApplyTemplate={handleApplyHealthcareTemplate}
+                onCancel={handleBackToTemplates}
+              />
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    );
+  }
 
   return (
     <AnimatePresence>
@@ -173,7 +217,7 @@ export const LessonTemplateModal: React.FC<LessonTemplateModalProps> = ({
                   {healthcareTemplates.map((template) => 
                     renderTemplateCard(
                       template, 
-                      () => onSelectHealthcareTemplate?.(template.id),
+                      () => handleHealthcareTemplateSelect(template),
                       true
                     )
                   )}
