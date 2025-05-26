@@ -194,10 +194,16 @@ async function generateHtmlForBundle(sopDocument: SopDocument, options: HtmlExpo
       })
     );
     
-    // Generate the enhanced HTML content
+    // Fix: Call generateEnhancedHtmlTemplate with correct arguments
+    // Create a modified document with processed steps
+    const processedDocument = {
+      ...sopDocument,
+      steps: processedSteps
+    };
+    
+    // Generate the enhanced HTML content with only the document and options
     const htmlContent = generateEnhancedHtmlTemplate(
-      sopDocument, 
-      processedSteps, 
+      processedDocument,
       options.enhancedOptions || {}
     );
     
