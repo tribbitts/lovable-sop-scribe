@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,16 +17,19 @@ interface StepQuizProps {
 const StepQuiz: React.FC<StepQuizProps> = ({ step, onUpdateQuestions }) => {
   const [newQuestion, setNewQuestion] = useState("");
   const [newOptions, setNewOptions] = useState(["", "", "", ""]);
-  const [correctAnswer, setCorrectAnswer] = useState(0);
+  const [correctAnswerIndex, setCorrectAnswerIndex] = useState(0);
 
   const addQuestion = () => {
     if (!newQuestion.trim()) return;
 
+    const filteredOptions = newOptions.filter(opt => opt.trim());
+    
     const question: QuizQuestion = {
       id: Date.now().toString(),
       question: newQuestion,
-      options: newOptions.filter(opt => opt.trim()),
-      correctAnswer,
+      type: "multiple-choice",
+      options: filteredOptions,
+      correctAnswer: filteredOptions[correctAnswerIndex] || filteredOptions[0],
       explanation: ""
     };
 
@@ -35,7 +39,7 @@ const StepQuiz: React.FC<StepQuizProps> = ({ step, onUpdateQuestions }) => {
     // Reset form
     setNewQuestion("");
     setNewOptions(["", "", "", ""]);
-    setCorrectAnswer(0);
+    setCorrectAnswerIndex(0);
   };
 
   const removeQuestion = (questionId: string) => {
@@ -47,6 +51,11 @@ const StepQuiz: React.FC<StepQuizProps> = ({ step, onUpdateQuestions }) => {
     const updated = [...newOptions];
     updated[index] = value;
     setNewOptions(updated);
+  };
+
+  const getCorrectAnswerIndex = (question: QuizQuestion): number => {
+    if (!question.options) return 0;
+    return question.options.findIndex(option => option === question.correctAnswer);
   };
 
   return (
@@ -62,37 +71,40 @@ const StepQuiz: React.FC<StepQuizProps> = ({ step, onUpdateQuestions }) => {
       {/* Existing Questions */}
       {step.quizQuestions && step.quizQuestions.length > 0 && (
         <div className="space-y-3">
-          {step.quizQuestions.map((question, index) => (
-            <Card key={question.id} className="bg-zinc-800/50 border-zinc-700">
-              <CardHeader className="pb-2">
-                <div className="flex justify-between items-start">
-                  <h5 className="text-sm font-medium text-zinc-200">
-                    Question {index + 1}: {question.question}
-                  </h5>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => removeQuestion(question.id)}
-                    className="text-red-400 hover:text-red-300"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent className="pt-0">
-                <div className="space-y-1">
-                  {question.options.map((option, optIndex) => (
-                    <div key={optIndex} className="flex items-center gap-2">
-                      <div className={`w-2 h-2 rounded-full ${
-                        optIndex === question.correctAnswer ? 'bg-green-400' : 'bg-zinc-600'
-                      }`} />
-                      <span className="text-sm text-zinc-300">{option}</span>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+          {step.quizQuestions.map((question, index) => {
+            const correctIndex = getCorrectAnswerIndex(question);
+            return (
+              <Card key={question.id} className="bg-zinc-800/50 border-zinc-700">
+                <CardHeader className="pb-2">
+                  <div className="flex justify-between items-start">
+                    <h5 className="text-sm font-medium text-zinc-200">
+                      Question {index + 1}: {question.question}
+                    </h5>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => removeQuestion(question.id)}
+                      className="text-red-400 hover:text-red-300"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent className="pt-0">
+                  <div className="space-y-1">
+                    {question.options?.map((option, optIndex) => (
+                      <div key={optIndex} className="flex items-center gap-2">
+                        <div className={`w-2 h-2 rounded-full ${
+                          optIndex === correctIndex ? 'bg-green-400' : 'bg-zinc-600'
+                        }`} />
+                        <span className="text-sm text-zinc-300">{option}</span>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
       )}
 
@@ -119,9 +131,9 @@ const StepQuiz: React.FC<StepQuizProps> = ({ step, onUpdateQuestions }) => {
                 <div key={index} className="flex items-center gap-2">
                   <button
                     type="button"
-                    onClick={() => setCorrectAnswer(index)}
+                    onClick={() => setCorrectAnswerIndex(index)}
                     className={`w-4 h-4 rounded-full border-2 flex-shrink-0 ${
-                      correctAnswer === index 
+                      correctAnswerIndex === index 
                         ? 'bg-green-400 border-green-400' 
                         : 'border-zinc-600 hover:border-zinc-500'
                     }`}
