@@ -55,6 +55,25 @@ const PDF_EXPORTS_KEY = "sop_daily_pdf_exports";
 const HTML_EXPORTS_KEY = "sop_daily_html_exports";
 const LAST_EXPORT_DATE_KEY = "sop_last_export_date";
 
+// Map database tier names to frontend tier names
+const mapDatabaseTierToFrontend = (dbTier: string): SubscriptionTier => {
+  switch (dbTier) {
+    case 'sop-essentials':
+      return 'pro';
+    case 'sopify-business':
+      return 'pro-learning';
+    case 'free':
+      return 'free';
+    // Legacy support for old tier names
+    case 'pro':
+      return 'pro';
+    case 'pro-learning':
+      return 'pro-learning';
+    default:
+      return 'free';
+  }
+};
+
 // Export the provider component
 export const SubscriptionProvider: React.FC<SubscriptionProviderProps> = ({ children }) => {
   const { user } = useAuth();
@@ -145,14 +164,10 @@ export const SubscriptionProvider: React.FC<SubscriptionProviderProps> = ({ chil
       } else if (data) {
         // Make sure status is active
         if (data.status === 'active') {
-          // Validate that tier is one of the expected values
-          const validTiers: SubscriptionTier[] = ["free", "pro", "pro-learning"];
-          const validTier = validTiers.includes(data.tier as SubscriptionTier) 
-            ? data.tier as SubscriptionTier 
-            : "free";
-          
-          setTier(validTier);
-          console.log(`Set subscription tier to ${validTier} for user ${user.id}`);
+          // Map database tier to frontend tier
+          const frontendTier = mapDatabaseTierToFrontend(data.tier);
+          setTier(frontendTier);
+          console.log(`Set subscription tier to ${frontendTier} (db: ${data.tier}) for user ${user.id}`);
         } else {
           setTier("free");
           console.log(`User ${user.id} has inactive subscription, setting to free tier`);

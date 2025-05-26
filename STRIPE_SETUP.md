@@ -1,30 +1,35 @@
+
 # Stripe Integration Setup Guide
 
 ## Overview
-This guide will help you connect your 3 Stripe products to your SOP application's subscription tiers.
+This guide will help you connect your 2 Stripe products to your SOPify application's subscription tiers.
 
 ## Step 1: Get Your Stripe Price IDs
 
 In your Stripe Dashboard:
 
 1. Go to **Products** → **Pricing**
-2. Find your 3 products and copy their **Price IDs** (they start with `price_`)
+2. Find your 2 products and copy their **Price IDs** (they start with `price_`)
 
 You should have:
-- **Pro PDF** product → Price ID (e.g., `price_1Abc123...`)
-- **Pro HTML** product → Price ID (e.g., `price_1Def456...`) 
-- **Pro Complete** product → Price ID (e.g., `price_1Ghi789...`)
+- **SOP Essentials** product → Price ID: `price_1RSoc8KdlDHwo16BCMoXLuhI`
+- **SOPify Business** product → Price ID: `price_1RSocWKdlDHwo16BpnMc4LKG`
 
 ## Step 2: Set Environment Variables in Supabase
 
 1. Go to your Supabase Dashboard
 2. Navigate to **Settings** → **Edge Functions**
-3. Add these environment variables:
+3. Update these environment variables:
 
 ```bash
-STRIPE_PRO_PDF_PRICE_ID=price_your_pro_pdf_price_id_here
-STRIPE_PRO_HTML_PRICE_ID=price_your_pro_html_price_id_here  
-STRIPE_PRO_COMPLETE_PRICE_ID=price_your_pro_complete_price_id_here
+# Remove old variables if they exist:
+# STRIPE_PRO_PDF_PRICE_ID
+# STRIPE_PRO_HTML_PRICE_ID  
+# STRIPE_PRO_COMPLETE_PRICE_ID
+
+# Add new variables:
+STRIPE_SOP_ESSENTIALS_PRICE_ID=price_1RSoc8KdlDHwo16BCMoXLuhI
+STRIPE_SOPIFY_BUSINESS_PRICE_ID=price_1RSocWKdlDHwo16BpnMc4LKG
 ```
 
 ## Step 3: Verify Webhook Configuration
@@ -50,12 +55,11 @@ Webhook URL should be: `https://your-project.supabase.co/functions/v1/stripe-web
 
 The system now supports these tiers:
 
-| UI Tier | Database Value | Features |
-|---------|----------------|----------|
-| Free | `free` | Basic PDF exports (1/day) |
-| Pro PDF | `pro-pdf` | Unlimited PDF exports |
-| Pro HTML | `pro-html` | HTML exports + progress tracking |
-| Pro Complete | `pro-complete` | All features |
+| UI Tier | Database Value | Price | Features |
+|---------|----------------|-------|----------|
+| Free | `free` | $0/month | Basic PDF exports (1/day) |
+| SOP Essentials | `sop-essentials` | $25/month | Unlimited PDF exports + basic training |
+| SOPify Business | `sopify-business` | $75/month | All features + interactive training |
 
 ## Troubleshooting
 
@@ -70,10 +74,9 @@ The system now supports these tiers:
 STRIPE_SECRET_KEY=sk_live_... # Your Stripe secret key
 STRIPE_WEBHOOK_SECRET=whsec_... # Your webhook signing secret
 
-# New price ID variables (add these)
-STRIPE_PRO_PDF_PRICE_ID=price_...
-STRIPE_PRO_HTML_PRICE_ID=price_...
-STRIPE_PRO_COMPLETE_PRICE_ID=price_...
+# New price ID variables
+STRIPE_SOP_ESSENTIALS_PRICE_ID=price_1RSoc8KdlDHwo16BCMoXLuhI
+STRIPE_SOPIFY_BUSINESS_PRICE_ID=price_1RSocWKdlDHwo16BpnMc4LKG
 
 # Supabase configuration
 SUPABASE_URL=https://your-project.supabase.co
@@ -83,8 +86,10 @@ SUPABASE_SERVICE_ROLE_KEY=eyJ...
 
 ## What Changed
 
-1. **create-checkout function**: Now accepts a `tier` parameter and maps it to the correct Stripe price ID
-2. **stripe-webhook function**: Extracts tier information from checkout session metadata and assigns correct subscription tier
-3. **Pricing component**: Already sends the correct tier when calling the checkout function
+1. **Updated tier names**: "Pro" → "SOP Essentials" ($25), "Pro Learning" → "SOPify Business" ($75)
+2. **New price IDs**: Updated to use the new Stripe product price IDs
+3. **Simplified tiers**: Reduced from 3 paid tiers to 2 paid tiers
+4. **Price mapping**: Direct mapping between Stripe price IDs and database tier values
+5. **Frontend compatibility**: Internal mapping ensures UI continues to work with existing tier structure
 
-Your subscription system should now work with all 3 tiers! 🎉 
+Your subscription system should now work with the new pricing structure! 🎉 

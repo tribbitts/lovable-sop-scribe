@@ -1,3 +1,4 @@
+
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
@@ -135,7 +136,7 @@ const Pricing = () => {
     { available: false, text: "Progress Tracking & Quizzes" }
   ];
   
-  const proTierFeatures = [
+  const sopEssentialsFeatures = [
     { available: true, text: "Everything in Free" },
     { available: true, text: "Unlimited PDF & HTML Exports" },
     { available: true, text: "Basic Training Modules" },
@@ -144,13 +145,13 @@ const Pricing = () => {
     { available: false, text: "Interactive Quizzes & Certificates" }
   ];
   
-  const proLearningFeatures = [
-    { available: true, text: "Everything in Pro" },
+  const sopifyBusinessFeatures = [
+    { available: true, text: "Everything in SOP Essentials" },
     { available: true, text: "Interactive Learning Modules" },
     { available: true, text: "Progress Tracking & Bookmarks" },
     { available: true, text: "Quiz Creation & Assessment" },
     { available: true, text: "Completion Certificates" },
-    { available: true, text: "Offline Training Content" }
+    { available: true, text: "Priority Support & Onboarding" }
   ];
 
   const handleFreeTier = () => {
@@ -223,26 +224,26 @@ const Pricing = () => {
           />
           
           <PricingTier 
-            title="Pro" 
-            price="$15" 
-            features={proTierFeatures} 
+            title="SOP Essentials" 
+            price="$25" 
+            features={sopEssentialsFeatures} 
             theme="primary"
             isPopular={true}
-            onSubscribe={() => handleSubscribe('pro')}
+            onSubscribe={() => handleSubscribe('sop-essentials')}
             userTier={tier}
-            loading={loading && processingTier === "pro"}
+            loading={loading && processingTier === "sop-essentials"}
             tier="pro"
             badgeText="POPULAR"
           />
           
           <PricingTier 
-            title="Pro Learning" 
-            price="$25" 
-            features={proLearningFeatures} 
+            title="SOPify Business" 
+            price="$75" 
+            features={sopifyBusinessFeatures} 
             theme="secondary"
-            onSubscribe={() => handleSubscribe('pro-learning')}
+            onSubscribe={() => handleSubscribe('sopify-business')}
             userTier={tier}
-            loading={loading && processingTier === "pro-learning"}
+            loading={loading && processingTier === "sopify-business"}
             tier="pro-learning"
             badgeText="PREMIUM"
           />

@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import Stripe from "https://esm.sh/stripe@14.21.0";
@@ -7,11 +8,10 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-// Price ID mapping for different tiers
+// Updated price ID mapping for new subscription tiers
 const PRICE_ID_MAP = {
-  'pro-pdf': Deno.env.get("STRIPE_PRO_PDF_PRICE_ID") || "",
-  'pro-html': Deno.env.get("STRIPE_PRO_HTML_PRICE_ID") || "",
-  'pro-complete': Deno.env.get("STRIPE_PRO_COMPLETE_PRICE_ID") || "",
+  'sop-essentials': 'price_1RSoc8KdlDHwo16BCMoXLuhI',
+  'sopify-business': 'price_1RSocWKdlDHwo16BpnMc4LKG',
 };
 
 serve(async (req) => {
@@ -68,7 +68,7 @@ serve(async (req) => {
 
     // Parse request body
     const requestData = await req.json();
-    const tier = requestData.tier || "pro-complete";
+    const tier = requestData.tier || "sopify-business";
     
     // Validate tier and get corresponding price ID
     const priceId = PRICE_ID_MAP[tier];

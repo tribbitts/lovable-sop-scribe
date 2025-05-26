@@ -63,11 +63,11 @@ serve(async (req) => {
       const customerId = session.customer;
       
       // Extract tier from metadata and validate it
-      const tierFromMetadata = session.metadata?.tier || "pro-complete"; // Default fallback
+      const tierFromMetadata = session.metadata?.tier || "sopify-business"; // Default fallback
       
       // Validate that tier is one of the expected values
-      const validTiers = ["pro-pdf", "pro-html", "pro-complete", "free"];
-      const tier = validTiers.includes(tierFromMetadata) ? tierFromMetadata : "pro-complete";
+      const validTiers = ["sop-essentials", "sopify-business", "free"];
+      const tier = validTiers.includes(tierFromMetadata) ? tierFromMetadata : "sopify-business";
       
       if (!customerId) {
         throw new Error("No customer ID found in checkout session");
@@ -163,7 +163,7 @@ serve(async (req) => {
         // Try to get the current tier from the subscription metadata
         const tierFromMetadata = subscription.metadata?.tier;
         
-        if (tierFromMetadata && ["pro-pdf", "pro-html", "pro-complete"].includes(tierFromMetadata)) {
+        if (tierFromMetadata && ["sop-essentials", "sopify-business"].includes(tierFromMetadata)) {
           // We found a valid tier in the metadata
           const { error: updateError } = await supabaseClient
             .from("subscriptions")
