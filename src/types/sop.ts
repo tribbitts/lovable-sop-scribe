@@ -1,3 +1,4 @@
+
 // Training Module Creator - Enhanced Types
 // Sync test: Updated for Lovable platform integration
 export type CalloutShape = "circle" | "rectangle" | "arrow" | "number";
@@ -69,6 +70,7 @@ export type HealthcareContentType =
   | "critical-safety" 
   | "hipaa-alert" 
   | "patient-communication"
+  | "scenario-guidance"
   | "standard";
 
 export interface HealthcareContent {
