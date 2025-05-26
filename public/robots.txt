@@ -39,4 +39,4 @@ Disallow: /static/
 Crawl-delay: 1
 
 # Sitemap location
-Sitemap: https://sopify.app/sitemap.xml
+Sitemap: https://sopifyapp.com/sitemap.xml

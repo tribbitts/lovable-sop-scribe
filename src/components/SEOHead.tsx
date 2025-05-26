@@ -9,7 +9,7 @@ interface SEOHeadProps {
 
 const SEOHead = ({ metadata = {}, path = "/" }: SEOHeadProps) => {
   const seo = { ...defaultSEO, ...metadata };
-  const canonicalUrl = `https://sopify.app${path}`;
+  const canonicalUrl = `https://sopifyapp.com${path}`;
   
   return (
     <Helmet>

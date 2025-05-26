@@ -36,7 +36,7 @@ export const seoPages: Record<string, SEOMetadata> = {
         "availability": "https://schema.org/InStock"
       },
       "operatingSystem": "Web Browser",
-      "url": "https://sopify.app"
+      "url": "https://sopifyapp.com"
     }
   },
   "/app": {

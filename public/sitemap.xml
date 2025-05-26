@@ -3,7 +3,7 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
   <!-- Homepage - Highest priority -->
   <url>
-    <loc>https://sopify.app/</loc>
+    <loc>https://sopifyapp.com/</loc>
     <lastmod>2025-01-26</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
@@ -11,7 +11,7 @@
   
   <!-- SOP Creator App - High priority -->
   <url>
-    <loc>https://sopify.app/app</loc>
+    <loc>https://sopifyapp.com/app</loc>
     <lastmod>2025-01-26</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
@@ -19,7 +19,7 @@
   
   <!-- Authentication -->
   <url>
-    <loc>https://sopify.app/auth</loc>
+    <loc>https://sopifyapp.com/auth</loc>
     <lastmod>2025-01-26</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
@@ -27,21 +27,21 @@
   
   <!-- Legal Pages -->
   <url>
-    <loc>https://sopify.app/privacy-policy</loc>
+    <loc>https://sopifyapp.com/privacy-policy</loc>
     <lastmod>2025-01-26</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>
   
   <url>
-    <loc>https://sopify.app/terms-of-service</loc>
+    <loc>https://sopifyapp.com/terms-of-service</loc>
     <lastmod>2025-01-26</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>
   
   <url>
-    <loc>https://sopify.app/cookie-policy</loc>
+    <loc>https://sopifyapp.com/cookie-policy</loc>
     <lastmod>2025-01-26</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
