@@ -122,7 +122,7 @@ export const RedFlagIdentifier: React.FC<RedFlagIdentifierProps> = ({
         }}
       />
       
-      <style jsx>{`
+      <style>{`
         .red-flag-highlight {
           background: linear-gradient(135deg, #ef4444, #dc2626);
           color: white;
