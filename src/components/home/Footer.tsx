@@ -36,9 +36,7 @@ const Footer = () => {
   ];
   
   const supportLinks = [
-    { text: "Help Center", href: "#" },
-    { text: "Contact Us", href: "#" },
-    { text: "Status", href: "#" }
+    { text: "Contact Us", href: "mailto:support@sopifyapp.com" }
   ];
   
   const legalLinks = [
