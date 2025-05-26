@@ -6,7 +6,6 @@ import { AuthProvider } from "./context/AuthContext";
 import { SubscriptionProvider } from "./context/SubscriptionContext";
 import { Toaster } from "./components/ui/sonner";
 import HomePage from "./pages/HomePage";
-import Index from "./pages/Index";
 import SopCreator from "./pages/SopCreator";
 import Auth from "./pages/Auth";
 import PrivacyPolicy from "./pages/PrivacyPolicy";

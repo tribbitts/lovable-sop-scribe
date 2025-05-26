@@ -30,8 +30,7 @@ const FooterColumn = ({ title, links }: { title: string, links: { text: string, 
 
 const Footer = () => {
   const productLinks = [
-    { text: "Features", href: "#" },
-    { text: "Templates", href: "#" },
+    { text: "Features", href: "#how-it-works" },
     { text: "Pricing", href: "#pricing" }
   ];
   
