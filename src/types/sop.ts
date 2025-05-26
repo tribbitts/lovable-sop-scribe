@@ -1,4 +1,3 @@
-
 // Training Module Creator - Enhanced Types
 // Sync test: Updated for Lovable platform integration
 export type CalloutShape = "circle" | "rectangle" | "arrow" | "number";
@@ -65,12 +64,49 @@ export interface LearningObjective {
   category?: "knowledge" | "skill" | "behavior";
 }
 
+// Healthcare-specific content types
+export type HealthcareContentType = 
+  | "critical-safety" 
+  | "hipaa-alert" 
+  | "patient-communication"
+  | "standard";
+
+export interface HealthcareContent {
+  id: string;
+  type: HealthcareContentType;
+  content: string;
+  priority: "high" | "medium" | "low";
+  icon?: string;
+}
+
 // New content block types for enhanced engagement
 export interface ContentBlock {
   id: string;
-  type: "text" | "key-takeaway" | "scenario" | "checklist";
+  type: "text" | "key-takeaway" | "scenario" | "checklist" | "healthcare-alert";
   content: string;
   title?: string; // For titled blocks like scenarios
+  healthcareType?: HealthcareContentType; // For healthcare-specific content
+  priority?: "high" | "medium" | "low";
+}
+
+export interface RevisionHistoryEntry {
+  id: string;
+  version: string;
+  date: string;
+  changes: string;
+  author: string;
+  approved: boolean;
+  approver?: string;
+  approvalDate?: string;
+}
+
+export interface ApprovalSignature {
+  id: string;
+  role: string;
+  name: string;
+  signature?: string; // Base64 signature image
+  date?: string;
+  approved: boolean;
 }
 
 export interface SopStep {
@@ -91,6 +127,12 @@ export interface SopStep {
   contentBlocks?: ContentBlock[];
   keyTakeaway?: string; // Quick key takeaway field
   estimatedTime?: number; // Estimated time in minutes
+  
+  // Healthcare-specific content
+  healthcareContent?: HealthcareContent[];
+  patientSafetyNote?: string;
+  hipaaAlert?: string;
+  communicationTip?: string;
   
   // Training module properties
   trainingMode?: boolean;
@@ -116,6 +158,15 @@ export interface SopDocument {
     enabled: boolean;
     sessionName?: string;
     lastSaved?: string;
+  };
+  
+  // Healthcare-specific metadata
+  healthcareMetadata?: {
+    revisionHistory: RevisionHistoryEntry[];
+    approvalSignatures: ApprovalSignature[];
+    complianceLevel: "basic" | "hipaa" | "joint-commission";
+    patientImpact: "direct" | "indirect" | "administrative";
+    criticalityLevel: "routine" | "important" | "critical";
   };
 }
 
