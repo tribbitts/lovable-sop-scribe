@@ -1,0 +1,524 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Employee Onboarding Process - SOPify Business Demo</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 40px;
+        }
+        
+        body {
+            font-family: 'Helvetica', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            text-align: center;
+            border-bottom: 3px solid #007AFF;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .company-name {
+            color: #007AFF;
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .title {
+            font-size: 32px;
+            font-weight: bold;
+            color: #1E1E1E;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            font-size: 18px;
+            color: #666;
+            margin-bottom: 20px;
+        }
+        
+        .meta-info {
+            display: flex;
+            justify-content: space-between;
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+        
+        .demo-badge {
+            background: linear-gradient(135deg, #007AFF, #5856D6);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-weight: bold;
+            text-align: center;
+            margin: 20px 0;
+        }
+        
+        .step {
+            margin-bottom: 40px;
+            page-break-inside: avoid;
+        }
+        
+        .step-header {
+            background: linear-gradient(135deg, #007AFF, #5856D6);
+            color: white;
+            padding: 20px;
+            border-radius: 12px 12px 0 0;
+            margin-bottom: 0;
+        }
+        
+        .step-number {
+            font-size: 18px;
+            font-weight: bold;
+            opacity: 0.9;
+        }
+        
+        .step-title {
+            font-size: 24px;
+            font-weight: bold;
+            margin: 5px 0;
+        }
+        
+        .step-description {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+        
+        .step-content {
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-top: none;
+            padding: 25px;
+            border-radius: 0 0 12px 12px;
+        }
+        
+        .key-takeaway {
+            background: linear-gradient(135deg, #e8f5e8, #f0f8f0);
+            border-left: 4px solid #34C759;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        
+        .key-takeaway h4 {
+            color: #2e7d32;
+            margin-bottom: 10px;
+        }
+        
+        .tags {
+            margin: 15px 0;
+        }
+        
+        .tag {
+            background: #007AFF;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 16px;
+            font-size: 12px;
+            margin-right: 8px;
+            display: inline-block;
+        }
+        
+        .quiz-section {
+            background: linear-gradient(135deg, #e3f2fd, #f3e5f5);
+            border: 1px solid #007AFF;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        .quiz-header {
+            color: #007AFF;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+        
+        .resources {
+            background: #fff3e0;
+            border-left: 4px solid #ff9800;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 50px;
+            padding-top: 20px;
+            border-top: 2px solid #e0e0e0;
+            color: #666;
+        }
+        
+        .demo-watermark {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-45deg);
+            font-size: 72px;
+            color: rgba(0, 122, 255, 0.05);
+            font-weight: bold;
+            z-index: -1;
+            pointer-events: none;
+        }
+        
+        @media print {
+            .demo-watermark {
+                display: block;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="demo-watermark">SOPIFY DEMO</div>
+    
+    <div class="header">
+        <div class="company-name">TechCorp Solutions</div>
+        <h1 class="title">Employee Onboarding Process</h1>
+        <p class="subtitle">Human Resources - New Hire Integration</p>
+        
+        <div class="demo-badge">
+            🚀 SOPify Business Tier Demo - Professional Features Showcase
+        </div>
+    </div>
+    
+    <div class="meta-info">
+        <div><strong>Version:</strong> 2.1</div>
+        <div><strong>Date:</strong> 2024-12-19</div>
+        <div><strong>Author:</strong> HR Department</div>
+        <div><strong>Approver:</strong> Sarah Johnson, HR Director</div>
+    </div>
+    
+    <div style="background: #e3f2fd; padding: 20px; border-radius: 8px; margin-bottom: 30px;">
+        <h3 style="color: #1976d2; margin-bottom: 10px;">📋 About This Demo</h3>
+        <p>Comprehensive guide for onboarding new employees, ensuring smooth integration into company culture and processes. This demo showcases SOPify Business tier features including professional branding, interactive callouts, embedded quizzes, and enterprise-grade formatting.</p>
+        
+        <h4 style="color: #1976d2; margin-top: 20px; margin-bottom: 10px;">✨ Business Tier Features Demonstrated:</h4>
+        <ul style="margin: 0; padding-left: 20px;">
+            <li>Professional branding and custom styling</li>
+            <li>Interactive callouts and annotations</li>
+            <li>Embedded quiz questions with explanations</li>
+            <li>Resource links and references</li>
+            <li>Advanced formatting and layout options</li>
+            <li>Enterprise-grade documentation standards</li>
+        </ul>
+    </div>
+    
+    
+        <div class="step">
+            <div class="step-header">
+                <div class="step-number">Step 1</div>
+                <h2 class="step-title">Pre-Arrival Preparation</h2>
+                <p class="step-description">Set up workspace and prepare necessary documentation before the new employee's first day.</p>
+            </div>
+            
+            <div class="step-content">
+                
+        <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 10px 0;">
+          <h4 style="color: #007AFF; margin-bottom: 10px;">🏢 Workspace Setup</h4>
+          <ul style="margin: 0; padding-left: 20px;">
+            <li>Reserve and prepare desk/office space with ergonomic considerations</li>
+            <li>Order necessary equipment (laptop, monitor, phone, accessories)</li>
+            <li>Set up IT accounts and access credentials across all systems</li>
+            <li>Prepare welcome package with company materials and branded items</li>
+            <li>Coordinate with facilities team for parking and access cards</li>
+          </ul>
+        </div>
+        
+        <div style="background: #e3f2fd; padding: 15px; border-radius: 8px; margin: 10px 0;">
+          <h4 style="color: #1976d2; margin-bottom: 10px;">📋 Documentation Preparation</h4>
+          <ul style="margin: 0; padding-left: 20px;">
+            <li>Prepare employment contract and tax forms (W-4, I-9)</li>
+            <li>Create personalized employee handbook packet</li>
+            <li>Schedule orientation meetings with key stakeholders</li>
+            <li>Notify team members and prepare introduction materials</li>
+            <li>Set up payroll and benefits enrollment appointments</li>
+          </ul>
+        </div>
+      
+                
+                
+                    <div class="key-takeaway">
+                        <h4>🎯 Key Takeaway</h4>
+                        <p>Proper preparation ensures the new employee feels welcomed and can be productive from day one. This investment in preparation reduces time-to-productivity by 40%.</p>
+                    </div>
+                
+                
+                
+                    <div class="tags">
+                        <span class="tag">Preparation</span><span class="tag">IT Setup</span><span class="tag">Documentation</span><span class="tag">Facilities</span>
+                    </div>
+                
+                
+                
+                    <p><strong>⏱️ Estimated Time:</strong> 2-3 hours</p>
+                
+                
+                
+                    <div style="background: #fff3e0; padding: 15px; border-radius: 8px; margin: 15px 0;">
+                        <strong>📝 Notes:</strong> Complete all setup tasks at least 2 days before start date to allow for any technical issues. Use the pre-arrival checklist to ensure nothing is missed.
+                    </div>
+                
+                
+                
+                
+                
+            </div>
+        </div>
+    
+        <div class="step">
+            <div class="step-header">
+                <div class="step-number">Step 2</div>
+                <h2 class="step-title">First Day Welcome & Orientation</h2>
+                <p class="step-description">Conduct comprehensive orientation and introduction to company culture, values, and immediate team.</p>
+            </div>
+            
+            <div class="step-content">
+                
+        <div style="background: linear-gradient(135deg, #e8f5e8, #f0f8f0); padding: 15px; border-radius: 8px; margin: 10px 0; border-left: 4px solid #34C759;">
+          <h4 style="color: #2e7d32; margin-bottom: 10px;">🌅 Morning Orientation (9:00 AM - 12:00 PM)</h4>
+          <ul style="margin: 0; padding-left: 20px;">
+            <li><strong>9:00-9:30:</strong> Personal welcome by direct supervisor and HR representative</li>
+            <li><strong>9:30-10:30:</strong> Comprehensive office tour and facility overview</li>
+            <li><strong>10:30-11:00:</strong> Introduction to immediate team members and key contacts</li>
+            <li><strong>11:00-11:30:</strong> Review of company mission, values, and culture presentation</li>
+            <li><strong>11:30-12:00:</strong> Overview of organizational structure and reporting relationships</li>
+          </ul>
+        </div>
+        
+        <div style="background: linear-gradient(135deg, #fff3e0, #fce4ec); padding: 15px; border-radius: 8px; margin: 10px 0; border-left: 4px solid #ff9800;">
+          <h4 style="color: #f57c00; margin-bottom: 10px;">🌆 Afternoon Setup (1:00 PM - 5:00 PM)</h4>
+          <ul style="margin: 0; padding-left: 20px;">
+            <li><strong>1:00-2:00:</strong> Complete HR paperwork and documentation</li>
+            <li><strong>2:00-3:00:</strong> IT setup and system access verification</li>
+            <li><strong>3:00-4:00:</strong> Detailed review of job description and performance expectations</li>
+            <li><strong>4:00-4:30:</strong> Benefits enrollment and payroll setup</li>
+            <li><strong>4:30-5:00:</strong> Schedule follow-up meetings and training sessions for week 1</li>
+          </ul>
+        </div>
+      
+                
+                
+                    <div class="key-takeaway">
+                        <h4>🎯 Key Takeaway</h4>
+                        <p>A structured first day creates positive first impressions and sets clear expectations. Research shows that employees with great first-day experiences are 69% more likely to stay with the company for three years.</p>
+                    </div>
+                
+                
+                
+                    <div class="tags">
+                        <span class="tag">Orientation</span><span class="tag">Culture</span><span class="tag">Team Introduction</span><span class="tag">Documentation</span>
+                    </div>
+                
+                
+                
+                    <p><strong>⏱️ Estimated Time:</strong> Full day</p>
+                
+                
+                
+                
+                
+                    <div class="quiz-section">
+                        <div class="quiz-header">🧠 Knowledge Check</div>
+                        
+                            <div style="margin-bottom: 15px;">
+                                <p><strong>Q: What is the primary goal of the first day orientation?</strong></p>
+                                <ul style="margin: 10px 0; padding-left: 20px;">
+                                    <li>Complete paperwork</li><li>Set up equipment</li><li>Create positive first impressions</li><li>Meet everyone</li>
+                                </ul>
+                                <p style="color: #34C759;"><strong>✅ Answer:</strong> Create positive first impressions</p>
+                                <p style="font-style: italic; color: #666;"><strong>Explanation:</strong> While all activities are important, the primary goal is creating a welcoming environment that sets the tone for the employee's entire experience with the company.</p>
+                            </div>
+                        
+                            <div style="margin-bottom: 15px;">
+                                <p><strong>Q: How much more likely are employees with great first-day experiences to stay for three years?</strong></p>
+                                <ul style="margin: 10px 0; padding-left: 20px;">
+                                    <li>25% more likely</li><li>45% more likely</li><li>69% more likely</li><li>80% more likely</li>
+                                </ul>
+                                <p style="color: #34C759;"><strong>✅ Answer:</strong> 69% more likely</p>
+                                <p style="font-style: italic; color: #666;"><strong>Explanation:</strong> Research consistently shows that first impressions have a lasting impact on employee retention and engagement.</p>
+                            </div>
+                        
+                    </div>
+                
+                
+                
+            </div>
+        </div>
+    
+        <div class="step">
+            <div class="step-header">
+                <div class="step-number">Step 3</div>
+                <h2 class="step-title">Week 1: Role Integration & Training</h2>
+                <p class="step-description">Focus on role-specific training, initial project assignments, and building relationships with team members.</p>
+            </div>
+            
+            <div class="step-content">
+                
+        <div style="background: linear-gradient(135deg, #e1f5fe, #f3e5f5); padding: 15px; border-radius: 8px; margin: 10px 0;">
+          <h4 style="color: #0277bd; margin-bottom: 10px;">📚 Training Schedule</h4>
+          <ul style="margin: 0; padding-left: 20px;">
+            <li><strong>Day 2-3:</strong> Department-specific training sessions and system tutorials</li>
+            <li><strong>Day 4:</strong> Shadow experienced team member on real projects</li>
+            <li><strong>Day 5:</strong> Begin first independent project assignment with mentor support</li>
+            <li><strong>Ongoing:</strong> Access to online learning platform and certification programs</li>
+          </ul>
+        </div>
+        
+        <div style="background: linear-gradient(135deg, #f1f8e9, #e8f5e8); padding: 15px; border-radius: 8px; margin: 10px 0;">
+          <h4 style="color: #388e3c; margin-bottom: 10px;">🤝 Check-in Meetings & Support</h4>
+          <ul style="margin: 0; padding-left: 20px;">
+            <li>Daily 15-minute check-ins with direct supervisor</li>
+            <li>Mid-week progress review with HR and department head</li>
+            <li>End-of-week comprehensive feedback session</li>
+            <li>Buddy system pairing with experienced team member</li>
+            <li>Open-door policy for questions and concerns</li>
+          </ul>
+        </div>
+      
+                
+                
+                    <div class="key-takeaway">
+                        <h4>🎯 Key Takeaway</h4>
+                        <p>Regular check-ins during the first week help identify and address any concerns early, leading to faster integration and higher job satisfaction.</p>
+                    </div>
+                
+                
+                
+                    <div class="tags">
+                        <span class="tag">Training</span><span class="tag">Integration</span><span class="tag">Feedback</span><span class="tag">Mentorship</span>
+                    </div>
+                
+                
+                
+                    <p><strong>⏱️ Estimated Time:</strong> Ongoing throughout week</p>
+                
+                
+                
+                
+                
+                
+                
+                    <div class="resources">
+                        <h4 style="color: #f57c00; margin-bottom: 10px;">📚 Resources</h4>
+                        
+                            <div style="margin-bottom: 10px;">
+                                <strong>Department Training Materials:</strong> Comprehensive access to role-specific training modules and certification programs<br>
+                                <a href="https://intranet.techcorp.com/training" style="color: #007AFF;">https://intranet.techcorp.com/training</a>
+                            </div>
+                        
+                            <div style="margin-bottom: 10px;">
+                                <strong>Project Management System:</strong> Platform for tracking assignments, progress, and collaboration<br>
+                                <a href="https://projects.techcorp.com" style="color: #007AFF;">https://projects.techcorp.com</a>
+                            </div>
+                        
+                            <div style="margin-bottom: 10px;">
+                                <strong>Employee Learning Portal:</strong> Self-paced learning resources and skill development programs<br>
+                                <a href="https://learning.techcorp.com" style="color: #007AFF;">https://learning.techcorp.com</a>
+                            </div>
+                        
+                    </div>
+                
+            </div>
+        </div>
+    
+        <div class="step">
+            <div class="step-header">
+                <div class="step-number">Step 4</div>
+                <h2 class="step-title">30-Day Review & Goal Setting</h2>
+                <p class="step-description">Comprehensive evaluation of integration progress, performance assessment, and strategic goal setting for continued growth.</p>
+            </div>
+            
+            <div class="step-content">
+                
+        <div style="background: linear-gradient(135deg, #fce4ec, #f3e5f5); padding: 15px; border-radius: 8px; margin: 10px 0;">
+          <h4 style="color: #c2185b; margin-bottom: 10px;">📊 Review Components</h4>
+          <ul style="margin: 0; padding-left: 20px;">
+            <li>Comprehensive performance assessment against initial expectations and KPIs</li>
+            <li>360-degree feedback collection from team members, peers, and stakeholders</li>
+            <li>Employee self-assessment and reflection on integration experience</li>
+            <li>Skills gap analysis and identification of development opportunities</li>
+            <li>Strategic goal setting for next 60-90 days with SMART objectives</li>
+          </ul>
+        </div>
+        
+        <div style="background: linear-gradient(135deg, #e0f2f1, #e8f5e8); padding: 15px; border-radius: 8px; margin: 10px 0;">
+          <h4 style="color: #00695c; margin-bottom: 10px;">📝 Documentation & Planning</h4>
+          <ul style="margin: 0; padding-left: 20px;">
+            <li>Complete formal review form with detailed performance metrics</li>
+            <li>Update employee development plan with personalized learning path</li>
+            <li>Schedule follow-up review dates (60-day, 90-day, 6-month)</li>
+            <li>Document lessons learned and process improvements</li>
+            <li>Create action plan for addressing any identified challenges</li>
+          </ul>
+        </div>
+      
+                
+                
+                    <div class="key-takeaway">
+                        <h4>🎯 Key Takeaway</h4>
+                        <p>The 30-day review is crucial for ensuring successful long-term integration and identifying any support needs. This milestone review reduces turnover by 25% and increases employee engagement scores.</p>
+                    </div>
+                
+                
+                
+                    <div class="tags">
+                        <span class="tag">Review</span><span class="tag">Assessment</span><span class="tag">Goal Setting</span><span class="tag">Development Planning</span>
+                    </div>
+                
+                
+                
+                    <p><strong>⏱️ Estimated Time:</strong> 2-3 hours</p>
+                
+                
+                
+                
+                
+                    <div class="quiz-section">
+                        <div class="quiz-header">🧠 Knowledge Check</div>
+                        
+                            <div style="margin-bottom: 15px;">
+                                <p><strong>Q: When should the 30-day review be scheduled?</strong></p>
+                                <ul style="margin: 10px 0; padding-left: 20px;">
+                                    <li>Exactly 30 days after start</li><li>Between days 28-32</li><li>End of first month</li><li>When convenient</li>
+                                </ul>
+                                <p style="color: #34C759;"><strong>✅ Answer:</strong> Between days 28-32</p>
+                                <p style="font-style: italic; color: #666;"><strong>Explanation:</strong> Scheduling within a few days of the 30-day mark allows for flexibility while maintaining the review timeline and ensuring timely feedback.</p>
+                            </div>
+                        
+                            <div style="margin-bottom: 15px;">
+                                <p><strong>Q: What is the primary benefit of conducting thorough 30-day reviews?</strong></p>
+                                <ul style="margin: 10px 0; padding-left: 20px;">
+                                    <li>Compliance requirement</li><li>Reduces turnover by 25%</li><li>Saves time</li><li>Increases paperwork</li>
+                                </ul>
+                                <p style="color: #34C759;"><strong>✅ Answer:</strong> Reduces turnover by 25%</p>
+                                <p style="font-style: italic; color: #666;"><strong>Explanation:</strong> Research shows that structured 30-day reviews significantly improve retention rates and employee satisfaction.</p>
+                            </div>
+                        
+                    </div>
+                
+                
+                
+            </div>
+        </div>
+    
+    
+    <div class="footer">
+        <p><strong>Generated by SOPify Business</strong></p>
+        <p>Professional SOP creation and training platform</p>
+        <p style="font-size: 12px; color: #999;">This is a demonstration of SOPify's Business tier capabilities</p>
+    </div>
+</body>
+</html>
+  

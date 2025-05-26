@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -7,7 +6,6 @@ import {
   FileText, 
   Globe, 
   GraduationCap, 
-  Package,
   Eye,
   Play
 } from "lucide-react";
@@ -56,7 +54,7 @@ const DemoSection = () => {
     {
       tier: "SOPify Business ($75/mo)",
       title: "Complete Training Solutions",
-      description: "Advanced interactive training with LMS features and bundled packages",
+      description: "Advanced interactive training with LMS features and professional documentation",
       formats: [
         {
           name: "Enhanced Training Module",
@@ -66,31 +64,21 @@ const DemoSection = () => {
           description: "Advanced LMS-style training with progress tracking"
         },
         {
-          name: "Bundled Training Package",
-          icon: Package,
-          demoUrl: "/demos/business-bundle-demo.zip",
-          viewUrl: "#",
-          description: "Complete package with PDF + Interactive + Resources"
+          name: "Professional PDF Manual",
+          icon: FileText,
+          demoUrl: "/demos/business-pdf-demo.html",
+          viewUrl: "/demos/business-pdf-demo.html",
+          description: "Enterprise-grade PDF with advanced features"
         }
       ],
       badgeColor: "bg-purple-600",
-      features: ["Progress tracking", "Interactive quizzes", "Completion certificates", "LMS integration", "Bundled packages"]
+      features: ["Progress tracking", "Interactive quizzes", "Completion certificates", "LMS integration", "Enterprise PDF features"]
     }
   ];
 
-  const handleDemoClick = (demoUrl: string, isBundle: boolean = false) => {
-    if (isBundle) {
-      // For bundle demos, trigger download
-      const link = document.createElement('a');
-      link.href = demoUrl;
-      link.download = 'sopify-training-bundle-demo.zip';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    } else {
-      // For other demos, open in new tab
-      window.open(demoUrl, '_blank');
-    }
+  const handleDemoClick = (demoUrl: string) => {
+    // Open all demos in new tab
+    window.open(demoUrl, '_blank');
   };
 
   return (
@@ -137,27 +125,15 @@ const DemoSection = () => {
                       </div>
                       
                       <div className="flex gap-2">
-                        {format.name !== "Bundled Training Package" ? (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleDemoClick(format.viewUrl)}
-                            className="border-zinc-600 text-zinc-300 hover:bg-zinc-700 flex-1"
-                          >
-                            <Eye className="h-4 w-4 mr-2" />
-                            View Demo
-                          </Button>
-                        ) : (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleDemoClick(format.demoUrl, true)}
-                            className="border-zinc-600 text-zinc-300 hover:bg-zinc-700 flex-1"
-                          >
-                            <Download className="h-4 w-4 mr-2" />
-                            Download Demo
-                          </Button>
-                        )}
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleDemoClick(format.viewUrl)}
+                          className="border-zinc-600 text-zinc-300 hover:bg-zinc-700 flex-1"
+                        >
+                          <Eye className="h-4 w-4 mr-2" />
+                          View Demo
+                        </Button>
                       </div>
                     </div>
                   ))}
