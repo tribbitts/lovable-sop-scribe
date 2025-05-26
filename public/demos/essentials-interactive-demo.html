@@ -1,0 +1,304 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SOPify Interactive Demo - Employee Onboarding Process</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            text-align: center;
+            margin-bottom: 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+        
+        .demo-badge {
+            background: #007AFF;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            display: inline-block;
+            margin-bottom: 15px;
+        }
+        
+        .step-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+        
+        .step-container:hover {
+            transform: translateY(-5px);
+        }
+        
+        .step-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .step-number {
+            background: #007AFF;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 15px;
+        }
+        
+        .step-title {
+            font-size: 1.4em;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .step-content {
+            margin-left: 55px;
+        }
+        
+        .screenshot-placeholder {
+            background: linear-gradient(45deg, #f0f2f5, #e1e8ed);
+            border: 2px dashed #007AFF;
+            border-radius: 12px;
+            height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 15px 0;
+            color: #666;
+            font-style: italic;
+        }
+        
+        .interactive-element {
+            background: #e3f2fd;
+            border: 1px solid #007AFF;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .interactive-element:hover {
+            background: #bbdefb;
+            transform: scale(1.02);
+        }
+        
+        .progress-bar {
+            background: #e0e0e0;
+            border-radius: 10px;
+            height: 20px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            background: linear-gradient(90deg, #007AFF, #00C851);
+            height: 100%;
+            transition: width 0.5s ease;
+        }
+        
+        .footer {
+            text-align: center;
+            padding: 30px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 20px;
+            margin-top: 30px;
+        }
+        
+        .cta-button {
+            background: #007AFF;
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            margin: 10px;
+        }
+        
+        .cta-button:hover {
+            background: #0056b3;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 122, 255, 0.3);
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .step-content {
+                margin-left: 0;
+                margin-top: 15px;
+            }
+            
+            .step-header {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .step-number {
+                margin-right: 0;
+                margin-bottom: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="demo-badge">🎯 SOPify Interactive Demo</div>
+            <h1>Employee Onboarding Process</h1>
+            <p>Interactive Training Module - See how your team experiences SOPify training</p>
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: 60%"></div>
+            </div>
+            <small>Progress: 3 of 5 steps completed</small>
+        </div>
+        
+        <div class="step-container">
+            <div class="step-header">
+                <div class="step-number">1</div>
+                <div class="step-title">Create Employee Account</div>
+            </div>
+            <div class="step-content">
+                <p>Navigate to the HR portal and set up the new employee's account with their basic information.</p>
+                <div class="screenshot-placeholder">
+                    📸 Screenshot: HR Portal Login Screen with callouts and annotations
+                </div>
+                <div class="interactive-element" onclick="this.style.background='#c8e6c9'; this.innerHTML='✅ Step completed! Account created successfully.';">
+                    Click here to simulate completing this step
+                </div>
+            </div>
+        </div>
+        
+        <div class="step-container">
+            <div class="step-header">
+                <div class="step-number">2</div>
+                <div class="step-title">Send Welcome Email</div>
+            </div>
+            <div class="step-content">
+                <p>Use the automated email template to send a personalized welcome message to the new employee.</p>
+                <div class="screenshot-placeholder">
+                    📸 Screenshot: Email composition interface with highlighted areas
+                </div>
+                <div class="interactive-element" onclick="this.style.background='#c8e6c9'; this.innerHTML='✅ Welcome email sent successfully!';">
+                    Click to send welcome email
+                </div>
+            </div>
+        </div>
+        
+        <div class="step-container">
+            <div class="step-header">
+                <div class="step-number">3</div>
+                <div class="step-title">Assign Equipment</div>
+            </div>
+            <div class="step-content">
+                <p>Current Step: Allocate necessary equipment and workspace to the new employee.</p>
+                <div class="screenshot-placeholder">
+                    📸 Screenshot: Equipment assignment dashboard
+                </div>
+                <div class="interactive-element" onclick="this.style.background='#fff3cd'; this.innerHTML='⏳ Assignment in progress...';">
+                    Click to assign laptop and desk
+                </div>
+                <div class="interactive-element" onclick="this.style.background='#fff3cd'; this.innerHTML='⏳ Processing access cards...';">
+                    Click to create access cards
+                </div>
+            </div>
+        </div>
+        
+        <div class="step-container" style="opacity: 0.6;">
+            <div class="step-header">
+                <div class="step-number">4</div>
+                <div class="step-title">Schedule Training Sessions</div>
+            </div>
+            <div class="step-content">
+                <p>📅 This step will be unlocked after completing the current step.</p>
+                <div class="screenshot-placeholder">
+                    🔒 Screenshot preview locked
+                </div>
+            </div>
+        </div>
+        
+        <div class="step-container" style="opacity: 0.6;">
+            <div class="step-header">
+                <div class="step-number">5</div>
+                <div class="step-title">Complete Documentation</div>
+            </div>
+            <div class="step-content">
+                <p>📋 Final step - documentation and approval process.</p>
+                <div class="screenshot-placeholder">
+                    🔒 Screenshot preview locked
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <h3>This is what your team experiences with SOPify Interactive Modules!</h3>
+            <p>✨ Features shown: Progress tracking, interactive elements, step-by-step guidance, and mobile-responsive design.</p>
+            <br>
+            <a href="https://sopifyapp.com" class="cta-button">Create Your Own Interactive SOPs</a>
+            <a href="https://sopifyapp.com/#pricing" class="cta-button" style="background: #28a745;">View Pricing Plans</a>
+        </div>
+    </div>
+    
+    <script>
+        // Add some interactivity
+        document.addEventListener('DOMContentLoaded', function() {
+            // Simulate progress updates
+            const progressFill = document.querySelector('.progress-fill');
+            let currentProgress = 60;
+            
+            // Add click handlers for demo interactivity
+            const interactiveElements = document.querySelectorAll('.interactive-element');
+            interactiveElements.forEach(element => {
+                element.addEventListener('click', function() {
+                    // Simulate progress increase
+                    if (currentProgress < 100) {
+                        currentProgress += 10;
+                        progressFill.style.width = currentProgress + '%';
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

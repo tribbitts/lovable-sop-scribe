@@ -46,6 +46,7 @@ const Header = () => {
         
         <div className="hidden md:flex items-center space-x-6">
           <a href="#how-it-works" className="text-sm text-zinc-400 hover:text-white transition-colors">How It Works</a>
+          <a href="#demos" className="text-sm text-zinc-400 hover:text-white transition-colors">Live Demos</a>
           <a href="#pricing" className="text-sm text-zinc-400 hover:text-white transition-colors">Pricing</a>
         </div>
         
