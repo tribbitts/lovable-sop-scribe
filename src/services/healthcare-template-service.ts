@@ -1,6 +1,7 @@
 
 import { HealthcareTemplate, healthcareTemplates, TemplateSection } from "@/types/healthcare-templates";
-import { SopStep, HealthcareContent } from "@/types/sop";
+import { SopStep } from "@/types/sop";
+import { HealthcareContent, HealthcareContentType } from "@/types/healthcare";
 import { v4 as uuidv4 } from "uuid";
 
 export class HealthcareTemplateService {
@@ -78,7 +79,7 @@ export class HealthcareTemplateService {
     if (section.contentType === "safety-note" || ["hipaa-privacy", "emergency-protocols"].includes(section.id)) {
       content.push({
         id: uuidv4(),
-        type: "critical-safety",
+        type: "critical-safety" as HealthcareContentType,
         content: this.getSafetyMessage(section.id),
         priority: "high"
       });
@@ -89,7 +90,7 @@ export class HealthcareTemplateService {
         (["patient-first", "core-procedures", "difficult-conversations", "communication-practice"].includes(section.id))) {
       content.push({
         id: uuidv4(),
-        type: "patient-communication",
+        type: "patient-communication" as HealthcareContentType,
         content: this.getCommunicationSnippet(section.id),
         priority: "medium"
       });
@@ -99,7 +100,7 @@ export class HealthcareTemplateService {
     if (section.contentType === "scenario" && template.category === "continued-learning") {
       content.push({
         id: uuidv4(),
-        type: "scenario-guidance",
+        type: "scenario-guidance" as HealthcareContentType,
         content: this.getScenarioGuidance(section.id),
         priority: "medium"
       });
@@ -109,7 +110,7 @@ export class HealthcareTemplateService {
     if (["systems-navigation", "core-procedures", "protocol-details"].includes(section.id)) {
       content.push({
         id: uuidv4(),
-        type: "hipaa-alert",
+        type: "hipaa-alert" as HealthcareContentType,
         content: "Remember: All patient information accessed through these systems is protected under HIPAA. Only access information necessary for your job duties.",
         priority: "high"
       });
