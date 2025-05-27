@@ -116,103 +116,94 @@ async function addBeautifulCoverPage(
   margin: any,
   theme: any
 ) {
-  // Elegant gradient background matching demo design (purple-900 to blue-900)
-  const gradientSteps = 30;
-  for (let i = 0; i < gradientSteps; i++) {
-    const alpha = i / gradientSteps;
-    // Purple-900 (88, 28, 135) to Blue-900 (30, 58, 138)
-    const r = Math.round(88 + (30 - 88) * alpha);
-    const g = Math.round(28 + (58 - 28) * alpha);
-    const b = Math.round(135 + (138 - 135) * alpha);
-    
-    pdf.setFillColor(r, g, b);
-    pdf.rect(0, i * (height / gradientSteps), width, height / gradientSteps, 'F');
-  }
+  // Clean white background matching business demo
+  pdf.setFillColor(255, 255, 255);
+  pdf.rect(0, 0, width, height, 'F');
 
-  // Elegant company name with demo styling
-  setFontSafe(pdf, "helvetica", "normal");
-  pdf.setFontSize(16);
-  pdf.setTextColor(255, 255, 255);
-  pdf.setGState(new pdf.GState({opacity: 0.8}));
+  // Header section with blue border (matching demo)
+  const headerY = margin.top;
+  const headerHeight = 100;
+  
+  // Company name in SOPify blue
+  setFontSafe(pdf, "helvetica", "bold");
+  pdf.setFontSize(24);
+  pdf.setTextColor(0, 122, 255); // #007AFF
   
   const companyName = sopDocument.companyName || "Your Organization";
-  const companyWidth = getStringWidthSafe(pdf, companyName, 16);
-  pdf.text(companyName, (width - companyWidth) / 2, margin.top + 50);
+  const companyWidth = getStringWidthSafe(pdf, companyName, 24);
+  pdf.text(companyName, (width - companyWidth) / 2, headerY + 30);
 
-  // Main title with striking typography matching demo
-  pdf.setGState(new pdf.GState({opacity: 1}));
+  // Main title in dark text (matching demo)
   setFontSafe(pdf, "helvetica", "bold");
-  pdf.setFontSize(36);
-  pdf.setTextColor(255, 255, 255);
+  pdf.setFontSize(32);
+  pdf.setTextColor(30, 30, 30); // #1E1E1E
   
   const title = sopDocument.title || "Professional Training Module";
   const titleLines = pdf.splitTextToSize(title, width - margin.left - margin.right - 40);
-  let titleY = margin.top + 100;
+  let titleY = headerY + 55;
   
   titleLines.forEach((line: string) => {
-    const lineWidth = getStringWidthSafe(pdf, line, 36);
+    const lineWidth = getStringWidthSafe(pdf, line, 32);
     pdf.text(line, (width - lineWidth) / 2, titleY);
-    titleY += 14;
+    titleY += 12;
   });
 
-  // Elegant subtitle with professional styling
+  // Subtitle in gray (matching demo)
   if (sopDocument.topic) {
     setFontSafe(pdf, "helvetica", "normal");
-    pdf.setFontSize(20);
-    pdf.setTextColor(255, 255, 255);
-    pdf.setGState(new pdf.GState({opacity: 0.85}));
+    pdf.setFontSize(18);
+    pdf.setTextColor(102, 102, 102); // #666
     
-    const subtitleWidth = getStringWidthSafe(pdf, sopDocument.topic, 20);
-    pdf.text(sopDocument.topic, (width - subtitleWidth) / 2, titleY + 25);
+    const subtitleWidth = getStringWidthSafe(pdf, sopDocument.topic, 18);
+    pdf.text(sopDocument.topic, (width - subtitleWidth) / 2, titleY + 20);
+    titleY += 25;
   }
 
-  // Elegant badge design matching demo styling
-  const badgeY = titleY + 60;
+  // Blue border line (matching demo header)
+  pdf.setDrawColor(0, 122, 255);
+  pdf.setLineWidth(3);
+  pdf.line(margin.left, titleY + 10, width - margin.right, titleY + 10);
+
+  // Demo badge with gradient (matching business demo)
+  const badgeY = titleY + 40;
   const badgeText = theme.isHealthcare 
     ? `🏥 ${theme.themeName} Healthcare Training`
-    : "✨ Professional Training Module";
-  const badgeWidth = theme.isHealthcare ? 160 : 140;
-  const badgeHeight = 16;
+    : "🚀 SOPify Business Tier Demo - Professional Features Showcase";
+  const badgeWidth = theme.isHealthcare ? 180 : 240;
+  const badgeHeight = 20;
   
-  // Professional badge background with demo-style opacity
-  pdf.setFillColor(255, 255, 255);
-  pdf.setGState(new pdf.GState({opacity: 0.15}));
-  pdf.roundedRect((width - badgeWidth) / 2, badgeY - 8, badgeWidth, badgeHeight, 8, 8, 'F');
+  // Gradient badge background (matching demo)
+  for (let i = 0; i < 10; i++) {
+    const alpha = i / 10;
+    const r = Math.round(0 + (88 - 0) * alpha); // #007AFF to #5856D6
+    const g = Math.round(122 + (86 - 122) * alpha);
+    const b = Math.round(255 + (214 - 255) * alpha);
+    
+    pdf.setFillColor(r, g, b);
+    const segmentHeight = badgeHeight / 10;
+    const cornerRadius = i === 0 ? 25 : 0;
+    pdf.roundedRect((width - badgeWidth) / 2, badgeY - 10 + i * segmentHeight, badgeWidth, segmentHeight, cornerRadius, cornerRadius, 'F');
+  }
   
-  // Badge border for elegance
-  pdf.setGState(new pdf.GState({opacity: 0.3}));
-  pdf.setDrawColor(255, 255, 255);
-  pdf.setLineWidth(0.5);
-  pdf.roundedRect((width - badgeWidth) / 2, badgeY - 8, badgeWidth, badgeHeight, 8, 8, 'S');
-  
-  // Elegant badge text
-  pdf.setGState(new pdf.GState({opacity: 1}));
+  // Badge text
   setFontSafe(pdf, "helvetica", "bold");
   pdf.setFontSize(11);
   pdf.setTextColor(255, 255, 255);
   const badgeTextWidth = getStringWidthSafe(pdf, badgeText, 11);
   pdf.text(badgeText, (width - badgeTextWidth) / 2, badgeY);
 
-  // Elegant meta information card matching demo design
-  const metaY = height - 90;
-  const metaBoxHeight = 50;
+  // Meta information box (matching demo design)
+  const metaY = badgeY + 40;
+  const metaBoxHeight = 40;
   
-  // Professional card background with demo-style opacity
-  pdf.setFillColor(255, 255, 255);
-  pdf.setGState(new pdf.GState({opacity: 0.12}));
-  pdf.roundedRect(margin.left + 20, metaY, width - margin.left - margin.right - 40, metaBoxHeight, 12, 12, 'F');
+  // Light gray background (matching demo)
+  pdf.setFillColor(248, 249, 250); // #f8f9fa
+  pdf.roundedRect(margin.left, metaY, width - margin.left - margin.right, metaBoxHeight, 8, 8, 'F');
   
-  // Elegant card border
-  pdf.setGState(new pdf.GState({opacity: 0.25}));
-  pdf.setDrawColor(255, 255, 255);
-  pdf.setLineWidth(0.8);
-  pdf.roundedRect(margin.left + 20, metaY, width - margin.left - margin.right - 40, metaBoxHeight, 12, 12, 'S');
-  
-  // Professional meta information with demo styling
-  pdf.setGState(new pdf.GState({opacity: 1}));
+  // Meta information with flexible layout
   setFontSafe(pdf, "helvetica", "normal");
   pdf.setFontSize(11);
-  pdf.setTextColor(255, 255, 255);
+  pdf.setTextColor(51, 51, 51); // #333
   
   const metaInfo = [
     `Version: 1.0`,
@@ -221,20 +212,15 @@ async function addBeautifulCoverPage(
     `Steps: ${sopDocument.steps.length}`
   ];
   
-  // Elegant grid layout for meta information
-  const cardPadding = 15;
-  const metaStartX = margin.left + 20 + cardPadding;
+  // Four-column layout
+  const metaStartX = margin.left + 15;
   const metaStartY = metaY + 15;
+  const columnWidth = (width - margin.left - margin.right - 30) / 4;
   
-  // First row
-  pdf.text(metaInfo[0], metaStartX, metaStartY);
-  const firstRowSecondX = metaStartX + getStringWidthSafe(pdf, metaInfo[0], 11) + 40;
-  pdf.text(metaInfo[1], firstRowSecondX, metaStartY);
-  
-  // Second row
-  pdf.text(metaInfo[2], metaStartX, metaStartY + 18);
-  const secondRowSecondX = metaStartX + getStringWidthSafe(pdf, metaInfo[2], 11) + 40;
-  pdf.text(metaInfo[3], secondRowSecondX, metaStartY + 18);
+  metaInfo.forEach((info, index) => {
+    const x = metaStartX + (index * columnWidth);
+    pdf.text(info, x, metaStartY);
+  });
 }
 
 async function addBeautifulTableOfContents(
@@ -385,46 +371,38 @@ async function renderEnhancedSopSteps(
     const stepNumber = index + 1;
     
     // Check if we need a new page
-    if (currentY > height - margin.bottom - 140) {
+    if (currentY > height - margin.bottom - 160) {
       pdf.addPage();
-      // Elegant page background matching demo
-      pdf.setFillColor(24, 24, 27); // zinc-900
+      // Clean white background (matching demo)
+      pdf.setFillColor(255, 255, 255);
       pdf.rect(0, 0, width, height, 'F');
       currentY = margin.top;
     }
     
-    // Elegant step card design matching demo
-    const cardHeight = 120;
+    // Step design matching business demo
     const headerHeight = 35;
+    const contentHeight = 80;
+    const totalStepHeight = headerHeight + contentHeight;
     const hasCriticalContent = step.healthcareContent?.some(hc => 
       hc.priority === 'high' || hc.type === 'critical-safety'
     );
     
-    // Professional card background (zinc-800 equivalent)
-    pdf.setFillColor(39, 39, 42);
-    pdf.roundedRect(margin.left + 10, currentY, width - margin.left - margin.right - 20, cardHeight, 12, 12, 'F');
-    
-    // Elegant card border (zinc-700 equivalent)
-    pdf.setDrawColor(63, 63, 70);
-    pdf.setLineWidth(1);
-    pdf.roundedRect(margin.left + 10, currentY, width - margin.left - margin.right - 20, cardHeight, 12, 12, 'S');
-    
-    // Elegant header section with demo-style gradient
+    // Step header with gradient (matching demo)
     const headerColors = hasCriticalContent 
       ? [{ r: 239, g: 68, b: 68 }, { r: 245, g: 101, b: 101 }] // Red gradient for critical
-      : [{ r: 139, g: 92, b: 246 }, { r: 99, g: 102, b: 241 }]; // Purple gradient (demo style)
+      : [{ r: 0, g: 122, b: 255 }, { r: 88, g: 86, b: 214 }]; // Demo gradient (#007AFF to #5856D6)
     
-    // Smooth gradient header
-    for (let i = 0; i < 15; i++) {
-      const alpha = i / 15;
+    // Gradient header background
+    for (let i = 0; i < 10; i++) {
+      const alpha = i / 10;
       const r = Math.round(headerColors[0].r + (headerColors[1].r - headerColors[0].r) * alpha);
       const g = Math.round(headerColors[0].g + (headerColors[1].g - headerColors[0].g) * alpha);
       const b = Math.round(headerColors[0].b + (headerColors[1].b - headerColors[0].b) * alpha);
       
       pdf.setFillColor(r, g, b);
-      const segmentHeight = headerHeight / 15;
+      const segmentHeight = headerHeight / 10;
       const cornerRadius = i === 0 ? 12 : 0;
-      pdf.roundedRect(margin.left + 10, currentY + i * segmentHeight, width - margin.left - margin.right - 20, segmentHeight, cornerRadius, cornerRadius, 'F');
+      pdf.roundedRect(margin.left, currentY + i * segmentHeight, width - margin.left - margin.right, segmentHeight, cornerRadius, cornerRadius, 'F');
     }
     
     // Elegant priority badge matching demo style
@@ -449,78 +427,73 @@ async function renderEnhancedSopSteps(
       pdf.text("⚠ CRITICAL", badgeX + 4, badgeY + 8);
     }
     
-    // Professional step number and title
-    setFontSafe(pdf, "helvetica", "normal");
-    pdf.setFontSize(12);
-    pdf.setTextColor(255, 255, 255);
-    pdf.setGState(new pdf.GState({opacity: 0.7}));
-    pdf.text(`Step ${stepNumber}`, margin.left + 25, currentY + 15);
-    
-    pdf.setGState(new pdf.GState({opacity: 1}));
+    // Step number and title (matching demo)
     setFontSafe(pdf, "helvetica", "bold");
     pdf.setFontSize(18);
     pdf.setTextColor(255, 255, 255);
+    pdf.setGState(new pdf.GState({opacity: 0.9}));
+    pdf.text(`Step ${stepNumber}`, margin.left + 20, currentY + 12);
+    
+    setFontSafe(pdf, "helvetica", "bold");
+    pdf.setFontSize(24);
+    pdf.setTextColor(255, 255, 255);
+    pdf.setGState(new pdf.GState({opacity: 1}));
     const stepTitle = step.title || `Step ${stepNumber}`;
-    pdf.text(stepTitle, margin.left + 25, currentY + 28);
+    pdf.text(stepTitle, margin.left + 20, currentY + 26);
     
-    // Professional content section within the card
-    const contentY = currentY;
-    const contentHeight = cardHeight - headerHeight;
-    
-    // Step description with elegant formatting
+    // Step description in header
     if (step.description) {
       setFontSafe(pdf, "helvetica", "normal");
-      pdf.setFontSize(11);
+      pdf.setFontSize(16);
       pdf.setTextColor(255, 255, 255);
       pdf.setGState(new pdf.GState({opacity: 0.9}));
       
-      const descLines = pdf.splitTextToSize(step.description, width - margin.left - margin.right - 60);
-      let descY = contentY + 15;
-      descLines.slice(0, 4).forEach((line: string) => {
-        pdf.text(line, margin.left + 25, descY);
-        descY += 6;
-      });
+      const descLines = pdf.splitTextToSize(step.description, width - margin.left - margin.right - 40);
+      if (descLines.length > 0) {
+        pdf.text(descLines[0], margin.left + 20, currentY + 32);
+      }
     }
     
-    // Professional tags with demo-style badges
-    if (step.tags && step.tags.length > 0) {
-      let tagY = currentY + cardHeight - 25;
-      let tagX = margin.left + 25;
-      
-      pdf.setGState(new pdf.GState({opacity: 1}));
-      
-      step.tags.slice(0, 4).forEach((tag: string) => {
-        const tagWidth = getStringWidthSafe(pdf, tag, 8) + 12;
-        
-        // Elegant tag background matching demo
-        pdf.setFillColor(99, 102, 241); // indigo-500
-        pdf.setGState(new pdf.GState({opacity: 0.2}));
-        pdf.roundedRect(tagX, tagY - 4, tagWidth, 10, 5, 5, 'F');
-        
-        // Tag border
-        pdf.setGState(new pdf.GState({opacity: 0.4}));
-        pdf.setDrawColor(99, 102, 241);
-        pdf.setLineWidth(0.5);
-        pdf.roundedRect(tagX, tagY - 4, tagWidth, 10, 5, 5, 'S');
-        
-        // Tag text
-        pdf.setGState(new pdf.GState({opacity: 1}));
-        setFontSafe(pdf, "helvetica", "normal");
-        pdf.setFontSize(8);
-        pdf.setTextColor(255, 255, 255);
-        pdf.text(tag, tagX + 6, tagY + 2);
-        
-        tagX += tagWidth + 8;
-        
-        // Wrap to next line if needed
-        if (tagX > width - margin.right - 60) {
-          tagX = margin.left + 25;
-          tagY += 12;
-        }
-      });
-    }
+    // White content section (matching demo)
+    const contentY = currentY + headerHeight;
+    pdf.setFillColor(255, 255, 255); // White background
+    pdf.roundedRect(margin.left, contentY, width - margin.left - margin.right, contentHeight, 0, 0, 'F');
     
-    currentY += cardHeight + 25;
+    // Content border (matching demo)
+    pdf.setDrawColor(224, 224, 224); // #e0e0e0
+    pdf.setLineWidth(1);
+    pdf.line(margin.left, contentY, width - margin.right, contentY); // Top border only
+    pdf.roundedRect(margin.left, contentY, width - margin.left - margin.right, contentHeight, 0, 12, 'S'); // Bottom rounded corners
+    
+         // Tags in content section (matching demo)
+     if (step.tags && step.tags.length > 0) {
+       let tagY = contentY + contentHeight - 20;
+       let tagX = margin.left + 20;
+       
+       step.tags.slice(0, 4).forEach((tag: string) => {
+         const tagWidth = getStringWidthSafe(pdf, tag, 12) + 12;
+         
+         // Blue tag background (matching demo)
+         pdf.setFillColor(0, 122, 255); // #007AFF
+         pdf.roundedRect(tagX, tagY - 4, tagWidth, 12, 16, 16, 'F');
+         
+         // Tag text
+         setFontSafe(pdf, "helvetica", "normal");
+         pdf.setFontSize(12);
+         pdf.setTextColor(255, 255, 255);
+         pdf.text(tag, tagX + 6, tagY + 3);
+         
+         tagX += tagWidth + 8;
+         
+         // Wrap to next line if needed
+         if (tagX > width - margin.right - 40) {
+           tagX = margin.left + 20;
+           tagY += 16;
+         }
+       });
+     }
+     
+     currentY += totalStepHeight + 25;
   });
 }
 
@@ -537,26 +510,34 @@ function addBeautifulFooters(
   for (let i = 1; i <= totalPages; i++) {
     pdf.setPage(i);
     
-    // Elegant footer line matching demo style (purple gradient)
-    pdf.setDrawColor(139, 92, 246); // purple-500
-    pdf.setLineWidth(1.5);
-    pdf.line(margin.left + 10, height - margin.bottom + 8, width - margin.right - 10, height - margin.bottom + 8);
+    // Footer border line (matching demo)
+    pdf.setDrawColor(224, 224, 224); // #e0e0e0
+    pdf.setLineWidth(2);
+    pdf.line(margin.left, height - margin.bottom + 5, width - margin.right, height - margin.bottom + 5);
     
-    // Professional footer text
+    // Footer text (matching demo)
+    setFontSafe(pdf, "helvetica", "bold");
+    pdf.setFontSize(12);
+    pdf.setTextColor(102, 102, 102); // #666
+    
+    // Center text - Generated by SOPify Business
+    const centerText = "Generated by SOPify Business";
+    const centerTextWidth = getStringWidthSafe(pdf, centerText, 12);
+    pdf.text(centerText, (width - centerTextWidth) / 2, height - margin.bottom + 18);
+    
+    // Subtitle text
     setFontSafe(pdf, "helvetica", "normal");
     pdf.setFontSize(10);
-    pdf.setTextColor(156, 163, 175); // gray-400
+    const subtitleText = "Professional SOP creation and training platform";
+    const subtitleTextWidth = getStringWidthSafe(pdf, subtitleText, 10);
+    pdf.text(subtitleText, (width - subtitleTextWidth) / 2, height - margin.bottom + 28);
     
-    // Left side - elegant document info
-    const leftText = theme.isHealthcare 
-      ? `${sopDocument.title || 'Training Module'} • ${theme.themeName} Healthcare Training`
-      : `${sopDocument.title || 'Training Module'} • Professional Training`;
-    pdf.text(leftText, margin.left + 10, height - margin.bottom + 18);
-    
-    // Right side - elegant page number
-    const rightText = `Page ${i} of ${totalPages}`;
-    const rightTextWidth = getStringWidthSafe(pdf, rightText, 10);
-    pdf.text(rightText, width - margin.right - rightTextWidth - 10, height - margin.bottom + 18);
+    // Demo notice
+    pdf.setFontSize(8);
+    pdf.setTextColor(153, 153, 153); // #999
+    const demoText = "This is a demonstration of SOPify's Business tier capabilities";
+    const demoTextWidth = getStringWidthSafe(pdf, demoText, 8);
+    pdf.text(demoText, (width - demoTextWidth) / 2, height - margin.bottom + 36);
   }
 }
 
