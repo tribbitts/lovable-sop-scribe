@@ -188,3 +188,45 @@ export async function generatePDF(sopDocument: SopDocument): Promise<string> {
     }
   });
 }
+
+// New function for HTML-to-PDF generation (preserves exact demo styling)
+export async function generatePDFFromHTML(sopDocument: SopDocument): Promise<string> {
+  try {
+    console.log("Starting HTML-to-PDF generation with exact demo styling");
+    
+    // Import the HTML-to-PDF generator
+    const { generateHtmlToPdf } = await import("./pdf/html-to-pdf-generator");
+    
+    // Use HTML-to-PDF generator for perfect styling preservation
+    const result = await generateHtmlToPdf(sopDocument, {
+      includeTableOfContents: false,
+      includeProgressInfo: true
+    });
+    
+    console.log("HTML-to-PDF generation initiated");
+    return result;
+  } catch (error) {
+    console.error("HTML-to-PDF generation failed:", error);
+    throw error;
+  }
+}
+
+// Function for direct download with browser print dialog (exact demo styling)
+export async function downloadPDFWithBrowserPrint(sopDocument: SopDocument): Promise<void> {
+  try {
+    console.log("Starting browser print PDF generation with exact demo styling");
+    
+    // Import the HTML-to-PDF generator
+    const { generateAndDownloadPdf } = await import("./pdf/html-to-pdf-generator");
+    
+    await generateAndDownloadPdf(sopDocument, {
+      includeTableOfContents: false,
+      includeProgressInfo: true
+    });
+    
+    console.log("Browser print PDF generation initiated");
+  } catch (error) {
+    console.error("Browser print PDF generation failed:", error);
+    throw error;
+  }
+}
