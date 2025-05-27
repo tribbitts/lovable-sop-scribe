@@ -1,4 +1,5 @@
 import { SopDocument } from "@/types/sop";
+import { generateStandardHtmlTemplate } from "../html-export/standard-template";
 
 export interface HtmlToPdfOptions {
   includeTableOfContents?: boolean;
@@ -19,10 +20,18 @@ export async function generateHtmlToPdf(
     try {
       console.log("Generating HTML template for PDF conversion");
       
-      // Create HTML template matching business demo styling
-      const htmlContent = createBusinessDemoHtml(sopDocument, options);
+      // Use our enhanced HTML template instead of the business demo
+      const htmlContent = generateStandardHtmlTemplate(sopDocument, {
+        customization: {
+          primaryColor: "#007AFF",
+          accentColor: "#5856D6",
+          fontFamily: "system",
+          headerStyle: "modern",
+          layout: "standard"
+        }
+      });
       
-      // Create a new window for printing
+      // Create a new window for printing with print parameter
       const printWindow = window.open('', '_blank');
       if (!printWindow) {
         throw new Error('Could not open print window. Please allow popups for this site.');

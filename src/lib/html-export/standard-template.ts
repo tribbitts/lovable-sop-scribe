@@ -389,15 +389,134 @@ export function generateStandardHtmlTemplate(
             align-items: center;
         }
         
+        .footer-left {
+            text-align: left;
+        }
+        
         .footer-left p {
             margin: 0;
             color: #666;
             font-weight: 500;
         }
         
+        .footer-right {
+            text-align: right;
+        }
+        
         .footer-right p {
             margin: 0;
             color: #666;
+        }
+        
+        /* Print-specific styles for PDF generation */
+        @media print {
+            @page {
+                margin: 0.75in;
+                size: letter;
+                /* Disable browser headers/footers */
+                @top-left { content: ""; }
+                @top-center { content: ""; }
+                @top-right { content: ""; }
+                @bottom-left { content: ""; }
+                @bottom-center { content: ""; }
+                @bottom-right { content: ""; }
+            }
+            
+            body {
+                background: white !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            
+            .container {
+                max-width: none;
+                margin: 0;
+                padding: 0;
+            }
+            
+            .header {
+                page-break-inside: avoid;
+                margin-bottom: 30px;
+                background: white !important;
+                border: none !important;
+                border-radius: 0 !important;
+                box-shadow: none !important;
+                padding: 0 !important;
+            }
+            
+            .header-top {
+                display: flex !important;
+                justify-content: space-between !important;
+                align-items: flex-start !important;
+                margin-bottom: 20px !important;
+                width: 100% !important;
+            }
+            
+            .header-left {
+                text-align: left !important;
+                flex: 0 0 auto !important;
+                width: auto !important;
+            }
+            
+            .header-right {
+                text-align: right !important;
+                flex: 0 0 auto !important;
+                width: auto !important;
+            }
+            
+            .header-center {
+                text-align: center !important;
+                margin-top: 20px !important;
+            }
+            
+            .company-name,
+            .version,
+            .document-date,
+            .last-revised {
+                display: block !important;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+            
+            .step-container {
+                page-break-inside: avoid;
+                break-inside: avoid;
+                background: white !important;
+                border-radius: 0 !important;
+                box-shadow: none !important;
+                border: 1px solid #e9ecef !important;
+                margin-bottom: 20px !important;
+            }
+            
+            .footer {
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                background: white !important;
+                border-top: 1px solid #e9ecef;
+                padding: 15px 0;
+                border-radius: 0 !important;
+                box-shadow: none !important;
+                margin-top: 0 !important;
+            }
+            
+            .footer-content {
+                display: flex !important;
+                justify-content: space-between !important;
+                align-items: center !important;
+                max-width: 100%;
+                margin: 0 auto;
+                padding: 0 20px;
+            }
+            
+            .footer-left {
+                text-align: left !important;
+            }
+            
+            .footer-right {
+                text-align: right !important;
+            }
         }
         
         @media (max-width: 768px) {
@@ -437,6 +556,27 @@ export function generateStandardHtmlTemplate(
             }
         }
     </style>
+    <script>
+        // Print optimization script
+        window.addEventListener('beforeprint', function() {
+            // Hide any browser-generated headers/footers
+            document.title = '';
+        });
+        
+        window.addEventListener('afterprint', function() {
+            // Restore title after printing
+            document.title = '${title}';
+        });
+        
+        // Auto-open print dialog for demo-style PDF export
+        if (window.location.search.includes('print=true')) {
+            window.addEventListener('load', function() {
+                setTimeout(function() {
+                    window.print();
+                }, 500);
+            });
+        }
+    </script>
 </head>
 <body>
     <div class="container">
