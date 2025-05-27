@@ -19,7 +19,7 @@ const HomePage = () => {
         "name": "What is SOPify?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "SOPify is a professional SOP (Standard Operating Procedure) creation tool that helps businesses create step-by-step documentation with screenshots, annotations, and interactive training modules."
+          "text": "SOPify is a professional SOP (Standard Operating Procedure) creation tool that helps businesses create step-by-step documentation with screenshots and annotations for clear, professional procedures."
         }
       },
       {
@@ -27,7 +27,7 @@ const HomePage = () => {
         "name": "How much does SOPify cost?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "SOPify offers a free tier with basic features, SOP Essentials at $25/month, and SOPify Business at $75/month with advanced features like interactive training modules."
+          "text": "SOPify offers a free tier with basic features, SOP Essentials at $25/month, and SOPify Business at $75/month with advanced features and customization options."
         }
       },
       {

@@ -22,9 +22,6 @@ import {
 } from "lucide-react";
 import { SopStep, StepCardProps } from "@/types/sop";
 import StepScreenshot from "./StepScreenshot";
-import StepQuiz from "./StepQuiz";
-import StepResources from "./StepResources";
-import { HealthcareStepEnhancements } from "./HealthcareStepEnhancements";
 
 const StepCard: React.FC<StepCardProps> = ({
   step,
@@ -98,11 +95,7 @@ const StepCard: React.FC<StepCardProps> = ({
     }
   };
 
-  const hasHealthcareContent = step.healthcareContent && step.healthcareContent.length > 0;
-  const hasCriticalContent = step.healthcareContent?.some(content => 
-    content.priority === "high" || content.type === "critical-safety"
-  );
-  const hasKnowledgeCheck = step.quizQuestions && step.quizQuestions.length > 0;
+  // Simplified checks for core SOP features only
 
   return (
     <motion.div
@@ -159,27 +152,6 @@ const StepCard: React.FC<StepCardProps> = ({
                     <Badge className="bg-blue-600 text-white text-xs">
                       <Clock className="h-3 w-3 mr-1" />
                       {step.estimatedTime}min
-                    </Badge>
-                  )}
-                  
-                  {hasHealthcareContent && (
-                    <Badge className="bg-teal-600 text-white text-xs">
-                      <Shield className="h-3 w-3 mr-1" />
-                      Healthcare
-                    </Badge>
-                  )}
-                  
-                  {hasCriticalContent && (
-                    <Badge className="bg-red-600 text-white text-xs animate-pulse">
-                      <AlertTriangle className="h-3 w-3 mr-1" />
-                      Critical
-                    </Badge>
-                  )}
-
-                  {hasKnowledgeCheck && (
-                    <Badge className="bg-green-600 text-white text-xs">
-                      <HelpCircle className="h-3 w-3 mr-1" />
-                      Knowledge Check
                     </Badge>
                   )}
                 </div>
@@ -268,14 +240,6 @@ const StepCard: React.FC<StepCardProps> = ({
               />
             </div>
 
-            {/* Healthcare-Specific Enhancements */}
-            {hasHealthcareContent && (
-              <>
-                <Separator className="bg-zinc-700" />
-                <HealthcareStepEnhancements step={step} />
-              </>
-            )}
-
             <Separator className="bg-zinc-700" />
 
             {/* Screenshot Section */}
@@ -294,20 +258,6 @@ const StepCard: React.FC<StepCardProps> = ({
               addCallout={addCallout}
               deleteCallout={deleteCallout}
               onStepChange={onStepChange}
-            />
-
-            {/* Knowledge Check Section */}
-            <Separator className="bg-zinc-700" />
-            <StepQuiz
-              step={step}
-              onUpdateQuestions={(questions) => handleInputChange("quizQuestions", questions)}
-            />
-
-            {/* Resources Section */}
-            <Separator className="bg-zinc-700" />
-            <StepResources
-              step={step}
-              onUpdateResources={(resources) => handleInputChange("resources", resources)}
             />
           </CardContent>
         )}

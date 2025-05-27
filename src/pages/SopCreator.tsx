@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -14,30 +13,21 @@ import {
   Save, 
   Plus, 
   FileText, 
-  Sparkles,
   ChevronLeft,
   ChevronRight,
   Trash2,
-  RotateCcw,
-  BookOpen,
-  HelpCircle,
-  Users,
-  Target,
-  ArrowRight,
   Download,
-  Shield
+  ArrowRight
 } from "lucide-react";
 import StepCard from "@/components/step-editor/StepCard";
-import ProgressTracker from "@/components/ProgressTracker";
 import ExportPanel from "@/components/step-editor/ExportPanel";
 import { useSopContext } from "@/context/SopContext";
-import { SopStep, SopDocument } from "@/types/sop";
+import { SopStep } from "@/types/sop";
 
 const SopCreator: React.FC = () => {
   const {
     sopDocument,
     addStep,
-    addStepFromTemplate,
     updateStep,
     deleteStep,
     duplicateStep,
@@ -46,7 +36,6 @@ const SopCreator: React.FC = () => {
     getCompletedStepsCount,
     getProgressPercentage,
     setTableOfContents,
-    setDarkMode,
     saveDocumentToJSON,
     resetDocument,
     setSopTitle,
@@ -62,76 +51,9 @@ const SopCreator: React.FC = () => {
   const [activeStepId, setActiveStepId] = useState<string | null>(null);
   const [showExportPanel, setShowExportPanel] = useState(false);
   const [showAdvancedSettings, setShowAdvancedSettings] = useState(false);
-  const [showStepTemplateSelector, setShowStepTemplateSelector] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [exportProgress, setExportProgress] = useState<string>("");
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
-
-  // Detect if this is a healthcare document
-  const isHealthcareDocument = sopDocument?.steps.some(step => 
-    step.healthcareContent && step.healthcareContent.length > 0
-  ) || sopDocument?.title.toLowerCase().includes('healthcare') ||
-  sopDocument?.title.toLowerCase().includes('patient') ||
-  sopDocument?.title.toLowerCase().includes('hipaa') ||
-  sopDocument?.title.toLowerCase().includes('medical');
-
-  // Step template definitions for SOP creation
-  const getStepTemplates = () => {
-    const baseTemplates = [
-      {
-        type: "standard" as const,
-        title: isHealthcareDocument ? "Healthcare Procedure Step" : "Standard Step",
-        description: isHealthcareDocument 
-          ? "Step-by-step healthcare procedure with safety protocols"
-          : "Basic instruction step with screenshots and annotations",
-        icon: BookOpen,
-        color: isHealthcareDocument ? "from-teal-600 to-blue-600" : "from-blue-600 to-purple-600",
-        features: isHealthcareDocument 
-          ? ["Healthcare protocols", "Safety guidelines", "Patient care focus", "Screenshot support"]
-          : ["Clear instructions", "Screenshot support", "Callout annotations", "Resource links"]
-      },
-      {
-        type: "knowledge-check" as const,
-        title: isHealthcareDocument ? "Compliance Verification" : "Knowledge Check",
-        description: isHealthcareDocument
-          ? "Critical healthcare compliance and safety verification"
-          : "Quick understanding check with simple Q&A",
-        icon: HelpCircle,
-        color: isHealthcareDocument ? "from-red-600 to-orange-600" : "from-green-600 to-teal-600",
-        features: isHealthcareDocument
-          ? ["Compliance verification", "Safety confirmation", "Critical checkpoints"]
-          : ["Simple questions", "Quick validation", "Understanding checks"]
-      },
-      {
-        type: "scenario" as const,
-        title: isHealthcareDocument ? "Patient Care Scenario" : "Example Scenario",
-        description: isHealthcareDocument
-          ? "Practice patient interactions and clinical decision-making"
-          : "Real-world example or case study application",
-        icon: Users,
-        color: isHealthcareDocument ? "from-purple-600 to-pink-600" : "from-orange-600 to-red-600",
-        features: isHealthcareDocument
-          ? ["Patient interactions", "Clinical scenarios", "Communication examples"]
-          : ["Practical examples", "Case studies", "Context application"]
-      },
-      {
-        type: "resource-focus" as const,
-        title: isHealthcareDocument ? "Healthcare Resources" : "Reference Materials",
-        description: isHealthcareDocument
-          ? "Essential healthcare references and continuing education resources"
-          : "Additional resources, links, and reference materials",
-        icon: Target,
-        color: isHealthcareDocument ? "from-emerald-600 to-teal-600" : "from-purple-600 to-pink-600",
-        features: isHealthcareDocument
-          ? ["Clinical guidelines", "Compliance resources", "Professional references"]
-          : ["External links", "Reference materials", "Additional resources"]
-      }
-    ];
-
-    return baseTemplates;
-  };
-
-  const stepTemplates = getStepTemplates();
 
   // Auto-expand first step when created
   useEffect(() => {
@@ -158,132 +80,94 @@ const SopCreator: React.FC = () => {
   };
 
   const handleAddStep = () => {
-    setShowStepTemplateSelector(true);
-  };
-
-  const handleTemplateSelect = (templateType: "standard" | "knowledge-check" | "scenario" | "resource-focus") => {
-    addStepFromTemplate(templateType);
-    setShowStepTemplateSelector(false);
+    addStep();
     
     // Auto-focus the new step
     setTimeout(() => {
-      const newStep = steps[steps.length - 1];
+      const newStep = steps[steps.length];
       if (newStep) {
-        setCurrentStepIndex(steps.length - 1);
+        setCurrentStepIndex(steps.length);
         setActiveStepId(newStep.id);
       }
     }, 100);
   };
 
-  const handleExport = async (format: "pdf" | "html" | "training-module" | "bundle", options?: any) => {
+  const handleExport = async (format: "pdf" | "html", options?: any) => {
     setIsExporting(true);
     
-    if (format === "bundle") {
-      setExportProgress("Creating comprehensive SOP package...");
-      console.log('🎯 SopCreator handling bundle export with options:', options);
-      
-      try {
-        await exportDocument(format, options);
-      } catch (error) {
-        console.error("Bundle export failed:", error);
-      }
-    } else if (format === "training-module") {
-      setExportProgress("Creating interactive SOP module...");
-      
-      const enhancedOptions = {
-        mode: 'standalone' as const,
-        enhanced: true,
-        enhancedOptions: {
-          passwordProtection: {
-            enabled: !!options?.trainingOptions?.passwordProtection,
-            password: options?.trainingOptions?.passwordProtection || "",
-            hint: "Contact your administrator for access"
-          },
-          features: {
-            enableNotes: options?.trainingOptions?.enableNotes ?? true,
-            enableBookmarks: options?.trainingOptions?.enableBookmarks ?? true,
-            enableSearch: true,
-            enableProgressTracking: options?.includeProgressInfo ?? true
-          },
-          theme: options?.theme || 'auto',
-          branding: {
-            companyColors: {
-              primary: options?.trainingOptions?.primaryColor || '#007AFF',
-              secondary: options?.trainingOptions?.secondaryColor || '#1E1E1E'
-            }
-          }
-        }
-      };
-      
-      try {
-        await exportDocument("html", enhancedOptions);
-      } catch (error) {
-        console.error("Interactive SOP export failed:", error);
-      }
-    } else {
-      setExportProgress(`Preparing ${format.toUpperCase()} export...`);
-      try {
-        await exportDocument(format, options);
-      } catch (error) {
-        console.error("Export failed:", error);
-      }
+    try {
+      setExportProgress(`Creating ${format.toUpperCase()} document...`);
+      await exportDocument(format, options);
+      toast({
+        title: "Export Complete",
+        description: `Your SOP has been exported as ${format.toUpperCase()}.`,
+      });
+    } catch (error) {
+      console.error("Export failed:", error);
+      toast({
+        title: "Export Failed",
+        description: "There was an error exporting your SOP. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsExporting(false);
+      setExportProgress("");
     }
-    
-    setIsExporting(false);
-    setExportProgress("");
   };
 
   const handleDeleteStep = (stepId: string) => {
     const stepIndex = steps.findIndex(step => step.id === stepId);
-    if (stepIndex === -1) return;
-    
-    // Confirm deletion
-    const confirmDelete = window.confirm("Are you sure you want to delete this step? This action cannot be undone.");
-    if (!confirmDelete) return;
-    
     deleteStep(stepId);
     
     // Adjust current step index if needed
-    if (currentStepIndex >= steps.length - 1) {
-      setCurrentStepIndex(Math.max(0, steps.length - 2));
+    if (stepIndex <= currentStepIndex && currentStepIndex > 0) {
+      setCurrentStepIndex(currentStepIndex - 1);
     }
+    
+    toast({
+      title: "Step Deleted",
+      description: "The step has been removed from your SOP.",
+    });
   };
 
   const navigateToStep = (index: number) => {
     if (index >= 0 && index < steps.length) {
       setCurrentStepIndex(index);
+      setActiveStepId(steps[index].id);
     }
   };
 
   const nextStep = () => {
     if (currentStepIndex < steps.length - 1) {
       setCurrentStepIndex(currentStepIndex + 1);
+      setActiveStepId(steps[currentStepIndex + 1].id);
     }
   };
 
   const prevStep = () => {
     if (currentStepIndex > 0) {
       setCurrentStepIndex(currentStepIndex - 1);
+      setActiveStepId(steps[currentStepIndex - 1].id);
     }
   };
 
   // Get current step safely
   const currentStep = steps.length > 0 ? steps[currentStepIndex] : null;
 
-  // Simplified header focused on SOP creation
+  // SOP Header with essential information
   const renderHeader = () => (
     <Card className="bg-[#1E1E1E] border-zinc-800 rounded-2xl mb-6">
       <CardContent className="p-6">
         <div className="flex items-center justify-between">
           <div className="flex-1">
             <div className="flex items-center gap-3 mb-2">
-              <h1 className="text-2xl font-bold text-white">Interactive SOP Creator</h1>
+              <h1 className="text-2xl font-bold text-white">SOP Creator</h1>
               <Badge className="bg-gradient-to-r from-blue-600 to-purple-600 text-white">
                 <FileText className="h-3 w-3 mr-1" />
-                Professional SOPs
+                Professional
               </Badge>
             </div>
-            <p className="text-zinc-400 text-sm">Create engaging, interactive Standard Operating Procedures with rich content and annotations</p>
+            <p className="text-zinc-400 text-sm">Create professional Standard Operating Procedures</p>
           </div>
           
           <div className="flex items-center gap-3">
@@ -307,11 +191,11 @@ const SopCreator: React.FC = () => {
           </div>
         </div>
 
-        {/* SOP Document Information */}
+        {/* SOP Information */}
         <div className="mt-6 p-4 bg-zinc-900/50 rounded-xl border border-zinc-800">
           <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-            <Sparkles className="h-5 w-5 text-blue-400" />
-            SOP Document Information
+            <FileText className="h-5 w-5 text-blue-400" />
+            SOP Information
           </h3>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -336,7 +220,7 @@ const SopCreator: React.FC = () => {
                 id="topic"
                 value={sopDocument?.topic || ""}
                 onChange={(e) => setSopTopic(e.target.value)}
-                placeholder="e.g., Operations, Safety, Customer Service..."
+                placeholder="e.g., Operations, HR, Safety..."
                 className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-500"
               />
             </div>
@@ -345,7 +229,7 @@ const SopCreator: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
             <div>
               <Label htmlFor="company" className="text-zinc-300 text-sm font-medium mb-2 block">
-                Organization (Optional)
+                Organization
               </Label>
               <Input
                 id="company"
@@ -390,7 +274,7 @@ const SopCreator: React.FC = () => {
                   id="description"
                   value={sopDocument?.description || ""}
                   onChange={(e) => setSopDescription(e.target.value)}
-                  placeholder="Provide a detailed description of this SOP..."
+                  placeholder="Provide a detailed description of this Standard Operating Procedure..."
                   className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-500 min-h-[100px]"
                 />
               </div>
@@ -398,14 +282,30 @@ const SopCreator: React.FC = () => {
           )}
         </AnimatePresence>
 
-        {/* Step Progress Overview */}
+        {/* Progress Overview */}
         {steps.length > 0 && (
-          <div className="mt-6">
-            <ProgressTracker 
-              completed={getCompletedStepsCount()} 
-              total={steps.length}
-              showPercentage={true}
-            />
+          <div className="mt-6 p-4 bg-zinc-900/30 rounded-lg border border-zinc-800">
+            <div className="flex items-center justify-between">
+              <div>
+                <h4 className="text-white font-medium text-sm">Progress</h4>
+                <p className="text-zinc-400 text-xs">
+                  {getCompletedStepsCount()} of {steps.length} steps completed
+                </p>
+              </div>
+              <div className="text-right">
+                <div className="text-2xl font-bold text-blue-400">
+                  {Math.round(getProgressPercentage())}%
+                </div>
+              </div>
+            </div>
+            <div className="mt-3">
+              <div className="w-full bg-zinc-700 rounded-full h-2">
+                <div 
+                  className="bg-gradient-to-r from-blue-500 to-green-500 h-2 rounded-full transition-all duration-300"
+                  style={{ width: `${getProgressPercentage()}%` }}
+                />
+              </div>
+            </div>
           </div>
         )}
       </CardContent>
@@ -460,26 +360,13 @@ const SopCreator: React.FC = () => {
             )}
           </div>
           
-          <div className="flex items-center gap-2">
-            {currentStep && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => handleDeleteStep(currentStep.id)}
-                className="text-red-400 border-red-800 hover:text-red-300 hover:bg-red-900/20"
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
-            )}
-            
-            <Button
-              onClick={handleAddStep}
-              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Add Step
-            </Button>
-          </div>
+          <Button
+            onClick={handleAddStep}
+            className="bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Add Step
+          </Button>
         </div>
       </CardContent>
     </Card>
@@ -493,9 +380,9 @@ const SopCreator: React.FC = () => {
             <FileText className="h-12 w-12 text-white" />
           </div>
           
-          <h3 className="text-2xl font-bold text-white mb-3">Create Your First SOP Step</h3>
+          <h3 className="text-2xl font-bold text-white mb-3">Create Your First Step</h3>
           <p className="text-zinc-400 mb-8">
-            Start building your Standard Operating Procedure by adding interactive steps with screenshots, annotations, and clear instructions.
+            Start building your Standard Operating Procedure by adding clear, step-by-step instructions with screenshots and annotations.
           </p>
           
           <Button
@@ -545,109 +432,6 @@ const SopCreator: React.FC = () => {
     </AnimatePresence>
   );
 
-  // Step Template Selector Modal
-  const renderStepTemplateSelector = () => (
-    <AnimatePresence>
-      {showStepTemplateSelector && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[9999] flex items-center justify-center p-4"
-          onClick={() => setShowStepTemplateSelector(false)}
-        >
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            className="bg-[#1E1E1E] rounded-2xl border border-zinc-800 p-6 max-w-4xl w-full max-h-[80vh] overflow-y-auto"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="text-center mb-6">
-              <h3 className="text-2xl font-bold text-white mb-2">
-                {isHealthcareDocument ? "Add Healthcare SOP Step" : "Choose a Step Template"}
-              </h3>
-              <p className="text-zinc-400">
-                {isHealthcareDocument 
-                  ? "Adding healthcare-focused step with compliance and safety features"
-                  : "Select the best structure for your SOP step to maximize clarity and usefulness"
-                }
-              </p>
-              {isHealthcareDocument && (
-                <div className="mt-2">
-                  <Badge className="bg-teal-600 text-white text-xs">
-                    <Shield className="h-3 w-3 mr-1" />
-                    Healthcare SOP
-                  </Badge>
-                </div>
-              )}
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-              {stepTemplates.map((template) => (
-                <motion.div
-                  key={template.type}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  className="p-4 bg-zinc-800/50 rounded-xl border border-zinc-700 cursor-pointer hover:border-blue-600/50 hover:bg-zinc-800/80 transition-all group"
-                  onClick={() => handleTemplateSelect(template.type)}
-                >
-                  <div className="flex items-start gap-4">
-                    <div className={`w-12 h-12 rounded-lg bg-gradient-to-r ${template.color} flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform`}>
-                      <template.icon className="h-6 w-6 text-white" />
-                    </div>
-                    
-                    <div className="flex-1">
-                      <h4 className="text-lg font-semibold text-white mb-1 group-hover:text-blue-300 transition-colors">
-                        {template.title}
-                      </h4>
-                      <p className="text-sm text-zinc-400 mb-3">{template.description}</p>
-                      
-                      <div className="flex flex-wrap gap-1">
-                        {template.features.map((feature, index) => (
-                          <span key={index} className="text-xs px-2 py-1 bg-zinc-700/50 rounded text-zinc-300">
-                            {feature}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                    
-                    <ArrowRight className="h-5 w-5 text-zinc-500 group-hover:text-blue-400 transition-colors" />
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-            
-            <div className="flex items-center justify-between">
-              <div className="text-xs text-zinc-500">
-                {isHealthcareDocument 
-                  ? "💡 Tip: Healthcare steps include compliance features and safety protocols automatically"
-                  : "💡 Tip: You can always change the step structure after creating it"
-                }
-              </div>
-              
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  onClick={() => setShowStepTemplateSelector(false)}
-                  className="border-zinc-700 text-zinc-300 hover:bg-zinc-800"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  onClick={() => handleTemplateSelect("standard")}
-                  className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white"
-                >
-                  Create Basic Step
-                </Button>
-              </div>
-            </div>
-          </motion.div>
-        </motion.div>
-      )}
-    </AnimatePresence>
-  );
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-zinc-900 via-zinc-800 to-zinc-900 p-4">
       <div className="max-w-5xl mx-auto">
@@ -686,9 +470,6 @@ const SopCreator: React.FC = () => {
 
         {/* Export Panel Overlay */}
         {renderExportPanel()}
-
-        {/* Step Template Selector Modal */}
-        {renderStepTemplateSelector()}
       </div>
     </div>
   );
