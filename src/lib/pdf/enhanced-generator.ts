@@ -55,37 +55,65 @@ export async function generateEnhancedPDF(
         secondary: options.branding?.companyColors?.secondary || '#5856D6',
         success: '#34C759',
         warning: '#FF9500',
+        danger: '#FF3B30',
         background: '#f8f9fa',
         text: '#333333',
         lightGray: '#e0e0e0',
         darkGray: '#666666'
       };
 
+      // Filter out ITM-only content before rendering
+      const filteredDocument = filterItmOnlyContent(sopDocument);
+
       // Create beautiful cover page matching demo design
-      await addBeautifulCoverPage(pdf, sopDocument, width, height, margin, theme);
+      await addBeautifulCoverPage(pdf, filteredDocument, width, height, margin, theme);
 
       // Add table of contents if requested
-      if (options.includeTableOfContents && sopDocument.steps.length > 0) {
+      if (options.includeTableOfContents && filteredDocument.steps.length > 0) {
         pdf.addPage();
-        await addBeautifulTableOfContents(pdf, sopDocument, width, height, margin, theme);
+        await addBeautifulTableOfContents(pdf, filteredDocument, width, height, margin, theme);
       }
 
-      // Add content pages with beautiful styling
+      // Add content pages with beautiful styling and enhanced SOP features
       pdf.addPage();
-      await renderBeautifulSteps(pdf, sopDocument, width, height, margin, theme);
+      await renderEnhancedSopSteps(pdf, filteredDocument, width, height, margin, theme);
 
       // Add beautiful footers
-      addBeautifulFooters(pdf, sopDocument, width, height, margin, theme);
+      addBeautifulFooters(pdf, filteredDocument, width, height, margin, theme);
 
       const pdfBase64 = pdf.output('datauristring');
       
-      console.log("Enhanced PDF generated with beautiful demo theme");
+      console.log("Enhanced PDF generated with beautiful demo theme and SOP enhancements");
       resolve(pdfBase64);
     } catch (error) {
       console.error("Enhanced PDF generation error:", error);
       reject(error);
     }
   });
+}
+
+// Filter out ITM-only content for PDF generation
+function filterItmOnlyContent(sopDocument: SopDocument): SopDocument {
+  const filteredSteps = sopDocument.steps.map(step => ({
+    ...step,
+    // Remove ITM-only quiz questions
+    quizQuestions: step.quizQuestions?.filter(q => !q.itmOnly),
+    // Remove ITM-only resources
+    resources: step.resources?.filter(r => !r.itmOnly),
+    // Remove ITM-only healthcare content
+    healthcareContent: step.healthcareContent?.filter(hc => !hc.itmOnly),
+    // Remove ITM-only learning objectives
+    learningObjectives: step.learningObjectives?.filter(lo => !lo.itmOnly),
+    // Remove ITM-only content blocks
+    contentBlocks: step.contentBlocks?.filter(cb => !cb.itmOnly),
+    // Keep core content but remove ITM-only detailed rationale
+    itmOnlyContent: undefined
+  }));
+
+  return {
+    ...sopDocument,
+    steps: filteredSteps
+  };
 }
 
 async function addBeautifulCoverPage(
@@ -145,7 +173,7 @@ async function addBeautifulCoverPage(
 
   // Beautiful badge design
   const badgeY = titleY + 50;
-  const badgeText = "🚀 SOPify Business - Professional Features";
+  const badgeText = "📋 Professional SOP Document";
   const badgeWidth = 120;
   const badgeHeight = 12;
   
@@ -337,7 +365,7 @@ async function addBeautifulTableOfContents(
   });
 }
 
-async function renderBeautifulSteps(
+async function renderEnhancedSopSteps(
   pdf: any,
   sopDocument: SopDocument,
   width: number,
@@ -352,151 +380,220 @@ async function renderBeautifulSteps(
     const stepNumber = index + 1;
     
     // Check if we need a new page
-    if (currentY > height - margin.bottom - 100) {
+    if (currentY > height - margin.bottom - 120) {
       pdf.addPage();
       pdf.setFillColor(248, 249, 250);
       pdf.rect(0, 0, width, height, 'F');
       currentY = margin.top;
     }
     
-    // Beautiful step header with gradient
-    const headerHeight = 25;
+    // Enhanced step header with priority indicators
+    const headerHeight = 30;
+    const hasCriticalContent = step.healthcareContent?.some(hc => 
+      hc.priority === 'high' || hc.type === 'critical-safety'
+    );
+    
+    // Dynamic header color based on content criticality
+    let headerColors = [
+      { r: 0, g: 122, b: 255 },   // Primary blue
+      { r: 88, g: 86, b: 214 }    // Secondary purple
+    ];
+    
+    if (hasCriticalContent) {
+      headerColors = [
+        { r: 255, g: 59, b: 48 },   // Critical red
+        { r: 255, g: 149, b: 0 }    // Warning orange
+      ];
+    }
+    
+    // Gradient header with priority-based coloring
     for (let i = 0; i < 10; i++) {
       const alpha = i / 10;
-      const r = Math.round(0 + (88 - 0) * alpha);
-      const g = Math.round(122 + (86 - 122) * alpha);
-      const b = Math.round(255 + (214 - 255) * alpha);
+      const r = Math.round(headerColors[0].r + (headerColors[1].r - headerColors[0].r) * alpha);
+      const g = Math.round(headerColors[0].g + (headerColors[1].g - headerColors[0].g) * alpha);
+      const b = Math.round(headerColors[0].b + (headerColors[1].b - headerColors[0].b) * alpha);
       
       pdf.setFillColor(r, g, b);
       pdf.roundedRect(margin.left, currentY + i * (headerHeight / 10), width - margin.left - margin.right, headerHeight / 10, i === 0 ? 6 : 0, i === 0 ? 6 : 0, 'F');
     }
     
+    // Priority indicator badge
+    if (hasCriticalContent) {
+      const badgeX = width - margin.right - 60;
+      const badgeY = currentY + 5;
+      
+      // Critical alert badge
+      pdf.setFillColor(255, 255, 255);
+      pdf.setGState(new pdf.GState({opacity: 0.9}));
+      pdf.roundedRect(badgeX, badgeY, 50, 8, 4, 4, 'F');
+      
+      pdf.setGState(new pdf.GState({opacity: 1}));
+      setFontSafe(pdf, "helvetica", "bold");
+      pdf.setFontSize(8);
+      pdf.setTextColor(220, 38, 127);
+      pdf.text("⚠ CRITICAL", badgeX + 3, badgeY + 5);
+    }
+    
     // Step number and title
     setFontSafe(pdf, "helvetica", "bold");
-    pdf.setFontSize(18);
+    pdf.setFontSize(14);
     pdf.setTextColor(255, 255, 255);
-    pdf.setGState(new pdf.GState({opacity: 0.9}));
+    pdf.setGState(new pdf.GState({opacity: 0.8}));
     pdf.text(`Step ${stepNumber}`, margin.left + 10, currentY + 8);
     
     pdf.setGState(new pdf.GState({opacity: 1}));
     setFontSafe(pdf, "helvetica", "bold");
-    pdf.setFontSize(24);
+    pdf.setFontSize(20);
     pdf.setTextColor(255, 255, 255);
     const stepTitle = step.title || `Step ${stepNumber}`;
-    pdf.text(stepTitle, margin.left + 10, currentY + 18);
+    pdf.text(stepTitle, margin.left + 10, currentY + 22);
     
     currentY += headerHeight;
     
-    // Beautiful content box
-    const contentHeight = 60; // Adjust based on content
+    // Enhanced content section with visual hierarchy
+    const contentHeight = 80;
     pdf.setFillColor(255, 255, 255);
-    pdf.roundedRect(margin.left, currentY, width - margin.left - margin.right, contentHeight, 0, 0, 'F');
     pdf.roundedRect(margin.left, currentY, width - margin.left - margin.right, contentHeight, 6, 6, 'F');
     
-    // Content border
-    pdf.setDrawColor(224, 224, 224);
-    pdf.setLineWidth(0.5);
+    // Content border with dynamic coloring
+    if (hasCriticalContent) {
+      pdf.setDrawColor(255, 59, 48);
+      pdf.setLineWidth(1.5);
+    } else {
+      pdf.setDrawColor(224, 224, 224);
+      pdf.setLineWidth(0.5);
+    }
     pdf.roundedRect(margin.left, currentY, width - margin.left - margin.right, contentHeight, 6, 6, 'S');
     
-    // Step description
+    // Step description with enhanced formatting
     if (step.description) {
       setFontSafe(pdf, "helvetica", "normal");
-      pdf.setFontSize(16);
-      pdf.setTextColor(255, 255, 255);
-      pdf.setGState(new pdf.GState({opacity: 0.9}));
+      pdf.setFontSize(12);
+      pdf.setTextColor(51, 51, 51);
       
-      // Add description to header area
       const descLines = pdf.splitTextToSize(step.description, width - margin.left - margin.right - 20);
-      let descY = currentY - 15;
-      descLines.slice(0, 2).forEach((line: string) => { // Limit to 2 lines
+      let descY = currentY + 10;
+      descLines.slice(0, 3).forEach((line: string) => {
         pdf.text(line, margin.left + 10, descY);
-        descY += 6;
+        descY += 5;
       });
     }
     
     pdf.setGState(new pdf.GState({opacity: 1}));
     
-    // Content text
-    setFontSafe(pdf, "helvetica", "normal");
-    pdf.setFontSize(11);
-    pdf.setTextColor(51, 51, 51);
+    // Enhanced safety alerts and HIPAA notes
+    let alertY = currentY + 35;
     
-    let contentY = currentY + 10;
-    
-    // Add detailed instructions if available
-    if (step.detailedInstructions) {
-      const cleanInstructions = step.detailedInstructions.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
-      const instructionLines = pdf.splitTextToSize(cleanInstructions, width - margin.left - margin.right - 20);
+    if (step.patientSafetyNote) {
+      // Safety alert box
+      pdf.setFillColor(254, 242, 242);
+      pdf.roundedRect(margin.left + 10, alertY, width - margin.left - margin.right - 20, 12, 4, 4, 'F');
       
-      instructionLines.slice(0, 4).forEach((line: string) => { // Limit lines to fit
-        pdf.text(line, margin.left + 10, contentY);
-        contentY += 5;
-      });
-    }
-    
-    // Beautiful key takeaway box
-    if (step.keyTakeaway) {
-      contentY += 5;
-      const takeawayHeight = 15;
+      pdf.setDrawColor(239, 68, 68);
+      pdf.setLineWidth(1);
+      pdf.line(margin.left + 10, alertY, margin.left + 10, alertY + 12);
       
-      // Gradient background for takeaway
-      for (let i = 0; i < 5; i++) {
-        const alpha = i / 5;
-        const r = Math.round(232 + (240 - 232) * alpha);
-        const g = Math.round(245 + (248 - 245) * alpha);
-        const b = Math.round(232 + (240 - 232) * alpha);
-        
-        pdf.setFillColor(r, g, b);
-        pdf.rect(margin.left + 10, contentY + i * (takeawayHeight / 5), width - margin.left - margin.right - 20, takeawayHeight / 5, 'F');
-      }
-      
-      // Green accent border
-      pdf.setDrawColor(52, 199, 89);
-      pdf.setLineWidth(2);
-      pdf.line(margin.left + 10, contentY, margin.left + 10, contentY + takeawayHeight);
-      
-      // Takeaway text
       setFontSafe(pdf, "helvetica", "bold");
-      pdf.setFontSize(9);
-      pdf.setTextColor(46, 125, 50);
-      pdf.text("🎯 Key Takeaway", margin.left + 15, contentY + 5);
+      pdf.setFontSize(8);
+      pdf.setTextColor(185, 28, 28);
+      pdf.text("🚨 SAFETY ALERT", margin.left + 15, alertY + 4);
       
       setFontSafe(pdf, "helvetica", "normal");
-      pdf.setFontSize(9);
+      pdf.setFontSize(8);
+      const safetyLines = pdf.splitTextToSize(step.patientSafetyNote, width - margin.left - margin.right - 30);
+      safetyLines.slice(0, 1).forEach((line: string) => {
+        pdf.text(line, margin.left + 15, alertY + 9);
+      });
+      
+      alertY += 15;
+    }
+    
+    if (step.hipaaAlert) {
+      // HIPAA alert box
+      pdf.setFillColor(239, 246, 255);
+      pdf.roundedRect(margin.left + 10, alertY, width - margin.left - margin.right - 20, 12, 4, 4, 'F');
+      
+      pdf.setDrawColor(59, 130, 246);
+      pdf.setLineWidth(1);
+      pdf.line(margin.left + 10, alertY, margin.left + 10, alertY + 12);
+      
+      setFontSafe(pdf, "helvetica", "bold");
+      pdf.setFontSize(8);
+      pdf.setTextColor(30, 64, 175);
+      pdf.text("🔒 HIPAA COMPLIANCE", margin.left + 15, alertY + 4);
+      
+      setFontSafe(pdf, "helvetica", "normal");
+      pdf.setFontSize(8);
+      const hipaaLines = pdf.splitTextToSize(step.hipaaAlert, width - margin.left - margin.right - 30);
+      hipaaLines.slice(0, 1).forEach((line: string) => {
+        pdf.text(line, margin.left + 15, alertY + 9);
+      });
+      
+      alertY += 15;
+    }
+    
+    // Enhanced key takeaway with visual prominence
+    if (step.keyTakeaway) {
+      const takeawayY = alertY;
+      const takeawayHeight = 12;
+      
+      // Gold accent for key takeaways
+      pdf.setFillColor(254, 243, 199);
+      pdf.roundedRect(margin.left + 10, takeawayY, width - margin.left - margin.right - 20, takeawayHeight, 4, 4, 'F');
+      
+      // Gold left border
+      pdf.setDrawColor(245, 158, 11);
+      pdf.setLineWidth(2);
+      pdf.line(margin.left + 10, takeawayY, margin.left + 10, takeawayY + takeawayHeight);
+      
+      setFontSafe(pdf, "helvetica", "bold");
+      pdf.setFontSize(8);
+      pdf.setTextColor(146, 64, 14);
+      pdf.text("🎯 KEY TAKEAWAY", margin.left + 15, takeawayY + 4);
+      
+      setFontSafe(pdf, "helvetica", "normal");
+      pdf.setFontSize(8);
       pdf.setTextColor(51, 51, 51);
       const takeawayLines = pdf.splitTextToSize(step.keyTakeaway, width - margin.left - margin.right - 30);
-      takeawayLines.slice(0, 2).forEach((line: string, lineIndex: number) => {
-        pdf.text(line, margin.left + 15, contentY + 10 + (lineIndex * 4));
+      takeawayLines.slice(0, 1).forEach((line: string) => {
+        pdf.text(line, margin.left + 15, takeawayY + 9);
       });
-      
-      contentY += takeawayHeight;
     }
     
-    // Tags with beautiful styling
+    // Enhanced tags with professional styling
     if (step.tags && step.tags.length > 0) {
-      contentY += 8;
+      let tagY = currentY + contentHeight - 10;
       let tagX = margin.left + 10;
       
-      step.tags.slice(0, 4).forEach((tag: string) => { // Limit tags
-        const tagWidth = getStringWidthSafe(pdf, tag, 8) + 8;
+      step.tags.slice(0, 5).forEach((tag: string) => {
+        const tagWidth = getStringWidthSafe(pdf, tag, 7) + 6;
         
-        // Beautiful tag background
-        pdf.setFillColor(0, 122, 255);
-        pdf.roundedRect(tagX, contentY - 3, tagWidth, 6, 3, 3, 'F');
+        // Professional tag background
+        pdf.setFillColor(241, 245, 249);
+        pdf.roundedRect(tagX, tagY - 3, tagWidth, 6, 3, 3, 'F');
+        
+        // Tag border
+        pdf.setDrawColor(203, 213, 225);
+        pdf.setLineWidth(0.3);
+        pdf.roundedRect(tagX, tagY - 3, tagWidth, 6, 3, 3, 'S');
         
         // Tag text
-        setFontSafe(pdf, "helvetica", "bold");
-        pdf.setFontSize(8);
-        pdf.setTextColor(255, 255, 255);
-        pdf.text(tag, tagX + 4, contentY + 1);
+        setFontSafe(pdf, "helvetica", "normal");
+        pdf.setFontSize(7);
+        pdf.setTextColor(71, 85, 105);
+        pdf.text(tag, tagX + 3, tagY + 1);
         
-        tagX += tagWidth + 5;
+        tagX += tagWidth + 4;
+        
+        // Wrap to next line if needed
+        if (tagX > width - margin.right - 40) {
+          tagX = margin.left + 10;
+          tagY += 8;
+        }
       });
-      
-      contentY += 8;
     }
     
-    currentY += contentHeight + 15;
+    currentY += contentHeight + 20;
   });
 }
 
@@ -524,7 +621,7 @@ function addBeautifulFooters(
     pdf.setTextColor(102, 102, 102);
     
     // Left side - document info
-    const leftText = `${sopDocument.title || 'SOP'} • Generated by SOPify Business`;
+    const leftText = `${sopDocument.title || 'SOP'} • Professional Document`;
     pdf.text(leftText, margin.left, height - margin.bottom + 12);
     
     // Right side - page number

@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -5,7 +6,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Trash2, ExternalLink, FileText, Video, Link2 } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Plus, Trash2, ExternalLink, FileText, Video, Link2, GraduationCap } from "lucide-react";
 import { SopStep, StepResource } from "@/types/sop";
 
 interface StepResourcesProps {
@@ -18,7 +20,8 @@ const StepResources: React.FC<StepResourcesProps> = ({ step, onUpdateResources }
     title: "",
     url: "",
     description: "",
-    type: "link" as const
+    type: "link" as const,
+    itmOnly: false
   });
 
   const addResource = () => {
@@ -37,12 +40,22 @@ const StepResources: React.FC<StepResourcesProps> = ({ step, onUpdateResources }
       title: "",
       url: "",
       description: "",
-      type: "link"
+      type: "link",
+      itmOnly: false
     });
   };
 
   const removeResource = (resourceId: string) => {
     const updatedResources = (step.resources || []).filter(r => r.id !== resourceId);
+    onUpdateResources(updatedResources);
+  };
+
+  const toggleResourceItmOnly = (resourceId: string) => {
+    const updatedResources = (step.resources || []).map(resource => 
+      resource.id === resourceId 
+        ? { ...resource, itmOnly: !resource.itmOnly }
+        : resource
+    );
     onUpdateResources(updatedResources);
   };
 
@@ -81,15 +94,36 @@ const StepResources: React.FC<StepResourcesProps> = ({ step, onUpdateResources }
                       <Badge className="bg-zinc-700 text-zinc-300 text-xs">
                         {resource.type}
                       </Badge>
+                      {resource.itmOnly ? (
+                        <Badge className="bg-purple-600 text-white text-xs">
+                          <GraduationCap className="h-3 w-3 mr-1" />
+                          ITM-Only
+                        </Badge>
+                      ) : (
+                        <Badge className="bg-slate-600 text-white text-xs">
+                          <FileText className="h-3 w-3 mr-1" />
+                          PDF + ITM
+                        </Badge>
+                      )}
                     </div>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => removeResource(resource.id)}
-                      className="text-red-400 hover:text-red-300"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                    <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-1">
+                        <Label className="text-xs text-zinc-400">ITM-Only</Label>
+                        <Switch
+                          checked={resource.itmOnly || false}
+                          onCheckedChange={() => toggleResourceItmOnly(resource.id)}
+                          size="sm"
+                        />
+                      </div>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => removeResource(resource.id)}
+                        className="text-red-400 hover:text-red-300"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
                 </CardHeader>
                 <CardContent className="pt-0">
@@ -161,6 +195,25 @@ const StepResources: React.FC<StepResourcesProps> = ({ step, onUpdateResources }
               placeholder="Brief description of this resource..."
               className="bg-zinc-800 border-zinc-700 text-white mt-1"
             />
+          </div>
+
+          <div className="flex items-center justify-between p-3 bg-zinc-900/50 rounded-lg">
+            <div>
+              <Label className="text-zinc-300">Content Destination</Label>
+              <p className="text-xs text-zinc-500">
+                {newResource.itmOnly 
+                  ? "Resource will only appear in interactive training module" 
+                  : "Resource will appear in both PDF and interactive training"
+                }
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <Label className="text-sm text-zinc-400">ITM-Only</Label>
+              <Switch
+                checked={newResource.itmOnly}
+                onCheckedChange={(checked) => setNewResource(prev => ({ ...prev, itmOnly: checked }))}
+              />
+            </div>
           </div>
 
           <Button

@@ -22,11 +22,13 @@ import {
   HelpCircle,
   Users,
   Target,
-  ArrowRight
+  ArrowRight,
+  FileText
 } from "lucide-react";
 import StepCard from "@/components/step-editor/StepCard";
 import ProgressTracker from "@/components/ProgressTracker";
 import ExportPanel from "@/components/step-editor/ExportPanel";
+import ItmContentManager from "@/components/step-editor/ItmContentManager";
 import { useSopContext } from "@/context/SopContext";
 import { LessonTemplateModal } from "@/components/LessonTemplateModal";
 import { SopStep } from "@/types/sop";
@@ -66,6 +68,7 @@ const SopCreator: React.FC = () => {
   const [exportProgress, setExportProgress] = useState<string>("");
   const [showLessonTemplateModal, setShowLessonTemplateModal] = useState(false);
   const [currentLessonIndex, setCurrentLessonIndex] = useState(0);
+  const [showContentManager, setShowContentManager] = useState(false);
 
   // Lesson template definitions
   const lessonTemplates = [
@@ -310,10 +313,21 @@ const SopCreator: React.FC = () => {
                 </Badge>
               )}
             </div>
-            <p className="text-zinc-400 text-sm">Create engaging, interactive training experiences</p>
+            <p className="text-zinc-400 text-sm">Create engaging, interactive training experiences with ITM-PDF content distinction</p>
           </div>
           
           <div className="flex items-center gap-3">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowContentManager(!showContentManager)}
+              className={`text-zinc-300 border-zinc-700 hover:text-white hover:bg-zinc-800 ${
+                showContentManager ? 'bg-purple-600 border-purple-600 text-white' : ''
+              }`}
+            >
+              <FileText className="h-4 w-4 mr-2" />
+              Content Manager
+            </Button>
             <Button
               variant="outline"
               size="sm"
@@ -333,6 +347,23 @@ const SopCreator: React.FC = () => {
             </Button>
           </div>
         </div>
+
+        {/* ITM Content Manager */}
+        <AnimatePresence>
+          {showContentManager && currentStep && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              className="mt-6"
+            >
+              <ItmContentManager
+                step={currentStep}
+                onUpdateStep={(field, value) => handleStepChange(currentStep.id, field, value)}
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Training Module Information */}
         <div className="mt-6 p-4 bg-zinc-900/50 rounded-xl border border-zinc-800">
