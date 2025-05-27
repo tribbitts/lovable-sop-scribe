@@ -114,6 +114,10 @@ const StepCard: React.FC<StepCardProps> = ({
     }
   };
 
+  const handleCalloutClick = (calloutId: string) => {
+    deleteCallout(step.id, calloutId);
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -319,7 +323,7 @@ const StepCard: React.FC<StepCardProps> = ({
                       });
                     }
                   }}
-                  onCalloutClick={deleteCallout}
+                  onCalloutClick={handleCalloutClick}
                   onCalloutUpdate={handleEnhancedCalloutUpdate}
                   cursorPosition={cursorPosition}
                   showCalloutCursor={showCalloutCursor}
