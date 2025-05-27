@@ -5,6 +5,7 @@ import { initializePdfFonts, setFontSafe, getStringWidthSafe } from "./font-hand
 import { addCoverPage } from "./cover-page";
 import { addContentPageDesign, addPageFooters } from "./content-page";
 import { renderSteps } from "./step-renderer";
+import { healthcareThemes } from "@/services/enhanced-healthcare-templates";
 
 export interface EnhancedPdfOptions {
   theme?: string;
@@ -49,18 +50,9 @@ export async function generateEnhancedPDF(
       const height = pdf.internal.pageSize.getHeight();
       const margin = { top: 28, right: 22, bottom: 28, left: 22 };
 
-      // Use beautiful demo theme colors
-      const theme = {
-        primary: options.branding?.companyColors?.primary || '#007AFF',
-        secondary: options.branding?.companyColors?.secondary || '#5856D6',
-        success: '#34C759',
-        warning: '#FF9500',
-        danger: '#FF3B30',
-        background: '#f8f9fa',
-        text: '#333333',
-        lightGray: '#e0e0e0',
-        darkGray: '#666666'
-      };
+      // Detect healthcare template and apply appropriate theme
+      const healthcareTheme = detectHealthcareTheme(sopDocument);
+      const theme = getEnhancedTheme(sopDocument, options, healthcareTheme);
 
       // Filter out ITM-only content before rendering
       const filteredDocument = filterItmOnlyContent(sopDocument);
@@ -124,13 +116,16 @@ async function addBeautifulCoverPage(
   margin: any,
   theme: any
 ) {
-  // Beautiful gradient background effect (simulated with rectangles)
+  // Beautiful gradient background effect using theme colors
+  const primaryRgb = hexToRgb(theme.primary);
+  const secondaryRgb = hexToRgb(theme.secondary);
+  
   const gradientSteps = 20;
   for (let i = 0; i < gradientSteps; i++) {
     const alpha = i / gradientSteps;
-    const r = Math.round(0 + (88 - 0) * alpha); // 007AFF to 5856D6
-    const g = Math.round(122 + (86 - 122) * alpha);
-    const b = Math.round(255 + (214 - 255) * alpha);
+    const r = Math.round(primaryRgb.r + (secondaryRgb.r - primaryRgb.r) * alpha);
+    const g = Math.round(primaryRgb.g + (secondaryRgb.g - primaryRgb.g) * alpha);
+    const b = Math.round(primaryRgb.b + (secondaryRgb.b - primaryRgb.b) * alpha);
     
     pdf.setFillColor(r, g, b);
     pdf.rect(0, i * (height / gradientSteps), width, height / gradientSteps, 'F');
@@ -171,10 +166,12 @@ async function addBeautifulCoverPage(
     pdf.text(sopDocument.topic, (width - subtitleWidth) / 2, titleY + 20);
   }
 
-  // Beautiful badge design
+  // Beautiful badge design with healthcare context
   const badgeY = titleY + 50;
-  const badgeText = "📋 Professional SOP Document";
-  const badgeWidth = 120;
+  const badgeText = theme.isHealthcare 
+    ? `🏥 ${theme.themeName} Healthcare Training`
+    : "📋 Professional SOP Document";
+  const badgeWidth = theme.isHealthcare ? 140 : 120;
   const badgeHeight = 12;
   
   // Badge background with rounded corners effect
@@ -393,10 +390,13 @@ async function renderEnhancedSopSteps(
       hc.priority === 'high' || hc.type === 'critical-safety'
     );
     
-    // Dynamic header color based on content criticality
+    // Dynamic header color based on content criticality and theme
+    const primaryRgb = hexToRgb(theme.primary);
+    const secondaryRgb = hexToRgb(theme.secondary);
+    
     let headerColors = [
-      { r: 0, g: 122, b: 255 },   // Primary blue
-      { r: 88, g: 86, b: 214 }    // Secondary purple
+      primaryRgb,   // Theme primary color
+      secondaryRgb  // Theme secondary color
     ];
     
     if (hasCriticalContent) {
@@ -610,8 +610,9 @@ function addBeautifulFooters(
   for (let i = 1; i <= totalPages; i++) {
     pdf.setPage(i);
     
-    // Beautiful footer line
-    pdf.setDrawColor(0, 122, 255);
+    // Beautiful footer line with theme color
+    const primaryRgb = hexToRgb(theme.primary);
+    pdf.setDrawColor(primaryRgb.r, primaryRgb.g, primaryRgb.b);
     pdf.setLineWidth(1);
     pdf.line(margin.left, height - margin.bottom + 5, width - margin.right, height - margin.bottom + 5);
     
@@ -620,8 +621,10 @@ function addBeautifulFooters(
     pdf.setFontSize(9);
     pdf.setTextColor(102, 102, 102);
     
-    // Left side - document info
-    const leftText = `${sopDocument.title || 'SOP'} • Professional Document`;
+    // Left side - document info with healthcare indicator
+    const leftText = theme.isHealthcare 
+      ? `${sopDocument.title || 'SOP'} • ${theme.themeName} Healthcare Training`
+      : `${sopDocument.title || 'SOP'} • Professional Document`;
     pdf.text(leftText, margin.left, height - margin.bottom + 12);
     
     // Right side - page number
@@ -629,4 +632,97 @@ function addBeautifulFooters(
     const rightTextWidth = getStringWidthSafe(pdf, rightText, 9);
     pdf.text(rightText, width - margin.right - rightTextWidth, height - margin.bottom + 12);
   }
+}
+
+// Helper function to detect healthcare template type
+function detectHealthcareTheme(sopDocument: SopDocument): string | null {
+  // Check if document has healthcare content
+  const hasHealthcareContent = sopDocument.steps.some(step => 
+    step.healthcareContent && step.healthcareContent.length > 0
+  );
+  
+  // Check title for healthcare keywords
+  const title = sopDocument.title?.toLowerCase() || '';
+  const hasHealthcareTitle = title.includes('healthcare') ||
+    title.includes('patient') ||
+    title.includes('hipaa') ||
+    title.includes('medical');
+  
+  if (!hasHealthcareContent && !hasHealthcareTitle) {
+    return null;
+  }
+  
+  // Detect specific healthcare template type
+  if (title.includes('new hire') || title.includes('onboarding')) {
+    return 'new-hire-onboarding';
+  }
+  if (title.includes('continued learning') || title.includes('professional development')) {
+    return 'continued-learning';
+  }
+  if (title.includes('communication') || title.includes('patient communication')) {
+    return 'communication-excellence';
+  }
+  
+  return 'healthcare-general';
+}
+
+// Helper function to get enhanced theme based on healthcare template
+function getEnhancedTheme(sopDocument: SopDocument, options: EnhancedPdfOptions, healthcareType: string | null) {
+  // If it's a healthcare document, use healthcare theme colors
+  if (healthcareType && healthcareThemes[healthcareType]) {
+    const hcTheme = healthcareThemes[healthcareType];
+    
+    return {
+      primary: hcTheme.primaryColor,
+      secondary: hcTheme.secondaryColor,
+      accent: hcTheme.accentColor,
+      success: '#34C759',
+      warning: '#FF9500',
+      danger: '#FF3B30',
+      background: hcTheme.backgroundColor,
+      text: hcTheme.textColor,
+      lightGray: '#e0e0e0',
+      darkGray: '#666666',
+      // Healthcare-specific colors
+      criticalSafety: '#DC2626',
+      hipaaAlert: '#2563EB',
+      patientCommunication: '#16A34A',
+      // Theme metadata
+      isHealthcare: true,
+      healthcareType: healthcareType,
+      themeName: hcTheme.name
+    };
+  }
+  
+  // Default professional theme with any custom branding
+  return {
+    primary: options.branding?.companyColors?.primary || '#007AFF',
+    secondary: options.branding?.companyColors?.secondary || '#5856D6',
+    accent: '#007AFF',
+    success: '#34C759',
+    warning: '#FF9500',
+    danger: '#FF3B30',
+    background: '#f8f9fa',
+    text: '#333333',
+    lightGray: '#e0e0e0',
+    darkGray: '#666666',
+    // Healthcare-specific colors (defaults)
+    criticalSafety: '#DC2626',
+    hipaaAlert: '#2563EB',
+    patientCommunication: '#16A34A',
+    // Theme metadata
+    isHealthcare: false,
+    healthcareType: null,
+    themeName: 'Professional'
+  };
+}
+
+// Helper function to convert hex color to RGB
+function hexToRgb(hex: string): { r: number; g: number; b: number } {
+  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  return result ? {
+    r: parseInt(result[1], 16),
+    g: parseInt(result[2], 16),
+    b: parseInt(result[3], 16)
+  } : { r: 0, g: 122, b: 255 }; // Default to SOPify blue
 }
