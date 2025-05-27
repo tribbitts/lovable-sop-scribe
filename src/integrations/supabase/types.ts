@@ -27,6 +27,36 @@ export type Database = {
         }
         Relationships: []
       }
+      folders: {
+        Row: {
+          color: string | null
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          color?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       itm_feedback: {
         Row: {
           clear_rating: number | null
@@ -81,6 +111,42 @@ export type Database = {
         }
         Relationships: []
       }
+      sop_tags: {
+        Row: {
+          created_at: string
+          id: string
+          sop_id: string
+          tag_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          sop_id: string
+          tag_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          sop_id?: string
+          tag_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sop_tags_sop_id_fkey"
+            columns: ["sop_id"]
+            isOneToOne: false
+            referencedRelation: "sops"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sop_tags_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "tags"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       "SOPify App": {
         Row: {
           created_at: string
@@ -95,6 +161,47 @@ export type Database = {
           id?: number
         }
         Relationships: []
+      }
+      sops: {
+        Row: {
+          content: Json
+          created_at: string
+          description: string | null
+          folder_id: string | null
+          id: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          content: Json
+          created_at?: string
+          description?: string | null
+          folder_id?: string | null
+          id?: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          content?: Json
+          created_at?: string
+          description?: string | null
+          folder_id?: string | null
+          id?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sops_folder_id_fkey"
+            columns: ["folder_id"]
+            isOneToOne: false
+            referencedRelation: "folders"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       stripe_events_log: {
         Row: {
@@ -146,6 +253,30 @@ export type Database = {
           stripe_subscription_id?: string | null
           tier?: string
           updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      tags: {
+        Row: {
+          color: string | null
+          created_at: string
+          id: string
+          name: string
+          user_id: string
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string
+          id?: string
+          name: string
+          user_id: string
+        }
+        Update: {
+          color?: string | null
+          created_at?: string
+          id?: string
+          name?: string
           user_id?: string
         }
         Relationships: []

@@ -1,23 +1,27 @@
 import React, { createContext, useState, useContext, ReactNode } from "react";
 import { SopDocument, SopStep, Callout, StepResource, ExportFormat } from "../types/sop";
 import { EnhancedContentBlock } from "../types/enhanced-content";
+import { Folder, Tag, SavedSop } from "../types/organization";
 import { toast } from "@/hooks/use-toast";
 import { StorageManager } from "@/utils/storageManager";
 import { DocumentManager } from "./managers/DocumentManager";
 import { StepManager } from "./managers/StepManager";
 import { ScreenshotManager } from "./managers/ScreenshotManager";
+import { useFolders } from "@/hooks/useFolders";
+import { useTags } from "@/hooks/useTags";
+import { useSavedSops } from "@/hooks/useSavedSops";
 
 interface SopContextType {
   sopDocument: SopDocument;
   setSopTitle: (title: string) => void;
   setSopTopic: (topic: string) => void;
   setSopDate: (date: string) => void;
-  setSopDescription: (description: string) => void; // Added description setter
-  setSopVersion: (version: string) => void; // Added version setter
-  setSopLastRevised: (lastRevised: string) => void; // Added last revised setter
+  setSopDescription: (description: string) => void;
+  setSopVersion: (version: string) => void;
+  setSopLastRevised: (lastRevised: string) => void;
   setLogo: (logo: string | null) => void;
   setBackgroundImage: (image: string | null) => void;
-  setCompanyName: (name: string) => void; // Fixed function name
+  setCompanyName: (name: string) => void;
   
   // Step management
   addStep: () => void;
@@ -83,13 +87,32 @@ interface SopContextType {
   setTrainingMode: (enabled: boolean) => void;
   enableProgressTracking: (sessionName?: string) => void;
   disableProgressTracking: () => void;
+
+  // Organization system
+  folders: Folder[];
+  tags: Tag[];
+  savedSops: SavedSop[];
+  organizationLoading: boolean;
+  createFolder: (name: string, description?: string, color?: string) => Promise<Folder | null>;
+  updateFolder: (id: string, updates: Partial<Folder>) => Promise<Folder | null>;
+  deleteFolder: (id: string) => Promise<boolean>;
+  createTag: (name: string, color?: string) => Promise<Tag | null>;
+  updateTag: (id: string, updates: Partial<Tag>) => Promise<Tag | null>;
+  deleteTag: (id: string) => Promise<boolean>;
+  saveSopToDatabase: (folderId?: string, description?: string) => Promise<SavedSop | null>;
+  updateSopInDatabase: (id: string, folderId?: string, description?: string) => Promise<SavedSop | null>;
+  deleteSopFromDatabase: (id: string) => Promise<boolean>;
+  loadSopFromDatabase: (savedSop: SavedSop) => void;
+  addTagToSop: (sopId: string, tagId: string) => Promise<boolean>;
+  removeTagFromSop: (sopId: string, tagId: string) => Promise<boolean>;
+  refreshOrganization: () => void;
 }
 
 const defaultSopDocument: SopDocument = {
   title: "",
   topic: "",
   date: new Date().toISOString().split("T")[0],
-  description: "", // Added description
+  description: "",
   logo: null,
   backgroundImage: null,
   steps: [],
@@ -122,21 +145,37 @@ export const SopProvider = ({ children }: { children: ReactNode }) => {
     return defaultSopDocument;
   });
 
-  React.useEffect(() => {
-    // TEMPORARILY DISABLED: Auto-save causing infinite loop
-    // TODO: Fix StorageManager.clearOldData() to not clear auth tokens
-    /*
-    const saveSuccess = StorageManager.saveDocument(sopDocument);
-    
-    if (!saveSuccess) {
-      toast({
-        title: "Storage Warning",
-        description: "Document is too large for auto-save. Consider exporting to file.",
-        variant: "destructive"
-      });
-    }
-    */
-  }, [sopDocument]);
+  // Organization hooks
+  const {
+    folders,
+    loading: foldersLoading,
+    createFolder,
+    updateFolder,
+    deleteFolder,
+    refetch: refetchFolders
+  } = useFolders();
+
+  const {
+    tags,
+    loading: tagsLoading,
+    createTag,
+    updateTag,
+    deleteTag,
+    refetch: refetchTags
+  } = useTags();
+
+  const {
+    savedSops,
+    loading: sopsLoading,
+    saveSop,
+    updateSop,
+    deleteSop,
+    addTagToSop,
+    removeTagFromSop,
+    refetch: refetchSops
+  } = useSavedSops();
+
+  const organizationLoading = foldersLoading || tagsLoading || sopsLoading;
 
   const setSopTitle = (title: string) => {
     setSopDocument(prev => DocumentManager.updateTitle(prev, title));
@@ -433,6 +472,51 @@ export const SopProvider = ({ children }: { children: ReactNode }) => {
     return DocumentManager.getProgressInfo(sopDocument).percentage;
   };
 
+  // Organization system functions
+  const saveSopToDatabase = async (folderId?: string, description?: string) => {
+    return await saveSop(sopDocument, folderId, description);
+  };
+
+  const updateSopInDatabase = async (id: string, folderId?: string, description?: string) => {
+    return await updateSop(id, sopDocument, folderId, description);
+  };
+
+  const deleteSopFromDatabase = async (id: string) => {
+    return await deleteSop(id);
+  };
+
+  const loadSopFromDatabase = (savedSop: SavedSop) => {
+    if (savedSop.content) {
+      setSopDocument(savedSop.content as SopDocument);
+      toast({
+        title: "Success",
+        description: `Loaded SOP: ${savedSop.title}`
+      });
+    }
+  };
+
+  const refreshOrganization = () => {
+    refetchFolders();
+    refetchTags();
+    refetchSops();
+  };
+
+  React.useEffect(() => {
+    // TEMPORARILY DISABLED: Auto-save causing infinite loop
+    // TODO: Fix StorageManager.clearOldData() to not clear auth tokens
+    /*
+    const saveSuccess = StorageManager.saveDocument(sopDocument);
+    
+    if (!saveSuccess) {
+      toast({
+        title: "Storage Warning",
+        description: "Document is too large for auto-save. Consider exporting to file.",
+        variant: "destructive"
+      });
+    }
+    */
+  }, [sopDocument]);
+
   const contextValue: SopContextType = {
     sopDocument,
     setSopTitle,
@@ -508,7 +592,26 @@ export const SopProvider = ({ children }: { children: ReactNode }) => {
     setDarkMode,
     setTrainingMode,
     enableProgressTracking,
-    disableProgressTracking
+    disableProgressTracking,
+
+    // Organization system
+    folders,
+    tags,
+    savedSops,
+    organizationLoading,
+    createFolder,
+    updateFolder,
+    deleteFolder,
+    createTag,
+    updateTag,
+    deleteTag,
+    saveSopToDatabase,
+    updateSopInDatabase,
+    deleteSopFromDatabase,
+    loadSopFromDatabase,
+    addTagToSop,
+    removeTagFromSop,
+    refreshOrganization
   };
 
   return (
