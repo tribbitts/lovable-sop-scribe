@@ -1,10 +1,15 @@
 
 import React from "react";
-import { ChecklistBlock } from "./ChecklistBlock";
-import { TableBlock } from "./TableBlock";
+import { InteractiveChecklistBlock } from "./InteractiveChecklistBlock";
+import { SimpleTableBlock } from "./SimpleTableBlock";
 import { AccordionBlock } from "./AccordionBlock";
-import { AlertBlock } from "./AlertBlock";
+import { EnhancedAlertBlock } from "./EnhancedAlertBlock";
 import { EnhancedContentBlock } from "@/types/enhanced-content";
+import { Card, CardContent } from "@/components/ui/card";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import { Trash2 } from "lucide-react";
 
 interface ContentBlockRendererProps {
   blocks: EnhancedContentBlock[];
@@ -46,31 +51,65 @@ export const ContentBlockRenderer: React.FC<ContentBlockRendererProps> = ({
         switch (block.type) {
           case 'text':
             return (
-              <div
-                key={block.id}
-                className={`p-4 rounded-lg ${
-                  block.style === 'highlight' ? 'bg-yellow-50 dark:bg-yellow-950 border border-yellow-200 dark:border-yellow-800' :
-                  block.style === 'warning' ? 'bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800' :
-                  block.style === 'info' ? 'bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800' :
-                  'bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800'
-                }`}
-              >
-                {isEditing ? (
-                  <textarea
-                    value={block.content}
-                    onChange={(e) => updateBlock(index, { ...block, content: e.target.value })}
-                    className="w-full bg-transparent border-none resize-none outline-none"
-                    rows={3}
-                  />
-                ) : (
-                  <div className="whitespace-pre-wrap">{block.content}</div>
-                )}
-              </div>
+              <Card key={block.id} className="bg-zinc-900 border-zinc-700">
+                <CardContent className="p-4">
+                  {isEditing && (
+                    <div className="flex justify-between items-center mb-3">
+                      <Select 
+                        value={block.style || 'normal'} 
+                        onValueChange={(style: 'normal' | 'highlight' | 'warning' | 'info') => 
+                          updateBlock(index, { ...block, style })
+                        }
+                      >
+                        <SelectTrigger className="w-40 bg-zinc-800 border-zinc-600 text-white">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="normal">Normal Text</SelectItem>
+                          <SelectItem value="highlight">Highlighted</SelectItem>
+                          <SelectItem value="warning">Warning Style</SelectItem>
+                          <SelectItem value="info">Info Style</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => deleteBlock(index)}
+                        className="text-red-400 hover:text-red-300"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  )}
+                  
+                  <div className={`p-4 rounded-lg ${
+                    block.style === 'highlight' ? 'bg-yellow-900/20 border border-yellow-700' :
+                    block.style === 'warning' ? 'bg-red-900/20 border border-red-700' :
+                    block.style === 'info' ? 'bg-blue-900/20 border border-blue-700' :
+                    'bg-zinc-800 border border-zinc-700'
+                  }`}>
+                    {isEditing ? (
+                      <Textarea
+                        value={block.content}
+                        onChange={(e) => updateBlock(index, { ...block, content: e.target.value })}
+                        placeholder="Enter your text content..."
+                        className="bg-transparent border-none resize-none outline-none text-white placeholder:text-zinc-500"
+                        rows={4}
+                      />
+                    ) : (
+                      <div className="whitespace-pre-wrap text-zinc-200 leading-relaxed">
+                        {block.content}
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
             );
 
           case 'checklist':
             return (
-              <ChecklistBlock
+              <InteractiveChecklistBlock
                 key={block.id}
                 block={block}
                 onChange={(updated) => updateBlock(index, updated)}
@@ -80,7 +119,7 @@ export const ContentBlockRenderer: React.FC<ContentBlockRendererProps> = ({
 
           case 'table':
             return (
-              <TableBlock
+              <SimpleTableBlock
                 key={block.id}
                 block={block}
                 onChange={(updated) => updateBlock(index, updated)}
@@ -100,7 +139,7 @@ export const ContentBlockRenderer: React.FC<ContentBlockRendererProps> = ({
 
           case 'alert':
             return (
-              <AlertBlock
+              <EnhancedAlertBlock
                 key={block.id}
                 block={block}
                 onChange={(updated) => updateBlock(index, updated)}
