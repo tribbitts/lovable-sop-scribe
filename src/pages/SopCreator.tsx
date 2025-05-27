@@ -23,7 +23,8 @@ import {
   Users,
   Target,
   ArrowRight,
-  FileText
+  FileText,
+  Shield
 } from "lucide-react";
 import StepCard from "@/components/step-editor/StepCard";
 import ProgressTracker from "@/components/ProgressTracker";
@@ -70,41 +71,90 @@ const SopCreator: React.FC = () => {
   const [currentLessonIndex, setCurrentLessonIndex] = useState(0);
   const [showContentManager, setShowContentManager] = useState(false);
 
-  // Lesson template definitions
-  const lessonTemplates = [
-    {
-      type: "standard" as const,
-      title: "Standard Lesson",
-      description: "Text + screenshot format for step-by-step instructions",
-      icon: BookOpen,
-      color: "from-blue-600 to-purple-600",
-      features: ["Text instructions", "Screenshot support", "Callout tools"]
-    },
-    {
-      type: "knowledge-check" as const,
-      title: "Knowledge Check",
-      description: "Test understanding with quiz questions and feedback",
-      icon: HelpCircle,
-      color: "from-green-600 to-teal-600",
-      features: ["Quiz questions", "Immediate feedback", "Progress tracking"]
-    },
-    {
-      type: "scenario" as const,
-      title: "Real-World Scenario",
-      description: "Apply concepts through practical examples and case studies",
-      icon: Users,
-      color: "from-orange-600 to-red-600",
-      features: ["Practical examples", "Case studies", "Context application"]
-    },
-    {
-      type: "resource-focus" as const,
-      title: "Resource Hub",
-      description: "Curated links and additional materials for deeper learning",
-      icon: Target,
-      color: "from-purple-600 to-pink-600",
-      features: ["External links", "Downloadable resources", "Extended learning"]
+  // Detect if this is a healthcare document
+  const isHealthcareDocument = sopDocument?.steps.some(step => 
+    step.healthcareContent && step.healthcareContent.length > 0
+  ) || sopDocument?.title.toLowerCase().includes('healthcare') ||
+  sopDocument?.title.toLowerCase().includes('patient') ||
+  sopDocument?.title.toLowerCase().includes('hipaa') ||
+  sopDocument?.title.toLowerCase().includes('medical');
+
+  // Detect healthcare template type
+  const getHealthcareTemplateType = () => {
+    const title = sopDocument?.title.toLowerCase() || '';
+    
+    if (title.includes('new hire') || title.includes('onboarding')) {
+      return 'new-hire-onboarding';
     }
-  ];
+    if (title.includes('continued learning') || title.includes('professional development')) {
+      return 'continued-learning';
+    }
+    if (title.includes('communication') || title.includes('patient communication')) {
+      return 'communication-excellence';
+    }
+    
+    return 'healthcare-general';
+  };
+
+  const healthcareType = isHealthcareDocument ? getHealthcareTemplateType() : null;
+
+  // Lesson template definitions (context-aware)
+  const getLessonTemplates = () => {
+    const baseTemplates = [
+      {
+        type: "standard" as const,
+        title: isHealthcareDocument ? "Healthcare Procedure" : "Standard Lesson",
+        description: isHealthcareDocument 
+          ? "Step-by-step healthcare procedure with safety protocols"
+          : "Text + screenshot format for step-by-step instructions",
+        icon: BookOpen,
+        color: isHealthcareDocument ? "from-teal-600 to-blue-600" : "from-blue-600 to-purple-600",
+        features: isHealthcareDocument 
+          ? ["Healthcare protocols", "Safety guidelines", "Patient care focus", "Screenshot support"]
+          : ["Text instructions", "Screenshot support", "Callout tools"]
+      },
+      {
+        type: "knowledge-check" as const,
+        title: isHealthcareDocument ? "Compliance Assessment" : "Knowledge Check",
+        description: isHealthcareDocument
+          ? "Critical healthcare compliance and safety knowledge verification"
+          : "Test understanding with quiz questions and feedback",
+        icon: HelpCircle,
+        color: isHealthcareDocument ? "from-red-600 to-orange-600" : "from-green-600 to-teal-600",
+        features: isHealthcareDocument
+          ? ["Compliance testing", "Safety verification", "High-stakes assessment", "Mandatory passing"]
+          : ["Quiz questions", "Immediate feedback", "Progress tracking"]
+      },
+      {
+        type: "scenario" as const,
+        title: isHealthcareDocument ? "Patient Care Scenario" : "Real-World Scenario",
+        description: isHealthcareDocument
+          ? "Practice patient interactions and clinical decision-making"
+          : "Apply concepts through practical examples and case studies",
+        icon: Users,
+        color: isHealthcareDocument ? "from-purple-600 to-pink-600" : "from-orange-600 to-red-600",
+        features: isHealthcareDocument
+          ? ["Patient interactions", "Clinical scenarios", "Communication practice", "Decision-making"]
+          : ["Practical examples", "Case studies", "Context application"]
+      },
+      {
+        type: "resource-focus" as const,
+        title: isHealthcareDocument ? "Healthcare Resources" : "Resource Hub",
+        description: isHealthcareDocument
+          ? "Essential healthcare references, guidelines, and continuing education"
+          : "Curated links and additional materials for deeper learning",
+        icon: Target,
+        color: isHealthcareDocument ? "from-emerald-600 to-teal-600" : "from-purple-600 to-pink-600",
+        features: isHealthcareDocument
+          ? ["Clinical guidelines", "Compliance resources", "Professional development", "Evidence-based materials"]
+          : ["External links", "Downloadable resources", "Extended learning"]
+      }
+    ];
+
+    return baseTemplates;
+  };
+
+  const lessonTemplates = getLessonTemplates();
 
   // Auto-expand first step when created and auto-enable training mode
   useEffect(() => {
@@ -643,8 +693,25 @@ const SopCreator: React.FC = () => {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="text-center mb-6">
-              <h3 className="text-2xl font-bold text-white mb-2">Choose a Lesson Template</h3>
-              <p className="text-zinc-400">Select the best structure for your content to maximize learning effectiveness</p>
+              <h3 className="text-2xl font-bold text-white mb-2">
+                {isHealthcareDocument ? "Add Healthcare Training Step" : "Choose a Lesson Template"}
+              </h3>
+              <p className="text-zinc-400">
+                {isHealthcareDocument 
+                  ? `Adding to ${healthcareType === 'new-hire-onboarding' ? 'New Hire Onboarding' : 
+                      healthcareType === 'continued-learning' ? 'Continued Learning' :
+                      healthcareType === 'communication-excellence' ? 'Communication Excellence' : 'Healthcare'} training`
+                  : "Select the best structure for your content to maximize learning effectiveness"
+                }
+              </p>
+              {isHealthcareDocument && (
+                <div className="mt-2">
+                  <Badge className="bg-teal-600 text-white text-xs">
+                    <Shield className="h-3 w-3 mr-1" />
+                    Healthcare Template
+                  </Badge>
+                </div>
+              )}
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
@@ -684,7 +751,10 @@ const SopCreator: React.FC = () => {
             
             <div className="flex items-center justify-between">
               <div className="text-xs text-zinc-500">
-                💡 Tip: You can always change the structure after creating the lesson
+                {isHealthcareDocument 
+                  ? "💡 Tip: Healthcare steps include compliance features and safety protocols automatically"
+                  : "💡 Tip: You can always change the structure after creating the lesson"
+                }
               </div>
               
               <div className="flex gap-2">
