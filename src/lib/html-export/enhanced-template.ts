@@ -1,3 +1,4 @@
+import { generateFeedbackForm } from './feedback-integration';
 
 export function generateEnhancedHtmlTemplate(
   sopDocument: any,
@@ -12,6 +13,12 @@ export function generateEnhancedHtmlTemplate(
   const totalSteps = steps.length;
   const progressPercentage = totalSteps > 0 ? Math.round((completedSteps / totalSteps) * 100) : 0;
   
+  // Check if this is a healthcare/patient communication module
+  const isHealthcareModule = sopDocument.healthcareMetadata || 
+    steps.some((step: any) => step.healthcareContent?.length > 0) ||
+    title.toLowerCase().includes('patient') ||
+    title.toLowerCase().includes('healthcare');
+  
   // Generate chapter navigation
   const generateChapterNav = () => {
     return steps.map((step: any, index: number) => {
@@ -21,16 +28,68 @@ export function generateEnhancedHtmlTemplate(
       const statusIcon = isCompleted ? '✅' : isActive ? '📍' : '⏳';
       const className = isCompleted ? 'completed' : isActive ? 'active' : '';
       
-      return `<li class="${className}" onclick="navigateToStep(${index})">${statusIcon} ${stepNumber}. ${step.title || `Step ${stepNumber}`}</li>`;
+      // Add healthcare indicators
+      const hasHealthcareContent = step.healthcareContent && step.healthcareContent.length > 0;
+      const hasCriticalContent = step.healthcareContent?.some((content: any) => 
+        content.priority === "high" || content.type === "critical-safety"
+      );
+      
+      let healthcareIndicator = '';
+      if (hasCriticalContent) {
+        healthcareIndicator = ' 🚨';
+      } else if (hasHealthcareContent) {
+        healthcareIndicator = ' 🏥';
+      }
+      
+      return `<li class="${className}" onclick="navigateToStep(${index})">${statusIcon} ${stepNumber}. ${step.title || `Step ${stepNumber}`}${healthcareIndicator}</li>`;
     }).join('\n            ');
   };
   
-  // Generate step containers
+  // Generate step containers with enhanced healthcare features
   const generateStepContainers = () => {
     return steps.map((step: any, index: number) => {
       const stepNumber = index + 1;
       const isActive = index === 0;
       const isCompleted = step.completed;
+      
+      // Generate healthcare content sections
+      const generateHealthcareContent = (step: any) => {
+        if (!step.healthcareContent || step.healthcareContent.length === 0) return '';
+        
+        return step.healthcareContent.map((content: any) => {
+          const priorityColors = {
+            high: '#dc3545',
+            medium: '#fd7e14', 
+            low: '#28a745'
+          };
+          
+          const typeIcons = {
+            'critical-safety': '🚨',
+            'hipaa-alert': '🔒',
+            'patient-communication': '💬',
+            'scenario-guidance': '🎭',
+            'standard': '📋'
+          };
+          
+          return `
+            <div class="healthcare-alert" style="
+              background: ${priorityColors[content.priority as keyof typeof priorityColors] || '#6c757d'}20;
+              border: 2px solid ${priorityColors[content.priority as keyof typeof priorityColors] || '#6c757d'};
+              border-radius: 12px;
+              padding: 15px;
+              margin: 15px 0;
+            ">
+              <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                <span style="font-size: 1.2em;">${typeIcons[content.type as keyof typeof typeIcons] || '📌'}</span>
+                <strong style="color: ${priorityColors[content.priority as keyof typeof priorityColors] || '#6c757d'}; text-transform: uppercase; font-size: 0.9em;">
+                  ${content.type.replace('-', ' ')} - ${content.priority} Priority
+                </strong>
+              </div>
+              <p style="margin: 0; line-height: 1.5;">${content.content}</p>
+            </div>
+          `;
+        }).join('');
+      };
       
       return `
         <div class="step-container ${isActive ? 'current' : ''}" id="step-${index}" style="${isActive ? '' : 'display: none;'}">
@@ -39,11 +98,46 @@ export function generateEnhancedHtmlTemplate(
             <div class="step-header">
                 <div class="step-number">${stepNumber}</div>
                 <div class="step-title">${step.title || `Step ${stepNumber}`}</div>
+                ${step.estimatedTime ? `<div class="time-estimate">⏱️ ${step.estimatedTime} min</div>` : ''}
             </div>
             <div class="step-content">
                 <p style="font-size: 1.1em; margin-bottom: 20px; line-height: 1.6;">
                     ${step.description || 'Complete this step to continue with the training.'}
                 </p>
+                
+                ${step.keyTakeaway ? `
+                <div class="key-takeaway" style="
+                  background: #1e3a8a20;
+                  border: 2px solid #3b82f6;
+                  border-radius: 12px;
+                  padding: 15px;
+                  margin: 15px 0;
+                ">
+                  <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                    <span style="font-size: 1.2em;">💡</span>
+                    <strong style="color: #3b82f6;">Key Takeaway</strong>
+                  </div>
+                  <p style="margin: 0; font-style: italic;">${step.keyTakeaway}</p>
+                </div>
+                ` : ''}
+                
+                ${generateHealthcareContent(step)}
+                
+                ${step.patientSafetyNote ? `
+                <div class="patient-safety-note" style="
+                  background: #dc354520;
+                  border: 2px solid #dc3545;
+                  border-radius: 12px;
+                  padding: 15px;
+                  margin: 15px 0;
+                ">
+                  <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                    <span style="font-size: 1.2em;">⚠️</span>
+                    <strong style="color: #dc3545;">PATIENT SAFETY</strong>
+                  </div>
+                  <p style="margin: 0; font-weight: 500;">${step.patientSafetyNote}</p>
+                </div>
+                ` : ''}
                 
                 ${step.screenshot ? `
                 <div class="screenshot-container">
@@ -57,7 +151,7 @@ export function generateEnhancedHtmlTemplate(
                 ` : `
                 <div class="screenshot-container">
                     <div class="screenshot-overlay">
-                        📸 Interactive Screenshot: ${step.title || `Step ${stepNumber}`}
+                        📸 ${isHealthcareModule ? 'Interactive Healthcare Scenario' : 'Interactive Screenshot'}: ${step.title || `Step ${stepNumber}`}
                     </div>
                 </div>
                 `}
@@ -75,7 +169,10 @@ export function generateEnhancedHtmlTemplate(
                     <button class="btn btn-success" onclick="markStepComplete(${index})" ${isCompleted ? 'disabled' : ''}>
                         ${isCompleted ? '✅ Completed' : 'Mark as Complete'}
                     </button>
-                    <button class="btn btn-primary" onclick="practiceExercise(${index})">Practice Exercise</button>
+                    ${isHealthcareModule ? 
+                      `<button class="btn btn-primary" onclick="practiceScenario(${index})">🎭 Practice Scenario</button>` :
+                      `<button class="btn btn-primary" onclick="practiceExercise(${index})">Practice Exercise</button>`
+                    }
                     ${index < steps.length - 1 ? `<button class="btn btn-outline" onclick="navigateToStep(${index + 1})">Next Step</button>` : ''}
                 </div>
             </div>
@@ -84,24 +181,60 @@ export function generateEnhancedHtmlTemplate(
   };
   
   const generateQuizSection = (step: any, stepIndex: number) => {
-    // Generate a simple quiz for demonstration
-    const quizOptions = [
-      "Verify all required information is present",
-      "Skip verification to save time", 
-      "Ask a colleague to handle it"
-    ];
-    
-    return `
-    <div class="interactive-quiz">
-        <div class="quiz-question">
-            🧠 Knowledge Check: What's the most important thing to remember for this step?
-        </div>
-        <ul class="quiz-options">
-            <li onclick="handleQuizAnswer(this, true)">Verify all required information is present</li>
-            <li onclick="handleQuizAnswer(this, false)">Skip verification to save time</li>
-            <li onclick="handleQuizAnswer(this, false)">Ask a colleague to handle it</li>
-        </ul>
-    </div>`;
+    if (!step.quizQuestions || step.quizQuestions.length === 0) {
+      // Generate a contextual quiz for healthcare modules
+      if (isHealthcareModule) {
+        const contextualOptions = [
+          "Verify patient understanding and provide clear instructions",
+          "Rush through to see more patients", 
+          "Assume the patient understands without checking"
+        ];
+        
+        return `
+        <div class="interactive-quiz">
+            <div class="quiz-question">
+                🧠 Healthcare Knowledge Check: What's the most important thing to remember for this step?
+            </div>
+            <ul class="quiz-options">
+                <li onclick="handleQuizAnswer(this, true)">Verify patient understanding and provide clear instructions</li>
+                <li onclick="handleQuizAnswer(this, false)">Rush through to see more patients</li>
+                <li onclick="handleQuizAnswer(this, false)">Assume the patient understands without checking</li>
+            </ul>
+        </div>`;
+      } else {
+        const quizOptions = [
+          "Verify all required information is present",
+          "Skip verification to save time", 
+          "Ask a colleague to handle it"
+        ];
+        
+        return `
+        <div class="interactive-quiz">
+            <div class="quiz-question">
+                🧠 Knowledge Check: What's the most important thing to remember for this step?
+            </div>
+            <ul class="quiz-options">
+                <li onclick="handleQuizAnswer(this, true)">Verify all required information is present</li>
+                <li onclick="handleQuizAnswer(this, false)">Skip verification to save time</li>
+                <li onclick="handleQuizAnswer(this, false)">Ask a colleague to handle it</li>
+            </ul>
+        </div>`;
+      }
+    }
+
+    // Render actual quiz questions
+    return step.quizQuestions.map((quiz: any, qIndex: number) => `
+      <div class="interactive-quiz">
+          <div class="quiz-question">
+              🧠 ${quiz.question}
+          </div>
+          <ul class="quiz-options" id="quiz-${stepIndex}-${qIndex}">
+              ${quiz.options?.map((option: string, oIndex: number) => `
+                <li onclick="handleQuizAnswer(this, ${option === quiz.correctAnswer}, '${quiz.explanation || ''}')">${option}</li>
+              `).join('') || ''}
+          </ul>
+      </div>
+    `).join('');
   };
 
   return `<!DOCTYPE html>
@@ -488,6 +621,7 @@ export function generateEnhancedHtmlTemplate(
             <div class="logo">🎯 ${title}</div>
             <div class="user-info">
                 <span>📊 Progress: ${progressPercentage}%</span>
+                ${isHealthcareModule ? '<span>🏥 Healthcare Training</span>' : ''}
             </div>
         </div>
     </div>
@@ -535,10 +669,14 @@ export function generateEnhancedHtmlTemplate(
     <div class="main-content">
         ${generateStepContainers()}
         
+        <!-- Feedback Section -->
+        ${generateFeedbackForm(title, options.moduleUrl)}
+        
         <div style="background: #2a2a2a; padding: 30px; border-radius: 16px; margin-top: 40px; text-align: center;">
             <h3>🚀 Enhanced Training Module by SOPify</h3>
             <p style="margin: 15px 0; opacity: 0.9;">
                 Professional training with progress tracking, interactive elements, and comprehensive learning tools.
+                ${isHealthcareModule ? '<br><strong>🏥 Specialized for Healthcare Excellence</strong>' : ''}
             </p>
             <div style="margin-top: 25px;">
                 <a href="https://sopifyapp.com" class="btn btn-primary" style="margin: 5px;">Create Your Training</a>
@@ -551,33 +689,44 @@ export function generateEnhancedHtmlTemplate(
         let currentStep = 0;
         let bookmarkedSteps = [];
         
-        function navigateToStep(stepIndex) {
-            // Hide current step
-            document.getElementById('step-' + currentStep).style.display = 'none';
-            
-            // Show new step
-            document.getElementById('step-' + stepIndex).style.display = 'block';
-            document.getElementById('step-' + stepIndex).classList.add('current');
-            document.getElementById('step-' + currentStep).classList.remove('current');
-            
-            // Update navigation
-            const navItems = document.querySelectorAll('.chapter-nav li');
-            navItems.forEach((item, index) => {
-                item.classList.remove('active');
-                if (index === stepIndex) {
-                    item.classList.add('active');
-                }
+        // ... keep existing code (all the JavaScript functions)
+        
+        function practiceScenario(stepIndex) {
+            const stepTitle = document.querySelector('#step-' + stepIndex + ' .step-title').textContent;
+            alert('🎭 Healthcare Scenario Practice\\n\\nYou would now practice: "' + stepTitle + '"\\n\\nThis could include:\\n• Role-playing exercises\\n• Patient interaction simulations\\n• Communication practice\\n• De-escalation scenarios');
+        }
+        
+        function handleQuizAnswer(element, isCorrect, explanation = '') {
+            // Disable all options in this quiz
+            const quizOptions = element.parentElement;
+            Array.from(quizOptions.children).forEach(option => {
+                option.style.pointerEvents = 'none';
             });
             
-            currentStep = stepIndex;
-            
-            // Load saved notes
-            const savedNotes = localStorage.getItem('notes-' + stepIndex);
-            if (savedNotes) {
-                document.getElementById('notes-' + stepIndex).value = savedNotes;
+            if (isCorrect) {
+                element.style.background = '#28a745';
+                element.innerHTML = '✅ ' + element.textContent + ' - Correct!';
+                if (explanation) {
+                    element.innerHTML += '<br><small style="font-style: italic; opacity: 0.9;">' + explanation + '</small>';
+                }
+            } else {
+                element.style.background = '#dc3545';
+                element.innerHTML = '❌ ' + element.textContent + ' - Try again!';
+                
+                // Show correct answer after 2 seconds
+                setTimeout(() => {
+                    const correctOption = Array.from(quizOptions.children).find(option => 
+                        option.textContent.includes('Verify') || option.textContent.includes('patient understanding')
+                    );
+                    if (correctOption) {
+                        correctOption.style.background = '#28a745';
+                        correctOption.innerHTML = '✅ ' + correctOption.textContent + ' - This was the correct answer';
+                    }
+                }, 2000);
             }
         }
         
+        // Enhanced completion tracking for healthcare modules
         function markStepComplete(stepIndex) {
             const navItems = document.querySelectorAll('.chapter-nav li');
             const stepContainer = document.getElementById('step-' + stepIndex);
@@ -601,71 +750,27 @@ export function generateEnhancedHtmlTemplate(
             
             // Update progress
             updateProgress();
-        }
-        
-        function toggleBookmark(stepIndex) {
-            const button = document.querySelector('#step-' + stepIndex + ' .bookmark-btn');
-            const stepTitle = document.querySelector('#step-' + stepIndex + ' .step-title').textContent;
             
-            if (bookmarkedSteps.includes(stepIndex)) {
-                bookmarkedSteps = bookmarkedSteps.filter(s => s !== stepIndex);
-                button.classList.remove('active');
-            } else {
-                bookmarkedSteps.push(stepIndex);
-                button.classList.add('active');
-            }
-            
-            updateBookmarksList();
-        }
-        
-        function updateBookmarksList() {
-            const bookmarksDiv = document.getElementById('bookmarks');
-            if (bookmarkedSteps.length === 0) {
-                bookmarksDiv.innerHTML = '<small>No bookmarks yet</small>';
-            } else {
-                const bookmarksList = bookmarkedSteps.map(stepIndex => {
-                    const stepTitle = document.querySelector('#step-' + stepIndex + ' .step-title').textContent;
-                    return '<small onclick="navigateToStep(' + stepIndex + ')" style="cursor: pointer; display: block; margin: 5px 0;">Step ' + (stepIndex + 1) + ': ' + stepTitle + '</small>';
-                }).join('');
-                bookmarksDiv.innerHTML = bookmarksList;
+            // Show encouragement for healthcare training
+            if (${isHealthcareModule}) {
+                setTimeout(() => {
+                    alert('🏥 Excellent work! You\\'re building critical healthcare communication skills. Keep going!');
+                }, 1000);
             }
         }
         
-        function updateProgress() {
-            const completedSteps = document.querySelectorAll('.chapter-nav li.completed').length;
-            const totalSteps = document.querySelectorAll('.chapter-nav li').length;
-            const percentage = Math.round((completedSteps / totalSteps) * 100);
-            
-            document.querySelector('.progress-fill').style.width = percentage + '%';
-            document.querySelector('.user-info span').textContent = '📊 Progress: ' + percentage + '%';
-            document.querySelector('.overall-progress small').textContent = completedSteps + ' of ' + totalSteps + ' steps completed';
-        }
-        
-        function handleQuizAnswer(element, isCorrect) {
-            if (isCorrect) {
-                element.style.background = '#28a745';
-                element.innerHTML = '✅ ' + element.textContent + ' - Correct!';
-            } else {
-                element.style.background = '#dc3545';
-                element.innerHTML = '❌ ' + element.textContent + ' - Try again!';
-            }
-        }
-        
-        function practiceExercise(stepIndex) {
-            alert('🎯 Practice Exercise\\n\\nThis would open an interactive exercise for Step ' + (stepIndex + 1) + '. In the full version, this could include simulations, role-playing scenarios, or hands-on practice activities.');
-        }
-        
-        // Auto-save notes
-        document.addEventListener('input', function(e) {
-            if (e.target.classList.contains('notes-input')) {
-                const stepIndex = e.target.id.split('-')[1];
-                localStorage.setItem('notes-' + stepIndex, e.target.value);
-            }
-        });
+        // ... keep existing code (rest of JavaScript functions)
         
         // Initialize
         document.addEventListener('DOMContentLoaded', function() {
             updateProgress();
+            
+            // Show healthcare-specific welcome message
+            if (${isHealthcareModule}) {
+                setTimeout(() => {
+                    console.log('🏥 Welcome to specialized healthcare training. Focus on patient safety and clear communication.');
+                }, 2000);
+            }
         });
     </script>
 </body>
