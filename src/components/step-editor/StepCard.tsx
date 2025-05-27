@@ -263,21 +263,22 @@ const StepCard: React.FC<StepCardProps> = ({
             <Separator className="bg-zinc-700" />
 
             {/* Screenshot Section */}
-            <StepScreenshot
-              step={step}
-              isEditingCallouts={isEditingCallouts}
-              calloutColor={calloutColor}
-              setCalloutColor={setCalloutColor}
-              showCalloutCursor={showCalloutCursor}
-              cursorPosition={cursorPosition}
-              handleScreenshotMouseMove={handleScreenshotMouseMove}
-              handleScreenshotMouseEnter={handleScreenshotMouseEnter}
-              handleScreenshotMouseLeave={handleScreenshotMouseLeave}
-              toggleEditMode={toggleEditMode}
-              setStepScreenshot={setStepScreenshot}
-              addCallout={addCallout}
-              deleteCallout={deleteCallout}
-            />
+                      <StepScreenshot
+            step={step}
+            isEditingCallouts={isEditingCallouts}
+            calloutColor={calloutColor}
+            setCalloutColor={setCalloutColor}
+            showCalloutCursor={showCalloutCursor}
+            cursorPosition={cursorPosition}
+            handleScreenshotMouseMove={handleScreenshotMouseMove}
+            handleScreenshotMouseEnter={handleScreenshotMouseEnter}
+            handleScreenshotMouseLeave={handleScreenshotMouseLeave}
+            toggleEditMode={toggleEditMode}
+            setStepScreenshot={setStepScreenshot}
+            addCallout={addCallout}
+            deleteCallout={deleteCallout}
+            onStepChange={onStepChange}
+          />
 
             {/* Quiz Section */}
             {step.trainingMode && (

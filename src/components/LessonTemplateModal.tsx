@@ -35,6 +35,12 @@ import { createHealthcareSOP } from "@/services/healthcare-sop-template";
 import { createComplianceChecklistSOP } from "@/services/compliance-checklist-template";
 import { createTroubleshootingGuideSOP } from "@/services/troubleshooting-guide-template";
 import { createPatientCommunicationSOP } from "@/services/patient-communication-template";
+import { 
+  createNewHireOnboardingSOP, 
+  createContinuedLearningSOP, 
+  createCommunicationExcellenceSOP,
+  healthcareThemes 
+} from "@/services/enhanced-healthcare-templates";
 
 interface LessonTemplateModalProps {
   isOpen: boolean;
@@ -83,18 +89,56 @@ const LessonTemplateModal: React.FC<LessonTemplateModalProps> = ({ isOpen, onClo
       isNew: true
     },
     {
-      id: "healthcare-sop",
-      title: "Healthcare SOP",
-      description: "A specialized SOP for healthcare procedures with compliance and safety guidelines.",
+      id: "healthcare-new-hire",
+      title: "Healthcare New Hire Onboarding",
+      description: "Comprehensive onboarding for new healthcare staff with patient-first philosophy and critical compliance training.",
       icon: "Shield",
       category: "Healthcare",
       features: [
-        "Compliance guidelines",
-        "Safety protocols",
-        "Patient care standards",
-        "HIPAA compliance"
+        "Patient-centered care principles",
+        "HIPAA & privacy compliance",
+        "Emergency protocols",
+        "Systems navigation training",
+        "Critical safety alerts",
+        "Progress certification"
       ],
-      isHealthcare: true
+      isHealthcare: true,
+      isNew: true,
+      theme: healthcareThemes["new-hire-onboarding"]
+    },
+    {
+      id: "healthcare-continued-learning",
+      title: "Healthcare Continued Learning",
+      description: "Professional development updates for experienced healthcare staff with evidence-based practices.",
+      icon: "BookOpen",
+      category: "Healthcare",
+      features: [
+        "Evidence-based practice updates",
+        "Quality improvement initiatives",
+        "Professional development",
+        "Scenario-based learning",
+        "Compliance tracking"
+      ],
+      isHealthcare: true,
+      theme: healthcareThemes["continued-learning"]
+    },
+    {
+      id: "healthcare-communication",
+      title: "Patient Communication Excellence",
+      description: "Advanced communication skills training with therapeutic techniques and cultural competency.",
+      icon: "MessageSquare",
+      category: "Healthcare",
+      features: [
+        "Therapeutic communication",
+        "De-escalation techniques",
+        "Cultural competency",
+        "Difficult conversations",
+        "Empathy training",
+        "Interactive scenarios"
+      ],
+      isHealthcare: true,
+      isNew: true,
+      theme: healthcareThemes["communication-excellence"]
     },
     {
       id: "compliance-checklist",
@@ -158,8 +202,14 @@ const LessonTemplateModal: React.FC<LessonTemplateModalProps> = ({ isOpen, onClo
       case "training-module":
         templateSOP = createTrainingModuleSOP();
         break;
-      case "healthcare-sop":
-        templateSOP = createHealthcareSOP();
+      case "healthcare-new-hire":
+        templateSOP = createNewHireOnboardingSOP();
+        break;
+      case "healthcare-continued-learning":
+        templateSOP = createContinuedLearningSOP();
+        break;
+      case "healthcare-communication":
+        templateSOP = createCommunicationExcellenceSOP();
         break;
       case "compliance-checklist":
         templateSOP = createComplianceChecklistSOP();
@@ -259,33 +309,77 @@ const LessonTemplateModal: React.FC<LessonTemplateModalProps> = ({ isOpen, onClo
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredTemplates.map((template) => {
             const Icon = getIconComponent(template.icon);
+            const hasTheme = template.theme;
             return (
               <Card
                 key={template.id}
-                className="bg-[#2A2A2A] border-zinc-700 hover:bg-zinc-700/20 transition-colors cursor-pointer"
+                className={`bg-[#2A2A2A] border-zinc-700 hover:bg-zinc-700/20 transition-colors cursor-pointer relative overflow-hidden ${
+                  hasTheme ? 'border-l-4' : ''
+                }`}
+                style={hasTheme ? { borderLeftColor: template.theme.primaryColor } : {}}
                 onClick={() => handleTemplateSelect(template.id)}
               >
+                {hasTheme && (
+                  <div 
+                    className="absolute top-0 right-0 w-16 h-16 opacity-10"
+                    style={{
+                      background: `linear-gradient(135deg, ${template.theme.primaryColor}, ${template.theme.secondaryColor})`
+                    }}
+                  />
+                )}
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <div className="flex items-center gap-2">
-                    <Icon className="h-4 w-4 text-zinc-400" />
+                    <Icon 
+                      className="h-4 w-4" 
+                      style={hasTheme ? { color: template.theme.primaryColor } : { color: '#9CA3AF' }}
+                    />
                     <CardTitle className="text-sm font-medium text-zinc-200">
                       {template.title}
                     </CardTitle>
                   </div>
-                  {template.isNew && (
-                    <Badge variant="secondary" className="uppercase">
-                      New
-                    </Badge>
-                  )}
+                  <div className="flex gap-1">
+                    {template.isNew && (
+                      <Badge variant="secondary" className="uppercase text-xs">
+                        New
+                      </Badge>
+                    )}
+                    {hasTheme && (
+                      <Badge 
+                        className="text-xs text-white"
+                        style={{ backgroundColor: template.theme.primaryColor }}
+                      >
+                        {template.theme.name}
+                      </Badge>
+                    )}
+                  </div>
                 </CardHeader>
                 <CardContent>
                   <p className="text-sm text-zinc-400">{template.description}</p>
                   <Separator className="my-2 bg-zinc-700" />
-                  <ul className="list-disc list-inside text-sm text-zinc-400">
+                  <ul className="list-disc list-inside text-sm text-zinc-400 space-y-1">
                     {template.features.map((feature, index) => (
-                      <li key={index}>{feature}</li>
+                      <li key={index} className="text-xs">{feature}</li>
                     ))}
                   </ul>
+                  {hasTheme && (
+                    <div className="mt-3 flex gap-1">
+                      <div 
+                        className="w-3 h-3 rounded-full"
+                        style={{ backgroundColor: template.theme.primaryColor }}
+                        title="Primary Color"
+                      />
+                      <div 
+                        className="w-3 h-3 rounded-full"
+                        style={{ backgroundColor: template.theme.secondaryColor }}
+                        title="Secondary Color"
+                      />
+                      <div 
+                        className="w-3 h-3 rounded-full"
+                        style={{ backgroundColor: template.theme.accentColor }}
+                        title="Accent Color"
+                      />
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             );
