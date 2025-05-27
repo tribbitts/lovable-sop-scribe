@@ -189,9 +189,11 @@ const CalloutOverlay: React.FC<CalloutOverlayProps> = ({
     const renderShape = () => {
       switch (callout.shape) {
         case "circle":
+          // Force circles to be perfectly square using the smaller dimension
+          const circleSize = Math.min(callout.width, callout.height);
           return (
             <div
-              className={`w-full h-full rounded-full border-2 ${
+              className={`rounded-full border-2 ${
                 isEditingThis ? 'border-white' : 'border-opacity-80'
               } flex items-center justify-center transition-all duration-200 ${
                 isInteractive ? 'hover:scale-110 hover:shadow-lg' : ''
@@ -199,7 +201,12 @@ const CalloutOverlay: React.FC<CalloutOverlayProps> = ({
               style={{ 
                 backgroundColor: `${callout.color}40`,
                 borderColor: callout.color,
-                aspectRatio: '1 / 1',
+                width: `${circleSize}%`,
+                height: `${circleSize}%`,
+                position: 'absolute',
+                left: '50%',
+                top: '50%',
+                transform: 'translate(-50%, -50%)',
                 minWidth: '20px',
                 minHeight: '20px'
               }}
@@ -207,7 +214,7 @@ const CalloutOverlay: React.FC<CalloutOverlayProps> = ({
               {callout.number && (
                 <span 
                   className="text-white font-bold text-xs"
-                  style={{ fontSize: `${Math.max(8, callout.width * 0.8)}px` }}
+                  style={{ fontSize: `${Math.max(8, circleSize * 0.8)}px` }}
                 >
                   {callout.number}
                 </span>
@@ -272,11 +279,17 @@ const CalloutOverlay: React.FC<CalloutOverlayProps> = ({
             >
               <svg 
                 className="w-full h-full" 
-                viewBox="0 0 24 24" 
-                fill="currentColor"
-                style={{ transform: 'rotate(-45deg)' }}
+                viewBox="0 0 100 100" 
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="8"
+                strokeLinecap="round"
+                strokeLinejoin="round"
               >
-                <path d="M12 2L22 12L12 22L10.59 20.59L18.17 13H2V11H18.17L10.59 3.41L12 2Z" />
+                {/* Arrow shaft */}
+                <line x1="10" y1="50" x2="70" y2="50" />
+                {/* Arrow head */}
+                <polyline points="55,35 70,50 55,65" />
               </svg>
             </div>
           );

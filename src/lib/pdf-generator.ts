@@ -126,31 +126,142 @@ function addTableOfContents(
 export async function generatePDF(sopDocument: SopDocument): Promise<string> {
   return new Promise(async (resolve, reject) => {
     try {
-      console.log("Using beautiful enhanced PDF generator for consistent theme");
+      console.log("Generating clean standard PDF");
       
-      // Import the enhanced PDF generator
-      const { generateEnhancedPDF } = await import("./pdf/enhanced-generator");
+      // Create PDF with standard settings
+      const pdf = new jsPDF({
+        orientation: "portrait",
+        unit: "mm", 
+        format: "a4",
+        compress: true
+      });
+
+      // Initialize fonts
+      initializePdfFonts(pdf);
+
+      // PDF dimensions
+      const width = pdf.internal.pageSize.getWidth();
+      const height = pdf.internal.pageSize.getHeight();
+      const margin = { top: 20, right: 20, bottom: 20, left: 20 };
+
+      let currentY = margin.top;
+
+      // Simple header
+      setFontSafe(pdf, "helvetica", "bold");
+      pdf.setFontSize(24);
+      pdf.setTextColor(0, 0, 0);
       
-      // Use the beautiful enhanced PDF generator with all the stunning features
-      const enhancedOptions = {
-        theme: 'professional',
-        includeTableOfContents: sopDocument.tableOfContents || false,
-        includeProgressInfo: true,
-        quality: 'high' as const,
-        branding: {
-          companyColors: {
-            primary: '#007AFF',
-            secondary: '#5856D6'
+      const title = sopDocument.title || "Standard Operating Procedure";
+      pdf.text(title, margin.left, currentY);
+      currentY += 15;
+
+      // Subtitle
+      if (sopDocument.topic) {
+        setFontSafe(pdf, "helvetica", "normal");
+        pdf.setFontSize(14);
+        pdf.setTextColor(100, 100, 100);
+        pdf.text(sopDocument.topic, margin.left, currentY);
+        currentY += 10;
+      }
+
+      // Simple line separator
+      pdf.setDrawColor(200, 200, 200);
+      pdf.setLineWidth(0.5);
+      pdf.line(margin.left, currentY, width - margin.right, currentY);
+      currentY += 15;
+
+      // Render steps
+      for (let i = 0; i < sopDocument.steps.length; i++) {
+        const step = sopDocument.steps[i];
+        const stepNumber = i + 1;
+
+        // Check if we need a new page
+        if (currentY > height - margin.bottom - 60) {
+          pdf.addPage();
+          currentY = margin.top;
+        }
+
+        // Step number and title
+        setFontSafe(pdf, "helvetica", "bold");
+        pdf.setFontSize(16);
+        pdf.setTextColor(0, 0, 0);
+        
+        const stepTitle = `${stepNumber}. ${step.title || `Step ${stepNumber}`}`;
+        pdf.text(stepTitle, margin.left, currentY);
+        currentY += 8;
+
+        // Step description
+        if (step.description) {
+          setFontSafe(pdf, "helvetica", "normal");
+          pdf.setFontSize(11);
+          pdf.setTextColor(60, 60, 60);
+          
+          const descLines = pdf.splitTextToSize(step.description, width - margin.left - margin.right);
+          descLines.forEach((line: string) => {
+            if (currentY > height - margin.bottom - 20) {
+              pdf.addPage();
+              currentY = margin.top;
+            }
+            pdf.text(line, margin.left, currentY);
+            currentY += 5;
+          });
+          currentY += 5;
+        }
+
+        // Handle screenshots
+        const screenshots = step.screenshots || (step.screenshot ? [step.screenshot] : []);
+        
+        for (const screenshot of screenshots) {
+          if (screenshot.dataUrl) {
+            try {
+              // Check if we need a new page for the image
+              if (currentY > height - margin.bottom - 80) {
+                pdf.addPage();
+                currentY = margin.top;
+              }
+
+              // Add image with proper sizing
+              const imgWidth = Math.min(120, width - margin.left - margin.right);
+              const imgHeight = 80; // Fixed height for consistency
+              
+              pdf.addImage(screenshot.dataUrl, 'JPEG', margin.left, currentY, imgWidth, imgHeight);
+              currentY += imgHeight + 5;
+
+              // Add screenshot title if available
+              if (screenshot.title) {
+                setFontSafe(pdf, "helvetica", "italic");
+                pdf.setFontSize(9);
+                pdf.setTextColor(120, 120, 120);
+                pdf.text(screenshot.title, margin.left, currentY);
+                currentY += 5;
+              }
+            } catch (imageError) {
+              console.warn("Failed to add image to PDF:", imageError);
+              // Continue without the image
+            }
           }
         }
-      };
+
+        currentY += 10; // Space between steps
+      }
+
+      // Footer
+      const totalPages = (pdf.internal.pages as any[]).length - 1; // Subtract 1 for the empty first page
+      for (let pageNum = 1; pageNum <= totalPages; pageNum++) {
+        pdf.setPage(pageNum);
+        
+        setFontSafe(pdf, "helvetica", "normal");
+        pdf.setFontSize(8);
+        pdf.setTextColor(150, 150, 150);
+        
+        const footerText = `Created with SOPify - Page ${pageNum} of ${totalPages}`;
+        const footerWidth = getStringWidthSafe(pdf, footerText, 8);
+        pdf.text(footerText, (width - footerWidth) / 2, height - 10);
+      }
+
+      const pdfBase64 = pdf.output('datauristring');
       
-      console.log("Generating beautiful PDF with enhanced theme:", enhancedOptions);
-      
-      // Generate the beautiful PDF
-      const pdfBase64 = await generateEnhancedPDF(sopDocument, enhancedOptions);
-      
-      // Extract the PDF blob from base64 for saving
+      // Save the PDF
       const base64Data = pdfBase64.split(',')[1];
       const byteCharacters = atob(base64Data);
       const byteNumbers = new Array(byteCharacters.length);
@@ -160,30 +271,21 @@ export async function generatePDF(sopDocument: SopDocument): Promise<string> {
       const byteArray = new Uint8Array(byteNumbers);
       const blob = new Blob([byteArray], { type: 'application/pdf' });
       
-      // Save the beautiful PDF with SOPify standardized filename
       const filename = generatePdfFilename(sopDocument);
-      console.log(`Saving beautiful SOPify PDF as: ${filename}`);
       
-      try {
-        // Create download link and trigger download
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = filename;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
-        
-        console.log("Beautiful SOPify PDF saved successfully");
-        resolve(pdfBase64);
-      } catch (saveError) {
-        console.error("Error saving beautiful SOPify PDF:", saveError);
-        // Even if saving fails, return the base64 for preview
-        resolve(pdfBase64);
-      }
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      
+      console.log("Standard PDF saved successfully");
+      resolve(pdfBase64);
     } catch (error) {
-      console.error("Beautiful PDF generation error:", error);
+      console.error("Standard PDF generation error:", error);
       reject(new Error(`PDF generation failed: ${error instanceof Error ? error.message : String(error)}`));
     }
   });

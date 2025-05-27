@@ -92,7 +92,7 @@ const ExportPanel: React.FC<ExportPanelProps> = ({
   return (
     <div className="w-full h-full bg-[#1E1E1E] text-white flex flex-col">
       {/* Header */}
-      <div className="p-6 border-b border-zinc-800">
+      <div className="flex-shrink-0 p-6 border-b border-zinc-800">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-semibold flex items-center gap-2">
             <Download className="h-5 w-5" />
@@ -109,8 +109,8 @@ const ExportPanel: React.FC<ExportPanelProps> = ({
         )}
       </div>
 
-      {/* Content */}
-      <div className="flex-1 overflow-y-auto p-6">
+      {/* Scrollable Content */}
+      <div className="flex-1 overflow-y-auto p-6 scrollbar-thin scrollbar-thumb-zinc-600 scrollbar-track-zinc-800">
         {/* HTML Export Section */}
         <div className="space-y-4 mb-8">
           <h3 className="text-lg font-semibold text-white mb-3">HTML Export (Recommended)</h3>
