@@ -1,6 +1,6 @@
-
 import React, { createContext, useState, useContext, ReactNode } from "react";
 import { SopDocument, SopStep, Callout, StepResource, ExportFormat } from "../types/sop";
+import { EnhancedContentBlock } from "../types/enhanced-content";
 import { toast } from "@/hooks/use-toast";
 import { StorageManager } from "@/utils/storageManager";
 import { DocumentManager } from "./managers/DocumentManager";
@@ -28,6 +28,12 @@ interface SopContextType {
   deleteStep: (stepId: string) => void;
   duplicateStep: (stepId: string) => void;
   toggleStepCompletion: (stepId: string) => void;
+  
+  // Enhanced content blocks
+  addStepContentBlock: (stepId: string, block: EnhancedContentBlock) => void;
+  updateStepContentBlock: (stepId: string, blockId: string, updates: Partial<EnhancedContentBlock>) => void;
+  removeStepContentBlock: (stepId: string, blockId: string) => void;
+  reorderStepContentBlocks: (stepId: string, fromIndex: number, toIndex: number) => void;
   
   // Screenshot management
   setStepScreenshot: (stepId: string, dataUrl: string) => void;
@@ -222,6 +228,73 @@ export const SopProvider = ({ children }: { children: ReactNode }) => {
     setSopDocument(prev => StepManager.toggleStepCompletion(prev, stepId));
   };
 
+  // Enhanced content block operations
+  const addStepContentBlock = (stepId: string, block: EnhancedContentBlock) => {
+    setSopDocument(prev => {
+      const stepIndex = prev.steps.findIndex(s => s.id === stepId);
+      if (stepIndex === -1) return prev;
+
+      const updatedSteps = [...prev.steps];
+      const currentBlocks = updatedSteps[stepIndex].enhancedContentBlocks || [];
+      updatedSteps[stepIndex].enhancedContentBlocks = [...currentBlocks, block];
+
+      return { ...prev, steps: updatedSteps };
+    });
+  };
+
+  const updateStepContentBlock = (stepId: string, blockId: string, updates: Partial<EnhancedContentBlock>) => {
+    setSopDocument(prev => {
+      const stepIndex = prev.steps.findIndex(s => s.id === stepId);
+      if (stepIndex === -1) return prev;
+
+      const updatedSteps = [...prev.steps];
+      const currentBlocks = updatedSteps[stepIndex].enhancedContentBlocks || [];
+      const blockIndex = currentBlocks.findIndex(b => b.id === blockId);
+      
+      if (blockIndex === -1) return prev;
+
+      updatedSteps[stepIndex].enhancedContentBlocks = currentBlocks.map(block =>
+        block.id === blockId ? { ...block, ...updates } : block
+      );
+
+      return { ...prev, steps: updatedSteps };
+    });
+  };
+
+  const removeStepContentBlock = (stepId: string, blockId: string) => {
+    setSopDocument(prev => {
+      const stepIndex = prev.steps.findIndex(s => s.id === stepId);
+      if (stepIndex === -1) return prev;
+
+      const updatedSteps = [...prev.steps];
+      const currentBlocks = updatedSteps[stepIndex].enhancedContentBlocks || [];
+      updatedSteps[stepIndex].enhancedContentBlocks = currentBlocks.filter(b => b.id !== blockId);
+
+      return { ...prev, steps: updatedSteps };
+    });
+  };
+
+  const reorderStepContentBlocks = (stepId: string, fromIndex: number, toIndex: number) => {
+    setSopDocument(prev => {
+      const stepIndex = prev.steps.findIndex(s => s.id === stepId);
+      if (stepIndex === -1) return prev;
+
+      const updatedSteps = [...prev.steps];
+      const currentBlocks = [...(updatedSteps[stepIndex].enhancedContentBlocks || [])];
+      
+      const [movedBlock] = currentBlocks.splice(fromIndex, 1);
+      currentBlocks.splice(toIndex, 0, movedBlock);
+      
+      // Update order property
+      currentBlocks.forEach((block, index) => {
+        block.order = index;
+      });
+
+      updatedSteps[stepIndex].enhancedContentBlocks = currentBlocks;
+      return { ...prev, steps: updatedSteps };
+    });
+  };
+
   const addStepTag = (stepId: string, tag: string) => {
     setSopDocument(prev => StepManager.addStepTag(prev, stepId, tag));
   };
@@ -374,6 +447,12 @@ export const SopProvider = ({ children }: { children: ReactNode }) => {
     deleteStep,
     duplicateStep,
     toggleStepCompletion,
+    
+    // Enhanced content blocks
+    addStepContentBlock,
+    updateStepContentBlock,
+    removeStepContentBlock,
+    reorderStepContentBlocks,
     
     // Screenshot management
     setStepScreenshot,

@@ -21,7 +21,10 @@ import {
   HelpCircle
 } from "lucide-react";
 import { SopStep, StepCardProps } from "@/types/sop";
+import { EnhancedContentBlock } from "@/types/enhanced-content";
 import StepScreenshot from "./StepScreenshot";
+import { ContentBlockSelector } from "@/components/content-blocks/ContentBlockSelector";
+import { ContentBlockRenderer } from "@/components/content-blocks/ContentBlockRenderer";
 
 const StepCard: React.FC<StepCardProps> = ({
   step,
@@ -95,7 +98,16 @@ const StepCard: React.FC<StepCardProps> = ({
     }
   };
 
-  // Simplified checks for core SOP features only
+  // Enhanced content block handlers
+  const handleAddContentBlock = (block: EnhancedContentBlock) => {
+    const currentBlocks = step.enhancedContentBlocks || [];
+    const newBlock = { ...block, order: currentBlocks.length };
+    handleInputChange("enhancedContentBlocks", [...currentBlocks, newBlock]);
+  };
+
+  const handleUpdateContentBlocks = (blocks: EnhancedContentBlock[]) => {
+    handleInputChange("enhancedContentBlocks", blocks);
+  };
 
   return (
     <motion.div
@@ -152,6 +164,11 @@ const StepCard: React.FC<StepCardProps> = ({
                     <Badge className="bg-blue-600 text-white text-xs">
                       <Clock className="h-3 w-3 mr-1" />
                       {step.estimatedTime}min
+                    </Badge>
+                  )}
+                  {step.enhancedContentBlocks && step.enhancedContentBlocks.length > 0 && (
+                    <Badge className="bg-purple-600 text-white text-xs">
+                      {step.enhancedContentBlocks.length} content blocks
                     </Badge>
                   )}
                 </div>
@@ -238,6 +255,24 @@ const StepCard: React.FC<StepCardProps> = ({
                 placeholder="What's the main point users should remember?"
                 className="bg-zinc-800 border-zinc-700 text-white mt-1"
               />
+            </div>
+
+            <Separator className="bg-zinc-700" />
+
+            {/* Enhanced Content Blocks Section */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <Label className="text-zinc-300 font-medium">Enhanced Content</Label>
+                <ContentBlockSelector onAddBlock={handleAddContentBlock} />
+              </div>
+              
+              {step.enhancedContentBlocks && step.enhancedContentBlocks.length > 0 && (
+                <ContentBlockRenderer
+                  blocks={step.enhancedContentBlocks}
+                  isEditing={true}
+                  onChange={handleUpdateContentBlocks}
+                />
+              )}
             </div>
 
             <Separator className="bg-zinc-700" />

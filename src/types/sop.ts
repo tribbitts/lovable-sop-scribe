@@ -131,6 +131,7 @@ export interface SopStep {
   
   // Enhanced content blocks
   contentBlocks?: ContentBlock[];
+  enhancedContentBlocks?: import('./enhanced-content').EnhancedContentBlock[]; // New enhanced content blocks
   keyTakeaway?: string; // Quick key takeaway field
   estimatedTime?: number; // Estimated time in minutes
   
