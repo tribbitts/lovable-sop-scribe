@@ -1,3 +1,4 @@
+import { Callout, ScreenshotData } from './sop';
 
 export interface ContentBlockBase {
   id: string;
