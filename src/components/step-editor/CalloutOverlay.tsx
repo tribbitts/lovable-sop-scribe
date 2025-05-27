@@ -197,21 +197,24 @@ const CalloutOverlay: React.FC<CalloutOverlayProps> = ({
             <div
               className={`w-full h-full rounded-full border-2 ${
                 isEditingThis ? 'border-white' : 'border-opacity-80'
-              } flex items-center justify-center transition-all duration-200 ${
+              } transition-all duration-200 ${
                 isInteractive ? 'hover:scale-110 hover:shadow-lg' : ''
               }`}
               style={{ 
                 backgroundColor: `${callout.color}40`,
                 borderColor: callout.color,
                 aspectRatio: '1 / 1',
-                minWidth: '20px',
-                minHeight: '20px'
+                minWidth: '30px',
+                minHeight: '30px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
               }}
             >
               {callout.number && (
                 <span 
-                  className="text-white font-bold text-xs"
-                  style={{ fontSize: `${Math.max(8, callout.width * 0.8)}px` }}
+                  className="text-white font-bold"
+                  style={{ fontSize: `${Math.max(10, callout.width * 0.6)}px` }}
                 >
                   {callout.number}
                 </span>
@@ -224,10 +227,15 @@ const CalloutOverlay: React.FC<CalloutOverlayProps> = ({
             <div
               className={`w-full h-full border-2 ${
                 isEditingThis ? 'border-white' : 'border-opacity-80'
-              } flex items-center justify-center transition-all duration-200`}
+              } transition-all duration-200`}
               style={{ 
                 backgroundColor: `${callout.color}40`,
                 borderColor: callout.color,
+                minWidth: '40px',
+                minHeight: '25px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
               }}
             >
               {callout.text && (
@@ -241,7 +249,7 @@ const CalloutOverlay: React.FC<CalloutOverlayProps> = ({
         case "number":
           return (
             <div
-              className={`w-full h-full rounded-full border-2 flex items-center justify-center font-bold text-white transition-all duration-200 ${
+              className={`w-full h-full rounded-full border-2 font-bold text-white transition-all duration-200 ${
                 isInteractive ? 'hover:scale-110 hover:shadow-lg cursor-pointer' : ''
               } ${
                 callout.revealText ? 'bg-gradient-to-br from-blue-500 to-purple-600' : ''
@@ -251,6 +259,12 @@ const CalloutOverlay: React.FC<CalloutOverlayProps> = ({
               style={{ 
                 backgroundColor: callout.revealText ? undefined : callout.color,
                 borderColor: callout.color,
+                aspectRatio: '1 / 1',
+                minWidth: '30px',
+                minHeight: '30px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
               }}
             >
               <span style={{ fontSize: `${Math.max(10, callout.width * 0.6)}px` }}>
@@ -272,18 +286,24 @@ const CalloutOverlay: React.FC<CalloutOverlayProps> = ({
           return (
             <div
               className="w-full h-full flex items-center justify-center"
-              style={{ color: callout.color }}
+              style={{ 
+                color: callout.color,
+                minWidth: '30px',
+                minHeight: '20px'
+              }}
             >
               <svg 
                 className="w-full h-full" 
                 viewBox="0 0 100 50" 
-                fill="currentColor"
+                fill="none"
                 style={{ transform: 'rotate(0deg)' }}
               >
-                {/* Simple arrow pointing right */}
+                {/* Clean arrow shape */}
                 <polygon 
                   points="10,20 60,20 60,10 90,25 60,40 60,30 10,30" 
-                  fill="currentColor"
+                  fill={callout.color}
+                  stroke={callout.color}
+                  strokeWidth="1"
                 />
               </svg>
             </div>

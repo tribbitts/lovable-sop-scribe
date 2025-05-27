@@ -119,12 +119,23 @@ export function generateStandardHtmlTemplate(
                                     display: flex;
                                     align-items: center;
                                     justify-content: center;
+                                    min-width: 30px;
+                                    min-height: 20px;
+                                  ` : ''}
+                                  ${callout.shape === 'circle' || callout.shape === 'number' ? `
+                                    aspect-ratio: 1 / 1;
+                                    min-width: 30px;
+                                    min-height: 30px;
+                                  ` : ''}
+                                  ${callout.shape === 'rectangle' ? `
+                                    min-width: 40px;
+                                    min-height: 25px;
                                   ` : ''}
                                 ">
                                   ${callout.shape === 'number' ? callout.number : ''}
                                   ${callout.shape === 'arrow' ? `
-                                    <svg viewBox="0 0 100 50" fill="${callout.color}" style="width: 100%; height: 100%;">
-                                      <polygon points="10,20 60,20 60,10 90,25 60,40 60,30 10,30" fill="${callout.color}" />
+                                    <svg viewBox="0 0 100 50" fill="none" style="width: 100%; height: 100%;">
+                                      <polygon points="10,20 60,20 60,10 90,25 60,40 60,30 10,30" fill="${callout.color}" stroke="${callout.color}" stroke-width="1" />
                                     </svg>
                                   ` : ''}
                                   ${callout.text ? `<span style="color: white; font-size: 12px; text-align: center;">${callout.text}</span>` : ''}
@@ -167,12 +178,23 @@ export function generateStandardHtmlTemplate(
                                         display: flex;
                                         align-items: center;
                                         justify-content: center;
+                                        min-width: 30px;
+                                        min-height: 20px;
+                                      ` : ''}
+                                      ${callout.shape === 'circle' || callout.shape === 'number' ? `
+                                        aspect-ratio: 1 / 1;
+                                        min-width: 30px;
+                                        min-height: 30px;
+                                      ` : ''}
+                                      ${callout.shape === 'rectangle' ? `
+                                        min-width: 40px;
+                                        min-height: 25px;
                                       ` : ''}
                                     ">
                                       ${callout.shape === 'number' ? callout.number : ''}
                                       ${callout.shape === 'arrow' ? `
-                                        <svg viewBox="0 0 100 50" fill="${callout.color}" style="width: 100%; height: 100%;">
-                                          <polygon points="10,20 60,20 60,10 90,25 60,40 60,30 10,30" fill="${callout.color}" />
+                                        <svg viewBox="0 0 100 50" fill="none" style="width: 100%; height: 100%;">
+                                          <polygon points="10,20 60,20 60,10 90,25 60,40 60,30 10,30" fill="${callout.color}" stroke="${callout.color}" stroke-width="1" />
                                         </svg>
                                       ` : ''}
                                       ${callout.text ? `<span style="color: white; font-size: 12px; text-align: center;">${callout.text}</span>` : ''}
@@ -422,26 +444,31 @@ export function generateStandardHtmlTemplate(
                 @bottom-right { content: ""; }
             }
             
+            * {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+            
             body {
                 background: white !important;
-                -webkit-print-color-adjust: exact;
-                print-color-adjust: exact;
+                margin: 0 !important;
+                padding: 0 !important;
             }
             
             .container {
-                max-width: none;
-                margin: 0;
-                padding: 0;
+                max-width: none !important;
+                margin: 0 !important;
+                padding: 0 !important;
             }
             
             .header {
-                page-break-inside: avoid;
-                margin-bottom: 30px;
+                page-break-inside: avoid !important;
+                margin-bottom: 30px !important;
                 background: white !important;
                 border: none !important;
                 border-radius: 0 !important;
                 box-shadow: none !important;
-                padding: 0 !important;
+                padding: 20px 0 !important;
             }
             
             .header-top {
@@ -450,23 +477,32 @@ export function generateStandardHtmlTemplate(
                 align-items: flex-start !important;
                 margin-bottom: 20px !important;
                 width: 100% !important;
+                position: relative !important;
             }
             
             .header-left {
+                position: absolute !important;
+                left: 0 !important;
+                top: 0 !important;
                 text-align: left !important;
-                flex: 0 0 auto !important;
                 width: auto !important;
+                flex: none !important;
             }
             
             .header-right {
+                position: absolute !important;
+                right: 0 !important;
+                top: 0 !important;
                 text-align: right !important;
-                flex: 0 0 auto !important;
                 width: auto !important;
+                flex: none !important;
             }
             
             .header-center {
                 text-align: center !important;
-                margin-top: 20px !important;
+                margin-top: 40px !important;
+                width: 100% !important;
+                position: relative !important;
             }
             
             .company-name,
@@ -474,47 +510,61 @@ export function generateStandardHtmlTemplate(
             .document-date,
             .last-revised {
                 display: block !important;
-                margin: 0 !important;
+                margin: 2px 0 !important;
                 padding: 0 !important;
+                line-height: 1.2 !important;
             }
             
             .step-container {
-                page-break-inside: avoid;
-                break-inside: avoid;
+                page-break-inside: avoid !important;
+                break-inside: avoid !important;
                 background: white !important;
                 border-radius: 0 !important;
                 box-shadow: none !important;
                 border: 1px solid #e9ecef !important;
                 margin-bottom: 20px !important;
+                padding: 20px !important;
+            }
+            
+            .step-screenshot {
+                max-width: 100% !important;
+                height: auto !important;
+                page-break-inside: avoid !important;
             }
             
             .footer {
-                position: fixed;
-                bottom: 0;
-                left: 0;
-                right: 0;
+                position: fixed !important;
+                bottom: 0 !important;
+                left: 0 !important;
+                right: 0 !important;
                 background: white !important;
-                border-top: 1px solid #e9ecef;
-                padding: 15px 0;
+                border-top: 1px solid #e9ecef !important;
+                padding: 10px 0 !important;
                 border-radius: 0 !important;
                 box-shadow: none !important;
                 margin-top: 0 !important;
+                z-index: 1000 !important;
             }
             
             .footer-content {
                 display: flex !important;
                 justify-content: space-between !important;
                 align-items: center !important;
-                max-width: 100%;
-                margin: 0 auto;
-                padding: 0 20px;
+                max-width: 100% !important;
+                margin: 0 auto !important;
+                padding: 0 20px !important;
+                position: relative !important;
             }
             
             .footer-left {
+                position: absolute !important;
+                left: 20px !important;
                 text-align: left !important;
             }
             
             .footer-right {
+                position: absolute !important;
+                right: 20px !important;
                 text-align: right !important;
             }
         }
