@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogPortal } from "@/components/ui/dialog";
 import { 
   X, 
   Download, 
@@ -503,15 +503,17 @@ const ExportPanel: React.FC<ExportPanelProps> = ({
       
       {/* PDF Export Options Modal */}
       <Dialog open={showPdfExportOptions} onOpenChange={setShowPdfExportOptions}>
-        <DialogContent className="bg-zinc-900 border-zinc-800 max-w-5xl w-[95vw] max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="text-white">PDF Export Options</DialogTitle>
-          </DialogHeader>
-          <PdfExportOptions 
-            sopDocument={document}
-            onClose={() => setShowPdfExportOptions(false)}
-          />
-        </DialogContent>
+        <DialogPortal>
+          <DialogContent className="bg-zinc-900 border-zinc-800 max-w-5xl w-[95vw] max-h-[90vh] overflow-y-auto z-[9999]" style={{ zIndex: 9999 }}>
+            <DialogHeader>
+              <DialogTitle className="text-white">PDF Export Options</DialogTitle>
+            </DialogHeader>
+            <PdfExportOptions 
+              sopDocument={document}
+              onClose={() => setShowPdfExportOptions(false)}
+            />
+          </DialogContent>
+        </DialogPortal>
       </Dialog>
     </div>
   );
