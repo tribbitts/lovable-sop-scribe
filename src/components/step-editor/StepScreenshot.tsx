@@ -64,33 +64,93 @@ const StepScreenshot: React.FC<StepScreenshotProps> = ({
 
   const handleScreenshotUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const newScreenshot: ScreenshotData = {
-          id: uuidv4(),
-          dataUrl: reader.result as string,
-          callouts: [],
-          title: `Screenshot ${allScreenshots.length + 1}`
-        };
+    if (!file) return;
 
-        // Update screenshots array
+    console.log('File selected:', file.name, file.type, file.size);
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: "Invalid File Type",
+        description: "Please select an image file",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Check file size (limit to 10MB)
+    const maxSize = 10 * 1024 * 1024; // 10MB
+    if (file.size > maxSize) {
+      toast({
+        title: "File Too Large",
+        description: "Please select an image smaller than 10MB",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const result = reader.result as string;
+      console.log('FileReader result:', result ? 'Success' : 'Failed');
+      
+      if (!result) {
+        toast({
+          title: "Upload Failed",
+          description: "Failed to read the image file",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // Create new screenshot data
+      const newScreenshot: ScreenshotData = {
+        id: uuidv4(),
+        dataUrl: result,
+        callouts: [],
+        title: `Screenshot ${allScreenshots.length + 1}`
+      };
+
+      console.log('Creating new screenshot:', newScreenshot.id);
+
+      // If this is the first screenshot, set it as the main screenshot
+      if (!step.screenshot && (!step.screenshots || step.screenshots.length === 0)) {
+        console.log('Setting as main screenshot');
+        if (onStepChange) {
+          onStepChange(step.id, "screenshot", newScreenshot);
+        }
+        setActiveScreenshotIndex(0);
+      } else {
+        console.log('Adding to screenshots array');
+        // Add to screenshots array
         const updatedScreenshots = [...(step.screenshots || []), newScreenshot];
-        
         if (onStepChange) {
           onStepChange(step.id, "screenshots", updatedScreenshots);
         }
-
         // Set active to the new screenshot
         setActiveScreenshotIndex(allScreenshots.length);
-        
-        toast({
-          title: "Screenshot Added",
-          description: "New screenshot has been added to this step",
-        });
-      };
-      reader.readAsDataURL(file);
-    }
+      }
+      
+      toast({
+        title: "Screenshot Added",
+        description: "New screenshot has been added to this step",
+      });
+
+      // Clear the input value so the same file can be uploaded again if needed
+      e.target.value = '';
+    };
+
+    reader.onerror = () => {
+      console.error('FileReader error:', reader.error);
+      toast({
+        title: "Upload Failed",
+        description: "Failed to read the image file",
+        variant: "destructive"
+      });
+    };
+
+    console.log('Starting file read...');
+    reader.readAsDataURL(file);
   };
 
   const handleUpdateScreenshot = (dataUrl: string) => {
@@ -313,7 +373,7 @@ const StepScreenshot: React.FC<StepScreenshotProps> = ({
                 screenshot={screenshot}
                 isEditingCallouts={false}
                 calloutColor={calloutColor}
-                onScreenshotUpload={() => {}}
+                onScreenshotUpload={handleScreenshotUpload}
                 onScreenshotClick={() => {}}
                 onCalloutClick={() => {}}
                 cursorPosition={cursorPosition}
