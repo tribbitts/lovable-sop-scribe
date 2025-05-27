@@ -668,34 +668,9 @@ function detectHealthcareTheme(sopDocument: SopDocument): string | null {
 
 // Helper function to get enhanced theme based on healthcare template
 function getEnhancedTheme(sopDocument: SopDocument, options: EnhancedPdfOptions, healthcareType: string | null) {
-  // If it's a healthcare document, use healthcare theme colors
-  if (healthcareType && healthcareThemes[healthcareType]) {
-    const hcTheme = healthcareThemes[healthcareType];
-    
-    return {
-      primary: hcTheme.primaryColor,
-      secondary: hcTheme.secondaryColor,
-      accent: hcTheme.accentColor,
-      success: '#34C759',
-      warning: '#FF9500',
-      danger: '#FF3B30',
-      background: hcTheme.backgroundColor,
-      text: hcTheme.textColor,
-      lightGray: '#e0e0e0',
-      darkGray: '#666666',
-      // Healthcare-specific colors
-      criticalSafety: '#DC2626',
-      hipaaAlert: '#2563EB',
-      patientCommunication: '#16A34A',
-      // Theme metadata
-      isHealthcare: true,
-      healthcareType: healthcareType,
-      themeName: hcTheme.name
-    };
-  }
-  
-  // Default professional theme with any custom branding
-  return {
+  // Use professional demo colors for all documents to match demo quality
+  // Healthcare context is maintained through badges and text, not colors
+  const demoTheme = {
     primary: options.branding?.companyColors?.primary || '#007AFF',
     secondary: options.branding?.companyColors?.secondary || '#5856D6',
     accent: '#007AFF',
@@ -706,15 +681,19 @@ function getEnhancedTheme(sopDocument: SopDocument, options: EnhancedPdfOptions,
     text: '#333333',
     lightGray: '#e0e0e0',
     darkGray: '#666666',
-    // Healthcare-specific colors (defaults)
+    // Healthcare-specific colors for alerts
     criticalSafety: '#DC2626',
     hipaaAlert: '#2563EB',
     patientCommunication: '#16A34A',
     // Theme metadata
-    isHealthcare: false,
-    healthcareType: null,
-    themeName: 'Professional'
+    isHealthcare: !!healthcareType,
+    healthcareType: healthcareType,
+    themeName: healthcareType && healthcareThemes[healthcareType] 
+      ? healthcareThemes[healthcareType].name 
+      : 'Professional'
   };
+  
+  return demoTheme;
 }
 
 // Helper function to convert hex color to RGB
