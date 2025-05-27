@@ -213,6 +213,16 @@ export interface ExportOptions {
     primaryColor?: string;
     secondaryColor?: string;
   };
+  // HTML Customization options
+  customization?: {
+    primaryColor?: string;
+    accentColor?: string;
+    fontFamily?: "system" | "serif" | "sans-serif" | "monospace";
+    headerStyle?: "modern" | "classic" | "minimal" | "corporate";
+    layout?: "standard" | "compact" | "spacious";
+    cornerRadius?: "none" | "small" | "medium" | "large";
+    shadowStyle?: "none" | "subtle" | "medium" | "strong";
+  };
 }
 
 // Progress tracking

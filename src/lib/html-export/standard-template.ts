@@ -1,12 +1,76 @@
 
 import { SopDocument } from "@/types/sop";
 
+// Helper function to get font family CSS
+function getFontFamilyCSS(fontFamily: string): string {
+  switch (fontFamily) {
+    case "serif":
+      return "Georgia, 'Times New Roman', Times, serif";
+    case "sans-serif":
+      return "'Helvetica Neue', Helvetica, Arial, sans-serif";
+    case "monospace":
+      return "'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace";
+    default:
+      return "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+  }
+}
+
+// Helper function to get layout spacing
+function getLayoutSpacing(layout: string) {
+  switch (layout) {
+    case "compact":
+      return { container: "20px 15px", stepPadding: "20px", stepMargin: "20px" };
+    case "spacious":
+      return { container: "60px 30px", stepPadding: "40px", stepMargin: "40px" };
+    default:
+      return { container: "40px 20px", stepPadding: "30px", stepMargin: "30px" };
+  }
+}
+
+// Helper function to get header styles
+function getHeaderStyles(headerStyle: string, primaryColor: string) {
+  switch (headerStyle) {
+    case "classic":
+      return {
+        background: "linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)",
+        border: `3px solid ${primaryColor}`,
+        titleColor: "#2c3e50"
+      };
+    case "minimal":
+      return {
+        background: "transparent",
+        border: `1px solid #e9ecef`,
+        titleColor: primaryColor
+      };
+    case "corporate":
+      return {
+        background: `linear-gradient(135deg, ${primaryColor}15 0%, ${primaryColor}05 100%)`,
+        border: `2px solid ${primaryColor}30`,
+        titleColor: primaryColor
+      };
+    default: // modern
+      return {
+        background: "white",
+        border: "none",
+        titleColor: primaryColor
+      };
+  }
+}
+
 export function generateStandardHtmlTemplate(
   sopDocument: SopDocument,
   options: any = {}
 ): string {
   const { steps = [] } = sopDocument;
   const title = sopDocument.title || "SOPify Training Module";
+  
+  // Extract customization options
+  const customization = options.customization || {};
+  const primaryColor = customization.primaryColor || "#007AFF";
+  const accentColor = customization.accentColor || "#5856D6";
+  const fontFamily = getFontFamilyCSS(customization.fontFamily || "system");
+  const spacing = getLayoutSpacing(customization.layout || "standard");
+  const headerStyles = getHeaderStyles(customization.headerStyle || "modern", primaryColor);
   
   // Generate steps HTML
   const generateStepsHtml = () => {
@@ -152,7 +216,7 @@ export function generateStandardHtmlTemplate(
         }
         
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-family: ${fontFamily};
             line-height: 1.6;
             color: #333;
             background: #f8f9fa;
@@ -161,22 +225,32 @@ export function generateStandardHtmlTemplate(
         .container {
             max-width: 900px;
             margin: 0 auto;
-            padding: 40px 20px;
+            padding: ${spacing.container};
         }
         
         .header {
             text-align: center;
             margin-bottom: 40px;
             padding: 30px;
-            background: white;
+            background: ${headerStyles.background};
+            border: ${headerStyles.border};
             border-radius: 12px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .company-name {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #666;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
         
         .title {
             font-size: 2.5rem;
             font-weight: 700;
-            color: #007AFF;
+            color: ${headerStyles.titleColor};
             margin-bottom: 10px;
         }
         
@@ -188,8 +262,8 @@ export function generateStandardHtmlTemplate(
         .step-container {
             background: white;
             border-radius: 12px;
-            padding: 30px;
-            margin-bottom: 30px;
+            padding: ${spacing.stepPadding};
+            margin-bottom: ${spacing.stepMargin};
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
         
@@ -200,7 +274,7 @@ export function generateStandardHtmlTemplate(
         }
         
         .step-number {
-            background: #007AFF;
+            background: ${primaryColor};
             color: white;
             width: 50px;
             height: 50px;
@@ -248,12 +322,12 @@ export function generateStandardHtmlTemplate(
             background: #f8f9fa;
             padding: 20px;
             border-radius: 8px;
-            border-left: 4px solid #007AFF;
+            border-left: 4px solid ${accentColor};
         }
         
         .callouts-list h4 {
             margin-bottom: 10px;
-            color: #007AFF;
+            color: ${accentColor};
         }
         
         .callouts-list ul {
@@ -265,12 +339,28 @@ export function generateStandardHtmlTemplate(
         }
         
         .footer {
-            text-align: center;
             padding: 30px;
             background: white;
             border-radius: 12px;
             margin-top: 40px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .footer-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .footer-left p {
+            margin: 0;
+            color: #666;
+            font-weight: 500;
+        }
+        
+        .footer-right p {
+            margin: 0;
+            color: #666;
         }
         
         @media (max-width: 768px) {
@@ -291,12 +381,19 @@ export function generateStandardHtmlTemplate(
             .title {
                 font-size: 2rem;
             }
+            
+            .footer-content {
+                flex-direction: column;
+                gap: 10px;
+                text-align: center;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
+            ${sopDocument.companyName ? `<div class="company-name">${sopDocument.companyName}</div>` : ''}
             <h1 class="title">${title}</h1>
             <p class="subtitle">${sopDocument.topic || 'Standard Operating Procedure'}</p>
         </div>
@@ -304,8 +401,14 @@ export function generateStandardHtmlTemplate(
         ${generateStepsHtml()}
         
         <div class="footer">
-            <p>Created with <strong>SOPify</strong> - Professional SOP Management Platform</p>
-            <p style="margin-top: 10px; color: #666;">Visit <a href="https://sopifyapp.com" style="color: #007AFF;">sopifyapp.com</a> to create your own SOPs</p>
+            <div class="footer-content">
+                <div class="footer-left">
+                    ${sopDocument.companyName ? `<p>&copy; ${sopDocument.companyName} ${new Date().getFullYear()}</p>` : ''}
+                </div>
+                <div class="footer-right">
+                    <p>Created with <a href="https://sopifyapp.com" style="color: ${primaryColor}; text-decoration: none;"><strong>SOPify</strong></a></p>
+                </div>
+            </div>
         </div>
     </div>
 </body>

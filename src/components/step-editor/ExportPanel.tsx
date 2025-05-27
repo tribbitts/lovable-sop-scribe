@@ -43,7 +43,14 @@ const ExportPanel: React.FC<ExportPanelProps> = ({
     includeTableOfContents: true,
     includeProgressInfo: false,
     quality: "high",
-    mode: "standalone"
+    mode: "standalone",
+    customization: {
+      primaryColor: "#007AFF",
+      accentColor: "#5856D6",
+      fontFamily: "system",
+      headerStyle: "modern",
+      layout: "standard"
+    }
   });
 
   const htmlThemes = [
@@ -194,19 +201,149 @@ const ExportPanel: React.FC<ExportPanelProps> = ({
                 </div>
 
                 {showAdvanced && (
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <Label className="text-blue-200 text-sm font-medium">High Quality Images</Label>
-                      <p className="text-xs text-blue-300/70">Full resolution export</p>
+                  <>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <Label className="text-blue-200 text-sm font-medium">High Quality Images</Label>
+                        <p className="text-xs text-blue-300/70">Full resolution export</p>
+                      </div>
+                      <Switch
+                        checked={exportOptions.quality === "high"}
+                        onCheckedChange={(checked) => setExportOptions(prev => ({ 
+                          ...prev, 
+                          quality: checked ? "high" : "medium" 
+                        }))}
+                      />
                     </div>
-                    <Switch
-                      checked={exportOptions.quality === "high"}
-                      onCheckedChange={(checked) => setExportOptions(prev => ({ 
-                        ...prev, 
-                        quality: checked ? "high" : "medium" 
-                      }))}
-                    />
-                  </div>
+
+                    {/* HTML Customization Section */}
+                    <div className="mt-4 p-4 bg-blue-900/10 border border-blue-600/30 rounded-lg">
+                      <h4 className="text-blue-200 font-medium text-sm mb-3 flex items-center gap-2">
+                        <Settings className="h-4 w-4" />
+                        HTML Customization
+                      </h4>
+                      
+                      <div className="space-y-3">
+                        {/* Primary Color */}
+                        <div className="flex items-center justify-between">
+                          <Label className="text-blue-200 text-xs">Primary Color</Label>
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="color"
+                              value={exportOptions.customization?.primaryColor || "#007AFF"}
+                              onChange={(e) => setExportOptions(prev => ({
+                                ...prev,
+                                customization: {
+                                  ...prev.customization,
+                                  primaryColor: e.target.value
+                                }
+                              }))}
+                              className="w-8 h-6 rounded border border-zinc-600 bg-transparent cursor-pointer"
+                            />
+                            <span className="text-xs text-blue-300">
+                              {exportOptions.customization?.primaryColor || "#007AFF"}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Accent Color */}
+                        <div className="flex items-center justify-between">
+                          <Label className="text-blue-200 text-xs">Accent Color</Label>
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="color"
+                              value={exportOptions.customization?.accentColor || "#5856D6"}
+                              onChange={(e) => setExportOptions(prev => ({
+                                ...prev,
+                                customization: {
+                                  ...prev.customization,
+                                  accentColor: e.target.value
+                                }
+                              }))}
+                              className="w-8 h-6 rounded border border-zinc-600 bg-transparent cursor-pointer"
+                            />
+                            <span className="text-xs text-blue-300">
+                              {exportOptions.customization?.accentColor || "#5856D6"}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Font Family */}
+                        <div className="flex items-center justify-between">
+                          <Label className="text-blue-200 text-xs">Font Style</Label>
+                          <Select
+                            value={exportOptions.customization?.fontFamily || "system"}
+                            onValueChange={(value) => setExportOptions(prev => ({
+                              ...prev,
+                              customization: {
+                                ...prev.customization,
+                                fontFamily: value as any
+                              }
+                            }))}
+                          >
+                            <SelectTrigger className="w-32 h-8 bg-zinc-800 border-zinc-700 text-white text-xs">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent className="bg-zinc-800 border-zinc-700">
+                              <SelectItem value="system" className="text-white hover:bg-zinc-700 text-xs">System</SelectItem>
+                              <SelectItem value="serif" className="text-white hover:bg-zinc-700 text-xs">Serif</SelectItem>
+                              <SelectItem value="sans-serif" className="text-white hover:bg-zinc-700 text-xs">Sans Serif</SelectItem>
+                              <SelectItem value="monospace" className="text-white hover:bg-zinc-700 text-xs">Monospace</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        {/* Header Style */}
+                        <div className="flex items-center justify-between">
+                          <Label className="text-blue-200 text-xs">Header Style</Label>
+                          <Select
+                            value={exportOptions.customization?.headerStyle || "modern"}
+                            onValueChange={(value) => setExportOptions(prev => ({
+                              ...prev,
+                              customization: {
+                                ...prev.customization,
+                                headerStyle: value as any
+                              }
+                            }))}
+                          >
+                            <SelectTrigger className="w-32 h-8 bg-zinc-800 border-zinc-700 text-white text-xs">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent className="bg-zinc-800 border-zinc-700">
+                              <SelectItem value="modern" className="text-white hover:bg-zinc-700 text-xs">Modern</SelectItem>
+                              <SelectItem value="classic" className="text-white hover:bg-zinc-700 text-xs">Classic</SelectItem>
+                              <SelectItem value="minimal" className="text-white hover:bg-zinc-700 text-xs">Minimal</SelectItem>
+                              <SelectItem value="corporate" className="text-white hover:bg-zinc-700 text-xs">Corporate</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        {/* Layout Style */}
+                        <div className="flex items-center justify-between">
+                          <Label className="text-blue-200 text-xs">Layout</Label>
+                          <Select
+                            value={exportOptions.customization?.layout || "standard"}
+                            onValueChange={(value) => setExportOptions(prev => ({
+                              ...prev,
+                              customization: {
+                                ...prev.customization,
+                                layout: value as any
+                              }
+                            }))}
+                          >
+                            <SelectTrigger className="w-32 h-8 bg-zinc-800 border-zinc-700 text-white text-xs">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent className="bg-zinc-800 border-zinc-700">
+                              <SelectItem value="standard" className="text-white hover:bg-zinc-700 text-xs">Standard</SelectItem>
+                              <SelectItem value="compact" className="text-white hover:bg-zinc-700 text-xs">Compact</SelectItem>
+                              <SelectItem value="spacious" className="text-white hover:bg-zinc-700 text-xs">Spacious</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                    </div>
+                  </>
                 )}
 
                 <div className="flex justify-between items-center pt-2">
