@@ -13,14 +13,12 @@ import {
   CheckCircle2, 
   Circle, 
   Trash2, 
-  FileText,
-  Clock,
-  Shield,
-  AlertTriangle,
-  HelpCircle
+  Clock
 } from "lucide-react";
 import { SopStep, StepCardProps } from "@/types/sop";
 import { EnhancedContentBlock } from "@/types/enhanced-content";
+import { useScreenshotManager } from "@/hooks/useScreenshotManager";
+import { ScreenshotUpload } from "@/components/common/ScreenshotUpload";
 import EnhancedScreenshotEditor from "./EnhancedScreenshotEditor";
 import { ContentBlockSelector } from "@/components/content-blocks/ContentBlockSelector";
 import { ContentBlockRenderer } from "@/components/content-blocks/ContentBlockRenderer";
@@ -39,10 +37,15 @@ const StepCard: React.FC<StepCardProps> = ({
   const [showCalloutCursor, setShowCalloutCursor] = useState(false);
   const [cursorPosition, setCursorPosition] = useState({ x: 0, y: 0 });
 
+  // Use unified screenshot management
+  const screenshotManager = useScreenshotManager({
+    stepId: step.id,
+    step,
+    onStepChange
+  });
+
   const handleInputChange = (field: keyof SopStep, value: any) => {
-    if (onStepChange) {
-      onStepChange(step.id, field, value);
-    }
+    onStepChange?.(step.id, field, value);
   };
 
   const handleScreenshotMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -68,14 +71,6 @@ const StepCard: React.FC<StepCardProps> = ({
     }
   };
 
-  const setStepScreenshot = (id: string, dataUrl: string) => {
-    handleInputChange("screenshot", { 
-      id: Date.now().toString(), 
-      dataUrl, 
-      callouts: step.screenshot?.callouts || [] 
-    });
-  };
-
   const addCallout = (stepId: string, callout: Omit<any, "id">) => {
     if (step.screenshot) {
       const newCallout = { ...callout, id: Date.now().toString() };
@@ -92,12 +87,9 @@ const StepCard: React.FC<StepCardProps> = ({
   };
 
   const toggleCompletion = () => {
-    if (onStepComplete) {
-      onStepComplete(step.id, !step.completed);
-    }
+    onStepComplete?.(step.id, !step.completed);
   };
 
-  // Enhanced content block handlers
   const handleAddContentBlock = (block: EnhancedContentBlock) => {
     const currentBlocks = step.enhancedContentBlocks || [];
     const newBlock = { ...block, order: currentBlocks.length };
@@ -252,7 +244,6 @@ const StepCard: React.FC<StepCardProps> = ({
               />
             </div>
 
-            {/* Key Takeaway Field */}
             <div>
               <Label htmlFor={`takeaway-${step.id}`} className="text-zinc-300 font-medium">
                 Key Takeaway (Optional)
@@ -286,14 +277,14 @@ const StepCard: React.FC<StepCardProps> = ({
 
             <Separator className="bg-zinc-700" />
 
-            {/* Enhanced Screenshot Section */}
+            {/* Simplified Screenshot Section */}
             <div className="space-y-4">
               <Label className="text-zinc-300 font-medium">Screenshot & Annotations</Label>
               
-              {step.screenshot ? (
+              {screenshotManager.hasScreenshots ? (
                 <EnhancedScreenshotEditor
                   stepId={step.id}
-                  screenshot={step.screenshot}
+                  screenshot={step.screenshot!}
                   isEditingCallouts={isEditingCallouts}
                   calloutColor={calloutColor}
                   setCalloutColor={setCalloutColor}
@@ -302,7 +293,10 @@ const StepCard: React.FC<StepCardProps> = ({
                     if (file) {
                       const reader = new FileReader();
                       reader.onload = (event) => {
-                        setStepScreenshot(step.id, event.target?.result as string);
+                        const dataUrl = event.target?.result as string;
+                        if (dataUrl && step.screenshot) {
+                          screenshotManager.replaceScreenshot(step.screenshot.id, dataUrl);
+                        }
                       };
                       reader.readAsDataURL(file);
                     }
@@ -331,34 +325,16 @@ const StepCard: React.FC<StepCardProps> = ({
                   handleScreenshotMouseEnter={handleScreenshotMouseEnter}
                   handleScreenshotMouseLeave={handleScreenshotMouseLeave}
                   onUpdateScreenshot={(dataUrl) => {
-                    handleInputChange("screenshot", { ...step.screenshot, dataUrl });
+                    if (step.screenshot) {
+                      handleInputChange("screenshot", { ...step.screenshot, dataUrl });
+                    }
                   }}
                 />
               ) : (
-                <div className="border-2 border-dashed border-zinc-600 rounded-lg p-8 text-center">
-                  <p className="text-zinc-400 mb-4">No screenshot added yet</p>
-                  <Button
-                    variant="outline"
-                    className="border-zinc-600 text-zinc-300 hover:bg-zinc-700"
-                  >
-                    Upload Screenshot
-                    <Input
-                      type="file"
-                      accept="image/*"
-                      className="absolute inset-0 opacity-0 cursor-pointer"
-                      onChange={(e) => {
-                        const file = e.target.files?.[0];
-                        if (file) {
-                          const reader = new FileReader();
-                          reader.onload = (event) => {
-                            setStepScreenshot(step.id, event.target?.result as string);
-                          };
-                          reader.readAsDataURL(file);
-                        }
-                      }}
-                    />
-                  </Button>
-                </div>
+                <ScreenshotUpload
+                  variant="dropzone"
+                  onUpload={(dataUrl) => screenshotManager.addScreenshot(dataUrl)}
+                />
               )}
               
               <div className="flex items-center gap-2">
