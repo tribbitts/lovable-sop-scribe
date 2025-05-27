@@ -63,7 +63,7 @@ export const useSavedSops = () => {
           folder_id: folderId || null,
           title: sopDocument.title || 'Untitled SOP',
           description,
-          content: sopDocument
+          content: sopDocument as any // Cast to any to satisfy Json type
         })
         .select()
         .single();
@@ -101,7 +101,7 @@ export const useSavedSops = () => {
           folder_id: folderId || null,
           title: sopDocument.title || 'Untitled SOP',
           description,
-          content: sopDocument,
+          content: sopDocument as any, // Cast to any to satisfy Json type
           updated_at: new Date().toISOString()
         })
         .eq('id', id)
