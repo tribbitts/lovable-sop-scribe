@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -22,7 +21,7 @@ import {
 } from "lucide-react";
 import { SopStep, StepCardProps } from "@/types/sop";
 import { EnhancedContentBlock } from "@/types/enhanced-content";
-import StepScreenshot from "./StepScreenshot";
+import EnhancedScreenshotEditor from "./EnhancedScreenshotEditor";
 import { ContentBlockSelector } from "@/components/content-blocks/ContentBlockSelector";
 import { ContentBlockRenderer } from "@/components/content-blocks/ContentBlockRenderer";
 
@@ -107,6 +106,12 @@ const StepCard: React.FC<StepCardProps> = ({
 
   const handleUpdateContentBlocks = (blocks: EnhancedContentBlock[]) => {
     handleInputChange("enhancedContentBlocks", blocks);
+  };
+
+  const handleEnhancedCalloutUpdate = (callouts: any[]) => {
+    if (step.screenshot) {
+      handleInputChange("screenshot", { ...step.screenshot, callouts });
+    }
   };
 
   return (
@@ -277,23 +282,95 @@ const StepCard: React.FC<StepCardProps> = ({
 
             <Separator className="bg-zinc-700" />
 
-            {/* Screenshot Section */}
-            <StepScreenshot
-              step={step}
-              isEditingCallouts={isEditingCallouts}
-              calloutColor={calloutColor}
-              setCalloutColor={setCalloutColor}
-              showCalloutCursor={showCalloutCursor}
-              cursorPosition={cursorPosition}
-              handleScreenshotMouseMove={handleScreenshotMouseMove}
-              handleScreenshotMouseEnter={handleScreenshotMouseEnter}
-              handleScreenshotMouseLeave={handleScreenshotMouseLeave}
-              toggleEditMode={toggleEditMode}
-              setStepScreenshot={setStepScreenshot}
-              addCallout={addCallout}
-              deleteCallout={deleteCallout}
-              onStepChange={onStepChange}
-            />
+            {/* Enhanced Screenshot Section */}
+            <div className="space-y-4">
+              <Label className="text-zinc-300 font-medium">Screenshot & Annotations</Label>
+              
+              {step.screenshot ? (
+                <EnhancedScreenshotEditor
+                  stepId={step.id}
+                  screenshot={step.screenshot}
+                  isEditingCallouts={isEditingCallouts}
+                  calloutColor={calloutColor}
+                  setCalloutColor={setCalloutColor}
+                  onScreenshotUpload={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      const reader = new FileReader();
+                      reader.onload = (event) => {
+                        setStepScreenshot(step.id, event.target?.result as string);
+                      };
+                      reader.readAsDataURL(file);
+                    }
+                  }}
+                  onScreenshotClick={(e) => {
+                    if (isEditingCallouts) {
+                      const rect = e.currentTarget.getBoundingClientRect();
+                      const x = ((e.clientX - rect.left) / rect.width) * 100;
+                      const y = ((e.clientY - rect.top) / rect.height) * 100;
+                      
+                      addCallout(step.id, {
+                        shape: "circle",
+                        color: calloutColor,
+                        x,
+                        y,
+                        width: 5,
+                        height: 5
+                      });
+                    }
+                  }}
+                  onCalloutClick={deleteCallout}
+                  onCalloutUpdate={handleEnhancedCalloutUpdate}
+                  cursorPosition={cursorPosition}
+                  showCalloutCursor={showCalloutCursor}
+                  handleScreenshotMouseMove={handleScreenshotMouseMove}
+                  handleScreenshotMouseEnter={handleScreenshotMouseEnter}
+                  handleScreenshotMouseLeave={handleScreenshotMouseLeave}
+                  onUpdateScreenshot={(dataUrl) => {
+                    handleInputChange("screenshot", { ...step.screenshot, dataUrl });
+                  }}
+                />
+              ) : (
+                <div className="border-2 border-dashed border-zinc-600 rounded-lg p-8 text-center">
+                  <p className="text-zinc-400 mb-4">No screenshot added yet</p>
+                  <Button
+                    variant="outline"
+                    className="border-zinc-600 text-zinc-300 hover:bg-zinc-700"
+                  >
+                    Upload Screenshot
+                    <Input
+                      type="file"
+                      accept="image/*"
+                      className="absolute inset-0 opacity-0 cursor-pointer"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          const reader = new FileReader();
+                          reader.onload = (event) => {
+                            setStepScreenshot(step.id, event.target?.result as string);
+                          };
+                          reader.readAsDataURL(file);
+                        }
+                      }}
+                    />
+                  </Button>
+                </div>
+              )}
+              
+              <div className="flex items-center gap-2">
+                <Button
+                  size="sm"
+                  variant={isEditingCallouts ? "default" : "outline"}
+                  onClick={toggleEditMode}
+                  className={isEditingCallouts 
+                    ? "bg-blue-600 hover:bg-blue-700 text-white" 
+                    : "border-zinc-600 text-zinc-300 hover:bg-zinc-700"
+                  }
+                >
+                  {isEditingCallouts ? "Finish Editing" : "Edit Callouts"}
+                </Button>
+              </div>
+            </div>
           </CardContent>
         )}
       </Card>
