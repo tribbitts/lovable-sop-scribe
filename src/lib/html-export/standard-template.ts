@@ -61,17 +61,19 @@ export function generateStandardHtmlTemplate(
   options: any = {}
 ): string {
   const { steps = [] } = sopDocument;
-  const title = sopDocument.title || "SOPify Training Module";
   
   // Extract customization options
   const customization = options.customization || {};
   const primaryColor = customization.primaryColor || "#007AFF";
   const accentColor = customization.accentColor || "#5856D6";
-  const fontFamily = getFontFamilyCSS(customization.fontFamily || "system");
-  const spacing = getLayoutSpacing(customization.layout || "standard");
-  const headerStyles = getHeaderStyles(customization.headerStyle || "modern", primaryColor);
+  const fontFamily = customization.fontFamily || "system";
+  const headerStyle = customization.headerStyle || "modern";
+  const layout = customization.layout || "standard";
   
-  // Generate steps HTML
+  const title = sopDocument.title || "Standard Operating Procedure";
+  const companyName = sopDocument.companyName || "Your Organization";
+  const currentYear = new Date().getFullYear();
+  
   const generateStepsHtml = () => {
     return steps.map((step: any, index: number) => {
       const stepNumber = index + 1;
@@ -92,8 +94,8 @@ export function generateStandardHtmlTemplate(
                   if (step.screenshot && step.screenshot.dataUrl) {
                     screenshotHtml += `
                     <div class="screenshot-container">
-                        <div class="screenshot-wrapper" style="position: relative; display: inline-block;">
-                            <img src="${step.screenshot.dataUrl}" alt="Step ${stepNumber} Screenshot" class="step-screenshot" />
+                        <div class="screenshot-wrapper" style="position: relative; display: inline-block; width: 100%;">
+                            <img src="${step.screenshot.dataUrl}" alt="Step ${stepNumber} Screenshot" class="step-screenshot" style="width: 100%; height: auto; display: block;" />
                             ${step.screenshot.callouts && step.screenshot.callouts.length > 0 ? 
                               step.screenshot.callouts.map((callout: any) => `
                                 <div class="callout callout-${callout.shape}" style="
@@ -104,6 +106,7 @@ export function generateStandardHtmlTemplate(
                                   height: ${callout.height}%;
                                   border: 2px solid ${callout.color};
                                   background-color: ${callout.color}40;
+                                  transform: translate(-50%, -50%);
                                   ${callout.shape === 'circle' || callout.shape === 'number' ? `
                                     border-radius: 50%;
                                     aspect-ratio: 1 / 1;
@@ -154,8 +157,8 @@ export function generateStandardHtmlTemplate(
                       if (screenshot.dataUrl) {
                         screenshotHtml += `
                         <div class="screenshot-container">
-                            <div class="screenshot-wrapper" style="position: relative; display: inline-block;">
-                                <img src="${screenshot.dataUrl}" alt="Step ${stepNumber} Screenshot ${imgIndex + 1}" class="step-screenshot" />
+                            <div class="screenshot-wrapper" style="position: relative; display: inline-block; width: 100%;">
+                                <img src="${screenshot.dataUrl}" alt="Step ${stepNumber} Screenshot ${imgIndex + 1}" class="step-screenshot" style="width: 100%; height: auto; display: block;" />
                                 ${screenshot.callouts && screenshot.callouts.length > 0 ? 
                                   screenshot.callouts.map((callout: any) => `
                                     <div class="callout callout-${callout.shape}" style="
@@ -166,6 +169,7 @@ export function generateStandardHtmlTemplate(
                                       height: ${callout.height}%;
                                       border: 2px solid ${callout.color};
                                       background-color: ${callout.color}40;
+                                      transform: translate(-50%, -50%);
                                       ${callout.shape === 'circle' || callout.shape === 'number' ? `
                                         border-radius: 50%;
                                         aspect-ratio: 1 / 1;
@@ -275,7 +279,7 @@ export function generateStandardHtmlTemplate(
                         case 'warning':
                           enhancedContentHtml += `
                             <div class="enhanced-content-block warning-block">
-                              ${block.title ? `<h4 class="block-title warning-title">⚠️ ${block.title}</h4>` : ''}
+                              ${block.title ? `<h4 class="block-title warning-title">${block.title}</h4>` : ''}
                               <div class="warning-content">${block.content}</div>
                             </div>
                           `;
@@ -284,54 +288,19 @@ export function generateStandardHtmlTemplate(
                     });
                   }
                   
-                  // Add detailed instructions if present
-                  if (step.detailedInstructions) {
-                    enhancedContentHtml += `
-                      <div class="enhanced-content-block detailed-instructions">
-                        <h4 class="block-title">📋 Detailed Instructions</h4>
-                        <div class="detailed-content">${step.detailedInstructions}</div>
-                      </div>
-                    `;
-                  }
-                  
-                  // Add notes if present
-                  if (step.notes) {
-                    enhancedContentHtml += `
-                      <div class="enhanced-content-block notes-section">
-                        <h4 class="block-title">📝 Notes</h4>
-                        <div class="notes-content">${step.notes}</div>
-                      </div>
-                    `;
-                  }
-                  
-                  // Add file link if present
-                  if (step.fileLink) {
-                    enhancedContentHtml += `
-                      <div class="enhanced-content-block file-link-section">
-                        <h4 class="block-title">🔗 Resource Link</h4>
-                        <div class="file-link-content">
-                          <a href="${step.fileLink}" target="_blank" class="resource-link">
-                            ${step.fileLinkText || step.fileLink}
-                          </a>
-                        </div>
-                      </div>
-                    `;
-                  }
-                  
                   return enhancedContentHtml;
                 })()}
                 
-                ${step.callouts && step.callouts.length > 0 ? `
-                <div class="callouts-list">
-                    <h4>Key Points:</h4>
-                    <ul>
-                        ${step.callouts.map((callout: any) => `<li>${callout.text}</li>`).join('')}
-                    </ul>
-                </div>
+                ${step.keyTakeaway ? `
+                  <div class="key-takeaway">
+                    <h4>💡 Key Takeaway</h4>
+                    <p>${step.keyTakeaway}</p>
+                  </div>
                 ` : ''}
             </div>
-        </div>`;
-    }).join('\n        ');
+        </div>
+      `;
+    }).join('');
   };
 
   return `<!DOCTYPE html>
@@ -341,6 +310,8 @@ export function generateStandardHtmlTemplate(
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>${title}</title>
     <style>
+        ${getFontFamilyCSS(fontFamily)}
+        
         * {
             margin: 0;
             padding: 0;
@@ -348,20 +319,22 @@ export function generateStandardHtmlTemplate(
         }
         
         body {
-            font-family: ${fontFamily};
+            font-family: ${fontFamily === 'system' ? '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif' : fontFamily};
             line-height: 1.6;
             color: #333;
             background: #f8f9fa;
-            max-width: 900px;
+            max-width: 1200px;
             margin: 0 auto;
-            padding: ${spacing.container};
+            padding: 40px 20px;
+            ${getLayoutSpacing(layout)}
         }
         
         .header {
-            text-align: center;
-            border-bottom: 3px solid ${primaryColor};
-            padding-bottom: 30px;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
             margin-bottom: 40px;
+            overflow: hidden;
             position: relative;
         }
         
@@ -369,360 +342,289 @@ export function generateStandardHtmlTemplate(
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
-            margin-bottom: 30px;
-            position: relative;
+            padding: 30px 40px 20px;
+            background: linear-gradient(135deg, ${primaryColor}08, ${accentColor}08);
         }
         
         .header-left {
             text-align: left;
-            position: absolute;
-            left: 0;
-            top: 0;
-        }
-        
-        .header-right {
-            text-align: right;
-            position: absolute;
-            right: 0;
-            top: 0;
         }
         
         .company-name {
             color: ${primaryColor};
-            font-size: 1.2rem;
+            font-size: 24px;
             font-weight: bold;
-            margin-bottom: 5px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
+            margin-bottom: 8px;
         }
         
         .version {
-            font-size: 0.9rem;
             color: #666;
-            font-weight: 500;
+            font-size: 14px;
+            background: ${primaryColor}15;
+            padding: 4px 12px;
+            border-radius: 20px;
+            display: inline-block;
+        }
+        
+        .header-right {
+            text-align: right;
         }
         
         .document-date {
-            font-size: 1rem;
             color: #666;
+            font-size: 16px;
             font-weight: 500;
-            margin-bottom: 5px;
+            margin-bottom: 4px;
         }
         
         .last-revised {
-            font-size: 0.9rem;
-            color: #666;
-            font-weight: 500;
+            color: #888;
+            font-size: 14px;
         }
         
         .header-center {
             text-align: center;
-            margin-top: 60px;
+            padding: 20px 40px 40px;
+            ${getHeaderStyles(headerStyle, primaryColor)}
         }
         
         .title {
-            font-size: 2.5rem;
-            font-weight: bold;
-            color: #1E1E1E;
-            margin-bottom: 10px;
+            font-size: 3rem;
+            font-weight: 800;
+            color: #1a1a1a;
+            margin-bottom: 16px;
+            letter-spacing: -0.02em;
         }
         
         .subtitle {
-            font-size: 1.2rem;
+            font-size: 1.25rem;
             color: #666;
-            margin-bottom: 20px;
+            margin-bottom: 24px;
+            font-weight: 400;
         }
         
         .demo-badge {
             background: linear-gradient(135deg, ${primaryColor}, ${accentColor});
             color: white;
             padding: 12px 24px;
-            border-radius: 25px;
-            font-weight: bold;
-            text-align: center;
-            margin: 20px auto;
+            border-radius: 30px;
+            font-weight: 600;
             display: inline-block;
-            box-shadow: 0 4px 15px rgba(0, 122, 255, 0.3);
+            box-shadow: 0 4px 15px ${primaryColor}40;
         }
         
         .step {
-            margin-bottom: ${spacing.stepMargin};
-            page-break-inside: avoid;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-            border-radius: 12px;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            margin-bottom: 32px;
             overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .step:hover {
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
         }
         
         .step-header {
             background: linear-gradient(135deg, ${primaryColor}, ${accentColor});
             color: white;
-            padding: ${spacing.stepPadding};
-            margin-bottom: 0;
+            padding: 32px 40px;
+            position: relative;
         }
         
         .step-number {
-            font-size: 1.1rem;
-            font-weight: bold;
+            font-size: 16px;
+            font-weight: 600;
             opacity: 0.9;
-            margin-bottom: 5px;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
         
         .step-title {
-            font-size: 1.5rem;
-            font-weight: bold;
-            margin: 5px 0;
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            line-height: 1.3;
         }
         
         .step-description {
-            font-size: 1rem;
-            opacity: 0.9;
-            margin-top: 10px;
+            font-size: 18px;
+            opacity: 0.95;
+            line-height: 1.5;
         }
         
         .step-content {
-            background: white;
-            border: 1px solid #e0e0e0;
-            border-top: none;
-            padding: ${spacing.stepPadding};
-            border-radius: 0 0 12px 12px;
+            padding: 40px;
         }
         
         .screenshot-container {
-            margin: 20px 0;
+            margin: 24px 0;
             text-align: center;
         }
         
-        .step-screenshot {
+        .screenshot-wrapper {
+            position: relative;
+            display: inline-block;
             max-width: 100%;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+        }
+        
+        .step-screenshot {
+            width: 100%;
             height: auto;
-            border-radius: 8px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
-            border: 1px solid #e0e0e0;
+            display: block;
+            border-radius: 12px;
+        }
+        
+        .callout {
+            pointer-events: none;
+            z-index: 10;
         }
         
         .screenshot-title {
-            margin-top: 10px;
-            font-size: 0.9rem;
-            color: #666;
+            margin-top: 16px;
             font-style: italic;
+            color: #666;
+            font-size: 14px;
         }
         
-        .callouts-list {
+        .key-takeaway {
             background: linear-gradient(135deg, #e8f5e8, #f0f8f0);
             border-left: 4px solid #34C759;
-            padding: 20px;
-            border-radius: 0 8px 8px 0;
-            margin: 20px 0;
+            padding: 24px;
+            margin: 32px 0;
+            border-radius: 0 12px 12px 0;
         }
         
-        .callouts-list h4 {
-            color: #2e7d32;
-            margin-bottom: 10px;
-            font-size: 1.1rem;
+        .key-takeaway h4 {
+            color: #2d5a2d;
+            font-size: 18px;
+            margin-bottom: 12px;
+            font-weight: 600;
         }
         
-        .callouts-list ul {
-            margin-left: 20px;
-        }
-        
-        .callouts-list li {
-            margin-bottom: 8px;
-            color: #2e7d32;
+        .key-takeaway p {
+            color: #2d5a2d;
+            font-size: 16px;
+            line-height: 1.6;
         }
         
         /* Enhanced Content Blocks */
         .enhanced-content-block {
-            margin: 20px 0;
-            padding: 20px;
-            border-radius: 8px;
+            margin: 24px 0;
+            padding: 24px;
+            border-radius: 12px;
             background: #f8f9fa;
-            border-left: 4px solid ${primaryColor};
+            border: 1px solid #e9ecef;
         }
         
         .block-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 16px;
             color: ${primaryColor};
-            font-size: 1.1rem;
-            font-weight: bold;
-            margin-bottom: 15px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        /* Table Styles */
-        .table-block {
-            background: white;
-            border: 1px solid #e0e0e0;
-        }
-        
-        .table-container {
-            overflow-x: auto;
         }
         
         .content-table {
             width: 100%;
             border-collapse: collapse;
-            margin: 0;
+            margin-top: 8px;
         }
         
         .content-table th,
         .content-table td {
-            border: 1px solid #e0e0e0;
-            padding: 12px;
+            padding: 12px 16px;
             text-align: left;
+            border-bottom: 1px solid #dee2e6;
         }
         
         .content-table th {
             background: linear-gradient(135deg, ${primaryColor}15, ${accentColor}15);
-            font-weight: bold;
-            color: #333;
-        }
-        
-        .content-table tr:nth-child(even) {
-            background: #f8f9fa;
-        }
-        
-        /* List Styles */
-        .list-block {
-            background: linear-gradient(135deg, #e8f4fd, #f0f8ff);
-            border-left-color: #007AFF;
+            font-weight: 600;
+            color: #495057;
         }
         
         .content-list {
-            margin: 0;
-            padding-left: 20px;
+            padding-left: 24px;
         }
         
         .content-list li {
             margin-bottom: 8px;
-            color: #333;
-        }
-        
-        /* Text Block Styles */
-        .text-block {
-            background: linear-gradient(135deg, #f0f8f0, #f8fff8);
-            border-left-color: #34C759;
+            line-height: 1.6;
         }
         
         .text-content {
-            color: #333;
-            line-height: 1.6;
+            line-height: 1.7;
+            color: #495057;
         }
         
-        /* Note Block Styles */
         .note-block {
-            background: linear-gradient(135deg, #fff8e1, #fffbf0);
-            border-left-color: #FF9500;
+            background: linear-gradient(135deg, #e3f2fd, #f3e5f5);
+            border-left: 4px solid #2196F3;
         }
         
         .note-title {
-            color: #e65100;
+            color: #1976D2;
         }
         
         .note-content {
-            color: #333;
-            font-style: italic;
+            color: #1976D2;
         }
         
-        /* Warning Block Styles */
         .warning-block {
-            background: linear-gradient(135deg, #ffebee, #fff5f5);
-            border-left-color: #FF3B30;
+            background: linear-gradient(135deg, #fff3e0, #fce4ec);
+            border-left: 4px solid #FF9800;
         }
         
         .warning-title {
-            color: #c62828;
+            color: #F57C00;
         }
         
         .warning-content {
-            color: #333;
-            font-weight: 500;
-        }
-        
-        /* Detailed Instructions */
-        .detailed-instructions {
-            background: linear-gradient(135deg, #e3f2fd, #f3e5f5);
-            border-left-color: #5856D6;
-        }
-        
-        .detailed-content {
-            color: #333;
-            line-height: 1.7;
-        }
-        
-        /* Notes Section */
-        .notes-section {
-            background: linear-gradient(135deg, #f3e5f5, #faf2ff);
-            border-left-color: #AF52DE;
-        }
-        
-        .notes-content {
-            color: #333;
-            font-style: italic;
-            line-height: 1.6;
-        }
-        
-        /* File Link Section */
-        .file-link-section {
-            background: linear-gradient(135deg, #e8f5e8, #f0f8f0);
-            border-left-color: #34C759;
-        }
-        
-        .resource-link {
-            color: ${primaryColor};
-            text-decoration: none;
-            font-weight: bold;
-            padding: 8px 16px;
-            background: white;
-            border: 2px solid ${primaryColor};
-            border-radius: 6px;
-            display: inline-block;
-            transition: all 0.2s ease;
-        }
-        
-        .resource-link:hover {
-            background: ${primaryColor};
-            color: white;
+            color: #F57C00;
         }
         
         .footer {
-            padding: 30px;
+            margin-top: 60px;
+            padding: 30px 0;
+            border-top: 2px solid ${primaryColor};
             background: white;
-            border-radius: 12px;
-            margin-top: 50px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-            border-top: 3px solid ${primaryColor};
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
         }
         
         .footer-content {
             display: flex;
             justify-content: space-between;
             align-items: center;
+            max-width: 100%;
+            margin: 0 auto;
+            padding: 0 40px;
         }
         
         .footer-left {
             text-align: left;
-        }
-        
-        .footer-left p {
-            margin: 0;
             color: #666;
-            font-weight: 500;
+            font-size: 14px;
         }
         
         .footer-right {
             text-align: right;
         }
         
-        .footer-right p {
-            margin: 0;
-            color: #666;
-        }
-        
         .footer-right a {
             color: ${primaryColor};
             text-decoration: none;
             font-weight: bold;
+            font-size: 14px;
+        }
+        
+        .footer-right a:hover {
+            text-decoration: underline;
         }
         
         /* Print-specific styles for PDF generation */
@@ -756,55 +658,11 @@ export function generateStandardHtmlTemplate(
                 margin-bottom: 30px !important;
                 background: white !important;
                 border-bottom: 3px solid ${primaryColor} !important;
-                padding-bottom: 20px !important;
+                box-shadow: none !important;
             }
             
             .header-top {
-                display: flex !important;
-                justify-content: space-between !important;
-                align-items: flex-start !important;
-                margin-bottom: 20px !important;
-                width: 100% !important;
-                position: relative !important;
-            }
-            
-            .header-left {
-                position: absolute !important;
-                left: 0 !important;
-                top: 0 !important;
-                text-align: left !important;
-                width: auto !important;
-                flex: none !important;
-            }
-            
-            .header-right {
-                position: absolute !important;
-                right: 0 !important;
-                top: 0 !important;
-                text-align: right !important;
-                width: auto !important;
-                flex: none !important;
-            }
-            
-            .header-center {
-                text-align: center !important;
-                margin-top: 40px !important;
-                width: 100% !important;
-                position: relative !important;
-            }
-            
-            .company-name,
-            .version,
-            .document-date,
-            .last-revised {
-                display: block !important;
-                margin: 2px 0 !important;
-                padding: 0 !important;
-                line-height: 1.2 !important;
-            }
-            
-            .demo-badge {
-                background: linear-gradient(135deg, ${primaryColor}, ${accentColor}) !important;
+                background: white !important;
                 -webkit-print-color-adjust: exact !important;
                 print-color-adjust: exact !important;
             }
@@ -981,7 +839,7 @@ export function generateStandardHtmlTemplate(
     <div class="header">
         <div class="header-top">
             <div class="header-left">
-                ${sopDocument.companyName ? `<div class="company-name">${sopDocument.companyName}</div>` : ''}
+                <div class="company-name">${companyName}</div>
                 ${sopDocument.version ? `<div class="version">Version ${sopDocument.version}</div>` : ''}
             </div>
             <div class="header-right">
@@ -1003,10 +861,10 @@ export function generateStandardHtmlTemplate(
     <div class="footer">
         <div class="footer-content">
             <div class="footer-left">
-                ${sopDocument.companyName ? `<p>&copy; ${sopDocument.companyName} ${new Date().getFullYear()}</p>` : ''}
+                <p>${companyName} © ${currentYear}</p>
             </div>
             <div class="footer-right">
-                <p>Created with <a href="https://sopifyapp.com"><strong>SOPify</strong></a></p>
+                <p>Created by <a href="https://sopifyapp.com" target="_blank"><strong>SOPifyapp.com</strong></a></p>
             </div>
         </div>
     </div>
