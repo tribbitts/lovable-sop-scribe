@@ -10,8 +10,10 @@ import PdfExportError from "./PdfExportError";
 import ExportFormatSelector, { ExportOptions } from "./ExportFormatSelector";
 import HtmlExportOptions from "./HtmlExportOptions";
 import EnhancedHtmlExportOptions, { EnhancedHtmlExportSettings } from "./EnhancedHtmlExportOptions";
+import PdfExportOptions from "@/components/PdfExportOptions";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { BookOpen, Settings, Sparkles, Download, FileText } from "lucide-react";
 
 // Extended format type
@@ -21,6 +23,7 @@ const ExportManager = () => {
   const { sopDocument } = useSopContext();
   const [showLegacyInterface, setShowLegacyInterface] = useState(false);
   const [format, setFormat] = useState<ExtendedExportFormat>("pdf");
+  const [showPdfExportOptions, setShowPdfExportOptions] = useState(false);
   
   // Enhanced HTML settings
   const [enhancedSettings, setEnhancedSettings] = useState<EnhancedHtmlExportSettings>({
@@ -73,8 +76,8 @@ const ExportManager = () => {
     console.log('📄 Comprehensive Export Started:', options);
     
     if (options.format === "pdf") {
-      // PDF export only takes sopDocument parameter
-      handlePdfExport(sopDocument);
+      // Show PDF export options modal for user to choose between Standard and Demo-Style
+      setShowPdfExportOptions(true);
     } else if (options.format === "html") {
       handleExportHtml(sopDocument, { 
         mode: exportMode
@@ -108,7 +111,7 @@ const ExportManager = () => {
   // Legacy export handler
   const onExport = () => {
     if (format === "pdf") {
-      handlePdfExport(sopDocument);
+      setShowPdfExportOptions(true);
     } else if (format === "html") {
       handleExportHtml(sopDocument, { mode: exportMode });
     } else if (format === "enhanced-html") {
@@ -193,35 +196,17 @@ const ExportManager = () => {
                 
                 <Button
                   variant="outline"
-                  onClick={() => handleComprehensiveExport({
-                    format: 'pdf',
-                    quality: 'standard',
-                    theme: 'light',
-                    includeImages: true,
-                    includeCallouts: true,
-                    includeTags: true,
-                    includeResources: true,
-                    includeProgress: true,
-                    enableInteractive: false,
-                    compressionLevel: 50,
-                    pageSize: 'A4',
-                    orientation: 'portrait',
-                    trainingMode: false,
-                    quizEnabled: false,
-                    trackingEnabled: false,
-                    certificateEnabled: false,
-                    adminAccess: false
-                  })}
+                  onClick={() => setShowPdfExportOptions(true)}
                   disabled={isExporting || sopDocument.steps.length === 0}
                   className="border-zinc-600 text-zinc-300"
                 >
                   <Download className="h-4 w-4 mr-2" />
-                  Quick PDF
+                  Export PDF
                 </Button>
               </div>
               
               <p className="text-xs text-zinc-400">
-                Use "Quick PDF" for standard export with default settings, or use the format selector above for full customization.
+                Use "Export PDF" to choose between standard and demo-style PDF exports, or use the format selector above for other formats.
               </p>
             </CardContent>
           </Card>
@@ -236,6 +221,19 @@ const ExportManager = () => {
         pdfPreviewUrl={pdfPreviewUrl}
         exportError={displayError}
       />
+      
+      {/* PDF Export Options Modal */}
+      <Dialog open={showPdfExportOptions} onOpenChange={setShowPdfExportOptions}>
+        <DialogContent className="bg-zinc-900 border-zinc-800 max-w-5xl w-[95vw] max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-white">PDF Export Options</DialogTitle>
+          </DialogHeader>
+          <PdfExportOptions 
+            sopDocument={sopDocument}
+            onClose={() => setShowPdfExportOptions(false)}
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
