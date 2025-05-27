@@ -199,6 +199,9 @@ const CalloutOverlay: React.FC<CalloutOverlayProps> = ({
               style={{ 
                 backgroundColor: `${callout.color}40`,
                 borderColor: callout.color,
+                aspectRatio: '1 / 1',
+                minWidth: '20px',
+                minHeight: '20px'
               }}
             >
               {callout.number && (
@@ -267,7 +270,14 @@ const CalloutOverlay: React.FC<CalloutOverlayProps> = ({
               className="w-full h-full flex items-center justify-center"
               style={{ color: callout.color }}
             >
-              <MousePointer className="w-full h-full" />
+              <svg 
+                className="w-full h-full" 
+                viewBox="0 0 24 24" 
+                fill="currentColor"
+                style={{ transform: 'rotate(-45deg)' }}
+              >
+                <path d="M12 2L22 12L12 22L10.59 20.59L18.17 13H2V11H18.17L10.59 3.41L12 2Z" />
+              </svg>
             </div>
           );
         

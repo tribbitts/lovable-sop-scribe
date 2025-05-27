@@ -22,11 +22,32 @@ export function generateStandardHtmlTemplate(
             <div class="step-content">
                 <p class="step-description">${step.description || 'Complete this step to continue.'}</p>
                 
-                ${step.screenshot ? `
-                <div class="screenshot-container">
-                    <img src="${step.screenshot.dataUrl}" alt="Step ${stepNumber} Screenshot" class="step-screenshot" />
-                </div>
-                ` : ''}
+                ${(() => {
+                  let screenshotHtml = '';
+                  
+                  // Handle legacy single screenshot
+                  if (step.screenshot && step.screenshot.dataUrl) {
+                    screenshotHtml += `
+                    <div class="screenshot-container">
+                        <img src="${step.screenshot.dataUrl}" alt="Step ${stepNumber} Screenshot" class="step-screenshot" />
+                    </div>`;
+                  }
+                  
+                  // Handle new multiple screenshots array
+                  if (step.screenshots && step.screenshots.length > 0) {
+                    step.screenshots.forEach((screenshot: any, imgIndex: number) => {
+                      if (screenshot.dataUrl) {
+                        screenshotHtml += `
+                        <div class="screenshot-container">
+                            <img src="${screenshot.dataUrl}" alt="Step ${stepNumber} Screenshot ${imgIndex + 1}" class="step-screenshot" />
+                            ${screenshot.title ? `<p class="screenshot-title">${screenshot.title}</p>` : ''}
+                        </div>`;
+                      }
+                    });
+                  }
+                  
+                  return screenshotHtml;
+                })()}
                 
                 ${step.callouts && step.callouts.length > 0 ? `
                 <div class="callouts-list">
@@ -138,6 +159,13 @@ export function generateStandardHtmlTemplate(
             height: auto;
             border-radius: 8px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        
+        .screenshot-title {
+            margin-top: 8px;
+            font-size: 0.9em;
+            color: #666;
+            font-style: italic;
         }
         
         .callouts-list {
