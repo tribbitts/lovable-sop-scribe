@@ -3,7 +3,6 @@ import { SopDocument } from "@/types/sop";
 
 export const createHealthcareSOP = (): SopDocument => {
   return {
-    id: crypto.randomUUID(),
     title: "Healthcare SOP Template",
     topic: "Healthcare Procedures",
     description: "A specialized SOP for healthcare procedures with compliance and safety guidelines",

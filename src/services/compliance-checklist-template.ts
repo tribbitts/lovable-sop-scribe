@@ -3,7 +3,6 @@ import { SopDocument } from "@/types/sop";
 
 export const createComplianceChecklistSOP = (): SopDocument => {
   return {
-    id: crypto.randomUUID(),
     title: "Compliance Checklist",
     topic: "Regulatory Compliance",
     description: "A detailed checklist to ensure compliance with industry regulations",

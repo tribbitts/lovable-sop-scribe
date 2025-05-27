@@ -3,7 +3,6 @@ import { SopDocument } from "@/types/sop";
 
 export const createTroubleshootingGuideSOP = (): SopDocument => {
   return {
-    id: crypto.randomUUID(),
     title: "Troubleshooting Guide",
     topic: "Technical Support",
     description: "A guide to quickly resolve common issues and problems",

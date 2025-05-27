@@ -3,7 +3,6 @@ import { SopDocument } from "@/types/sop";
 
 export const createBasicSOP = (): SopDocument => {
   return {
-    id: crypto.randomUUID(),
     title: "Basic SOP Template",
     topic: "Standard Operating Procedure",
     description: "A simple, step-by-step guide for standard operating procedures",

@@ -3,7 +3,6 @@ import { SopDocument } from "@/types/sop";
 
 export const createTrainingModuleSOP = (): SopDocument => {
   return {
-    id: crypto.randomUUID(),
     title: "Interactive Training Module",
     topic: "Training & Development",
     description: "An interactive training module with quizzes and progress tracking",
