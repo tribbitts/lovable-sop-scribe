@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -15,14 +16,16 @@ import {
   Download, 
   FileText, 
   Globe, 
-  GraduationCap, 
+  Eye, 
   Package,
   Loader2,
   Settings,
   Palette,
   Shield,
   BookOpen,
-  Zap
+  Zap,
+  Printer,
+  ExternalLink
 } from "lucide-react";
 import { SopDocument, ExportFormat, ExportOptions } from "@/types/sop";
 import PdfExportOptions from "@/components/PdfExportOptions";
@@ -40,7 +43,7 @@ const ExportPanel: React.FC<ExportPanelProps> = ({
   isExporting = false,
   exportProgress = ""
 }) => {
-  const [selectedFormat, setSelectedFormat] = useState<ExportFormat | "bundle">("bundle");
+  const [selectedFormat, setSelectedFormat] = useState<ExportFormat | "bundle">("html");
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [showPdfExportOptions, setShowPdfExportOptions] = useState(false);
   const [exportOptions, setExportOptions] = useState<ExportOptions>({
@@ -56,65 +59,53 @@ const ExportPanel: React.FC<ExportPanelProps> = ({
     customPrimaryColor: "#007AFF",
     customSecondaryColor: "#1E1E1E",
     includeResources: true,
-    bundleName: document.title || "Training-Package",
+    bundleName: document.title || "SOP-Package",
     includeStyleGuide: true,
     includeQuickReference: true,
-    includeVideoPlaceholders: false,
     generateThumbnails: true,
     createFolderStructure: true
   });
 
   const exportFormats = [
     {
-      id: "bundle" as const,
-      title: "Bundled Training Package",
-      description: "Complete training solution with PDF manual + interactive HTML module",
-      icon: Package,
+      id: "html" as const,
+      title: "Interactive HTML SOP",
+      description: "Rich, interactive SOP that can be viewed in any browser and printed as PDF",
+      icon: Globe,
       badge: "Recommended",
+      badgeColor: "bg-gradient-to-r from-blue-600 to-green-600",
+      features: ["Browser Compatible", "Print-to-PDF Ready", "Interactive Elements", "Offline Capable"],
+      primary: true
+    },
+    {
+      id: "bundle" as const,
+      title: "Complete SOP Package",
+      description: "Comprehensive package with HTML SOP + PDF manual + resources",
+      icon: Package,
+      badge: "Complete",
       badgeColor: "bg-gradient-to-r from-purple-600 to-blue-600",
-      features: ["Professional PDF Manual", "Interactive HTML Module", "Offline Capable", "Resource Files"]
+      features: ["HTML SOP", "PDF Manual", "Resource Files", "Professional Structure"]
     },
     {
       id: "pdf" as const,
-      title: "PDF Manual",
-      description: "Professional training manual for printing and reference",
+      title: "Direct PDF Export",
+      description: "Traditional PDF document for immediate download",
       icon: FileText,
       badge: "Classic",
       badgeColor: "bg-gray-600",
-      features: ["Print-Ready", "Professional Layout", "Comprehensive", "Portable"]
-    },
-    {
-      id: "html" as const,
-      title: "Interactive Module",
-      description: "Web-based training with progress tracking and interactivity",
-      icon: Globe,
-      badge: "Interactive",
-      badgeColor: "bg-green-600",
-      features: ["Progress Tracking", "Interactive Elements", "Modern Design", "Self-Contained"]
-    },
-    {
-      id: "training-module" as const,
-      title: "Enhanced Training Module",
-      description: "Advanced interactive training with LMS features",
-      icon: GraduationCap,
-      badge: "Advanced",
-      badgeColor: "bg-orange-600",
-      features: ["LMS Integration", "Advanced Analytics", "Custom Branding", "Password Protection"]
+      features: ["Instant Download", "Print-Ready", "Universal Compatibility", "Traditional Format"]
     }
   ];
 
-  const pdfThemes = [
-    { id: "professional", name: "Professional", description: "Clean, business-focused design" },
-    { id: "elegant", name: "Elegant", description: "Sophisticated purple and gold styling" },
-    { id: "technical", name: "Technical", description: "Clean, engineering-focused design" },
-    { id: "modern", name: "Modern", description: "Contemporary styling with bold accents" },
-    { id: "corporate", name: "Corporate", description: "Traditional, formal appearance" },
-    { id: "custom", name: "Custom", description: "Use your brand colors" }
+  const htmlThemes = [
+    { id: "auto", name: "Smart Theme", description: "Automatically adapts to content and user preference" },
+    { id: "light", name: "Professional Light", description: "Clean, business-focused light theme" },
+    { id: "dark", name: "Modern Dark", description: "Contemporary dark theme with rich colors" }
   ];
 
   const handleExport = () => {
     if (selectedFormat === "bundle") {
-      // For bundle exports, pass the options in a format the DocumentManager expects
+      // For bundle exports, pass comprehensive options
       const bundleExportOptions = {
         bundleOptions: {
           pdfOptions: {
@@ -129,21 +120,13 @@ const ExportPanel: React.FC<ExportPanelProps> = ({
           },
           htmlOptions: {
             mode: exportOptions.mode,
-            enhanced: true,
-            enhancedOptions: {
-              theme: exportOptions.theme,
-              lmsFeatures: {
-                enableNotes: true,
-                enableBookmarks: true,
-                enableSearch: true,
-                enableProgressTracking: exportOptions.includeProgressInfo
-              }
-            }
+            theme: exportOptions.theme,
+            includeTableOfContents: exportOptions.includeTableOfContents,
+            includeProgressInfo: exportOptions.includeProgressInfo
           },
           includeResources: bundleOptions.includeResources,
           bundleName: bundleOptions.bundleName
         },
-        // Add bundle-specific options at root level for easier access
         includeStyleGuide: bundleOptions.includeStyleGuide,
         includeQuickReference: bundleOptions.includeQuickReference,
         generateThumbnails: bundleOptions.generateThumbnails,
@@ -153,14 +136,27 @@ const ExportPanel: React.FC<ExportPanelProps> = ({
       console.log('🎯 ExportPanel sending bundle options:', bundleExportOptions);
       onExport(selectedFormat, bundleExportOptions as any);
     } else if (selectedFormat === "pdf") {
-      // Show PDF export options modal for user to choose between Standard and Demo-Style
+      // Show PDF export options modal
       setShowPdfExportOptions(true);
-    } else {
-      // For other formats, use the original structure
-      const options: ExportOptions = {
-        ...exportOptions
+    } else if (selectedFormat === "html") {
+      // For HTML exports, use enhanced options for interactivity
+      const htmlOptions: ExportOptions = {
+        ...exportOptions,
+        mode: 'standalone',
+        enhanced: true,
+        enhancedOptions: {
+          theme: exportOptions.theme,
+          features: {
+            enableNotes: true,
+            enableBookmarks: true,
+            enableSearch: true,
+            enableProgressTracking: exportOptions.includeProgressInfo
+          }
+        }
       };
-      onExport(selectedFormat, options);
+      onExport(selectedFormat, htmlOptions);
+    } else {
+      onExport(selectedFormat, exportOptions);
     }
   };
 
@@ -173,7 +169,7 @@ const ExportPanel: React.FC<ExportPanelProps> = ({
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-semibold flex items-center gap-2">
             <Download className="h-5 w-5" />
-            Export Training Module
+            Export SOP
           </h2>
         </div>
         
@@ -184,6 +180,21 @@ const ExportPanel: React.FC<ExportPanelProps> = ({
             </p>
           </div>
         )}
+
+        {/* HTML Export Highlight */}
+        <div className="bg-blue-900/20 border border-blue-700/50 rounded-lg p-4 mb-4">
+          <div className="flex items-start gap-3">
+            <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center flex-shrink-0">
+              <Printer className="h-4 w-4 text-white" />
+            </div>
+            <div>
+              <h3 className="text-blue-300 font-medium text-sm mb-1">Best PDF Quality</h3>
+              <p className="text-blue-200 text-xs leading-relaxed">
+                Export as Interactive HTML, then use your browser's "Print to PDF" (Ctrl+P) for the highest quality PDF output with perfect styling.
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Content */}
@@ -202,7 +213,7 @@ const ExportPanel: React.FC<ExportPanelProps> = ({
                   selectedFormat === format.id
                     ? "border-blue-500 bg-blue-500/10"
                     : "border-zinc-700 bg-zinc-800/50 hover:border-zinc-600"
-                }`}
+                } ${format.primary ? "ring-2 ring-blue-500/30" : ""}`}
                 onClick={() => setSelectedFormat(format.id)}
               >
                 <div className="flex items-start gap-3">
@@ -216,6 +227,11 @@ const ExportPanel: React.FC<ExportPanelProps> = ({
                       <Badge className={`${format.badgeColor} text-white text-xs`}>
                         {format.badge}
                       </Badge>
+                      {format.primary && (
+                        <Badge className="bg-green-600 text-white text-xs">
+                          Best Quality
+                        </Badge>
+                      )}
                     </div>
                     
                     <p className="text-sm text-zinc-400 mb-2">{format.description}</p>
@@ -246,39 +262,25 @@ const ExportPanel: React.FC<ExportPanelProps> = ({
 
         <Separator className="bg-zinc-700 my-6" />
 
-        {/* Bundle-Specific Options */}
-        {selectedFormat === "bundle" && (
+        {/* Format-Specific Options */}
+        {selectedFormat === "html" && (
           <div className="space-y-6 mb-6">
             <h3 className="text-lg font-medium flex items-center gap-2">
-              <Settings className="h-5 w-5" />
-              Bundle Configuration
+              <Globe className="h-5 w-5" />
+              Interactive HTML Options
             </h3>
             
-            {/* Bundle Name */}
-            <div>
-              <Label htmlFor="bundleName" className="text-sm font-medium text-zinc-300 mb-2 block">
-                Bundle Name
-              </Label>
-              <Input
-                id="bundleName"
-                value={bundleOptions.bundleName}
-                onChange={(e) => setBundleOptions(prev => ({ ...prev, bundleName: e.target.value }))}
-                placeholder="Training Package Name"
-                className="bg-zinc-800 border-zinc-700 text-white"
-              />
-            </div>
-
-            {/* PDF Theme Selection */}
+            {/* Theme Selection */}
             <div>
               <Label className="text-sm font-medium text-zinc-300 mb-2 block">
-                PDF Manual Theme
+                Visual Theme
               </Label>
-              <Select value={bundleOptions.pdfTheme} onValueChange={(value) => setBundleOptions(prev => ({ ...prev, pdfTheme: value }))}>
+              <Select value={exportOptions.theme} onValueChange={(value: "light" | "dark" | "auto") => setExportOptions(prev => ({ ...prev, theme: value }))}>
                 <SelectTrigger className="bg-zinc-800 border-zinc-700 text-white">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {pdfThemes.map((theme) => (
+                  {htmlThemes.map((theme) => (
                     <SelectItem key={theme.id} value={theme.id}>
                       <div>
                         <div className="font-medium">{theme.name}</div>
@@ -290,59 +292,57 @@ const ExportPanel: React.FC<ExportPanelProps> = ({
               </Select>
             </div>
 
-            {/* Custom Colors */}
-            {bundleOptions.pdfTheme === "custom" && (
-              <div className="grid grid-cols-2 gap-4">
+            {/* Print-to-PDF Guidance */}
+            <div className="bg-green-900/20 border border-green-700/50 rounded-lg p-4">
+              <div className="flex items-start gap-3">
+                <Printer className="h-5 w-5 text-green-400 mt-0.5 flex-shrink-0" />
                 <div>
-                  <Label className="text-sm font-medium text-zinc-300 mb-2 block">
-                    Primary Color
-                  </Label>
-                  <div className="flex gap-2">
-                    <div 
-                      className="w-10 h-10 rounded border border-zinc-700"
-                      style={{ backgroundColor: bundleOptions.customPrimaryColor }}
-                    />
-                    <Input
-                      type="color"
-                      value={bundleOptions.customPrimaryColor}
-                      onChange={(e) => setBundleOptions(prev => ({ ...prev, customPrimaryColor: e.target.value }))}
-                      className="flex-1 bg-zinc-800 border-zinc-700"
-                    />
-                  </div>
-                </div>
-                
-                <div>
-                  <Label className="text-sm font-medium text-zinc-300 mb-2 block">
-                    Secondary Color
-                  </Label>
-                  <div className="flex gap-2">
-                    <div 
-                      className="w-10 h-10 rounded border border-zinc-700"
-                      style={{ backgroundColor: bundleOptions.customSecondaryColor }}
-                    />
-                    <Input
-                      type="color"
-                      value={bundleOptions.customSecondaryColor}
-                      onChange={(e) => setBundleOptions(prev => ({ ...prev, customSecondaryColor: e.target.value }))}
-                      className="flex-1 bg-zinc-800 border-zinc-700"
-                    />
+                  <h4 className="text-green-300 font-medium text-sm mb-2">Perfect PDF Creation</h4>
+                  <div className="text-green-200 text-xs space-y-1">
+                    <p>1. Export as Interactive HTML</p>
+                    <p>2. Open the HTML file in your browser</p>
+                    <p>3. Press Ctrl+P (or Cmd+P on Mac)</p>
+                    <p>4. Select "Save as PDF" for professional quality</p>
                   </div>
                 </div>
               </div>
-            )}
+            </div>
+          </div>
+        )}
 
-            {/* Enhanced Bundle Options */}
+        {selectedFormat === "bundle" && (
+          <div className="space-y-6 mb-6">
+            <h3 className="text-lg font-medium flex items-center gap-2">
+              <Package className="h-5 w-5" />
+              Complete Package Options
+            </h3>
+            
+            {/* Package Name */}
+            <div>
+              <Label htmlFor="bundleName" className="text-sm font-medium text-zinc-300 mb-2 block">
+                Package Name
+              </Label>
+              <Input
+                id="bundleName"
+                value={bundleOptions.bundleName}
+                onChange={(e) => setBundleOptions(prev => ({ ...prev, bundleName: e.target.value }))}
+                placeholder="SOP Package Name"
+                className="bg-zinc-800 border-zinc-700 text-white"
+              />
+            </div>
+
+            {/* Package Contents */}
             <div className="space-y-4">
               <h4 className="text-sm font-medium text-zinc-300 flex items-center gap-2">
-                <Package className="h-4 w-4" />
-                Bundle Contents
+                <BookOpen className="h-4 w-4" />
+                Package Contents
               </h4>
               
               <div className="grid gap-3">
                 <div className="flex items-center justify-between">
                   <div>
-                    <Label className="text-sm font-medium text-zinc-300">Include Resources</Label>
-                    <p className="text-xs text-zinc-500">Add logos, backgrounds, and media files</p>
+                    <Label className="text-sm font-medium text-zinc-300">Resource Files</Label>
+                    <p className="text-xs text-zinc-500">Include screenshots and media files</p>
                   </div>
                   <Switch
                     checked={bundleOptions.includeResources}
@@ -352,19 +352,8 @@ const ExportPanel: React.FC<ExportPanelProps> = ({
                 
                 <div className="flex items-center justify-between">
                   <div>
-                    <Label className="text-sm font-medium text-zinc-300">Style Guide</Label>
-                    <p className="text-xs text-zinc-500">Generate a visual style guide document</p>
-                  </div>
-                  <Switch
-                    checked={bundleOptions.includeStyleGuide}
-                    onCheckedChange={(checked) => setBundleOptions(prev => ({ ...prev, includeStyleGuide: checked }))}
-                  />
-                </div>
-                
-                <div className="flex items-center justify-between">
-                  <div>
                     <Label className="text-sm font-medium text-zinc-300">Quick Reference</Label>
-                    <p className="text-xs text-zinc-500">Create a condensed cheat sheet</p>
+                    <p className="text-xs text-zinc-500">Generate a condensed summary document</p>
                   </div>
                   <Switch
                     checked={bundleOptions.includeQuickReference}
@@ -374,23 +363,12 @@ const ExportPanel: React.FC<ExportPanelProps> = ({
                 
                 <div className="flex items-center justify-between">
                   <div>
-                    <Label className="text-sm font-medium text-zinc-300">Organized Folders</Label>
-                    <p className="text-xs text-zinc-500">Structure content in professional folders</p>
+                    <Label className="text-sm font-medium text-zinc-300">Organized Structure</Label>
+                    <p className="text-xs text-zinc-500">Create professional folder organization</p>
                   </div>
                   <Switch
                     checked={bundleOptions.createFolderStructure}
                     onCheckedChange={(checked) => setBundleOptions(prev => ({ ...prev, createFolderStructure: checked }))}
-                  />
-                </div>
-                
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label className="text-sm font-medium text-zinc-300">Generate Thumbnails</Label>
-                    <p className="text-xs text-zinc-500">Create preview images for all screenshots</p>
-                  </div>
-                  <Switch
-                    checked={bundleOptions.generateThumbnails}
-                    onCheckedChange={(checked) => setBundleOptions(prev => ({ ...prev, generateThumbnails: checked }))}
                   />
                 </div>
               </div>
@@ -400,7 +378,7 @@ const ExportPanel: React.FC<ExportPanelProps> = ({
 
         {/* Common Export Options */}
         <div className="space-y-4">
-          <h3 className="text-lg font-medium">Export Options</h3>
+          <h3 className="text-lg font-medium">Export Settings</h3>
           
           <div className="grid gap-4">
             {/* Quality */}
@@ -411,9 +389,9 @@ const ExportPanel: React.FC<ExportPanelProps> = ({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="low">Low (Faster)</SelectItem>
-                  <SelectItem value="medium">Medium (Balanced)</SelectItem>
-                  <SelectItem value="high">High (Best Quality)</SelectItem>
+                  <SelectItem value="low">Fast (Lower Quality)</SelectItem>
+                  <SelectItem value="medium">Balanced (Good Quality)</SelectItem>
+                  <SelectItem value="high">Best (Highest Quality)</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -430,11 +408,11 @@ const ExportPanel: React.FC<ExportPanelProps> = ({
               />
             </div>
 
-            {/* Include Progress Info */}
+            {/* Include Progress Tracking */}
             <div className="flex items-center justify-between">
               <div>
-                <Label className="text-sm font-medium text-zinc-300">Progress Tracking</Label>
-                <p className="text-xs text-zinc-500">Enable completion tracking</p>
+                <Label className="text-sm font-medium text-zinc-300">Step Progress</Label>
+                <p className="text-xs text-zinc-500">Enable step completion tracking</p>
               </div>
               <Switch
                 checked={exportOptions.includeProgressInfo}
@@ -459,7 +437,7 @@ const ExportPanel: React.FC<ExportPanelProps> = ({
         <Button
           onClick={handleExport}
           disabled={!canExport || isExporting}
-          className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white"
+          className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white"
         >
           {isExporting ? (
             <>
@@ -474,6 +452,28 @@ const ExportPanel: React.FC<ExportPanelProps> = ({
           )}
         </Button>
         
+        {selectedFormat === "html" && (
+          <div className="mt-3 space-y-2">
+            <div className="text-xs text-zinc-400 text-center">
+              Interactive HTML SOP with browser print-to-PDF capability
+            </div>
+            <div className="flex items-center justify-center gap-2 text-xs">
+              <div className="flex items-center gap-1 text-green-400">
+                <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+                <span>Interactive</span>
+              </div>
+              <div className="flex items-center gap-1 text-blue-400">
+                <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
+                <span>Print-Ready</span>
+              </div>
+              <div className="flex items-center gap-1 text-purple-400">
+                <div className="w-2 h-2 bg-purple-400 rounded-full"></div>
+                <span>Professional</span>
+              </div>
+            </div>
+          </div>
+        )}
+
         {selectedFormat === "bundle" && (
           <div className="mt-3 space-y-2">
             <div className="flex items-center justify-between text-xs text-zinc-400">
@@ -481,21 +481,7 @@ const ExportPanel: React.FC<ExportPanelProps> = ({
               <span className="font-mono">{document.steps.length > 10 ? '15-25 MB' : '5-15 MB'}</span>
             </div>
             <div className="text-xs text-zinc-500 text-center">
-              Complete training package with PDF manual, interactive module, and resources
-            </div>
-            <div className="flex items-center justify-center gap-2 text-xs">
-              <div className="flex items-center gap-1 text-green-400">
-                <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-                <span>PDF Manual</span>
-              </div>
-              <div className="flex items-center gap-1 text-blue-400">
-                <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
-                <span>Interactive Module</span>
-              </div>
-              <div className="flex items-center gap-1 text-purple-400">
-                <div className="w-2 h-2 bg-purple-400 rounded-full"></div>
-                <span>Resources</span>
-              </div>
+              Complete SOP package with HTML, PDF, and resources
             </div>
           </div>
         )}

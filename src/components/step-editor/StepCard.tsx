@@ -14,10 +14,11 @@ import {
   CheckCircle2, 
   Circle, 
   Trash2, 
-  GraduationCap,
+  FileText,
   Clock,
   Shield,
-  AlertTriangle
+  AlertTriangle,
+  HelpCircle
 } from "lucide-react";
 import { SopStep, StepCardProps } from "@/types/sop";
 import StepScreenshot from "./StepScreenshot";
@@ -101,6 +102,7 @@ const StepCard: React.FC<StepCardProps> = ({
   const hasCriticalContent = step.healthcareContent?.some(content => 
     content.priority === "high" || content.type === "critical-safety"
   );
+  const hasKnowledgeCheck = step.quizQuestions && step.quizQuestions.length > 0;
 
   return (
     <motion.div
@@ -153,13 +155,6 @@ const StepCard: React.FC<StepCardProps> = ({
                 </h3>
                 
                 <div className="flex items-center gap-2 mt-1">
-                  {step.trainingMode && (
-                    <Badge className="bg-purple-600 text-white text-xs">
-                      <GraduationCap className="h-3 w-3 mr-1" />
-                      Training
-                    </Badge>
-                  )}
-                  
                   {step.estimatedTime && (
                     <Badge className="bg-blue-600 text-white text-xs">
                       <Clock className="h-3 w-3 mr-1" />
@@ -178,6 +173,13 @@ const StepCard: React.FC<StepCardProps> = ({
                     <Badge className="bg-red-600 text-white text-xs animate-pulse">
                       <AlertTriangle className="h-3 w-3 mr-1" />
                       Critical
+                    </Badge>
+                  )}
+
+                  {hasKnowledgeCheck && (
+                    <Badge className="bg-green-600 text-white text-xs">
+                      <HelpCircle className="h-3 w-3 mr-1" />
+                      Knowledge Check
                     </Badge>
                   )}
                 </div>
@@ -241,7 +243,7 @@ const StepCard: React.FC<StepCardProps> = ({
 
             <div>
               <Label htmlFor={`description-${step.id}`} className="text-zinc-300 font-medium">
-                Description
+                Step Instructions
               </Label>
               <Textarea
                 id={`description-${step.id}`}
@@ -249,6 +251,20 @@ const StepCard: React.FC<StepCardProps> = ({
                 onChange={(e) => handleInputChange("description", e.target.value)}
                 placeholder="Describe what the user should do in this step..."
                 className="bg-zinc-800 border-zinc-700 text-white mt-1 min-h-[100px]"
+              />
+            </div>
+
+            {/* Key Takeaway Field */}
+            <div>
+              <Label htmlFor={`takeaway-${step.id}`} className="text-zinc-300 font-medium">
+                Key Takeaway (Optional)
+              </Label>
+              <Input
+                id={`takeaway-${step.id}`}
+                value={step.keyTakeaway || ""}
+                onChange={(e) => handleInputChange("keyTakeaway", e.target.value)}
+                placeholder="What's the main point users should remember?"
+                className="bg-zinc-800 border-zinc-700 text-white mt-1"
               />
             </div>
 
@@ -263,33 +279,29 @@ const StepCard: React.FC<StepCardProps> = ({
             <Separator className="bg-zinc-700" />
 
             {/* Screenshot Section */}
-                      <StepScreenshot
-            step={step}
-            isEditingCallouts={isEditingCallouts}
-            calloutColor={calloutColor}
-            setCalloutColor={setCalloutColor}
-            showCalloutCursor={showCalloutCursor}
-            cursorPosition={cursorPosition}
-            handleScreenshotMouseMove={handleScreenshotMouseMove}
-            handleScreenshotMouseEnter={handleScreenshotMouseEnter}
-            handleScreenshotMouseLeave={handleScreenshotMouseLeave}
-            toggleEditMode={toggleEditMode}
-            setStepScreenshot={setStepScreenshot}
-            addCallout={addCallout}
-            deleteCallout={deleteCallout}
-            onStepChange={onStepChange}
-          />
+            <StepScreenshot
+              step={step}
+              isEditingCallouts={isEditingCallouts}
+              calloutColor={calloutColor}
+              setCalloutColor={setCalloutColor}
+              showCalloutCursor={showCalloutCursor}
+              cursorPosition={cursorPosition}
+              handleScreenshotMouseMove={handleScreenshotMouseMove}
+              handleScreenshotMouseEnter={handleScreenshotMouseEnter}
+              handleScreenshotMouseLeave={handleScreenshotMouseLeave}
+              toggleEditMode={toggleEditMode}
+              setStepScreenshot={setStepScreenshot}
+              addCallout={addCallout}
+              deleteCallout={deleteCallout}
+              onStepChange={onStepChange}
+            />
 
-            {/* Quiz Section */}
-            {step.trainingMode && (
-              <>
-                <Separator className="bg-zinc-700" />
-                <StepQuiz
-                  step={step}
-                  onUpdateQuestions={(questions) => handleInputChange("quizQuestions", questions)}
-                />
-              </>
-            )}
+            {/* Knowledge Check Section */}
+            <Separator className="bg-zinc-700" />
+            <StepQuiz
+              step={step}
+              onUpdateQuestions={(questions) => handleInputChange("quizQuestions", questions)}
+            />
 
             {/* Resources Section */}
             <Separator className="bg-zinc-700" />

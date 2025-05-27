@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -12,7 +13,7 @@ import {
   Settings, 
   Save, 
   Plus, 
-  GraduationCap, 
+  FileText, 
   Sparkles,
   ChevronLeft,
   ChevronRight,
@@ -23,15 +24,13 @@ import {
   Users,
   Target,
   ArrowRight,
-  FileText,
+  Download,
   Shield
 } from "lucide-react";
 import StepCard from "@/components/step-editor/StepCard";
 import ProgressTracker from "@/components/ProgressTracker";
 import ExportPanel from "@/components/step-editor/ExportPanel";
-import ItmContentManager from "@/components/step-editor/ItmContentManager";
 import { useSopContext } from "@/context/SopContext";
-import LessonTemplateModal from "@/components/LessonTemplateModal";
 import { SopStep, SopDocument } from "@/types/sop";
 
 const SopCreator: React.FC = () => {
@@ -48,7 +47,6 @@ const SopCreator: React.FC = () => {
     getProgressPercentage,
     setTableOfContents,
     setDarkMode,
-    setTrainingMode,
     saveDocumentToJSON,
     resetDocument,
     setSopTitle,
@@ -64,12 +62,10 @@ const SopCreator: React.FC = () => {
   const [activeStepId, setActiveStepId] = useState<string | null>(null);
   const [showExportPanel, setShowExportPanel] = useState(false);
   const [showAdvancedSettings, setShowAdvancedSettings] = useState(false);
-  const [showTemplateSelector, setShowTemplateSelector] = useState(false);
+  const [showStepTemplateSelector, setShowStepTemplateSelector] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [exportProgress, setExportProgress] = useState<string>("");
-  const [showLessonTemplateModal, setShowLessonTemplateModal] = useState(false);
-  const [currentLessonIndex, setCurrentLessonIndex] = useState(0);
-  const [showContentManager, setShowContentManager] = useState(false);
+  const [currentStepIndex, setCurrentStepIndex] = useState(0);
 
   // Detect if this is a healthcare document
   const isHealthcareDocument = sopDocument?.steps.some(step => 
@@ -79,94 +75,70 @@ const SopCreator: React.FC = () => {
   sopDocument?.title.toLowerCase().includes('hipaa') ||
   sopDocument?.title.toLowerCase().includes('medical');
 
-  // Detect healthcare template type
-  const getHealthcareTemplateType = () => {
-    const title = sopDocument?.title.toLowerCase() || '';
-    
-    if (title.includes('new hire') || title.includes('onboarding')) {
-      return 'new-hire-onboarding';
-    }
-    if (title.includes('continued learning') || title.includes('professional development')) {
-      return 'continued-learning';
-    }
-    if (title.includes('communication') || title.includes('patient communication')) {
-      return 'communication-excellence';
-    }
-    
-    return 'healthcare-general';
-  };
-
-  const healthcareType = isHealthcareDocument ? getHealthcareTemplateType() : null;
-
-  // Lesson template definitions (context-aware)
-  const getLessonTemplates = () => {
+  // Step template definitions for SOP creation
+  const getStepTemplates = () => {
     const baseTemplates = [
       {
         type: "standard" as const,
-        title: isHealthcareDocument ? "Healthcare Procedure" : "Standard Lesson",
+        title: isHealthcareDocument ? "Healthcare Procedure Step" : "Standard Step",
         description: isHealthcareDocument 
           ? "Step-by-step healthcare procedure with safety protocols"
-          : "Text + screenshot format for step-by-step instructions",
+          : "Basic instruction step with screenshots and annotations",
         icon: BookOpen,
         color: isHealthcareDocument ? "from-teal-600 to-blue-600" : "from-blue-600 to-purple-600",
         features: isHealthcareDocument 
           ? ["Healthcare protocols", "Safety guidelines", "Patient care focus", "Screenshot support"]
-          : ["Text instructions", "Screenshot support", "Callout tools"]
+          : ["Clear instructions", "Screenshot support", "Callout annotations", "Resource links"]
       },
       {
         type: "knowledge-check" as const,
-        title: isHealthcareDocument ? "Compliance Assessment" : "Knowledge Check",
+        title: isHealthcareDocument ? "Compliance Verification" : "Knowledge Check",
         description: isHealthcareDocument
-          ? "Critical healthcare compliance and safety knowledge verification"
-          : "Test understanding with quiz questions and feedback",
+          ? "Critical healthcare compliance and safety verification"
+          : "Quick understanding check with simple Q&A",
         icon: HelpCircle,
         color: isHealthcareDocument ? "from-red-600 to-orange-600" : "from-green-600 to-teal-600",
         features: isHealthcareDocument
-          ? ["Compliance testing", "Safety verification", "High-stakes assessment", "Mandatory passing"]
-          : ["Quiz questions", "Immediate feedback", "Progress tracking"]
+          ? ["Compliance verification", "Safety confirmation", "Critical checkpoints"]
+          : ["Simple questions", "Quick validation", "Understanding checks"]
       },
       {
         type: "scenario" as const,
-        title: isHealthcareDocument ? "Patient Care Scenario" : "Real-World Scenario",
+        title: isHealthcareDocument ? "Patient Care Scenario" : "Example Scenario",
         description: isHealthcareDocument
           ? "Practice patient interactions and clinical decision-making"
-          : "Apply concepts through practical examples and case studies",
+          : "Real-world example or case study application",
         icon: Users,
         color: isHealthcareDocument ? "from-purple-600 to-pink-600" : "from-orange-600 to-red-600",
         features: isHealthcareDocument
-          ? ["Patient interactions", "Clinical scenarios", "Communication practice", "Decision-making"]
+          ? ["Patient interactions", "Clinical scenarios", "Communication examples"]
           : ["Practical examples", "Case studies", "Context application"]
       },
       {
         type: "resource-focus" as const,
-        title: isHealthcareDocument ? "Healthcare Resources" : "Resource Hub",
+        title: isHealthcareDocument ? "Healthcare Resources" : "Reference Materials",
         description: isHealthcareDocument
-          ? "Essential healthcare references, guidelines, and continuing education"
-          : "Curated links and additional materials for deeper learning",
+          ? "Essential healthcare references and continuing education resources"
+          : "Additional resources, links, and reference materials",
         icon: Target,
         color: isHealthcareDocument ? "from-emerald-600 to-teal-600" : "from-purple-600 to-pink-600",
         features: isHealthcareDocument
-          ? ["Clinical guidelines", "Compliance resources", "Professional development", "Evidence-based materials"]
-          : ["External links", "Downloadable resources", "Extended learning"]
+          ? ["Clinical guidelines", "Compliance resources", "Professional references"]
+          : ["External links", "Reference materials", "Additional resources"]
       }
     ];
 
     return baseTemplates;
   };
 
-  const lessonTemplates = getLessonTemplates();
+  const stepTemplates = getStepTemplates();
 
-  // Auto-expand first step when created and auto-enable training mode
+  // Auto-expand first step when created
   useEffect(() => {
     if (steps.length === 1 && !activeStepId) {
       setActiveStepId(steps[0].id);
     }
-    
-    // Auto-enable training mode if not set
-    if (sopDocument?.trainingMode === undefined) {
-      setTrainingMode(true);
-    }
-  }, [steps.length, activeStepId, sopDocument?.trainingMode, setTrainingMode]);
+  }, [steps.length, activeStepId]);
 
   // Auto-save functionality
   useEffect(() => {
@@ -186,31 +158,28 @@ const SopCreator: React.FC = () => {
   };
 
   const handleAddStep = () => {
-    setShowTemplateSelector(true);
+    setShowStepTemplateSelector(true);
   };
 
   const handleTemplateSelect = (templateType: "standard" | "knowledge-check" | "scenario" | "resource-focus") => {
     addStepFromTemplate(templateType);
-    setShowTemplateSelector(false);
+    setShowStepTemplateSelector(false);
     
     // Auto-focus the new step
     setTimeout(() => {
       const newStep = steps[steps.length - 1];
       if (newStep) {
+        setCurrentStepIndex(steps.length - 1);
         setActiveStepId(newStep.id);
       }
     }, 100);
-  };
-
-  const handleQuickExport = () => {
-    setShowExportPanel(true);
   };
 
   const handleExport = async (format: "pdf" | "html" | "training-module" | "bundle", options?: any) => {
     setIsExporting(true);
     
     if (format === "bundle") {
-      setExportProgress("Creating bundled training package...");
+      setExportProgress("Creating comprehensive SOP package...");
       console.log('🎯 SopCreator handling bundle export with options:', options);
       
       try {
@@ -219,7 +188,7 @@ const SopCreator: React.FC = () => {
         console.error("Bundle export failed:", error);
       }
     } else if (format === "training-module") {
-      setExportProgress("Creating interactive training module...");
+      setExportProgress("Creating interactive SOP module...");
       
       const enhancedOptions = {
         mode: 'standalone' as const,
@@ -230,7 +199,7 @@ const SopCreator: React.FC = () => {
             password: options?.trainingOptions?.passwordProtection || "",
             hint: "Contact your administrator for access"
           },
-          lmsFeatures: {
+          features: {
             enableNotes: options?.trainingOptions?.enableNotes ?? true,
             enableBookmarks: options?.trainingOptions?.enableBookmarks ?? true,
             enableSearch: true,
@@ -249,7 +218,7 @@ const SopCreator: React.FC = () => {
       try {
         await exportDocument("html", enhancedOptions);
       } catch (error) {
-        console.error("Training module export failed:", error);
+        console.error("Interactive SOP export failed:", error);
       }
     } else {
       setExportProgress(`Preparing ${format.toUpperCase()} export...`);
@@ -264,141 +233,60 @@ const SopCreator: React.FC = () => {
     setExportProgress("");
   };
 
-  const handleAddLesson = () => {
-    setShowLessonTemplateModal(true);
-  };
-
-  const handleAddLessonFromTemplate = (templateType: "standard" | "knowledge-check" | "scenario" | "resource-focus") => {
-    addStepFromTemplate(templateType);
-    setCurrentLessonIndex(steps.length); // Move to the new lesson
-    setShowLessonTemplateModal(false);
-    
-    console.log(`${templateType.replace('-', ' ')} lesson template has been added.`);
-  };
-
-  const handleSelectTemplate = (template: SopDocument) => {
-    // Replace the current document with the selected template
-    resetDocument();
-    // Set the document properties from the template
-    setSopTitle(template.title);
-    setSopTopic(template.topic);
-    setSopDescription(template.description || "");
-    setCompanyName(template.companyName);
-    setSopDate(template.date);
-    setTrainingMode(template.trainingMode || true);
-    
-    // Add all steps from the template
-    template.steps.forEach(step => {
-      addStep();
-      // Update the step with template data - this would need to be handled by the context
-    });
-    
-    setShowLessonTemplateModal(false);
-    console.log(`${template.title} template has been applied.`);
-  };
-
-  const handleAddHealthcareTemplate = (templateId: string) => {
-    // Import the healthcare template service
-    import("@/services/healthcare-template-service").then(({ HealthcareTemplateService }) => {
-      try {
-        const templateSteps = HealthcareTemplateService.createStepsFromTemplate(templateId);
-        const template = HealthcareTemplateService.getTemplateById(templateId);
-        
-        // Add all steps from the template
-        templateSteps.forEach(step => {
-          // Use addStep method to add each step to the SOP
-          addStep();
-          // Then update the step with template data
-          const stepIndex = steps.length;
-          updateStep(step.id, "title", step.title);
-          updateStep(step.id, "description", step.description);
-          updateStep(step.id, "detailedInstructions", step.detailedInstructions);
-          updateStep(step.id, "estimatedTime", step.estimatedTime);
-          updateStep(step.id, "tags", step.tags);
-          updateStep(step.id, "trainingMode", step.trainingMode);
-          updateStep(step.id, "healthcareContent", step.healthcareContent);
-          updateStep(step.id, "quizQuestions", step.quizQuestions);
-        });
-        
-        setCurrentLessonIndex(0); // Start with first lesson
-        setShowLessonTemplateModal(false);
-        
-        console.log(`${template?.name} template has been applied with ${templateSteps.length} lessons.`);
-      } catch (error) {
-        console.error("Failed to apply healthcare template:", error);
-      }
-    });
-  };
-
-  const handleDeleteLesson = (stepId: string) => {
+  const handleDeleteStep = (stepId: string) => {
     const stepIndex = steps.findIndex(step => step.id === stepId);
     if (stepIndex === -1) return;
     
     // Confirm deletion
-    const confirmDelete = window.confirm("Are you sure you want to delete this lesson? This action cannot be undone.");
+    const confirmDelete = window.confirm("Are you sure you want to delete this step? This action cannot be undone.");
     if (!confirmDelete) return;
     
     deleteStep(stepId);
     
-    // Adjust current lesson index if needed
-    if (currentLessonIndex >= steps.length - 1) {
-      setCurrentLessonIndex(Math.max(0, steps.length - 2));
+    // Adjust current step index if needed
+    if (currentStepIndex >= steps.length - 1) {
+      setCurrentStepIndex(Math.max(0, steps.length - 2));
     }
-    
-    console.log("The lesson has been removed from your training module.");
   };
 
-  const navigateToLesson = (index: number) => {
+  const navigateToStep = (index: number) => {
     if (index >= 0 && index < steps.length) {
-      setCurrentLessonIndex(index);
+      setCurrentStepIndex(index);
     }
   };
 
-  const nextLesson = () => {
-    if (currentLessonIndex < steps.length - 1) {
-      setCurrentLessonIndex(currentLessonIndex + 1);
+  const nextStep = () => {
+    if (currentStepIndex < steps.length - 1) {
+      setCurrentStepIndex(currentStepIndex + 1);
     }
   };
 
-  const prevLesson = () => {
-    if (currentLessonIndex > 0) {
-      setCurrentLessonIndex(currentLessonIndex - 1);
+  const prevStep = () => {
+    if (currentStepIndex > 0) {
+      setCurrentStepIndex(currentStepIndex - 1);
     }
   };
 
   // Get current step safely
-  const currentStep = steps.length > 0 ? steps[currentLessonIndex] : null;
+  const currentStep = steps.length > 0 ? steps[currentStepIndex] : null;
 
-  // Simplified header with key info only
-  const renderSimpleHeader = () => (
+  // Simplified header focused on SOP creation
+  const renderHeader = () => (
     <Card className="bg-[#1E1E1E] border-zinc-800 rounded-2xl mb-6">
       <CardContent className="p-6">
         <div className="flex items-center justify-between">
           <div className="flex-1">
             <div className="flex items-center gap-3 mb-2">
-              <h1 className="text-2xl font-bold text-white">Training Module Creator</h1>
-              {sopDocument?.trainingMode && (
-                <Badge className="bg-gradient-to-r from-purple-600 to-blue-600 text-white">
-                  <GraduationCap className="h-3 w-3 mr-1" />
-                  Interactive Mode
-                </Badge>
-              )}
+              <h1 className="text-2xl font-bold text-white">Interactive SOP Creator</h1>
+              <Badge className="bg-gradient-to-r from-blue-600 to-purple-600 text-white">
+                <FileText className="h-3 w-3 mr-1" />
+                Professional SOPs
+              </Badge>
             </div>
-            <p className="text-zinc-400 text-sm">Create engaging, interactive training experiences with ITM-PDF content distinction</p>
+            <p className="text-zinc-400 text-sm">Create engaging, interactive Standard Operating Procedures with rich content and annotations</p>
           </div>
           
           <div className="flex items-center gap-3">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowContentManager(!showContentManager)}
-              className={`text-zinc-300 border-zinc-700 hover:text-white hover:bg-zinc-800 ${
-                showContentManager ? 'bg-purple-600 border-purple-600 text-white' : ''
-              }`}
-            >
-              <FileText className="h-4 w-4 mr-2" />
-              Content Manager
-            </Button>
             <Button
               variant="outline"
               size="sm"
@@ -411,61 +299,44 @@ const SopCreator: React.FC = () => {
             <Button
               onClick={() => setShowExportPanel(true)}
               disabled={!sopDocument?.title || !sopDocument?.topic || steps.length === 0}
-              className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white"
+              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white"
             >
-              <Save className="h-4 w-4 mr-2" />
-              Export Module
+              <Download className="h-4 w-4 mr-2" />
+              Export SOP
             </Button>
           </div>
         </div>
 
-        {/* ITM Content Manager */}
-        <AnimatePresence>
-          {showContentManager && currentStep && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              className="mt-6"
-            >
-              <ItmContentManager
-                step={currentStep}
-                onUpdateStep={(field, value) => handleStepChange(currentStep.id, field, value)}
-              />
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Training Module Information */}
+        {/* SOP Document Information */}
         <div className="mt-6 p-4 bg-zinc-900/50 rounded-xl border border-zinc-800">
           <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-            <Sparkles className="h-5 w-5 text-yellow-400" />
-            Training Module Information
+            <Sparkles className="h-5 w-5 text-blue-400" />
+            SOP Document Information
           </h3>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <Label htmlFor="title" className="text-zinc-300 text-sm font-medium mb-2 block">
-                Module Title *
+                SOP Title *
               </Label>
               <Input
                 id="title"
                 value={sopDocument?.title || ""}
                 onChange={(e) => setSopTitle(e.target.value)}
-                placeholder="Enter your training module title..."
+                placeholder="Enter your SOP title..."
                 className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-500"
               />
             </div>
             
             <div>
               <Label htmlFor="topic" className="text-zinc-300 text-sm font-medium mb-2 block">
-                Topic/Category *
+                Department/Category *
               </Label>
               <Input
                 id="topic"
                 value={sopDocument?.topic || ""}
                 onChange={(e) => setSopTopic(e.target.value)}
-                placeholder="e.g., Sales Training, Safety Protocol..."
+                placeholder="e.g., Operations, Safety, Customer Service..."
                 className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-500"
               />
             </div>
@@ -513,13 +384,13 @@ const SopCreator: React.FC = () => {
               
               <div>
                 <Label htmlFor="description" className="text-zinc-300 text-sm font-medium mb-2 block">
-                  Module Description
+                  SOP Description
                 </Label>
                 <Textarea
                   id="description"
                   value={sopDocument?.description || ""}
                   onChange={(e) => setSopDescription(e.target.value)}
-                  placeholder="Provide a detailed description of this training module..."
+                  placeholder="Provide a detailed description of this SOP..."
                   className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-500 min-h-[100px]"
                 />
               </div>
@@ -527,7 +398,7 @@ const SopCreator: React.FC = () => {
           )}
         </AnimatePresence>
 
-        {/* Lesson Progress Overview */}
+        {/* Step Progress Overview */}
         {steps.length > 0 && (
           <div className="mt-6">
             <ProgressTracker 
@@ -541,13 +412,13 @@ const SopCreator: React.FC = () => {
     </Card>
   );
 
-  const renderCarouselNavigation = () => (
+  const renderStepNavigation = () => (
     <Card className="bg-[#1E1E1E] border-zinc-800 rounded-2xl mb-6">
       <CardContent className="p-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             <h2 className="text-xl font-semibold text-white">
-              {steps.length === 0 ? "Get Started" : `Lesson ${currentLessonIndex + 1} of ${steps.length}`}
+              {steps.length === 0 ? "Get Started" : `Step ${currentStepIndex + 1} of ${steps.length}`}
             </h2>
             
             {steps.length > 0 && (
@@ -555,8 +426,8 @@ const SopCreator: React.FC = () => {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={prevLesson}
-                  disabled={currentLessonIndex === 0}
+                  onClick={prevStep}
+                  disabled={currentStepIndex === 0}
                   className="text-zinc-300 border-zinc-700 hover:text-white hover:bg-zinc-800"
                 >
                   <ChevronLeft className="h-4 w-4" />
@@ -566,9 +437,9 @@ const SopCreator: React.FC = () => {
                   {steps.map((_, index) => (
                     <button
                       key={index}
-                      onClick={() => navigateToLesson(index)}
+                      onClick={() => navigateToStep(index)}
                       className={`w-3 h-3 rounded-full transition-all ${
-                        index === currentLessonIndex 
+                        index === currentStepIndex 
                           ? "bg-blue-500" 
                           : "bg-zinc-700 hover:bg-zinc-600"
                       }`}
@@ -579,8 +450,8 @@ const SopCreator: React.FC = () => {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={nextLesson}
-                  disabled={currentLessonIndex === steps.length - 1}
+                  onClick={nextStep}
+                  disabled={currentStepIndex === steps.length - 1}
                   className="text-zinc-300 border-zinc-700 hover:text-white hover:bg-zinc-800"
                 >
                   <ChevronRight className="h-4 w-4" />
@@ -594,7 +465,7 @@ const SopCreator: React.FC = () => {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => handleDeleteLesson(currentStep.id)}
+                onClick={() => handleDeleteStep(currentStep.id)}
                 className="text-red-400 border-red-800 hover:text-red-300 hover:bg-red-900/20"
               >
                 <Trash2 className="h-4 w-4" />
@@ -602,11 +473,11 @@ const SopCreator: React.FC = () => {
             )}
             
             <Button
-              onClick={handleAddLesson}
-              className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white"
+              onClick={handleAddStep}
+              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white"
             >
               <Plus className="h-4 w-4 mr-2" />
-              Add Lesson
+              Add Step
             </Button>
           </div>
         </div>
@@ -618,21 +489,21 @@ const SopCreator: React.FC = () => {
     <Card className="bg-[#1E1E1E] border-zinc-800 rounded-2xl">
       <CardContent className="p-12 text-center">
         <div className="max-w-md mx-auto">
-          <div className="w-24 h-24 bg-gradient-to-br from-purple-600 to-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-6">
-            <GraduationCap className="h-12 w-12 text-white" />
+          <div className="w-24 h-24 bg-gradient-to-br from-blue-600 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-6">
+            <FileText className="h-12 w-12 text-white" />
           </div>
           
-          <h3 className="text-2xl font-bold text-white mb-3">Create Your First Lesson</h3>
+          <h3 className="text-2xl font-bold text-white mb-3">Create Your First SOP Step</h3>
           <p className="text-zinc-400 mb-8">
-            Start building your training module by adding interactive lessons. Choose from templates or create custom content.
+            Start building your Standard Operating Procedure by adding interactive steps with screenshots, annotations, and clear instructions.
           </p>
           
           <Button
-            onClick={handleAddLesson}
-            className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white px-8 py-3 text-lg"
+            onClick={handleAddStep}
+            className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-8 py-3 text-lg"
           >
             <Plus className="h-5 w-5 mr-2" />
-            Add First Lesson
+            Add First Step
           </Button>
         </div>
       </CardContent>
@@ -674,16 +545,16 @@ const SopCreator: React.FC = () => {
     </AnimatePresence>
   );
 
-  // Template Selector Modal
-  const renderTemplateSelector = () => (
+  // Step Template Selector Modal
+  const renderStepTemplateSelector = () => (
     <AnimatePresence>
-      {showTemplateSelector && (
+      {showStepTemplateSelector && (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[9999] flex items-center justify-center p-4"
-          onClick={() => setShowTemplateSelector(false)}
+          onClick={() => setShowStepTemplateSelector(false)}
         >
           <motion.div
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
@@ -694,33 +565,31 @@ const SopCreator: React.FC = () => {
           >
             <div className="text-center mb-6">
               <h3 className="text-2xl font-bold text-white mb-2">
-                {isHealthcareDocument ? "Add Healthcare Training Step" : "Choose a Lesson Template"}
+                {isHealthcareDocument ? "Add Healthcare SOP Step" : "Choose a Step Template"}
               </h3>
               <p className="text-zinc-400">
                 {isHealthcareDocument 
-                  ? `Adding to ${healthcareType === 'new-hire-onboarding' ? 'New Hire Onboarding' : 
-                      healthcareType === 'continued-learning' ? 'Continued Learning' :
-                      healthcareType === 'communication-excellence' ? 'Communication Excellence' : 'Healthcare'} training`
-                  : "Select the best structure for your content to maximize learning effectiveness"
+                  ? "Adding healthcare-focused step with compliance and safety features"
+                  : "Select the best structure for your SOP step to maximize clarity and usefulness"
                 }
               </p>
               {isHealthcareDocument && (
                 <div className="mt-2">
                   <Badge className="bg-teal-600 text-white text-xs">
                     <Shield className="h-3 w-3 mr-1" />
-                    Healthcare Template
+                    Healthcare SOP
                   </Badge>
                 </div>
               )}
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-              {lessonTemplates.map((template) => (
+              {stepTemplates.map((template) => (
                 <motion.div
                   key={template.type}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
-                  className="p-4 bg-zinc-800/50 rounded-xl border border-zinc-700 cursor-pointer hover:border-purple-600/50 hover:bg-zinc-800/80 transition-all group"
+                  className="p-4 bg-zinc-800/50 rounded-xl border border-zinc-700 cursor-pointer hover:border-blue-600/50 hover:bg-zinc-800/80 transition-all group"
                   onClick={() => handleTemplateSelect(template.type)}
                 >
                   <div className="flex items-start gap-4">
@@ -729,7 +598,7 @@ const SopCreator: React.FC = () => {
                     </div>
                     
                     <div className="flex-1">
-                      <h4 className="text-lg font-semibold text-white mb-1 group-hover:text-purple-300 transition-colors">
+                      <h4 className="text-lg font-semibold text-white mb-1 group-hover:text-blue-300 transition-colors">
                         {template.title}
                       </h4>
                       <p className="text-sm text-zinc-400 mb-3">{template.description}</p>
@@ -743,7 +612,7 @@ const SopCreator: React.FC = () => {
                       </div>
                     </div>
                     
-                    <ArrowRight className="h-5 w-5 text-zinc-500 group-hover:text-purple-400 transition-colors" />
+                    <ArrowRight className="h-5 w-5 text-zinc-500 group-hover:text-blue-400 transition-colors" />
                   </div>
                 </motion.div>
               ))}
@@ -753,23 +622,23 @@ const SopCreator: React.FC = () => {
               <div className="text-xs text-zinc-500">
                 {isHealthcareDocument 
                   ? "💡 Tip: Healthcare steps include compliance features and safety protocols automatically"
-                  : "💡 Tip: You can always change the structure after creating the lesson"
+                  : "💡 Tip: You can always change the step structure after creating it"
                 }
               </div>
               
               <div className="flex gap-2">
                 <Button
                   variant="outline"
-                  onClick={() => setShowTemplateSelector(false)}
+                  onClick={() => setShowStepTemplateSelector(false)}
                   className="border-zinc-700 text-zinc-300 hover:bg-zinc-800"
                 >
                   Cancel
                 </Button>
                 <Button
                   onClick={() => handleTemplateSelect("standard")}
-                  className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white"
+                  className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white"
                 >
-                  Skip & Create Basic Lesson
+                  Create Basic Step
                 </Button>
               </div>
             </div>
@@ -782,8 +651,8 @@ const SopCreator: React.FC = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-zinc-900 via-zinc-800 to-zinc-900 p-4">
       <div className="max-w-5xl mx-auto">
-        {renderSimpleHeader()}
-        {renderCarouselNavigation()}
+        {renderHeader()}
+        {renderStepNavigation()}
         
         <AnimatePresence mode="wait">
           {steps.length === 0 ? (
@@ -797,7 +666,7 @@ const SopCreator: React.FC = () => {
             </motion.div>
           ) : currentStep ? (
             <motion.div
-              key={`lesson-${currentLessonIndex}`}
+              key={`step-${currentStepIndex}`}
               initial={{ opacity: 0, x: 50 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -50 }}
@@ -805,11 +674,11 @@ const SopCreator: React.FC = () => {
             >
               <StepCard
                 step={currentStep}
-                index={currentLessonIndex}
+                index={currentStepIndex}
                 isActive={true}
                 onStepChange={handleStepChange}
                 onStepComplete={() => {}}
-                onDeleteStep={() => handleDeleteLesson(currentStep.id)}
+                onDeleteStep={() => handleDeleteStep(currentStep.id)}
               />
             </motion.div>
           ) : null}
@@ -818,15 +687,8 @@ const SopCreator: React.FC = () => {
         {/* Export Panel Overlay */}
         {renderExportPanel()}
 
-        {/* Template Selector Modal */}
-        {renderTemplateSelector()}
-
-        {/* Lesson Template Modal */}
-        <LessonTemplateModal
-          isOpen={showLessonTemplateModal}
-          onClose={() => setShowLessonTemplateModal(false)}
-          onSelectTemplate={handleSelectTemplate}
-        />
+        {/* Step Template Selector Modal */}
+        {renderStepTemplateSelector()}
       </div>
     </div>
   );
