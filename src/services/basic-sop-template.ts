@@ -9,22 +9,21 @@ export const createBasicSOP = (): SopDocument => {
     description: "A simple, step-by-step guide for standard operating procedures",
     companyName: "",
     date: new Date().toISOString().split('T')[0],
+    logo: null,
     steps: [
       {
         id: crypto.randomUUID(),
         title: "Introduction",
         description: "Overview of the procedure",
         detailedInstructions: "Provide an introduction to what this SOP covers and its purpose.",
-        estimatedTime: "5 minutes",
+        estimatedTime: 5,
         completed: false,
         tags: ["introduction", "overview"],
-        trainingMode: {
-          isEnabled: true,
-          type: "standard"
-        }
+        trainingMode: true,
+        screenshot: null
       }
     ],
-    tableOfContents: [],
+    tableOfContents: true,
     darkMode: false,
     trainingMode: true
   };

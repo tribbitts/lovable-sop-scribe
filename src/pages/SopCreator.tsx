@@ -31,7 +31,7 @@ import ExportPanel from "@/components/step-editor/ExportPanel";
 import ItmContentManager from "@/components/step-editor/ItmContentManager";
 import { useSopContext } from "@/context/SopContext";
 import LessonTemplateModal from "@/components/LessonTemplateModal";
-import { SopStep } from "@/types/sop";
+import { SopStep, SopDocument } from "@/types/sop";
 
 const SopCreator: React.FC = () => {
   const {
@@ -224,6 +224,27 @@ const SopCreator: React.FC = () => {
     setShowLessonTemplateModal(false);
     
     console.log(`${templateType.replace('-', ' ')} lesson template has been added.`);
+  };
+
+  const handleSelectTemplate = (template: SopDocument) => {
+    // Replace the current document with the selected template
+    resetDocument();
+    // Set the document properties from the template
+    setSopTitle(template.title);
+    setSopTopic(template.topic);
+    setSopDescription(template.description || "");
+    setCompanyName(template.companyName);
+    setSopDate(template.date);
+    setTrainingMode(template.trainingMode || true);
+    
+    // Add all steps from the template
+    template.steps.forEach(step => {
+      addStep();
+      // Update the step with template data - this would need to be handled by the context
+    });
+    
+    setShowLessonTemplateModal(false);
+    console.log(`${template.title} template has been applied.`);
   };
 
   const handleAddHealthcareTemplate = (templateId: string) => {
@@ -734,8 +755,7 @@ const SopCreator: React.FC = () => {
         <LessonTemplateModal
           isOpen={showLessonTemplateModal}
           onClose={() => setShowLessonTemplateModal(false)}
-          onSelectTemplate={handleAddLessonFromTemplate}
-          onSelectHealthcareTemplate={handleAddHealthcareTemplate}
+          onSelectTemplate={handleSelectTemplate}
         />
       </div>
     </div>

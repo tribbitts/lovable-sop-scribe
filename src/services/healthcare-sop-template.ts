@@ -9,27 +9,35 @@ export const createHealthcareSOP = (): SopDocument => {
     description: "A specialized SOP for healthcare procedures with compliance and safety guidelines",
     companyName: "",
     date: new Date().toISOString().split('T')[0],
+    logo: null,
     steps: [
       {
         id: crypto.randomUUID(),
         title: "Safety Protocols",
         description: "Essential safety measures and compliance requirements",
         detailedInstructions: "Review all safety protocols and compliance requirements before proceeding.",
-        estimatedTime: "10 minutes",
+        estimatedTime: 10,
         completed: false,
         tags: ["safety", "compliance", "healthcare"],
-        trainingMode: {
-          isEnabled: true,
-          type: "standard"
-        },
-        healthcareContent: {
-          safetyProtocols: ["Hand hygiene", "PPE requirements", "Infection control"],
-          complianceNotes: ["HIPAA compliance required", "Document all procedures"],
-          patientSafetyTips: ["Verify patient identity", "Check allergies", "Follow medication protocols"]
-        }
+        trainingMode: true,
+        screenshot: null,
+        healthcareContent: [
+          {
+            id: crypto.randomUUID(),
+            type: "critical-safety",
+            content: "Hand hygiene protocols must be followed",
+            priority: "high"
+          },
+          {
+            id: crypto.randomUUID(),
+            type: "hipaa-alert",
+            content: "HIPAA compliance required for all patient interactions",
+            priority: "high"
+          }
+        ]
       }
     ],
-    tableOfContents: [],
+    tableOfContents: true,
     darkMode: false,
     trainingMode: true
   };

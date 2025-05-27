@@ -9,22 +9,21 @@ export const createComplianceChecklistSOP = (): SopDocument => {
     description: "A detailed checklist to ensure compliance with industry regulations",
     companyName: "",
     date: new Date().toISOString().split('T')[0],
+    logo: null,
     steps: [
       {
         id: crypto.randomUUID(),
         title: "Regulatory Requirements",
         description: "Key compliance items to verify",
         detailedInstructions: "Review and verify all regulatory requirements are met.",
-        estimatedTime: "15 minutes",
+        estimatedTime: 15,
         completed: false,
         tags: ["compliance", "regulatory", "checklist"],
-        trainingMode: {
-          isEnabled: true,
-          type: "standard"
-        }
+        trainingMode: true,
+        screenshot: null
       }
     ],
-    tableOfContents: [],
+    tableOfContents: true,
     darkMode: false,
     trainingMode: true
   };

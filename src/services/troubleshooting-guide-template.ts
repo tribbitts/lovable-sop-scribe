@@ -9,22 +9,21 @@ export const createTroubleshootingGuideSOP = (): SopDocument => {
     description: "A guide to quickly resolve common issues and problems",
     companyName: "",
     date: new Date().toISOString().split('T')[0],
+    logo: null,
     steps: [
       {
         id: crypto.randomUUID(),
         title: "Problem Identification",
         description: "How to identify and categorize issues",
         detailedInstructions: "Follow these steps to properly identify and categorize the problem.",
-        estimatedTime: "5 minutes",
+        estimatedTime: 5,
         completed: false,
         tags: ["troubleshooting", "problem-solving", "technical"],
-        trainingMode: {
-          isEnabled: true,
-          type: "scenario"
-        }
+        trainingMode: true,
+        screenshot: null
       }
     ],
-    tableOfContents: [],
+    tableOfContents: true,
     darkMode: false,
     trainingMode: true
   };
