@@ -1,4 +1,3 @@
-
 import { SopDocument } from "@/types/sop";
 
 // Helper function to get font family CSS
@@ -11,7 +10,7 @@ function getFontFamilyCSS(fontFamily: string): string {
     case "monospace":
       return "'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace";
     default:
-      return "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+      return "'Helvetica', Arial, sans-serif";
   }
 }
 
@@ -19,11 +18,11 @@ function getFontFamilyCSS(fontFamily: string): string {
 function getLayoutSpacing(layout: string) {
   switch (layout) {
     case "compact":
-      return { container: "20px 15px", stepPadding: "20px", stepMargin: "20px" };
+      return { container: "20px 15px", stepPadding: "20px", stepMargin: "30px" };
     case "spacious":
-      return { container: "60px 30px", stepPadding: "40px", stepMargin: "40px" };
+      return { container: "60px 30px", stepPadding: "30px", stepMargin: "50px" };
     default:
-      return { container: "40px 20px", stepPadding: "30px", stepMargin: "30px" };
+      return { container: "40px 20px", stepPadding: "25px", stepMargin: "40px" };
   }
 }
 
@@ -32,7 +31,7 @@ function getHeaderStyles(headerStyle: string, primaryColor: string) {
   switch (headerStyle) {
     case "classic":
       return {
-        background: "linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)",
+        background: `linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)`,
         border: `3px solid ${primaryColor}`,
         titleColor: "#2c3e50"
       };
@@ -50,9 +49,9 @@ function getHeaderStyles(headerStyle: string, primaryColor: string) {
       };
     default: // modern
       return {
-        background: "white",
+        background: `linear-gradient(135deg, ${primaryColor}, #5856D6)`,
         border: "none",
-        titleColor: primaryColor
+        titleColor: "white"
       };
   }
 }
@@ -78,14 +77,14 @@ export function generateStandardHtmlTemplate(
       const stepNumber = index + 1;
       
       return `
-        <div class="step-container">
+        <div class="step">
             <div class="step-header">
-                <div class="step-number">${stepNumber}</div>
+                <div class="step-number">Step ${stepNumber}</div>
                 <h2 class="step-title">${step.title || `Step ${stepNumber}`}</h2>
+                ${step.description ? `<p class="step-description">${step.description}</p>` : ''}
             </div>
+            
             <div class="step-content">
-                <p class="step-description">${step.description || 'Complete this step to continue.'}</p>
-                
                 ${(() => {
                   let screenshotHtml = '';
                   
@@ -105,15 +104,21 @@ export function generateStandardHtmlTemplate(
                                   height: ${callout.height}%;
                                   border: 2px solid ${callout.color};
                                   background-color: ${callout.color}40;
-                                  ${callout.shape === 'circle' || callout.shape === 'number' ? 'border-radius: 50%;' : ''}
-                                  ${callout.shape === 'number' ? `
+                                  ${callout.shape === 'circle' || callout.shape === 'number' ? `
+                                    border-radius: 50%;
+                                    aspect-ratio: 1 / 1;
+                                    min-width: 30px;
+                                    min-height: 30px;
                                     display: flex;
                                     align-items: center;
                                     justify-content: center;
-                                    font-weight: bold;
-                                    color: white;
-                                    font-size: ${Math.max(10, callout.width * 0.6)}px;
-                                    background: ${callout.revealText ? 'linear-gradient(135deg, #3B82F6, #8B5CF6)' : callout.color};
+                                  ` : ''}
+                                  ${callout.shape === 'rectangle' ? `
+                                    min-width: 40px;
+                                    min-height: 25px;
+                                    display: flex;
+                                    align-items: center;
+                                    justify-content: center;
                                   ` : ''}
                                   ${callout.shape === 'arrow' ? `
                                     display: flex;
@@ -122,14 +127,11 @@ export function generateStandardHtmlTemplate(
                                     min-width: 30px;
                                     min-height: 20px;
                                   ` : ''}
-                                  ${callout.shape === 'circle' || callout.shape === 'number' ? `
-                                    aspect-ratio: 1 / 1;
-                                    min-width: 30px;
-                                    min-height: 30px;
-                                  ` : ''}
-                                  ${callout.shape === 'rectangle' ? `
-                                    min-width: 40px;
-                                    min-height: 25px;
+                                  ${callout.shape === 'number' ? `
+                                    font-weight: bold;
+                                    color: white;
+                                    font-size: ${Math.max(10, callout.width * 0.6)}px;
+                                    background: ${callout.revealText ? 'linear-gradient(135deg, #3B82F6, #8B5CF6)' : callout.color};
                                   ` : ''}
                                 ">
                                   ${callout.shape === 'number' ? callout.number : ''}
@@ -164,15 +166,21 @@ export function generateStandardHtmlTemplate(
                                       height: ${callout.height}%;
                                       border: 2px solid ${callout.color};
                                       background-color: ${callout.color}40;
-                                      ${callout.shape === 'circle' || callout.shape === 'number' ? 'border-radius: 50%;' : ''}
-                                      ${callout.shape === 'number' ? `
+                                      ${callout.shape === 'circle' || callout.shape === 'number' ? `
+                                        border-radius: 50%;
+                                        aspect-ratio: 1 / 1;
+                                        min-width: 30px;
+                                        min-height: 30px;
                                         display: flex;
                                         align-items: center;
                                         justify-content: center;
-                                        font-weight: bold;
-                                        color: white;
-                                        font-size: ${Math.max(10, callout.width * 0.6)}px;
-                                        background: ${callout.revealText ? 'linear-gradient(135deg, #3B82F6, #8B5CF6)' : callout.color};
+                                      ` : ''}
+                                      ${callout.shape === 'rectangle' ? `
+                                        min-width: 40px;
+                                        min-height: 25px;
+                                        display: flex;
+                                        align-items: center;
+                                        justify-content: center;
                                       ` : ''}
                                       ${callout.shape === 'arrow' ? `
                                         display: flex;
@@ -181,14 +189,11 @@ export function generateStandardHtmlTemplate(
                                         min-width: 30px;
                                         min-height: 20px;
                                       ` : ''}
-                                      ${callout.shape === 'circle' || callout.shape === 'number' ? `
-                                        aspect-ratio: 1 / 1;
-                                        min-width: 30px;
-                                        min-height: 30px;
-                                      ` : ''}
-                                      ${callout.shape === 'rectangle' ? `
-                                        min-width: 40px;
-                                        min-height: 25px;
+                                      ${callout.shape === 'number' ? `
+                                        font-weight: bold;
+                                        color: white;
+                                        font-size: ${Math.max(10, callout.width * 0.6)}px;
+                                        background: ${callout.revealText ? 'linear-gradient(135deg, #3B82F6, #8B5CF6)' : callout.color};
                                       ` : ''}
                                     ">
                                       ${callout.shape === 'number' ? callout.number : ''}
@@ -242,42 +247,45 @@ export function generateStandardHtmlTemplate(
             line-height: 1.6;
             color: #333;
             background: #f8f9fa;
-        }
-        
-        .container {
             max-width: 900px;
             margin: 0 auto;
             padding: ${spacing.container};
         }
         
         .header {
+            text-align: center;
+            border-bottom: 3px solid ${primaryColor};
+            padding-bottom: 30px;
             margin-bottom: 40px;
-            padding: 30px;
-            background: ${headerStyles.background};
-            border: ${headerStyles.border};
-            border-radius: 12px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: relative;
         }
         
         .header-top {
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
-            margin-bottom: 20px;
+            margin-bottom: 30px;
+            position: relative;
         }
         
         .header-left {
             text-align: left;
+            position: absolute;
+            left: 0;
+            top: 0;
         }
         
         .header-right {
             text-align: right;
+            position: absolute;
+            right: 0;
+            top: 0;
         }
         
         .company-name {
+            color: ${primaryColor};
             font-size: 1.2rem;
-            font-weight: 600;
-            color: #666;
+            font-weight: bold;
             margin-bottom: 5px;
             text-transform: uppercase;
             letter-spacing: 1px;
@@ -285,7 +293,7 @@ export function generateStandardHtmlTemplate(
         
         .version {
             font-size: 0.9rem;
-            color: #888;
+            color: #666;
             font-weight: 500;
         }
         
@@ -298,64 +306,80 @@ export function generateStandardHtmlTemplate(
         
         .last-revised {
             font-size: 0.9rem;
-            color: #888;
+            color: #666;
             font-weight: 500;
         }
         
         .header-center {
             text-align: center;
+            margin-top: 60px;
         }
         
         .title {
             font-size: 2.5rem;
-            font-weight: 700;
-            color: ${headerStyles.titleColor};
+            font-weight: bold;
+            color: #1E1E1E;
             margin-bottom: 10px;
         }
         
         .subtitle {
+            font-size: 1.2rem;
             color: #666;
-            font-size: 1.1rem;
+            margin-bottom: 20px;
         }
         
-        .step-container {
-            background: white;
-            border-radius: 12px;
-            padding: ${spacing.stepPadding};
+        .demo-badge {
+            background: linear-gradient(135deg, ${primaryColor}, ${accentColor});
+            color: white;
+            padding: 12px 24px;
+            border-radius: 25px;
+            font-weight: bold;
+            text-align: center;
+            margin: 20px auto;
+            display: inline-block;
+            box-shadow: 0 4px 15px rgba(0, 122, 255, 0.3);
+        }
+        
+        .step {
             margin-bottom: ${spacing.stepMargin};
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            page-break-inside: avoid;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            border-radius: 12px;
+            overflow: hidden;
         }
         
         .step-header {
-            display: flex;
-            align-items: center;
-            margin-bottom: 20px;
+            background: linear-gradient(135deg, ${primaryColor}, ${accentColor});
+            color: white;
+            padding: ${spacing.stepPadding};
+            margin-bottom: 0;
         }
         
         .step-number {
-            background: ${primaryColor};
-            color: white;
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            font-size: 1.1rem;
             font-weight: bold;
-            margin-right: 20px;
-            font-size: 18px;
+            opacity: 0.9;
+            margin-bottom: 5px;
         }
         
         .step-title {
-            font-size: 1.5em;
-            color: #333;
-            font-weight: 600;
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin: 5px 0;
         }
         
         .step-description {
-            font-size: 1.1em;
-            margin-bottom: 20px;
-            line-height: 1.6;
+            font-size: 1rem;
+            opacity: 0.9;
+            margin-top: 10px;
+        }
+        
+        .step-content {
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-top: none;
+            padding: ${spacing.stepPadding};
+            border-radius: 0 0 12px 12px;
         }
         
         .screenshot-container {
@@ -367,26 +391,29 @@ export function generateStandardHtmlTemplate(
             max-width: 100%;
             height: auto;
             border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+            border: 1px solid #e0e0e0;
         }
         
         .screenshot-title {
-            margin-top: 8px;
-            font-size: 0.9em;
+            margin-top: 10px;
+            font-size: 0.9rem;
             color: #666;
             font-style: italic;
         }
         
         .callouts-list {
-            background: #f8f9fa;
+            background: linear-gradient(135deg, #e8f5e8, #f0f8f0);
+            border-left: 4px solid #34C759;
             padding: 20px;
-            border-radius: 8px;
-            border-left: 4px solid ${accentColor};
+            border-radius: 0 8px 8px 0;
+            margin: 20px 0;
         }
         
         .callouts-list h4 {
+            color: #2e7d32;
             margin-bottom: 10px;
-            color: ${accentColor};
+            font-size: 1.1rem;
         }
         
         .callouts-list ul {
@@ -394,15 +421,17 @@ export function generateStandardHtmlTemplate(
         }
         
         .callouts-list li {
-            margin-bottom: 5px;
+            margin-bottom: 8px;
+            color: #2e7d32;
         }
         
         .footer {
             padding: 30px;
             background: white;
             border-radius: 12px;
-            margin-top: 40px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-top: 50px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            border-top: 3px solid ${primaryColor};
         }
         
         .footer-content {
@@ -430,6 +459,12 @@ export function generateStandardHtmlTemplate(
             color: #666;
         }
         
+        .footer-right a {
+            color: ${primaryColor};
+            text-decoration: none;
+            font-weight: bold;
+        }
+        
         /* Print-specific styles for PDF generation */
         @media print {
             @page {
@@ -453,22 +488,15 @@ export function generateStandardHtmlTemplate(
                 background: white !important;
                 margin: 0 !important;
                 padding: 0 !important;
-            }
-            
-            .container {
                 max-width: none !important;
-                margin: 0 !important;
-                padding: 0 !important;
             }
             
             .header {
                 page-break-inside: avoid !important;
                 margin-bottom: 30px !important;
                 background: white !important;
-                border: none !important;
-                border-radius: 0 !important;
-                box-shadow: none !important;
-                padding: 20px 0 !important;
+                border-bottom: 3px solid ${primaryColor} !important;
+                padding-bottom: 20px !important;
             }
             
             .header-top {
@@ -515,21 +543,43 @@ export function generateStandardHtmlTemplate(
                 line-height: 1.2 !important;
             }
             
-            .step-container {
+            .demo-badge {
+                background: linear-gradient(135deg, ${primaryColor}, ${accentColor}) !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+            
+            .step {
                 page-break-inside: avoid !important;
                 break-inside: avoid !important;
-                background: white !important;
-                border-radius: 0 !important;
+                margin-bottom: 30px !important;
                 box-shadow: none !important;
-                border: 1px solid #e9ecef !important;
-                margin-bottom: 20px !important;
-                padding: 20px !important;
+                border: 1px solid #e0e0e0 !important;
+            }
+            
+            .step-header {
+                background: linear-gradient(135deg, ${primaryColor}, ${accentColor}) !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+                color: white !important;
+            }
+            
+            .step-content {
+                background: white !important;
+                border-top: none !important;
             }
             
             .step-screenshot {
                 max-width: 100% !important;
                 height: auto !important;
                 page-break-inside: avoid !important;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+            }
+            
+            .callouts-list {
+                background: linear-gradient(135deg, #e8f5e8, #f0f8f0) !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
             }
             
             .footer {
@@ -538,12 +588,11 @@ export function generateStandardHtmlTemplate(
                 left: 0 !important;
                 right: 0 !important;
                 background: white !important;
-                border-top: 1px solid #e9ecef !important;
+                border-top: 2px solid ${primaryColor} !important;
                 padding: 10px 0 !important;
-                border-radius: 0 !important;
-                box-shadow: none !important;
                 margin-top: 0 !important;
                 z-index: 1000 !important;
+                box-shadow: none !important;
             }
             
             .footer-content {
@@ -570,7 +619,7 @@ export function generateStandardHtmlTemplate(
         }
         
         @media (max-width: 768px) {
-            .container {
+            body {
                 padding: 20px 10px;
             }
             
@@ -578,21 +627,17 @@ export function generateStandardHtmlTemplate(
                 flex-direction: column;
                 gap: 15px;
                 text-align: center;
+                position: relative;
             }
             
             .header-left,
             .header-right {
+                position: relative;
                 text-align: center;
             }
             
-            .step-header {
-                flex-direction: column;
-                text-align: center;
-            }
-            
-            .step-number {
-                margin-right: 0;
-                margin-bottom: 10px;
+            .header-center {
+                margin-top: 20px;
             }
             
             .title {
@@ -603,6 +648,11 @@ export function generateStandardHtmlTemplate(
                 flex-direction: column;
                 gap: 10px;
                 text-align: center;
+            }
+            
+            .footer-left,
+            .footer-right {
+                position: relative;
             }
         }
     </style>
@@ -629,34 +679,35 @@ export function generateStandardHtmlTemplate(
     </script>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <div class="header-top">
-                <div class="header-left">
-                    ${sopDocument.companyName ? `<div class="company-name">${sopDocument.companyName}</div>` : ''}
-                    ${sopDocument.version ? `<div class="version">Version ${sopDocument.version}</div>` : ''}
-                </div>
-                <div class="header-right">
-                    ${sopDocument.date ? `<div class="document-date">${sopDocument.date}</div>` : ''}
-                    ${sopDocument.lastRevised ? `<div class="last-revised">Last Revised: ${sopDocument.lastRevised}</div>` : ''}
-                </div>
+    <div class="header">
+        <div class="header-top">
+            <div class="header-left">
+                ${sopDocument.companyName ? `<div class="company-name">${sopDocument.companyName}</div>` : ''}
+                ${sopDocument.version ? `<div class="version">Version ${sopDocument.version}</div>` : ''}
             </div>
-            <div class="header-center">
-                <h1 class="title">${title}</h1>
-                <p class="subtitle">${sopDocument.topic || 'Standard Operating Procedure'}</p>
+            <div class="header-right">
+                ${sopDocument.date ? `<div class="document-date">${sopDocument.date}</div>` : ''}
+                ${sopDocument.lastRevised ? `<div class="last-revised">Last Revised: ${sopDocument.lastRevised}</div>` : ''}
             </div>
         </div>
-        
-        ${generateStepsHtml()}
-        
-        <div class="footer">
-            <div class="footer-content">
-                <div class="footer-left">
-                    ${sopDocument.companyName ? `<p>&copy; ${sopDocument.companyName} ${new Date().getFullYear()}</p>` : ''}
-                </div>
-                <div class="footer-right">
-                    <p>Created with <a href="https://sopifyapp.com" style="color: ${primaryColor}; text-decoration: none;"><strong>SOPify</strong></a></p>
-                </div>
+        <div class="header-center">
+            <h1 class="title">${title}</h1>
+            <p class="subtitle">${sopDocument.topic || 'Standard Operating Procedure'}</p>
+            <div class="demo-badge">
+                ✨ Professional SOPify Document
+            </div>
+        </div>
+    </div>
+    
+    ${generateStepsHtml()}
+    
+    <div class="footer">
+        <div class="footer-content">
+            <div class="footer-left">
+                ${sopDocument.companyName ? `<p>&copy; ${sopDocument.companyName} ${new Date().getFullYear()}</p>` : ''}
+            </div>
+            <div class="footer-right">
+                <p>Created with <a href="https://sopifyapp.com"><strong>SOPify</strong></a></p>
             </div>
         </div>
     </div>

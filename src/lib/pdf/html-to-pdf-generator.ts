@@ -20,7 +20,7 @@ export async function generateHtmlToPdf(
     try {
       console.log("Generating HTML template for PDF conversion");
       
-      // Use our enhanced HTML template instead of the business demo
+      // Use our enhanced HTML template with beautiful styling
       const htmlContent = generateStandardHtmlTemplate(sopDocument, {
         customization: {
           primaryColor: "#007AFF",
