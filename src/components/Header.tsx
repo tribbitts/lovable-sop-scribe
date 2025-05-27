@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
 
 const Header = () => {
-  const { sopDocument, setSopTitle, setSopTopic, setSopDate, setLogo } = useSopContext();
+  const { sopDocument, setSopTitle, setSopTopic, setSopDate, setSopVersion, setSopLastRevised, setLogo } = useSopContext();
   const [logoPreview, setLogoPreview] = useState<string | null>(sopDocument.logo);
 
   const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -59,13 +59,36 @@ const Header = () => {
               />
             </div>
             
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="sop-date" className="mb-1 block text-zinc-400 text-xs">Date</Label>
+                <Input 
+                  id="sop-date" 
+                  type="date" 
+                  value={sopDocument.date} 
+                  onChange={(e) => setSopDate(e.target.value)}
+                  className="bg-[#2C2C2E] border-zinc-700 text-white text-sm h-8 rounded-xl"
+                />
+              </div>
+              <div>
+                <Label htmlFor="sop-version" className="mb-1 block text-zinc-400 text-xs">Version</Label>
+                <Input 
+                  id="sop-version" 
+                  value={sopDocument.version || ""} 
+                  onChange={(e) => setSopVersion(e.target.value)}
+                  placeholder="e.g., 1.0"
+                  className="bg-[#2C2C2E] border-zinc-700 text-white text-sm h-8 rounded-xl placeholder:text-zinc-500"
+                />
+              </div>
+            </div>
+            
             <div>
-              <Label htmlFor="sop-date" className="mb-1 block text-zinc-400 text-xs">Date</Label>
+              <Label htmlFor="sop-last-revised" className="mb-1 block text-zinc-400 text-xs">Last Revised</Label>
               <Input 
-                id="sop-date" 
+                id="sop-last-revised" 
                 type="date" 
-                value={sopDocument.date} 
-                onChange={(e) => setSopDate(e.target.value)}
+                value={sopDocument.lastRevised || ""} 
+                onChange={(e) => setSopLastRevised(e.target.value)}
                 className="bg-[#2C2C2E] border-zinc-700 text-white text-sm h-8 rounded-xl"
               />
             </div>

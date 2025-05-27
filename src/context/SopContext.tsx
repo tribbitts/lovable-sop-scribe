@@ -13,6 +13,8 @@ interface SopContextType {
   setSopTopic: (topic: string) => void;
   setSopDate: (date: string) => void;
   setSopDescription: (description: string) => void; // Added description setter
+  setSopVersion: (version: string) => void; // Added version setter
+  setSopLastRevised: (lastRevised: string) => void; // Added last revised setter
   setLogo: (logo: string | null) => void;
   setBackgroundImage: (image: string | null) => void;
   setCompanyName: (name: string) => void; // Fixed function name
@@ -145,6 +147,14 @@ export const SopProvider = ({ children }: { children: ReactNode }) => {
 
   const setSopDescription = (description: string) => {
     setSopDocument(prev => ({ ...prev, description }));
+  };
+
+  const setSopVersion = (version: string) => {
+    setSopDocument(prev => ({ ...prev, version }));
+  };
+
+  const setSopLastRevised = (lastRevised: string) => {
+    setSopDocument(prev => ({ ...prev, lastRevised }));
   };
 
   const setLogo = (logo: string | null) => {
@@ -349,6 +359,8 @@ export const SopProvider = ({ children }: { children: ReactNode }) => {
     setSopTopic,
     setSopDate,
     setSopDescription,
+    setSopVersion,
+    setSopLastRevised,
     setLogo,
     setBackgroundImage,
     setCompanyName,

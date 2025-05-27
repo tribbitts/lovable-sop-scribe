@@ -229,7 +229,6 @@ export function generateStandardHtmlTemplate(
         }
         
         .header {
-            text-align: center;
             margin-bottom: 40px;
             padding: 30px;
             background: ${headerStyles.background};
@@ -238,13 +237,51 @@ export function generateStandardHtmlTemplate(
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
         
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 20px;
+        }
+        
+        .header-left {
+            text-align: left;
+        }
+        
+        .header-right {
+            text-align: right;
+        }
+        
         .company-name {
             font-size: 1.2rem;
             font-weight: 600;
             color: #666;
-            margin-bottom: 15px;
+            margin-bottom: 5px;
             text-transform: uppercase;
             letter-spacing: 1px;
+        }
+        
+        .version {
+            font-size: 0.9rem;
+            color: #888;
+            font-weight: 500;
+        }
+        
+        .document-date {
+            font-size: 1rem;
+            color: #666;
+            font-weight: 500;
+            margin-bottom: 5px;
+        }
+        
+        .last-revised {
+            font-size: 0.9rem;
+            color: #888;
+            font-weight: 500;
+        }
+        
+        .header-center {
+            text-align: center;
         }
         
         .title {
@@ -368,6 +405,17 @@ export function generateStandardHtmlTemplate(
                 padding: 20px 10px;
             }
             
+            .header-top {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+            
+            .header-left,
+            .header-right {
+                text-align: center;
+            }
+            
             .step-header {
                 flex-direction: column;
                 text-align: center;
@@ -393,9 +441,20 @@ export function generateStandardHtmlTemplate(
 <body>
     <div class="container">
         <div class="header">
-            ${sopDocument.companyName ? `<div class="company-name">${sopDocument.companyName}</div>` : ''}
-            <h1 class="title">${title}</h1>
-            <p class="subtitle">${sopDocument.topic || 'Standard Operating Procedure'}</p>
+            <div class="header-top">
+                <div class="header-left">
+                    ${sopDocument.companyName ? `<div class="company-name">${sopDocument.companyName}</div>` : ''}
+                    ${sopDocument.version ? `<div class="version">Version ${sopDocument.version}</div>` : ''}
+                </div>
+                <div class="header-right">
+                    ${sopDocument.date ? `<div class="document-date">${sopDocument.date}</div>` : ''}
+                    ${sopDocument.lastRevised ? `<div class="last-revised">Last Revised: ${sopDocument.lastRevised}</div>` : ''}
+                </div>
+            </div>
+            <div class="header-center">
+                <h1 class="title">${title}</h1>
+                <p class="subtitle">${sopDocument.topic || 'Standard Operating Procedure'}</p>
+            </div>
         </div>
         
         ${generateStepsHtml()}

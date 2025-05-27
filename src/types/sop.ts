@@ -164,6 +164,8 @@ export interface SopDocument {
   backgroundImage?: string | null;
   steps: SopStep[];
   companyName: string;
+  version?: string; // Version number for the document
+  lastRevised?: string; // Last revised date
   tableOfContents?: boolean;
   darkMode?: boolean;
   trainingMode?: boolean;

@@ -42,7 +42,9 @@ const SopCreator: React.FC = () => {
     setSopTopic,
     setCompanyName,
     setSopDate,
-    setSopDescription
+    setSopDescription,
+    setSopVersion,
+    setSopLastRevised
   } = useSopContext();
 
   // Get steps from sopDocument
@@ -249,6 +251,34 @@ const SopCreator: React.FC = () => {
                 type="date"
                 value={sopDocument?.date || new Date().toISOString().split('T')[0]}
                 onChange={(e) => setSopDate(e.target.value)}
+                className="bg-zinc-800 border-zinc-700 text-white"
+              />
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+            <div>
+              <Label htmlFor="version" className="text-zinc-300 text-sm font-medium mb-2 block">
+                Version Number
+              </Label>
+              <Input
+                id="version"
+                value={sopDocument?.version || ""}
+                onChange={(e) => setSopVersion(e.target.value)}
+                placeholder="e.g., 1.0, 2.1, etc."
+                className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-500"
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="lastRevised" className="text-zinc-300 text-sm font-medium mb-2 block">
+                Last Revised Date
+              </Label>
+              <Input
+                id="lastRevised"
+                type="date"
+                value={sopDocument?.lastRevised || ""}
+                onChange={(e) => setSopLastRevised(e.target.value)}
                 className="bg-zinc-800 border-zinc-700 text-white"
               />
             </div>
