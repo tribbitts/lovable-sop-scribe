@@ -138,7 +138,6 @@ export const SopProvider = ({ children }: { children: ReactNode }) => {
     */
   }, [sopDocument]);
 
-  // Document operations
   const setSopTitle = (title: string) => {
     setSopDocument(prev => DocumentManager.updateTitle(prev, title));
   };
@@ -195,7 +194,6 @@ export const SopProvider = ({ children }: { children: ReactNode }) => {
     setSopDocument(prev => DocumentManager.disableProgressTracking(prev));
   };
 
-  // Step operations
   const addStep = () => {
     setSopDocument(prev => StepManager.addStep(prev));
   };
@@ -228,7 +226,7 @@ export const SopProvider = ({ children }: { children: ReactNode }) => {
     setSopDocument(prev => StepManager.toggleStepCompletion(prev, stepId));
   };
 
-  // Enhanced content block operations
+  // Enhanced content block operations - FIXED to properly handle types
   const addStepContentBlock = (stepId: string, block: EnhancedContentBlock) => {
     setSopDocument(prev => {
       const stepIndex = prev.steps.findIndex(s => s.id === stepId);
@@ -236,7 +234,10 @@ export const SopProvider = ({ children }: { children: ReactNode }) => {
 
       const updatedSteps = [...prev.steps];
       const currentBlocks = updatedSteps[stepIndex].enhancedContentBlocks || [];
-      updatedSteps[stepIndex].enhancedContentBlocks = [...currentBlocks, block];
+      
+      // Ensure the block has the correct order
+      const blockWithOrder = { ...block, order: currentBlocks.length };
+      updatedSteps[stepIndex].enhancedContentBlocks = [...currentBlocks, blockWithOrder];
 
       return { ...prev, steps: updatedSteps };
     });
