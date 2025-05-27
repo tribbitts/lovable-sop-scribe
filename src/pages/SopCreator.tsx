@@ -30,7 +30,7 @@ import ProgressTracker from "@/components/ProgressTracker";
 import ExportPanel from "@/components/step-editor/ExportPanel";
 import ItmContentManager from "@/components/step-editor/ItmContentManager";
 import { useSopContext } from "@/context/SopContext";
-import { LessonTemplateModal } from "@/components/LessonTemplateModal";
+import LessonTemplateModal from "@/components/LessonTemplateModal";
 import { SopStep } from "@/types/sop";
 
 const SopCreator: React.FC = () => {
