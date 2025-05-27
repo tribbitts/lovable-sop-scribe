@@ -1,35 +1,31 @@
 import React, { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Separator } from "@/components/ui/separator";
-import { Badge } from "@/components/ui/badge";
-import { 
-  Lock, 
-  Bookmark, 
-  Search, 
-  FileText, 
-  Clock, 
-  Palette,
-  Shield,
+import { Button } from "@/components/ui/button";
+import { toast } from "@/hooks/use-toast";
+import {
   BookOpen,
-  Eye,
-  Info
+  Download,
+  FileText,
+  MessageCircle,
+  Settings,
+  Sparkles,
 } from "lucide-react";
-import { 
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { DialogClose } from "@/components/ui/dialog";
+import { SopDocument } from "@/types/sop";
 
-export interface EnhancedHtmlExportSettings {
+interface EnhancedHtmlExportSettings {
   passwordProtection: {
     enabled: boolean;
-    password: string;
-    hint: string;
+    password?: string;
+    hint?: string;
   };
   lmsFeatures: {
     enableNotes: boolean;
@@ -37,7 +33,7 @@ export interface EnhancedHtmlExportSettings {
     enableSearch: boolean;
     enableProgressTracking: boolean;
   };
-  theme: 'auto' | 'light' | 'dark';
+  theme: 'light' | 'dark' | 'auto';
   branding: {
     companyColors: {
       primary: string;
@@ -47,327 +43,347 @@ export interface EnhancedHtmlExportSettings {
 }
 
 interface EnhancedHtmlExportOptionsProps {
-  settings: EnhancedHtmlExportSettings;
-  onSettingsChange: (settings: EnhancedHtmlExportSettings) => void;
-  disabled?: boolean;
+  sopDocument: SopDocument;
+  onExport: (sopDocument: SopDocument, options: any) => void;
+  onClose: () => void;
+  isExporting: boolean;
+  exportProgress: string | null;
 }
 
-const EnhancedHtmlExportOptions: React.FC<EnhancedHtmlExportOptionsProps> = ({
-  settings,
-  onSettingsChange,
-  disabled = false
+export const EnhancedHtmlExportOptions: React.FC<EnhancedHtmlExportOptionsProps> = ({
+  sopDocument,
+  onExport,
+  onClose,
+  isExporting,
+  exportProgress
 }) => {
-  const updateSettings = (updates: Partial<EnhancedHtmlExportSettings>) => {
-    onSettingsChange({ ...settings, ...updates });
-  };
+  const [enablePasswordProtection, setEnablePasswordProtection] = useState(false);
+  const [password, setPassword] = useState("");
+  const [passwordHint, setPasswordHint] = useState("");
+  const [enableNotes, setEnableNotes] = useState(true);
+  const [enableBookmarks, setEnableBookmarks] = useState(true);
+  const [enableSearch, setEnableSearch] = useState(true);
+  const [enableProgressTracking, setEnableProgressTracking] = useState(true);
+  const [theme, setTheme] = useState<'light' | 'dark' | 'auto'>('auto');
+  const [primaryColor, setPrimaryColor] = useState("#007AFF");
+  const [secondaryColor, setSecondaryColor] = useState("#1E1E1E");
 
-  const updatePasswordProtection = (updates: Partial<typeof settings.passwordProtection>) => {
-    updateSettings({
-      passwordProtection: { ...settings.passwordProtection, ...updates }
-    });
-  };
+  const [includeFeedback, setIncludeFeedback] = useState(true);
+  const [feedbackEmail, setFeedbackEmail] = useState("feedback@sopify.com");
 
-  const updateLmsFeatures = (updates: Partial<typeof settings.lmsFeatures>) => {
-    updateSettings({
-      lmsFeatures: { ...settings.lmsFeatures, ...updates }
-    });
-  };
+  const handleExport = () => {
+    if (!sopDocument.steps.length) {
+      toast({
+        title: "No Steps Found",
+        description: "Please add at least one step before exporting.",
+        variant: "destructive",
+      });
+      return;
+    }
 
-  const updateBranding = (updates: Partial<typeof settings.branding>) => {
-    updateSettings({
-      branding: { ...settings.branding, ...updates }
+    onExport(sopDocument, {
+      mode: 'standalone',
+      enhanced: true,
+      enhancedOptions: {
+        passwordProtection: enablePasswordProtection ? {
+          enabled: true,
+          password: password,
+          hint: passwordHint
+        } : { enabled: false },
+        lmsFeatures: {
+          enableNotes: enableNotes,
+          enableBookmarks: enableBookmarks,
+          enableSearch: enableSearch,
+          enableProgressTracking: enableProgressTracking
+        },
+        theme: theme,
+        branding: {
+          companyColors: {
+            primary: primaryColor,
+            secondary: secondaryColor
+          }
+        }
+      },
+      includeFeedback,
+      feedbackEmail
     });
   };
 
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center gap-3">
-        <BookOpen className="h-5 w-5 text-[#007AFF]" />
-        <div>
-          <h3 className="text-lg font-semibold text-white">Enhanced Training Module</h3>
-          <p className="text-sm text-zinc-400">Create interactive, self-contained training experiences</p>
-        </div>
-      </div>
-
-      {/* Password Protection */}
-      <Card className="bg-[#1E1E1E] border-zinc-700">
+      <Card className="border-zinc-700 bg-zinc-900/50">
         <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2 text-base">
-            <Lock className="h-4 w-4" />
+          <CardTitle className="flex items-center gap-2 text-base text-white">
+            <Sparkles className="h-4 w-4" />
+            Enhanced HTML Export
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <p className="text-sm text-zinc-400">
+            Customize your enhanced HTML export with additional features and
+            branding options.
+          </p>
+        </CardContent>
+      </Card>
+
+      {/* Password Protection Settings */}
+      <Card className="border-zinc-700 bg-zinc-900/50">
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-base text-white">
+            <Settings className="h-4 w-4" />
             Password Protection
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger>
-                  <Info className="h-3 w-3 text-zinc-500" />
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p className="text-xs max-w-[200px]">
-                    Add client-side password protection to restrict access to your training module
-                  </p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between">
-            <Label htmlFor="password-enabled" className="text-sm text-zinc-300">
-              Enable password protection
-            </Label>
+            <div>
+              <Label className="text-zinc-300">Enable Password Protection</Label>
+              <p className="text-xs text-zinc-400 mt-1">
+                Require a password to access the exported HTML
+              </p>
+            </div>
             <Switch
-              id="password-enabled"
-              checked={settings.passwordProtection.enabled}
-              onCheckedChange={(enabled) => updatePasswordProtection({ enabled })}
-              disabled={disabled}
+              checked={enablePasswordProtection}
+              onCheckedChange={setEnablePasswordProtection}
             />
           </div>
-          
-          {settings.passwordProtection.enabled && (
-            <>
-              <div className="space-y-2">
-                <Label htmlFor="password" className="text-sm text-zinc-300">
-                  Password
-                </Label>
+
+          {enablePasswordProtection && (
+            <div className="space-y-3 pt-2 border-t border-zinc-700">
+              <div>
+                <Label className="text-zinc-300">Password</Label>
                 <Input
-                  id="password"
                   type="password"
-                  value={settings.passwordProtection.password}
-                  onChange={(e) => updatePasswordProtection({ password: e.target.value })}
-                  placeholder="Enter training password"
-                  className="bg-zinc-800 border-zinc-600 text-white"
-                  disabled={disabled}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Enter password"
+                  className="bg-zinc-800 border-zinc-600 text-zinc-300"
                 />
               </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="password-hint" className="text-sm text-zinc-300">
-                  Password Hint (Optional)
-                </Label>
+              <div>
+                <Label className="text-zinc-300">Password Hint</Label>
                 <Input
-                  id="password-hint"
-                  value={settings.passwordProtection.hint}
-                  onChange={(e) => updatePasswordProtection({ hint: e.target.value })}
-                  placeholder="e.g., Company founding year"
-                  className="bg-zinc-800 border-zinc-600 text-white"
-                  disabled={disabled}
+                  value={passwordHint}
+                  onChange={(e) => setPasswordHint(e.target.value)}
+                  placeholder="Enter a hint for the password"
+                  className="bg-zinc-800 border-zinc-600 text-zinc-300"
                 />
               </div>
-              
-              <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg">
-                <p className="text-xs text-amber-300 flex items-start gap-2">
-                  <Shield className="h-3 w-3 mt-0.5 flex-shrink-0" />
-                  Client-side protection is suitable for internal training materials. 
-                  For sensitive content, consider server-side authentication.
-                </p>
-              </div>
-            </>
+            </div>
           )}
         </CardContent>
       </Card>
 
-      {/* LMS Features */}
-      <Card className="bg-[#1E1E1E] border-zinc-700">
+      {/* LMS Features Settings */}
+      <Card className="border-zinc-700 bg-zinc-900/50">
         <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2 text-base">
-            <FileText className="h-4 w-4" />
-            Learning Management Features
+          <CardTitle className="flex items-center gap-2 text-base text-white">
+            <BookOpen className="h-4 w-4" />
+            LMS Features
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Clock className="h-4 w-4 text-zinc-400" />
-                <Label htmlFor="progress-tracking" className="text-sm text-zinc-300">
-                  Progress Tracking
-                </Label>
-              </div>
-              <Switch
-                id="progress-tracking"
-                checked={settings.lmsFeatures.enableProgressTracking}
-                onCheckedChange={(enabled) => updateLmsFeatures({ enableProgressTracking: enabled })}
-                disabled={disabled}
-              />
+          <div className="flex items-center justify-between">
+            <div>
+              <Label className="text-zinc-300">Enable Notes</Label>
+              <p className="text-xs text-zinc-400 mt-1">
+                Allow users to take notes within the training module
+              </p>
             </div>
-            
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <FileText className="h-4 w-4 text-zinc-400" />
-                <Label htmlFor="notes" className="text-sm text-zinc-300">
-                  User Notes
-                </Label>
-              </div>
-              <Switch
-                id="notes"
-                checked={settings.lmsFeatures.enableNotes}
-                onCheckedChange={(enabled) => updateLmsFeatures({ enableNotes: enabled })}
-                disabled={disabled}
-              />
-            </div>
-            
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Bookmark className="h-4 w-4 text-zinc-400" />
-                <Label htmlFor="bookmarks" className="text-sm text-zinc-300">
-                  Bookmarks
-                </Label>
-              </div>
-              <Switch
-                id="bookmarks"
-                checked={settings.lmsFeatures.enableBookmarks}
-                onCheckedChange={(enabled) => updateLmsFeatures({ enableBookmarks: enabled })}
-                disabled={disabled}
-              />
-            </div>
-            
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Search className="h-4 w-4 text-zinc-400" />
-                <Label htmlFor="search" className="text-sm text-zinc-300">
-                  Content Search
-                </Label>
-              </div>
-              <Switch
-                id="search"
-                checked={settings.lmsFeatures.enableSearch}
-                onCheckedChange={(enabled) => updateLmsFeatures({ enableSearch: enabled })}
-                disabled={disabled}
-              />
-            </div>
+            <Switch
+              checked={enableNotes}
+              onCheckedChange={setEnableNotes}
+            />
           </div>
-          
-          <div className="p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
-            <p className="text-xs text-blue-300">
-              All progress, notes, and bookmarks are saved locally in the user's browser
-            </p>
+
+          <div className="flex items-center justify-between">
+            <div>
+              <Label className="text-zinc-300">Enable Bookmarks</Label>
+              <p className="text-xs text-zinc-400 mt-1">
+                Allow users to bookmark steps for later review
+              </p>
+            </div>
+            <Switch
+              checked={enableBookmarks}
+              onCheckedChange={setEnableBookmarks}
+            />
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div>
+              <Label className="text-zinc-300">Enable Search</Label>
+              <p className="text-xs text-zinc-400 mt-1">
+                Allow users to search for specific content within the module
+              </p>
+            </div>
+            <Switch
+              checked={enableSearch}
+              onCheckedChange={setEnableSearch}
+            />
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div>
+              <Label className="text-zinc-300">Enable Progress Tracking</Label>
+              <p className="text-xs text-zinc-400 mt-1">
+                Track user progress and completion status
+              </p>
+            </div>
+            <Switch
+              checked={enableProgressTracking}
+              onCheckedChange={setEnableProgressTracking}
+            />
           </div>
         </CardContent>
       </Card>
 
-      {/* Theme & Branding */}
-      <Card className="bg-[#1E1E1E] border-zinc-700">
+      {/* Theme Settings */}
+      <Card className="border-zinc-700 bg-zinc-900/50">
         <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2 text-base">
-            <Palette className="h-4 w-4" />
-            Theme & Branding
+          <CardTitle className="flex items-center gap-2 text-base text-white">
+            🎨 Theme
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label className="text-sm text-zinc-300">Default Theme</Label>
-            <div className="flex gap-2">
-              {[
-                { value: 'auto', label: 'Auto', description: 'Follows system preference' },
-                { value: 'light', label: 'Light', description: 'Always light mode' },
-                { value: 'dark', label: 'Dark', description: 'Always dark mode' }
-              ].map((theme) => (
-                <button
-                  key={theme.value}
-                  onClick={() => updateSettings({ theme: theme.value as any })}
-                  className={`flex-1 p-3 rounded-lg border text-center transition-all ${
-                    settings.theme === theme.value
-                      ? 'border-[#007AFF] bg-[#007AFF]/10 text-[#007AFF]'
-                      : 'border-zinc-600 bg-zinc-800/50 text-zinc-300 hover:border-zinc-500'
-                  }`}
-                  disabled={disabled}
-                >
-                  <div className="font-medium text-sm">{theme.label}</div>
-                  <div className="text-xs opacity-70">{theme.description}</div>
-                </button>
-              ))}
+          <div className="grid grid-cols-3 gap-3">
+            <div>
+              <Label htmlFor="theme-light" className="text-zinc-300">
+                <input
+                  type="radio"
+                  id="theme-light"
+                  value="light"
+                  checked={theme === "light"}
+                  onChange={() => setTheme("light")}
+                  className="mr-2"
+                />
+                Light
+              </Label>
+            </div>
+            <div>
+              <Label htmlFor="theme-dark" className="text-zinc-300">
+                <input
+                  type="radio"
+                  id="theme-dark"
+                  value="dark"
+                  checked={theme === "dark"}
+                  onChange={() => setTheme("dark")}
+                  className="mr-2"
+                />
+                Dark
+              </Label>
+            </div>
+            <div>
+              <Label htmlFor="theme-auto" className="text-zinc-300">
+                <input
+                  type="radio"
+                  id="theme-auto"
+                  value="auto"
+                  checked={theme === "auto"}
+                  onChange={() => setTheme("auto")}
+                  className="mr-2"
+                />
+                Auto
+              </Label>
             </div>
           </div>
-          
-          <Separator className="bg-zinc-700" />
-          
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="primary-color" className="text-sm text-zinc-300">
-                Primary Color
-              </Label>
-              <div className="flex gap-2 items-center">
-                <Input
-                  id="primary-color"
-                  type="color"
-                  value={settings.branding.companyColors.primary}
-                  onChange={(e) => updateBranding({ 
-                    companyColors: { 
-                      ...settings.branding.companyColors, 
-                      primary: e.target.value 
-                    }
-                  })}
-                  className="w-12 h-8 p-1 bg-zinc-800 border-zinc-600"
-                  disabled={disabled}
-                />
-                <Input
-                  value={settings.branding.companyColors.primary}
-                  onChange={(e) => updateBranding({ 
-                    companyColors: { 
-                      ...settings.branding.companyColors, 
-                      primary: e.target.value 
-                    }
-                  })}
-                  className="flex-1 bg-zinc-800 border-zinc-600 text-white text-sm"
-                  disabled={disabled}
-                />
-              </div>
+
+          <div className="space-y-3 pt-2 border-t border-zinc-700">
+            <div>
+              <Label className="text-zinc-300">Primary Color</Label>
+              <Input
+                type="color"
+                value={primaryColor}
+                onChange={(e) => setPrimaryColor(e.target.value)}
+                className="h-10 w-full bg-zinc-800 border-zinc-600 text-zinc-300"
+              />
             </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="secondary-color" className="text-sm text-zinc-300">
-                Secondary Color
-              </Label>
-              <div className="flex gap-2 items-center">
-                <Input
-                  id="secondary-color"
-                  type="color"
-                  value={settings.branding.companyColors.secondary}
-                  onChange={(e) => updateBranding({ 
-                    companyColors: { 
-                      ...settings.branding.companyColors, 
-                      secondary: e.target.value 
-                    }
-                  })}
-                  className="w-12 h-8 p-1 bg-zinc-800 border-zinc-600"
-                  disabled={disabled}
-                />
-                <Input
-                  value={settings.branding.companyColors.secondary}
-                  onChange={(e) => updateBranding({ 
-                    companyColors: { 
-                      ...settings.branding.companyColors, 
-                      secondary: e.target.value 
-                    }
-                  })}
-                  className="flex-1 bg-zinc-800 border-zinc-600 text-white text-sm"
-                  disabled={disabled}
-                />
-              </div>
+            <div>
+              <Label className="text-zinc-300">Secondary Color</Label>
+              <Input
+                type="color"
+                value={secondaryColor}
+                onChange={(e) => setSecondaryColor(e.target.value)}
+                className="h-10 w-full bg-zinc-800 border-zinc-600 text-zinc-300"
+              />
             </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Preview Features */}
-      <div className="p-4 bg-gradient-to-r from-green-500/10 to-blue-500/10 border border-green-500/20 rounded-lg">
-        <div className="flex items-start gap-3">
-          <Eye className="h-5 w-5 text-green-400 flex-shrink-0 mt-0.5" />
-          <div>
-            <h4 className="font-medium text-green-300 mb-1">Enhanced Training Features</h4>
-            <ul className="text-sm text-green-200/80 space-y-1">
-              <li>• Self-contained HTML file with all assets embedded</li>
-              <li>• Interactive navigation with step-by-step progress</li>
-              <li>• Local data persistence (progress saved in browser)</li>
-              <li>• Responsive design for desktop and mobile</li>
-              <li>• Print-friendly layout for offline reference</li>
-              <li>• No server required - works anywhere</li>
-            </ul>
+      {/* Feedback System Settings */}
+      <Card className="border-zinc-700 bg-zinc-900/50">
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-base text-white">
+            <MessageCircle className="h-4 w-4" />
+            Feedback System
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <Label className="text-zinc-300">Include Feedback Mechanism</Label>
+              <p className="text-xs text-zinc-400 mt-1">
+                Add feedback buttons for users to suggest improvements
+              </p>
+            </div>
+            <Switch
+              checked={includeFeedback}
+              onCheckedChange={setIncludeFeedback}
+            />
           </div>
-        </div>
+
+          {includeFeedback && (
+            <div className="space-y-3 pt-2 border-t border-zinc-700">
+              <div>
+                <Label className="text-zinc-300">Feedback Email Address</Label>
+                <Input
+                  value={feedbackEmail}
+                  onChange={(e) => setFeedbackEmail(e.target.value)}
+                  placeholder="feedback@company.com"
+                  className="bg-zinc-800 border-zinc-600 text-zinc-300"
+                />
+                <p className="text-xs text-zinc-400 mt-1">
+                  Email address for receiving feedback via mailto links
+                </p>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Export Button and Status */}
+      <div className="flex justify-between items-center">
+        <Button
+          variant="outline"
+          onClick={handleExport}
+          disabled={isExporting}
+          className="border-zinc-600 text-zinc-300 hover:bg-zinc-700"
+        >
+          {isExporting ? (
+            <div className="flex items-center gap-2">
+              <div className="animate-spin rounded-full h-4 w-4 border-2 border-zinc-300 border-t-transparent"></div>
+              <span>Exporting...</span>
+            </div>
+          ) : (
+            <>
+              <Download className="h-4 w-4 mr-2" />
+              Export Enhanced HTML
+            </>
+          )}
+        </Button>
+        <DialogClose asChild>
+          <Button variant="secondary">Close</Button>
+        </DialogClose>
       </div>
+
+      {exportProgress && (
+        <div className="text-sm text-zinc-400">
+          Progress: {exportProgress}
+        </div>
+      )}
     </div>
   );
 };
 
-export default EnhancedHtmlExportOptions; 
+export default EnhancedHtmlExportOptions;

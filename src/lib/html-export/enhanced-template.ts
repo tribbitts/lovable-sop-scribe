@@ -1,6 +1,8 @@
+
 import { SopDocument } from "@/types/sop";
 import { renderEnhancedCallouts, generateCalloutInteractivityScript } from "./enhanced-callout-renderer";
 import { renderEnhancedContentBlocks } from "./enhanced-content-renderer";
+import { generateFeedbackSection, FeedbackOptions } from "./feedback-renderer";
 
 export interface HtmlExportOptions {
   theme?: 'light' | 'dark' | 'auto';
@@ -29,6 +31,7 @@ export interface HtmlExportOptions {
     cornerRadius?: "none" | "small" | "medium" | "large";
     shadowStyle?: "none" | "subtle" | "medium" | "strong";
   };
+  feedback?: FeedbackOptions;
 }
 
 export const generateHtmlTemplate = (sopDocument: SopDocument, options: HtmlExportOptions = {}) => {
@@ -100,6 +103,9 @@ export const generateEnhancedHtmlTemplate = (sopDocument: SopDocument, options: 
     `;
   }).join('');
 
+  // Generate feedback section
+  const feedbackHtml = generateFeedbackSection(sopDocument, options.feedback || {});
+
   return `
     <!DOCTYPE html>
     <html lang="en">
@@ -143,6 +149,8 @@ export const generateEnhancedHtmlTemplate = (sopDocument: SopDocument, options: 
       <div class="content">
         ${steps}
       </div>
+
+      ${feedbackHtml}
 
       ${generateCalloutInteractivityScript()}
     </body>

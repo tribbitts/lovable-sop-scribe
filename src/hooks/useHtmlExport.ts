@@ -16,7 +16,13 @@ export const useHtmlExport = () => {
 
   const handleExportHtml = async (
     sopDocument: SopDocument,
-    options?: HtmlExportOptions & { enhanced?: boolean; enhancedOptions?: any; trainingOptions?: any }
+    options?: HtmlExportOptions & { 
+      enhanced?: boolean; 
+      enhancedOptions?: any; 
+      trainingOptions?: any;
+      includeFeedback?: boolean;
+      feedbackEmail?: string;
+    }
   ) => {
     // Super user access check - multiple emails for Timothy
     const isSuperUser = user?.email === 'tribbit@tribbit.gg' || 
@@ -48,11 +54,16 @@ export const useHtmlExport = () => {
         mode: options?.mode || exportMode,
         quality: options?.quality || 0.85,
         enhanced: options?.enhanced || false,
-        enhancedOptions: options?.enhancedOptions
+        enhancedOptions: options?.enhancedOptions,
+        feedback: options?.includeFeedback ? {
+          enableSupabaseIntegration: true,
+          emailAddress: options?.feedbackEmail || "feedback@sopify.com",
+          companyName: sopDocument.companyName || "SOPify"
+        } : undefined
       };
 
       if (exportOptions.enhanced) {
-        setExportProgress("Creating enhanced training module with LMS features...");
+        setExportProgress("Creating enhanced training module with feedback system...");
       } else if (exportOptions.mode === 'standalone') {
         setExportProgress("Processing screenshots with callouts...");
       } else {
@@ -72,7 +83,7 @@ export const useHtmlExport = () => {
                         (exportOptions.mode === 'standalone' ? 'standalone HTML file' : 'ZIP package');
       toast({
         title: "Export Complete",
-        description: `Your SOP has been exported as a ${exportType}.`,
+        description: `Your SOP has been exported as a ${exportType}${options?.includeFeedback ? ' with feedback system' : ''}.`,
       });
 
     } catch (error) {
