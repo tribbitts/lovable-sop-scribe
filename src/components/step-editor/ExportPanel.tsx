@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -10,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { 
   X, 
   Download, 
@@ -25,6 +25,7 @@ import {
   Zap
 } from "lucide-react";
 import { SopDocument, ExportFormat, ExportOptions } from "@/types/sop";
+import PdfExportOptions from "@/components/PdfExportOptions";
 
 interface ExportPanelProps {
   document: SopDocument;
@@ -41,6 +42,7 @@ const ExportPanel: React.FC<ExportPanelProps> = ({
 }) => {
   const [selectedFormat, setSelectedFormat] = useState<ExportFormat | "bundle">("bundle");
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const [showPdfExportOptions, setShowPdfExportOptions] = useState(false);
   const [exportOptions, setExportOptions] = useState<ExportOptions>({
     theme: "auto",
     includeTableOfContents: true,
@@ -150,6 +152,9 @@ const ExportPanel: React.FC<ExportPanelProps> = ({
       
       console.log('🎯 ExportPanel sending bundle options:', bundleExportOptions);
       onExport(selectedFormat, bundleExportOptions as any);
+    } else if (selectedFormat === "pdf") {
+      // Show PDF export options modal for user to choose between Standard and Demo-Style
+      setShowPdfExportOptions(true);
     } else {
       // For other formats, use the original structure
       const options: ExportOptions = {
@@ -495,6 +500,19 @@ const ExportPanel: React.FC<ExportPanelProps> = ({
           </div>
         )}
       </div>
+      
+      {/* PDF Export Options Modal */}
+      <Dialog open={showPdfExportOptions} onOpenChange={setShowPdfExportOptions}>
+        <DialogContent className="bg-zinc-900 border-zinc-800 max-w-5xl w-[95vw] max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-white">PDF Export Options</DialogTitle>
+          </DialogHeader>
+          <PdfExportOptions 
+            sopDocument={document}
+            onClose={() => setShowPdfExportOptions(false)}
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
