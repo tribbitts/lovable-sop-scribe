@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -115,7 +114,6 @@ const StepQuiz: React.FC<StepQuizProps> = ({ step, onUpdateQuestions }) => {
                         <Switch
                           checked={question.itmOnly || false}
                           onCheckedChange={() => toggleQuestionItmOnly(question.id)}
-                          size="sm"
                         />
                       </div>
                       <Button

@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -112,7 +111,6 @@ const StepResources: React.FC<StepResourcesProps> = ({ step, onUpdateResources }
                         <Switch
                           checked={resource.itmOnly || false}
                           onCheckedChange={() => toggleResourceItmOnly(resource.id)}
-                          size="sm"
                         />
                       </div>
                       <Button
