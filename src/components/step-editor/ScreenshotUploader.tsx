@@ -11,6 +11,12 @@ interface ScreenshotUploaderProps {
 const ScreenshotUploader: React.FC<ScreenshotUploaderProps> = ({
   onScreenshotUpload,
 }) => {
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      onScreenshotUpload(e);
+    }
+  };
+
   return (
     <div className="bg-zinc-800 border border-dashed border-zinc-700 rounded-xl p-12 text-center">
       <div className="flex flex-col items-center space-y-3">
@@ -21,18 +27,20 @@ const ScreenshotUploader: React.FC<ScreenshotUploaderProps> = ({
             Upload a screenshot to illustrate this step
           </p>
         </div>
-        <Button
-          variant="outline"
-          className="mt-4 relative border-zinc-700 text-zinc-300 hover:bg-zinc-800"
-        >
-          Upload Image
+        <div className="relative">
+          <Button
+            variant="outline"
+            className="mt-4 border-zinc-700 text-zinc-300 hover:bg-zinc-800"
+          >
+            Upload Image
+          </Button>
           <Input
             type="file"
             accept="image/*"
-            className="absolute inset-0 opacity-0 cursor-pointer"
-            onChange={onScreenshotUpload}
+            className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+            onChange={handleFileChange}
           />
-        </Button>
+        </div>
       </div>
     </div>
   );
