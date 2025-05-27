@@ -1,3 +1,4 @@
+
 import React, { createContext, useState, useContext, ReactNode } from "react";
 import { SopDocument, SopStep, Callout, StepResource, ExportFormat } from "../types/sop";
 import { EnhancedContentBlock } from "../types/enhanced-content";
@@ -254,9 +255,35 @@ export const SopProvider = ({ children }: { children: ReactNode }) => {
       
       if (blockIndex === -1) return prev;
 
-      updatedSteps[stepIndex].enhancedContentBlocks = currentBlocks.map(block =>
-        block.id === blockId ? { ...block, ...updates } : block
-      );
+      const currentBlock = currentBlocks[blockIndex];
+      let updatedBlock: EnhancedContentBlock;
+
+      // Handle updates based on block type to maintain proper typing
+      switch (currentBlock.type) {
+        case 'text':
+          updatedBlock = { ...currentBlock, ...updates } as EnhancedContentBlock;
+          break;
+        case 'checklist':
+          updatedBlock = { ...currentBlock, ...updates } as EnhancedContentBlock;
+          break;
+        case 'table':
+          updatedBlock = { ...currentBlock, ...updates } as EnhancedContentBlock;
+          break;
+        case 'accordion':
+          updatedBlock = { ...currentBlock, ...updates } as EnhancedContentBlock;
+          break;
+        case 'alert':
+          updatedBlock = { ...currentBlock, ...updates } as EnhancedContentBlock;
+          break;
+        default:
+          updatedBlock = { ...currentBlock, ...updates } as EnhancedContentBlock;
+          break;
+      }
+
+      const newBlocks = [...currentBlocks];
+      newBlocks[blockIndex] = updatedBlock;
+      
+      updatedSteps[stepIndex].enhancedContentBlocks = newBlocks;
 
       return { ...prev, steps: updatedSteps };
     });
