@@ -29,7 +29,45 @@ export function generateStandardHtmlTemplate(
                   if (step.screenshot && step.screenshot.dataUrl) {
                     screenshotHtml += `
                     <div class="screenshot-container">
-                        <img src="${step.screenshot.dataUrl}" alt="Step ${stepNumber} Screenshot" class="step-screenshot" />
+                        <div class="screenshot-wrapper" style="position: relative; display: inline-block;">
+                            <img src="${step.screenshot.dataUrl}" alt="Step ${stepNumber} Screenshot" class="step-screenshot" />
+                            ${step.screenshot.callouts && step.screenshot.callouts.length > 0 ? 
+                              step.screenshot.callouts.map((callout: any) => `
+                                <div class="callout callout-${callout.shape}" style="
+                                  position: absolute;
+                                  left: ${callout.x}%;
+                                  top: ${callout.y}%;
+                                  width: ${callout.width}%;
+                                  height: ${callout.height}%;
+                                  border: 2px solid ${callout.color};
+                                  background-color: ${callout.color}40;
+                                  ${callout.shape === 'circle' || callout.shape === 'number' ? 'border-radius: 50%;' : ''}
+                                  ${callout.shape === 'number' ? `
+                                    display: flex;
+                                    align-items: center;
+                                    justify-content: center;
+                                    font-weight: bold;
+                                    color: white;
+                                    font-size: ${Math.max(10, callout.width * 0.6)}px;
+                                    background: ${callout.revealText ? 'linear-gradient(135deg, #3B82F6, #8B5CF6)' : callout.color};
+                                  ` : ''}
+                                  ${callout.shape === 'arrow' ? `
+                                    display: flex;
+                                    align-items: center;
+                                    justify-content: center;
+                                  ` : ''}
+                                ">
+                                  ${callout.shape === 'number' ? callout.number : ''}
+                                  ${callout.shape === 'arrow' ? `
+                                    <svg viewBox="0 0 100 50" fill="${callout.color}" style="width: 100%; height: 100%;">
+                                      <polygon points="10,20 60,20 60,10 90,25 60,40 60,30 10,30" fill="${callout.color}" />
+                                    </svg>
+                                  ` : ''}
+                                  ${callout.text ? `<span style="color: white; font-size: 12px; text-align: center;">${callout.text}</span>` : ''}
+                                </div>
+                              `).join('') : ''
+                            }
+                        </div>
                     </div>`;
                   }
                   
@@ -39,7 +77,45 @@ export function generateStandardHtmlTemplate(
                       if (screenshot.dataUrl) {
                         screenshotHtml += `
                         <div class="screenshot-container">
-                            <img src="${screenshot.dataUrl}" alt="Step ${stepNumber} Screenshot ${imgIndex + 1}" class="step-screenshot" />
+                            <div class="screenshot-wrapper" style="position: relative; display: inline-block;">
+                                <img src="${screenshot.dataUrl}" alt="Step ${stepNumber} Screenshot ${imgIndex + 1}" class="step-screenshot" />
+                                ${screenshot.callouts && screenshot.callouts.length > 0 ? 
+                                  screenshot.callouts.map((callout: any) => `
+                                    <div class="callout callout-${callout.shape}" style="
+                                      position: absolute;
+                                      left: ${callout.x}%;
+                                      top: ${callout.y}%;
+                                      width: ${callout.width}%;
+                                      height: ${callout.height}%;
+                                      border: 2px solid ${callout.color};
+                                      background-color: ${callout.color}40;
+                                      ${callout.shape === 'circle' || callout.shape === 'number' ? 'border-radius: 50%;' : ''}
+                                      ${callout.shape === 'number' ? `
+                                        display: flex;
+                                        align-items: center;
+                                        justify-content: center;
+                                        font-weight: bold;
+                                        color: white;
+                                        font-size: ${Math.max(10, callout.width * 0.6)}px;
+                                        background: ${callout.revealText ? 'linear-gradient(135deg, #3B82F6, #8B5CF6)' : callout.color};
+                                      ` : ''}
+                                      ${callout.shape === 'arrow' ? `
+                                        display: flex;
+                                        align-items: center;
+                                        justify-content: center;
+                                      ` : ''}
+                                    ">
+                                      ${callout.shape === 'number' ? callout.number : ''}
+                                      ${callout.shape === 'arrow' ? `
+                                        <svg viewBox="0 0 100 50" fill="${callout.color}" style="width: 100%; height: 100%;">
+                                          <polygon points="10,20 60,20 60,10 90,25 60,40 60,30 10,30" fill="${callout.color}" />
+                                        </svg>
+                                      ` : ''}
+                                      ${callout.text ? `<span style="color: white; font-size: 12px; text-align: center;">${callout.text}</span>` : ''}
+                                    </div>
+                                  `).join('') : ''
+                                }
+                            </div>
                             ${screenshot.title ? `<p class="screenshot-title">${screenshot.title}</p>` : ''}
                         </div>`;
                       }

@@ -6,6 +6,16 @@ import { addContentPageDesign, addPageFooters } from "@/lib/pdf/content-page";
 import { renderSteps } from "@/lib/pdf/step-renderer";
 import { initializePdfFonts, setFontSafe, getStringWidthSafe } from "@/lib/pdf/font-handler";
 
+// Helper function to convert hex color to RGB
+function hexToRgb(hex: string): { r: number; g: number; b: number } {
+  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  return result ? {
+    r: parseInt(result[1], 16),
+    g: parseInt(result[2], 16),
+    b: parseInt(result[3], 16)
+  } : { r: 0, g: 0, b: 0 };
+}
+
 // Add enhanced table of contents page with SOPify branding - blue only, no red
 function addTableOfContents(
   pdf: any,
@@ -225,6 +235,86 @@ export async function generatePDF(sopDocument: SopDocument): Promise<string> {
               const imgHeight = 80; // Fixed height for consistency
               
               pdf.addImage(screenshot.dataUrl, 'JPEG', margin.left, currentY, imgWidth, imgHeight);
+              
+              // Add callouts on top of the image
+              if (screenshot.callouts && screenshot.callouts.length > 0) {
+                screenshot.callouts.forEach((callout: any) => {
+                  const calloutX = margin.left + (callout.x / 100) * imgWidth;
+                  const calloutY = currentY + (callout.y / 100) * imgHeight;
+                  const calloutWidth = (callout.width / 100) * imgWidth;
+                  const calloutHeight = (callout.height / 100) * imgHeight;
+                  
+                  // Set callout color
+                  const rgb = hexToRgb(callout.color);
+                  pdf.setDrawColor(rgb.r, rgb.g, rgb.b);
+                  pdf.setFillColor(rgb.r, rgb.g, rgb.b, 0.3);
+                  
+                  if (callout.shape === 'circle' || callout.shape === 'number') {
+                    // Draw circle
+                    const radius = Math.min(calloutWidth, calloutHeight) / 2;
+                    const centerX = calloutX + calloutWidth / 2;
+                    const centerY = calloutY + calloutHeight / 2;
+                    
+                    pdf.setLineWidth(1);
+                    pdf.circle(centerX, centerY, radius, 'FD');
+                    
+                    // Add number if it's a numbered callout
+                    if (callout.shape === 'number' && callout.number) {
+                      setFontSafe(pdf, "helvetica", "bold");
+                      pdf.setFontSize(Math.max(8, radius * 0.8));
+                      pdf.setTextColor(255, 255, 255);
+                      
+                      const numberStr = String(callout.number);
+                      const numberWidth = getStringWidthSafe(pdf, numberStr, Math.max(8, radius * 0.8));
+                      pdf.text(numberStr, centerX - (numberWidth / 2), centerY + 2);
+                    }
+                  } else if (callout.shape === 'rectangle') {
+                    // Draw rectangle
+                    pdf.setLineWidth(1);
+                    pdf.rect(calloutX, calloutY, calloutWidth, calloutHeight, 'FD');
+                    
+                    // Add text if available
+                    if (callout.text) {
+                      setFontSafe(pdf, "helvetica", "normal");
+                      pdf.setFontSize(8);
+                      pdf.setTextColor(255, 255, 255);
+                      
+                      const textLines = pdf.splitTextToSize(callout.text, calloutWidth - 2);
+                      pdf.text(textLines, calloutX + 1, calloutY + 4);
+                    }
+                  } else if (callout.shape === 'arrow') {
+                    // Draw simple arrow shape
+                    pdf.setLineWidth(2);
+                    const arrowCenterX = calloutX + calloutWidth / 2;
+                    const arrowCenterY = calloutY + calloutHeight / 2;
+                    const arrowLength = Math.min(calloutWidth, calloutHeight) * 0.8;
+                    
+                    // Arrow shaft
+                    pdf.line(
+                      arrowCenterX - arrowLength / 2, 
+                      arrowCenterY, 
+                      arrowCenterX + arrowLength / 2, 
+                      arrowCenterY
+                    );
+                    
+                    // Arrow head
+                    const headSize = arrowLength * 0.2;
+                    pdf.line(
+                      arrowCenterX + arrowLength / 2, 
+                      arrowCenterY,
+                      arrowCenterX + arrowLength / 2 - headSize, 
+                      arrowCenterY - headSize / 2
+                    );
+                    pdf.line(
+                      arrowCenterX + arrowLength / 2, 
+                      arrowCenterY,
+                      arrowCenterX + arrowLength / 2 - headSize, 
+                      arrowCenterY + headSize / 2
+                    );
+                  }
+                });
+              }
+              
               currentY += imgHeight + 5;
 
               // Add screenshot title if available
