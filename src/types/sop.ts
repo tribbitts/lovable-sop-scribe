@@ -42,6 +42,7 @@ export interface StepResource {
   title: string;
   url: string;
   description?: string;
+  itmOnly?: boolean; // Flag for ITM-only resources
 }
 
 export interface QuizQuestion {
@@ -56,12 +57,14 @@ export interface QuizQuestion {
     incorrectFeedback?: string;
     optionFeedback?: { [key: string]: string }; // Feedback for each multiple choice option
   };
+  itmOnly?: boolean; // Flag for ITM-only quiz content
 }
 
 export interface LearningObjective {
   id: string;
   text: string;
   category?: "knowledge" | "skill" | "behavior";
+  itmOnly?: boolean; // Flag for ITM-only objectives
 }
 
 // Healthcare-specific content types
@@ -69,6 +72,7 @@ export type HealthcareContentType =
   | "critical-safety" 
   | "hipaa-alert" 
   | "patient-communication"
+  | "scenario-guidance"
   | "standard";
 
 export interface HealthcareContent {
@@ -77,6 +81,7 @@ export interface HealthcareContent {
   content: string;
   priority: "high" | "medium" | "low";
   icon?: string;
+  itmOnly?: boolean; // Flag for ITM-only healthcare content
 }
 
 // New content block types for enhanced engagement
@@ -87,6 +92,7 @@ export interface ContentBlock {
   title?: string; // For titled blocks like scenarios
   healthcareType?: HealthcareContentType; // For healthcare-specific content
   priority?: "high" | "medium" | "low";
+  itmOnly?: boolean; // Flag for ITM-only content blocks
 }
 
 export interface RevisionHistoryEntry {
@@ -140,6 +146,13 @@ export interface SopStep {
   quizQuestions?: QuizQuestion[];
   requiredScore?: number; // Percentage needed to pass
   allowRetakes?: boolean;
+  
+  // ITM content distinction
+  itmOnlyContent?: {
+    detailedRationale?: string; // Detailed learning explanations for ITM
+    interactiveScenarios?: string[]; // Scenario text for ITM interactions
+    additionalContext?: string; // Extra context for learning
+  };
 }
 
 export interface SopDocument {

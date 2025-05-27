@@ -27,6 +27,42 @@ export type Database = {
         }
         Relationships: []
       }
+      itm_feedback: {
+        Row: {
+          clear_rating: number | null
+          comments: string | null
+          created_at: string | null
+          helpful_rating: number | null
+          id: string
+          module_title: string
+          module_url: string | null
+          user_email: string | null
+          user_id: string | null
+        }
+        Insert: {
+          clear_rating?: number | null
+          comments?: string | null
+          created_at?: string | null
+          helpful_rating?: number | null
+          id?: string
+          module_title: string
+          module_url?: string | null
+          user_email?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          clear_rating?: number | null
+          comments?: string | null
+          created_at?: string | null
+          helpful_rating?: number | null
+          id?: string
+          module_title?: string
+          module_url?: string | null
+          user_email?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       pdf_usage: {
         Row: {
           created_at: string

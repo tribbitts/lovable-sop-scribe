@@ -114,39 +114,48 @@ export const healthcareTemplates: HealthcareTemplate[] = [
     sections: [
       {
         id: "objective",
-        title: "Objective of Update",
-        description: "Purpose and goals of this training update",
-        suggestedContent: "This update covers important changes to improve patient care and operational efficiency.",
+        title: "Training Update Overview",
+        description: "Purpose and importance of this training update",
+        suggestedContent: "This update covers important changes designed to improve patient care quality and operational efficiency.",
         contentType: "text",
         required: true,
-        estimatedTime: 5
+        estimatedTime: 8
       },
       {
         id: "key-changes",
-        title: "Key Changes",
-        description: "Summary of important changes",
-        suggestedContent: "Review the key changes that affect your daily responsibilities and patient interactions.",
+        title: "What's New",
+        description: "Summary of key changes and improvements",
+        suggestedContent: "Review the essential changes that will enhance your daily workflow and patient interactions.",
         contentType: "text",
         required: true,
         estimatedTime: 15
       },
       {
         id: "protocol-details",
-        title: "New Protocol Details",
-        description: "Detailed explanation of new procedures",
-        suggestedContent: "Step-by-step guidance on implementing the new protocols in your workflow.",
+        title: "Updated Procedures",
+        description: "Step-by-step guidance for new protocols",
+        suggestedContent: "Detailed walkthrough of the new procedures and how they integrate with your current responsibilities.",
         contentType: "text",
         required: true,
         estimatedTime: 20
       },
       {
-        id: "application-scenarios",
-        title: "Application Scenarios",
-        description: "Real-world scenarios and practice opportunities",
-        suggestedContent: "Practice applying the new protocols through realistic patient care scenarios.",
+        id: "practice-scenarios",
+        title: "Real-World Application",
+        description: "Interactive scenarios to practice new procedures",
+        suggestedContent: "Apply your learning through realistic patient care scenarios that reflect common workplace situations.",
         contentType: "scenario",
         required: true,
-        estimatedTime: 15
+        estimatedTime: 18
+      },
+      {
+        id: "implementation-tips",
+        title: "Implementation Best Practices",
+        description: "Tips for smooth transition to new procedures",
+        suggestedContent: "Practical guidance for successfully implementing these changes in your daily work routine.",
+        contentType: "communication-tip",
+        required: false,
+        estimatedTime: 10
       }
     ],
     enabledFeatures: {
@@ -156,8 +165,64 @@ export const healthcareTemplates: HealthcareTemplate[] = [
       bookmarks: true,
       patientCareRationales: true,
       scenarioBasedQuestions: true,
-      communicationSnippets: false,
+      communicationSnippets: true,
       redFlagIdentifiers: true
+    }
+  },
+  {
+    id: "healthcare-communication-excellence",
+    name: "Patient Communication Excellence",
+    description: "Advanced communication skills for exceptional patient experiences",
+    category: "communication",
+    icon: "MessageCircle",
+    color: "from-purple-600 to-pink-600",
+    sections: [
+      {
+        id: "communication-foundations",
+        title: "Communication Foundations",
+        description: "Core principles of effective patient communication",
+        suggestedContent: "Build strong communication skills that create positive patient experiences and improve care outcomes.",
+        contentType: "text",
+        required: true,
+        estimatedTime: 12
+      },
+      {
+        id: "difficult-conversations",
+        title: "Challenging Situations",
+        description: "Handling difficult conversations with empathy",
+        suggestedContent: "Learn techniques for managing challenging patient interactions while maintaining professionalism and compassion.",
+        contentType: "scenario",
+        required: true,
+        estimatedTime: 20
+      },
+      {
+        id: "cultural-sensitivity",
+        title: "Cultural Awareness",
+        description: "Providing culturally sensitive patient care",
+        suggestedContent: "Develop cultural competency to serve diverse patient populations with respect and understanding.",
+        contentType: "text",
+        required: true,
+        estimatedTime: 15
+      },
+      {
+        id: "communication-practice",
+        title: "Practice Sessions",
+        description: "Role-playing exercises for skill development",
+        suggestedContent: "Interactive practice sessions to refine your communication skills in realistic healthcare scenarios.",
+        contentType: "scenario",
+        required: true,
+        estimatedTime: 25
+      }
+    ],
+    enabledFeatures: {
+      quizzes: true,
+      progressTracking: true,
+      certificates: true,
+      bookmarks: true,
+      patientCareRationales: false,
+      scenarioBasedQuestions: true,
+      communicationSnippets: true,
+      redFlagIdentifiers: false
     }
   }
 ];

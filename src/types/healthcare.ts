@@ -5,6 +5,7 @@ export type HealthcareContentType =
   | "critical-safety" 
   | "hipaa-alert" 
   | "patient-communication"
+  | "scenario-guidance"
   | "standard";
 
 export interface HealthcareContent {
