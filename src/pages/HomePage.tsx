@@ -27,7 +27,7 @@ const HomePage = () => {
         "name": "How much does SOPify cost?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "SOPify offers a free tier with basic features, SOP Essentials at $25/month, and SOPify Business at $75/month with advanced features and customization options."
+          "text": "SOPify offers a free tier with basic features, SOP Essentials at $20/month, and SOPify Business at $40/month with advanced features and customization options."
         }
       },
       {

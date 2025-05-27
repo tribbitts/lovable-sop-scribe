@@ -1,5 +1,4 @@
-
-import { FileText, Download, Smartphone, Shield, Users, GraduationCap } from "lucide-react";
+import { FileText, Download, Smartphone, Shield, Users, Settings } from "lucide-react";
 
 const FeatureCard = ({ 
   icon: Icon, 
@@ -29,7 +28,7 @@ const Features = () => {
           </h2>
           <p className="text-zinc-400 max-w-2xl mx-auto">
             Powerful features designed to streamline your Standard Operating Procedure creation process, 
-            from documentation to training and team collaboration.
+            from documentation to professional exports and team collaboration.
           </p>
         </div>
         
@@ -47,9 +46,9 @@ const Features = () => {
           />
           
           <FeatureCard
-            icon={GraduationCap}
-            title="Interactive Training Modules"
-            description="Transform your SOPs into engaging training experiences with progress tracking, quizzes, and completion certificates."
+            icon={Settings}
+            title="Advanced Callout Tools"
+            description="Enhance your screenshots with professional callouts, arrows, and annotations to highlight important areas and steps."
           />
           
           <FeatureCard
@@ -67,7 +66,7 @@ const Features = () => {
           <FeatureCard
             icon={Users}
             title="Team Collaboration"
-            description="Share SOPs with your team, track completion status, and maintain consistent procedures across your organization."
+            description="Share SOPs with your team, maintain consistent procedures across your organization, and ensure everyone follows the same standards."
           />
         </div>
         
@@ -89,7 +88,7 @@ const Features = () => {
               <h4 className="text-lg font-medium text-white mb-3">Enterprise-Ready Features</h4>
               <p className="leading-relaxed">
                 From small teams to large organizations, SOPify scales with your needs. Custom branding, 
-                bulk exports, and advanced training features ensure your documentation looks professional 
+                professional exports, and advanced annotation features ensure your documentation looks professional 
                 and functions perfectly.
               </p>
             </div>

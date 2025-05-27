@@ -5,20 +5,20 @@ import {
   Download, 
   FileText, 
   Globe, 
-  GraduationCap, 
+  Settings, 
   Eye,
-  Play
+  Printer
 } from "lucide-react";
 
 const DemoSection = () => {
   const demoFormats = [
     {
       tier: "Free",
-      title: "Basic SOP Document",
-      description: "Simple step-by-step documentation with screenshots",
+      title: "Basic SOP Creation",
+      description: "Simple, professional step-by-step documentation with screenshots and annotations",
       formats: [
         {
-          name: "PDF Manual",
+          name: "Standard PDF",
           icon: FileText,
           demoUrl: "/demos/basic-sop-demo.pdf",
           viewUrl: "/demos/basic-sop-demo.pdf",
@@ -26,53 +26,53 @@ const DemoSection = () => {
         }
       ],
       badgeColor: "bg-gray-600",
-      features: ["Screenshot annotation", "Step-by-step instructions", "Professional layout"]
+      features: ["Screenshot annotation", "Step-by-step instructions", "Professional layout", "Basic callout tools"]
     },
     {
-      tier: "SOP Essentials ($25/mo)",
-      title: "Enhanced Training Materials",
-      description: "Professional SOPs with custom branding and multiple formats",
+      tier: "SOP Essentials ($20/mo)",
+      title: "Professional SOP Documentation",
+      description: "Enhanced SOPs with custom branding, multiple export formats, and advanced styling",
       formats: [
         {
-          name: "PDF Manual",
+          name: "Professional PDF",
           icon: FileText,
           demoUrl: "/demos/essentials-pdf-demo.pdf",
           viewUrl: "/demos/essentials-pdf-demo.pdf",
-          description: "Enhanced PDF with custom branding"
+          description: "Enhanced PDF with custom branding and styling"
         },
         {
-          name: "Interactive Module",
+          name: "Interactive HTML",
           icon: Globe,
           demoUrl: "/demos/essentials-interactive-demo.html",
           viewUrl: "/demos/essentials-interactive-demo.html",
-          description: "Web-based interactive training"
+          description: "Web-based SOP optimized for print-to-PDF"
         }
       ],
       badgeColor: "bg-blue-600",
-      features: ["Custom branding", "Multiple export formats", "Enhanced styling", "Callout tools"]
+      features: ["Custom branding", "Multiple export formats", "Advanced callout tools", "Print-to-PDF optimization", "Professional themes"]
     },
     {
-      tier: "SOPify Business ($75/mo)",
-      title: "Complete Training Solutions",
-      description: "Advanced interactive training with LMS features and professional documentation",
+      tier: "SOPify Business ($40/mo)",
+      title: "Enterprise SOP Solutions",
+      description: "Advanced SOP creation with enterprise-grade templates and customization options",
       formats: [
         {
-          name: "Enhanced Training Module",
-          icon: GraduationCap,
+          name: "Enterprise HTML",
+          icon: Globe,
           demoUrl: "/demos/business-enhanced-demo.html",
           viewUrl: "/demos/business-enhanced-demo.html",
-          description: "Advanced LMS-style training with progress tracking"
+          description: "Advanced HTML templates with enterprise styling"
         },
         {
-          name: "Professional PDF Manual",
-          icon: FileText,
+          name: "Premium PDF Export",
+          icon: Printer,
           demoUrl: "/demos/business-pdf-demo.html",
           viewUrl: "/demos/business-pdf-demo.html",
-          description: "Enterprise-grade PDF with advanced features"
+          description: "High-quality PDF with advanced formatting options"
         }
       ],
       badgeColor: "bg-purple-600",
-      features: ["Progress tracking", "Interactive quizzes", "Completion certificates", "LMS integration", "Enterprise PDF features"]
+      features: ["Enterprise templates", "Advanced customization", "Batch export capabilities", "API access", "Priority support"]
     }
   ];
 
@@ -86,10 +86,10 @@ const DemoSection = () => {
       <div className="container mx-auto px-4">
         <div className="text-center mb-12">
           <h2 className="text-3xl font-semibold tracking-tight text-white mb-4">
-            See What You Get
+            See Your SOP Output Quality
           </h2>
           <p className="text-zinc-400 max-w-3xl mx-auto">
-            Explore interactive demos of each export format. See exactly what your training materials will look like across all tiers.
+            Explore interactive demos of each export format. See exactly what your professional SOPs will look like across all tiers.
           </p>
         </div>
         

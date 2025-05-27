@@ -1,9 +1,8 @@
-
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
 import { useSubscription } from "@/context/SubscriptionContext";
-import { Loader2, FileText, Code, CheckCircle, GraduationCap, Palette } from "lucide-react";
+import { Loader2, FileText, Code, CheckCircle, Settings, Palette } from "lucide-react";
 import { useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { toast } from "@/hooks/use-toast";
@@ -128,30 +127,36 @@ const Pricing = () => {
   const navigate = useNavigate();
   
   const freeTierFeatures = [
-    { available: true, text: "Basic Training Documents" },
+    { available: true, text: "Basic SOP Creation" },
+    { available: true, text: "Screenshot Annotation Tools" },
     { available: true, text: "1 HTML Export per day" },
     { available: true, text: "1 PDF Export per day" },
-    { available: true, text: "Screenshot Annotation" },
-    { available: false, text: "Interactive Training Modules" },
-    { available: false, text: "Progress Tracking & Quizzes" }
+    { available: true, text: "Step-by-step Documentation" },
+    { available: false, text: "Unlimited Exports" },
+    { available: false, text: "Custom Branding & Themes" },
+    { available: false, text: "Advanced HTML Templates" }
   ];
   
   const sopEssentialsFeatures = [
     { available: true, text: "Everything in Free" },
     { available: true, text: "Unlimited PDF & HTML Exports" },
-    { available: true, text: "Basic Training Modules" },
-    { available: true, text: "Custom Branding & Backgrounds" },
-    { available: true, text: "Callout Tools & Annotations" },
-    { available: false, text: "Interactive Quizzes & Certificates" }
+    { available: true, text: "Professional HTML Templates" },
+    { available: true, text: "Custom Branding & Styling" },
+    { available: true, text: "Advanced Callout Tools" },
+    { available: true, text: "Multiple Screenshot Support" },
+    { available: true, text: "Print-to-PDF Optimization" },
+    { available: false, text: "Priority Support & Onboarding" }
   ];
   
   const sopifyBusinessFeatures = [
     { available: true, text: "Everything in SOP Essentials" },
-    { available: true, text: "Interactive Learning Modules" },
-    { available: true, text: "Progress Tracking & Bookmarks" },
-    { available: true, text: "Quiz Creation & Assessment" },
-    { available: true, text: "Completion Certificates" },
-    { available: true, text: "Priority Support & Onboarding" }
+    { available: true, text: "Advanced HTML Customization" },
+    { available: true, text: "Enterprise-Grade Templates" },
+    { available: true, text: "Batch Export Capabilities" },
+    { available: true, text: "API Access (Coming Soon)" },
+    { available: true, text: "Team Collaboration Features" },
+    { available: true, text: "Priority Support & Onboarding" },
+    { available: true, text: "Custom Integration Support" }
   ];
 
   const handleFreeTier = () => {
@@ -206,9 +211,9 @@ const Pricing = () => {
     <section id="pricing" className="py-16 bg-[#1E1E1E] border-t border-b border-zinc-800">
       <div className="container mx-auto px-4">
         <div className="text-center mb-12">
-          <h2 className="text-3xl font-semibold tracking-tight text-white mb-4">Plans for Every Need</h2>
+          <h2 className="text-3xl font-semibold tracking-tight text-white mb-4">Professional SOP Creation Plans</h2>
           <p className="text-zinc-400 max-w-2xl mx-auto">
-            Choose the plan that best fits your workflow. Start free and upgrade as you grow.
+            Choose the plan that fits your documentation needs. Create professional SOPs with high-quality exports and customization options.
           </p>
         </div>
         
@@ -225,7 +230,7 @@ const Pricing = () => {
           
           <PricingTier 
             title="SOP Essentials" 
-            price="$25" 
+            price="$20" 
             features={sopEssentialsFeatures} 
             theme="primary"
             isPopular={true}
@@ -238,7 +243,7 @@ const Pricing = () => {
           
           <PricingTier 
             title="SOPify Business" 
-            price="$75" 
+            price="$40" 
             features={sopifyBusinessFeatures} 
             theme="secondary"
             onSubscribe={() => handleSubscribe('sopify-business')}
