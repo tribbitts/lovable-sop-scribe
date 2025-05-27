@@ -3,6 +3,7 @@ import { SopDocument } from "@/types/sop";
 import { generateEnhancedHtmlTemplate } from "./enhanced-template";
 import { generateStandardHtmlTemplate } from "./standard-template";
 import { generateZipBundle } from "./zip-generator";
+import { FeedbackOptions } from "./feedback-renderer";
 
 export interface HtmlExportOptions {
   mode?: 'standalone' | 'zip';
@@ -10,6 +11,9 @@ export interface HtmlExportOptions {
   enhanced?: boolean;
   enhancedOptions?: any;
   includeTableOfContents?: boolean;
+  feedback?: FeedbackOptions;
+  includeFeedback?: boolean;
+  feedbackEmail?: string;
 }
 
 export async function exportSopAsHtml(

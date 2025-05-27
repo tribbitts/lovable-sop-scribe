@@ -21,7 +21,7 @@ import {
 import { DialogClose } from "@/components/ui/dialog";
 import { SopDocument } from "@/types/sop";
 
-interface EnhancedHtmlExportSettings {
+export interface EnhancedHtmlExportSettings {
   passwordProtection: {
     enabled: boolean;
     password?: string;
@@ -111,7 +111,6 @@ export const EnhancedHtmlExportOptions: React.FC<EnhancedHtmlExportOptionsProps>
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <Card className="border-zinc-700 bg-zinc-900/50">
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-base text-white">
@@ -127,7 +126,6 @@ export const EnhancedHtmlExportOptions: React.FC<EnhancedHtmlExportOptionsProps>
         </CardContent>
       </Card>
 
-      {/* Password Protection Settings */}
       <Card className="border-zinc-700 bg-zinc-900/50">
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-base text-white">
@@ -175,7 +173,6 @@ export const EnhancedHtmlExportOptions: React.FC<EnhancedHtmlExportOptionsProps>
         </CardContent>
       </Card>
 
-      {/* LMS Features Settings */}
       <Card className="border-zinc-700 bg-zinc-900/50">
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-base text-white">
@@ -238,7 +235,6 @@ export const EnhancedHtmlExportOptions: React.FC<EnhancedHtmlExportOptionsProps>
         </CardContent>
       </Card>
 
-      {/* Theme Settings */}
       <Card className="border-zinc-700 bg-zinc-900/50">
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-base text-white">
@@ -311,7 +307,6 @@ export const EnhancedHtmlExportOptions: React.FC<EnhancedHtmlExportOptionsProps>
         </CardContent>
       </Card>
 
-      {/* Feedback System Settings */}
       <Card className="border-zinc-700 bg-zinc-900/50">
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-base text-white">
@@ -352,7 +347,6 @@ export const EnhancedHtmlExportOptions: React.FC<EnhancedHtmlExportOptionsProps>
         </CardContent>
       </Card>
 
-      {/* Export Button and Status */}
       <div className="flex justify-between items-center">
         <Button
           variant="outline"
