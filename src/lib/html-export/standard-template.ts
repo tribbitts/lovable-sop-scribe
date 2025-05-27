@@ -137,7 +137,7 @@ export function generateStandardHtmlTemplate(
                                   ${callout.shape === 'number' ? callout.number : ''}
                                   ${callout.shape === 'arrow' ? `
                                     <svg viewBox="0 0 100 50" fill="none" style="width: 100%; height: 100%;">
-                                      <polygon points="10,20 60,20 60,10 90,25 60,40 60,30 10,30" fill="${callout.color}" stroke="${callout.color}" stroke-width="1" />
+                                      <polygon points="10,15 65,15 65,5 95,25 65,45 65,35 10,35" fill="${callout.color}" stroke="${callout.color}" stroke-width="2" stroke-linejoin="round" />
                                     </svg>
                                   ` : ''}
                                   ${callout.text ? `<span style="color: white; font-size: 12px; text-align: center;">${callout.text}</span>` : ''}
@@ -199,7 +199,7 @@ export function generateStandardHtmlTemplate(
                                       ${callout.shape === 'number' ? callout.number : ''}
                                       ${callout.shape === 'arrow' ? `
                                         <svg viewBox="0 0 100 50" fill="none" style="width: 100%; height: 100%;">
-                                          <polygon points="10,20 60,20 60,10 90,25 60,40 60,30 10,30" fill="${callout.color}" stroke="${callout.color}" stroke-width="1" />
+                                          <polygon points="10,15 65,15 65,5 95,25 65,45 65,35 10,35" fill="${callout.color}" stroke="${callout.color}" stroke-width="2" stroke-linejoin="round" />
                                         </svg>
                                       ` : ''}
                                       ${callout.text ? `<span style="color: white; font-size: 12px; text-align: center;">${callout.text}</span>` : ''}
@@ -214,6 +214,111 @@ export function generateStandardHtmlTemplate(
                   }
                   
                   return screenshotHtml;
+                })()}
+                
+                ${(() => {
+                  let enhancedContentHtml = '';
+                  
+                  // Add enhanced content blocks (tables, lists, etc.)
+                  if (step.enhancedContentBlocks && step.enhancedContentBlocks.length > 0) {
+                    step.enhancedContentBlocks.forEach((block: any) => {
+                      switch (block.type) {
+                        case 'table':
+                          enhancedContentHtml += `
+                            <div class="enhanced-content-block table-block">
+                              ${block.title ? `<h4 class="block-title">${block.title}</h4>` : ''}
+                              <div class="table-container">
+                                <table class="content-table">
+                                  <thead>
+                                    <tr>
+                                      ${block.headers.map((header: string) => `<th>${header}</th>`).join('')}
+                                    </tr>
+                                  </thead>
+                                  <tbody>
+                                    ${block.rows.map((row: string[]) => `
+                                      <tr>
+                                        ${row.map((cell: string) => `<td>${cell}</td>`).join('')}
+                                      </tr>
+                                    `).join('')}
+                                  </tbody>
+                                </table>
+                              </div>
+                            </div>
+                          `;
+                          break;
+                        case 'list':
+                          enhancedContentHtml += `
+                            <div class="enhanced-content-block list-block">
+                              ${block.title ? `<h4 class="block-title">${block.title}</h4>` : ''}
+                              <${block.ordered ? 'ol' : 'ul'} class="content-list">
+                                ${block.items.map((item: string) => `<li>${item}</li>`).join('')}
+                              </${block.ordered ? 'ol' : 'ul'}>
+                            </div>
+                          `;
+                          break;
+                        case 'text':
+                          enhancedContentHtml += `
+                            <div class="enhanced-content-block text-block">
+                              ${block.title ? `<h4 class="block-title">${block.title}</h4>` : ''}
+                              <div class="text-content">${block.content}</div>
+                            </div>
+                          `;
+                          break;
+                        case 'note':
+                          enhancedContentHtml += `
+                            <div class="enhanced-content-block note-block">
+                              ${block.title ? `<h4 class="block-title note-title">${block.title}</h4>` : ''}
+                              <div class="note-content">${block.content}</div>
+                            </div>
+                          `;
+                          break;
+                        case 'warning':
+                          enhancedContentHtml += `
+                            <div class="enhanced-content-block warning-block">
+                              ${block.title ? `<h4 class="block-title warning-title">⚠️ ${block.title}</h4>` : ''}
+                              <div class="warning-content">${block.content}</div>
+                            </div>
+                          `;
+                          break;
+                      }
+                    });
+                  }
+                  
+                  // Add detailed instructions if present
+                  if (step.detailedInstructions) {
+                    enhancedContentHtml += `
+                      <div class="enhanced-content-block detailed-instructions">
+                        <h4 class="block-title">📋 Detailed Instructions</h4>
+                        <div class="detailed-content">${step.detailedInstructions}</div>
+                      </div>
+                    `;
+                  }
+                  
+                  // Add notes if present
+                  if (step.notes) {
+                    enhancedContentHtml += `
+                      <div class="enhanced-content-block notes-section">
+                        <h4 class="block-title">📝 Notes</h4>
+                        <div class="notes-content">${step.notes}</div>
+                      </div>
+                    `;
+                  }
+                  
+                  // Add file link if present
+                  if (step.fileLink) {
+                    enhancedContentHtml += `
+                      <div class="enhanced-content-block file-link-section">
+                        <h4 class="block-title">🔗 Resource Link</h4>
+                        <div class="file-link-content">
+                          <a href="${step.fileLink}" target="_blank" class="resource-link">
+                            ${step.fileLinkText || step.fileLink}
+                          </a>
+                        </div>
+                      </div>
+                    `;
+                  }
+                  
+                  return enhancedContentHtml;
                 })()}
                 
                 ${step.callouts && step.callouts.length > 0 ? `
@@ -425,6 +530,161 @@ export function generateStandardHtmlTemplate(
             color: #2e7d32;
         }
         
+        /* Enhanced Content Blocks */
+        .enhanced-content-block {
+            margin: 20px 0;
+            padding: 20px;
+            border-radius: 8px;
+            background: #f8f9fa;
+            border-left: 4px solid ${primaryColor};
+        }
+        
+        .block-title {
+            color: ${primaryColor};
+            font-size: 1.1rem;
+            font-weight: bold;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        /* Table Styles */
+        .table-block {
+            background: white;
+            border: 1px solid #e0e0e0;
+        }
+        
+        .table-container {
+            overflow-x: auto;
+        }
+        
+        .content-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 0;
+        }
+        
+        .content-table th,
+        .content-table td {
+            border: 1px solid #e0e0e0;
+            padding: 12px;
+            text-align: left;
+        }
+        
+        .content-table th {
+            background: linear-gradient(135deg, ${primaryColor}15, ${accentColor}15);
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .content-table tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+        
+        /* List Styles */
+        .list-block {
+            background: linear-gradient(135deg, #e8f4fd, #f0f8ff);
+            border-left-color: #007AFF;
+        }
+        
+        .content-list {
+            margin: 0;
+            padding-left: 20px;
+        }
+        
+        .content-list li {
+            margin-bottom: 8px;
+            color: #333;
+        }
+        
+        /* Text Block Styles */
+        .text-block {
+            background: linear-gradient(135deg, #f0f8f0, #f8fff8);
+            border-left-color: #34C759;
+        }
+        
+        .text-content {
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        /* Note Block Styles */
+        .note-block {
+            background: linear-gradient(135deg, #fff8e1, #fffbf0);
+            border-left-color: #FF9500;
+        }
+        
+        .note-title {
+            color: #e65100;
+        }
+        
+        .note-content {
+            color: #333;
+            font-style: italic;
+        }
+        
+        /* Warning Block Styles */
+        .warning-block {
+            background: linear-gradient(135deg, #ffebee, #fff5f5);
+            border-left-color: #FF3B30;
+        }
+        
+        .warning-title {
+            color: #c62828;
+        }
+        
+        .warning-content {
+            color: #333;
+            font-weight: 500;
+        }
+        
+        /* Detailed Instructions */
+        .detailed-instructions {
+            background: linear-gradient(135deg, #e3f2fd, #f3e5f5);
+            border-left-color: #5856D6;
+        }
+        
+        .detailed-content {
+            color: #333;
+            line-height: 1.7;
+        }
+        
+        /* Notes Section */
+        .notes-section {
+            background: linear-gradient(135deg, #f3e5f5, #faf2ff);
+            border-left-color: #AF52DE;
+        }
+        
+        .notes-content {
+            color: #333;
+            font-style: italic;
+            line-height: 1.6;
+        }
+        
+        /* File Link Section */
+        .file-link-section {
+            background: linear-gradient(135deg, #e8f5e8, #f0f8f0);
+            border-left-color: #34C759;
+        }
+        
+        .resource-link {
+            color: ${primaryColor};
+            text-decoration: none;
+            font-weight: bold;
+            padding: 8px 16px;
+            background: white;
+            border: 2px solid ${primaryColor};
+            border-radius: 6px;
+            display: inline-block;
+            transition: all 0.2s ease;
+        }
+        
+        .resource-link:hover {
+            background: ${primaryColor};
+            color: white;
+        }
+        
         .footer {
             padding: 30px;
             background: white;
@@ -578,6 +838,45 @@ export function generateStandardHtmlTemplate(
             
             .callouts-list {
                 background: linear-gradient(135deg, #e8f5e8, #f0f8f0) !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+            
+            /* Enhanced Content Blocks Print Styles */
+            .enhanced-content-block {
+                page-break-inside: avoid !important;
+                break-inside: avoid !important;
+                margin: 15px 0 !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+            
+            .content-table {
+                page-break-inside: avoid !important;
+                break-inside: avoid !important;
+            }
+            
+            .content-table th {
+                background: linear-gradient(135deg, ${primaryColor}15, ${accentColor}15) !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+            
+            .table-block,
+            .list-block,
+            .text-block,
+            .note-block,
+            .warning-block,
+            .detailed-instructions,
+            .notes-section,
+            .file-link-section {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+            
+            .resource-link {
+                border: 2px solid ${primaryColor} !important;
+                color: ${primaryColor} !important;
                 -webkit-print-color-adjust: exact !important;
                 print-color-adjust: exact !important;
             }

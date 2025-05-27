@@ -88,6 +88,23 @@ const CalloutOverlay: React.FC<CalloutOverlayProps> = ({
       height = 5;
     }
 
+    // Calculate next number for numbered callouts
+    const getNextNumber = () => {
+      if (selectedTool !== "number") return undefined;
+      const existingNumbers = screenshot.callouts
+        .filter(c => c.shape === "number" && c.number)
+        .map(c => c.number!)
+        .sort((a, b) => a - b);
+      
+      // Find the next available number
+      for (let i = 1; i <= existingNumbers.length + 1; i++) {
+        if (!existingNumbers.includes(i)) {
+          return i;
+        }
+      }
+      return existingNumbers.length + 1;
+    };
+
     const calloutData = {
       shape: selectedTool,
       color: selectedColor,
@@ -95,7 +112,7 @@ const CalloutOverlay: React.FC<CalloutOverlayProps> = ({
       y: Math.max(0, Math.min(95, y - height / 2)),
       width,
       height,
-      number: selectedTool === "number" ? (screenshot.callouts.length + 1) : undefined,
+      number: getNextNumber(),
     };
 
     // If it's a numbered callout, show dialog for reveal text
@@ -287,23 +304,31 @@ const CalloutOverlay: React.FC<CalloutOverlayProps> = ({
             <div
               className="w-full h-full flex items-center justify-center"
               style={{ 
-                color: callout.color,
-                minWidth: '30px',
-                minHeight: '20px'
+                minWidth: '40px',
+                minHeight: '25px',
+                position: 'relative'
               }}
             >
               <svg 
-                className="w-full h-full" 
+                width="100%" 
+                height="100%" 
                 viewBox="0 0 100 50" 
                 fill="none"
-                style={{ transform: 'rotate(0deg)' }}
+                style={{ 
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  width: '100%',
+                  height: '100%'
+                }}
               >
-                {/* Clean arrow shape */}
+                {/* Clean arrow shape pointing right */}
                 <polygon 
-                  points="10,20 60,20 60,10 90,25 60,40 60,30 10,30" 
+                  points="10,15 65,15 65,5 95,25 65,45 65,35 10,35" 
                   fill={callout.color}
                   stroke={callout.color}
-                  strokeWidth="1"
+                  strokeWidth="2"
+                  strokeLinejoin="round"
                 />
               </svg>
             </div>
