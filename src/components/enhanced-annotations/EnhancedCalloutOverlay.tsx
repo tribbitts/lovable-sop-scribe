@@ -79,204 +79,249 @@ const EnhancedCalloutOverlay: React.FC<CalloutOverlayProps> = ({
   }, [isAddingCallout, activeReveal]);
 
   const handleOverlayClick = useCallback((event: React.MouseEvent<HTMLDivElement>) => {
-    if (!isEditing || !isAddingCallout || !overlayRef.current || !onCalloutAdd) return;
+    try {
+      if (!isEditing || !isAddingCallout || !overlayRef.current || !onCalloutAdd) return;
 
-    // Don't handle clicks during freehand drawing
-    if (selectedTool === "freehand" && isDrawing) return;
+      // Don't handle clicks during freehand drawing
+      if (selectedTool === "freehand" && isDrawing) return;
 
-    // Prevent the click if it's on an existing callout
-    const target = event.target as HTMLElement;
-    if (target !== overlayRef.current) return;
+      // Prevent the click if it's on an existing callout
+      const target = event.target as HTMLElement;
+      if (target !== overlayRef.current) return;
 
-    // Get the exact position relative to the overlay element
-    const rect = overlayRef.current.getBoundingClientRect();
-    
-    let x: number;
-    let y: number;
-    
-    const nativeEvent = event.nativeEvent as any;
-    
-    if (nativeEvent.layerX !== undefined && nativeEvent.layerY !== undefined) {
-      x = (nativeEvent.layerX / overlayRef.current.offsetWidth) * 100;
-      y = (nativeEvent.layerY / overlayRef.current.offsetHeight) * 100;
-    } else if (nativeEvent.offsetX !== undefined && nativeEvent.offsetY !== undefined) {
-      x = (nativeEvent.offsetX / overlayRef.current.offsetWidth) * 100;
-      y = (nativeEvent.offsetY / overlayRef.current.offsetHeight) * 100;
-    } else {
-      x = ((event.clientX - rect.left) / rect.width) * 100;
-      y = ((event.clientY - rect.top) / rect.height) * 100;
-    }
-
-    // Ensure coordinates are within bounds
-    x = Math.max(0, Math.min(100, x));
-    y = Math.max(0, Math.min(100, y));
-
-    // Default dimensions based on callout type
-    let width = 6;
-    let height = 6;
-
-    switch (selectedTool) {
-      case "rectangle":
-        width = 15;
-        height = 10;
-        break;
-      case "arrow":
-        width = 10;
-        height = 8;
-        break;
-      case "blur":
-        width = 20;
-        height = 15;
-        break;
-      case "magnifier":
-        width = 12;
-        height = 12;
-        break;
-      case "oval":
-        width = 10;
-        height = 8;
-        break;
-      case "polygon":
-        width = 10;
-        height = 10;
-        break;
-      case "freehand":
-        // Start freehand drawing
-        setIsDrawing(true);
-        const startPath = `M ${x} ${y}`;
-        setCurrentPath(startPath);
-        return;
-      default:
-        // Default size for circle, number, etc.
-        width = 6;
-        height = 6;
-        break;
-    }
-
-    // Calculate next number for numbered callouts
-    const getNextNumber = () => {
-      if (selectedTool !== "number") return undefined;
-      const existingNumbers = screenshot.callouts
-        .filter(c => c.shape === "number" && c.number)
-        .map(c => c.number!)
-        .sort((a, b) => a - b);
+      // Get the exact position relative to the overlay element
+      const rect = overlayRef.current.getBoundingClientRect();
       
-      for (let i = 1; i <= existingNumbers.length + 1; i++) {
-        if (!existingNumbers.includes(i)) {
-          return i;
-        }
+      let x: number;
+      let y: number;
+      
+      const nativeEvent = event.nativeEvent as any;
+      
+      if (nativeEvent.layerX !== undefined && nativeEvent.layerY !== undefined) {
+        x = (nativeEvent.layerX / overlayRef.current.offsetWidth) * 100;
+        y = (nativeEvent.layerY / overlayRef.current.offsetHeight) * 100;
+      } else if (nativeEvent.offsetX !== undefined && nativeEvent.offsetY !== undefined) {
+        x = (nativeEvent.offsetX / overlayRef.current.offsetWidth) * 100;
+        y = (nativeEvent.offsetY / overlayRef.current.offsetHeight) * 100;
+      } else {
+        x = ((event.clientX - rect.left) / rect.width) * 100;
+        y = ((event.clientY - rect.top) / rect.height) * 100;
       }
-      return existingNumbers.length + 1;
-    };
 
-    const calloutData: Omit<Callout, "id"> = {
-      shape: selectedTool,
-      color: selectedColor,
-      x: Math.max(0, Math.min(100 - width, x - width / 2)),
-      y: Math.max(0, Math.min(100 - height, y - height / 2)),
-      width,
-      height,
-      number: getNextNumber(),
-      style: { ...advancedStyle },
-      blurData: selectedTool === "blur" ? { ...blurData } : undefined,
-      magnifierData: selectedTool === "magnifier" ? { ...magnifierData } : undefined,
-      polygonData: selectedTool === "polygon" ? { ...polygonData } : undefined,
-      freehandData: selectedTool === "freehand" ? { ...freehandData } : undefined,
-    };
+      // Ensure coordinates are within bounds
+      x = Math.max(0, Math.min(100, x));
+      y = Math.max(0, Math.min(100, y));
 
-    // If it's a numbered callout, show dialog for reveal text
-    if (selectedTool === "number") {
-      setShowRevealTextDialog(true);
-      setRevealTextInput("");
-      (window as any).tempCalloutData = calloutData;
-    } else {
-      onCalloutAdd(calloutData);
+      // Default dimensions based on callout type
+      let width = 6;
+      let height = 6;
+
+      switch (selectedTool) {
+        case "rectangle":
+          width = 15;
+          height = 10;
+          break;
+        case "arrow":
+          width = 10;
+          height = 8;
+          break;
+        case "blur":
+          width = 20;
+          height = 15;
+          break;
+        case "magnifier":
+          width = 12;
+          height = 12;
+          break;
+        case "oval":
+          width = 10;
+          height = 8;
+          break;
+        case "polygon":
+          width = 10;
+          height = 10;
+          break;
+        default:
+          // Handle freehand and other cases
+          if (selectedTool === ("freehand" as CalloutShape)) {
+            // Start freehand drawing
+            setIsDrawing(true);
+            const startPath = `M ${x} ${y}`;
+            setCurrentPath(startPath);
+            return;
+          }
+          // Default size for circle, number, etc.
+          width = 6;
+          height = 6;
+          break;
+      }
+
+      // Calculate next number for numbered callouts
+      const getNextNumber = () => {
+        if (selectedTool !== "number") return undefined;
+        if (!screenshot?.callouts || !Array.isArray(screenshot.callouts)) return 1;
+        
+        const existingNumbers = screenshot.callouts
+          .filter(c => c && c.shape === "number" && typeof c.number === 'number')
+          .map(c => c.number!)
+          .sort((a, b) => a - b);
+        
+        for (let i = 1; i <= existingNumbers.length + 1; i++) {
+          if (!existingNumbers.includes(i)) {
+            return i;
+          }
+        }
+        return existingNumbers.length + 1;
+      };
+
+      const calloutData: Omit<Callout, "id"> = {
+        shape: selectedTool,
+        color: selectedColor,
+        x: Math.max(0, Math.min(100 - width, x - width / 2)),
+        y: Math.max(0, Math.min(100 - height, y - height / 2)),
+        width,
+        height,
+        number: getNextNumber(),
+        style: { ...advancedStyle },
+        blurData: selectedTool === "blur" ? { ...blurData } : undefined,
+        magnifierData: selectedTool === "magnifier" ? { ...magnifierData } : undefined,
+        polygonData: selectedTool === "polygon" ? { ...polygonData } : undefined,
+        freehandData: selectedTool === "freehand" ? { ...freehandData } : undefined,
+      };
+
+      // If it's a numbered callout, show dialog for reveal text
+      if (selectedTool === "number") {
+        setShowRevealTextDialog(true);
+        setRevealTextInput("");
+        (window as any).tempCalloutData = calloutData;
+      } else {
+        onCalloutAdd(calloutData);
+      }
+    } catch (error) {
+      console.error("Error in handleOverlayClick:", error);
+      // Reset state on error
+      setIsAddingCallout(false);
+      setIsDrawing(false);
+      setCurrentPath("");
     }
-  }, [isEditing, isAddingCallout, selectedTool, selectedColor, screenshot.callouts, onCalloutAdd, advancedStyle, blurData, magnifierData, polygonData, freehandData, isDrawing]);
+  }, [isEditing, isAddingCallout, selectedTool, selectedColor, screenshot?.callouts, onCalloutAdd, advancedStyle, blurData, magnifierData, polygonData, freehandData, isDrawing]);
 
   const handleFreehandDrawing = useCallback((event: React.MouseEvent<HTMLDivElement>) => {
-    if (!isDrawing || selectedTool !== "freehand" || !overlayRef.current) return;
+    try {
+      if (!isDrawing || selectedTool !== "freehand" || !overlayRef.current) return;
 
-    const rect = overlayRef.current.getBoundingClientRect();
-    const x = ((event.clientX - rect.left) / rect.width) * 100;
-    const y = ((event.clientY - rect.top) / rect.height) * 100;
+      const rect = overlayRef.current.getBoundingClientRect();
+      const x = ((event.clientX - rect.left) / rect.width) * 100;
+      const y = ((event.clientY - rect.top) / rect.height) * 100;
 
-    setCurrentPath(prev => `${prev} L ${x} ${y}`);
+      setCurrentPath(prev => `${prev} L ${x} ${y}`);
+    } catch (error) {
+      console.error("Error in handleFreehandDrawing:", error);
+      setIsDrawing(false);
+      setCurrentPath("");
+    }
   }, [isDrawing, selectedTool]);
 
   const finishFreehandDrawing = useCallback(() => {
-    if (!isDrawing || !currentPath || !onCalloutAdd) return;
+    try {
+      if (!isDrawing || !currentPath || !onCalloutAdd) return;
 
-    const calloutData: Omit<Callout, "id"> = {
-      shape: "freehand",
-      color: selectedColor,
-      x: 0,
-      y: 0,
-      width: 100,
-      height: 100,
-      style: { ...advancedStyle },
-      freehandData: { 
-        path: currentPath,
-        strokeWidth: freehandData.strokeWidth 
-      }
-    };
+      const calloutData: Omit<Callout, "id"> = {
+        shape: "freehand",
+        color: selectedColor,
+        x: 0,
+        y: 0,
+        width: 100,
+        height: 100,
+        style: { ...advancedStyle },
+        freehandData: { 
+          path: currentPath,
+          strokeWidth: freehandData.strokeWidth 
+        }
+      };
 
-    onCalloutAdd(calloutData);
-    setIsDrawing(false);
-    setCurrentPath("");
+      onCalloutAdd(calloutData);
+      setIsDrawing(false);
+      setCurrentPath("");
+    } catch (error) {
+      console.error("Error in finishFreehandDrawing:", error);
+      setIsDrawing(false);
+      setCurrentPath("");
+    }
   }, [isDrawing, currentPath, onCalloutAdd, selectedColor, advancedStyle, freehandData]);
 
   const handleCalloutClick = useCallback((callout: Callout, event: React.MouseEvent) => {
-    event.stopPropagation();
-    
-    if (isEditing) {
-      setEditingCallout(editingCallout === callout.id ? null : callout.id);
-    } else {
-      // Click-to-reveal functionality for viewing mode
-      if (callout.shape === "number" && callout.revealText) {
-        const rect = overlayRef.current?.getBoundingClientRect();
-        if (rect) {
-          const calloutCenterX = (callout.x + callout.width / 2) / 100 * rect.width;
-          const calloutCenterY = (callout.y + callout.height / 2) / 100 * rect.height;
-          
-          setRevealPosition({
-            x: calloutCenterX,
-            y: calloutCenterY
-          });
-          
-          if (activeReveal === callout.id) {
-            setActiveReveal(null);
-          } else {
-            setActiveReveal(callout.id);
-            setRevealedCallouts(prev => new Set([...prev, callout.id]));
+    try {
+      event.stopPropagation();
+      
+      if (isEditing) {
+        setEditingCallout(editingCallout === callout.id ? null : callout.id);
+      } else {
+        // Click-to-reveal functionality for viewing mode
+        if (callout.shape === "number" && callout.revealText) {
+          const rect = overlayRef.current?.getBoundingClientRect();
+          if (rect) {
+            const calloutCenterX = (callout.x + callout.width / 2) / 100 * rect.width;
+            const calloutCenterY = (callout.y + callout.height / 2) / 100 * rect.height;
+            
+            setRevealPosition({
+              x: calloutCenterX,
+              y: calloutCenterY
+            });
+            
+            if (activeReveal === callout.id) {
+              setActiveReveal(null);
+            } else {
+              setActiveReveal(callout.id);
+              setRevealedCallouts(prev => new Set([...prev, callout.id]));
+            }
           }
         }
       }
+    } catch (error) {
+      console.error("Error in handleCalloutClick:", error);
     }
   }, [isEditing, editingCallout, activeReveal]);
 
   const deleteCallout = useCallback((calloutId: string) => {
-    if (onCalloutDelete) {
-      onCalloutDelete(calloutId);
+    try {
+      if (onCalloutDelete) {
+        onCalloutDelete(calloutId);
+      }
+      setEditingCallout(null);
+    } catch (error) {
+      console.error("Error in deleteCallout:", error);
     }
-    setEditingCallout(null);
   }, [onCalloutDelete]);
 
   const updateCalloutColor = useCallback((calloutId: string, color: string) => {
-    const callout = screenshot.callouts.find(c => c.id === calloutId);
-    if (callout && onCalloutUpdate) {
-      onCalloutUpdate({ ...callout, color });
+    try {
+      if (!screenshot?.callouts || !Array.isArray(screenshot.callouts)) return;
+      
+      const callout = screenshot.callouts.find(c => c && c.id === calloutId);
+      if (callout && onCalloutUpdate) {
+        onCalloutUpdate({ ...callout, color });
+      }
+    } catch (error) {
+      console.error("Error in updateCalloutColor:", error);
     }
-  }, [screenshot.callouts, onCalloutUpdate]);
+  }, [screenshot?.callouts, onCalloutUpdate]);
 
   const handleRevealTextSubmit = useCallback(() => {
-    const calloutData = (window as any).tempCalloutData;
-    if (calloutData && onCalloutAdd) {
-      const newCallout: Omit<Callout, "id"> = {
-        ...calloutData,
-        revealText: revealTextInput.trim() || undefined,
-      };
-      onCalloutAdd(newCallout);
+    try {
+      const calloutData = (window as any).tempCalloutData;
+      if (calloutData && onCalloutAdd) {
+        const newCallout: Omit<Callout, "id"> = {
+          ...calloutData,
+          revealText: revealTextInput.trim() || undefined,
+        };
+        onCalloutAdd(newCallout);
+        setShowRevealTextDialog(false);
+        setRevealTextInput("");
+        (window as any).tempCalloutData = null;
+      }
+    } catch (error) {
+      console.error("Error in handleRevealTextSubmit:", error);
       setShowRevealTextDialog(false);
       setRevealTextInput("");
       (window as any).tempCalloutData = null;
@@ -290,21 +335,26 @@ const EnhancedCalloutOverlay: React.FC<CalloutOverlayProps> = ({
   }, []);
 
   const handleOverlayMouseMove = useCallback((event: React.MouseEvent<HTMLDivElement>) => {
-    if (isDrawing && selectedTool === "freehand") {
-      handleFreehandDrawing(event);
-      return;
-    }
+    try {
+      if (isDrawing && selectedTool === "freehand") {
+        handleFreehandDrawing(event);
+        return;
+      }
 
-    if (!isEditing || !isAddingCallout || !overlayRef.current) {
+      if (!isEditing || !isAddingCallout || !overlayRef.current) {
+        setHoverPosition(null);
+        return;
+      }
+
+      const rect = overlayRef.current.getBoundingClientRect();
+      const x = ((event.clientX - rect.left) / rect.width) * 100;
+      const y = ((event.clientY - rect.top) / rect.height) * 100;
+
+      setHoverPosition({ x, y });
+    } catch (error) {
+      console.error("Error in handleOverlayMouseMove:", error);
       setHoverPosition(null);
-      return;
     }
-
-    const rect = overlayRef.current.getBoundingClientRect();
-    const x = ((event.clientX - rect.left) / rect.width) * 100;
-    const y = ((event.clientY - rect.top) / rect.height) * 100;
-
-    setHoverPosition({ x, y });
   }, [isEditing, isAddingCallout, isDrawing, selectedTool, handleFreehandDrawing]);
 
   const handleOverlayMouseLeave = useCallback(() => {
@@ -319,202 +369,214 @@ const EnhancedCalloutOverlay: React.FC<CalloutOverlayProps> = ({
 
   // Render standard callouts (circle, rectangle, arrow, number)
   const renderStandardCallout = (callout: Callout) => {
-    // Use the original CalloutOverlay rendering logic for standard callouts
-    const isEditingThis = editingCallout === callout.id;
-    const hasBeenRevealed = revealedCallouts.has(callout.id);
-    const isInteractive = callout.shape === "number" && callout.revealText && !isEditing;
-    
-    const style: React.CSSProperties = {
-      position: 'absolute',
-      left: `${callout.x}%`,
-      top: `${callout.y}%`,
-      width: `${callout.width}%`,
-      height: `${callout.height}%`,
-      cursor: isInteractive ? 'pointer' : isEditing ? 'pointer' : 'default',
-      zIndex: 10,
-      opacity: callout.style?.opacity || 1,
-    };
+    try {
+      // Use the original CalloutOverlay rendering logic for standard callouts
+      const isEditingThis = editingCallout === callout.id;
+      const hasBeenRevealed = revealedCallouts.has(callout.id);
+      const isInteractive = callout.shape === "number" && callout.revealText && !isEditing;
+      
+      const style: React.CSSProperties = {
+        position: 'absolute',
+        left: `${callout.x}%`,
+        top: `${callout.y}%`,
+        width: `${callout.width}%`,
+        height: `${callout.height}%`,
+        cursor: isInteractive ? 'pointer' : isEditing ? 'pointer' : 'default',
+        zIndex: 10,
+        opacity: callout.style?.opacity || 1,
+      };
 
-    // Render shape based on type - using standard shapes for basic callouts
-    const renderShape = () => {
-      const fillColor = callout.style?.fillColor || `${callout.color}40`;
-      const borderColor = callout.style?.borderColor || callout.color;
-      const borderWidth = callout.style?.borderWidth || 2;
-      const fontSize = callout.style?.fontSize || 14;
-      const fontFamily = callout.style?.fontFamily || "system";
-      const fontColor = callout.style?.fontColor || "#ffffff";
+      // Render shape based on type - using standard shapes for basic callouts
+      const renderShape = () => {
+        const fillColor = callout.style?.fillColor || `${callout.color}40`;
+        const borderColor = callout.style?.borderColor || callout.color;
+        const borderWidth = callout.style?.borderWidth || 2;
+        const fontSize = callout.style?.fontSize || 14;
+        const fontFamily = callout.style?.fontFamily || "system";
+        const fontColor = callout.style?.fontColor || "#ffffff";
 
-      switch (callout.shape) {
-        case "circle":
-          return (
-            <div
-              className={`w-full h-full rounded-full transition-all duration-200 ${
-                isEditingThis ? 'border-white' : 'border-opacity-80'
-              } ${
-                isInteractive ? 'hover:scale-110 hover:shadow-lg' : ''
-              }`}
-              style={{ 
-                backgroundColor: fillColor,
-                border: `${borderWidth}px solid ${borderColor}`,
-                aspectRatio: '1 / 1',
-                minWidth: '40px',
-                minHeight: '40px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontFamily: fontFamily,
-                fontSize: `${fontSize}px`,
-                color: fontColor
-              }}
-            >
-              {callout.number && (
-                <span className="font-bold">
+        switch (callout.shape) {
+          case "circle":
+            return (
+              <div
+                className={`w-full h-full rounded-full transition-all duration-200 ${
+                  isEditingThis ? 'border-white' : 'border-opacity-80'
+                } ${
+                  isInteractive ? 'hover:scale-110 hover:shadow-lg' : ''
+                }`}
+                style={{ 
+                  backgroundColor: fillColor,
+                  border: `${borderWidth}px solid ${borderColor}`,
+                  aspectRatio: '1 / 1',
+                  minWidth: '40px',
+                  minHeight: '40px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontFamily: fontFamily,
+                  fontSize: `${fontSize}px`,
+                  color: fontColor
+                }}
+              >
+                {callout.number && (
+                  <span className="font-bold">
+                    {callout.number}
+                  </span>
+                )}
+              </div>
+            );
+          
+          case "rectangle":
+            return (
+              <div
+                className={`w-full h-full transition-all duration-200 ${
+                  isEditingThis ? 'border-white' : 'border-opacity-80'
+                }`}
+                style={{ 
+                  backgroundColor: fillColor,
+                  border: `${borderWidth}px solid ${borderColor}`,
+                  minWidth: '40px',
+                  minHeight: '25px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontFamily: fontFamily,
+                  fontSize: `${fontSize}px`,
+                  color: fontColor
+                }}
+              >
+                {callout.text && (
+                  <span className="font-medium text-center px-1">
+                    {callout.text}
+                  </span>
+                )}
+              </div>
+            );
+          
+          case "number":
+            return (
+              <div
+                className={`w-full h-full rounded-full border-2 font-bold transition-all duration-200 ${
+                  isInteractive ? 'hover:scale-110 hover:shadow-lg cursor-pointer' : ''
+                } ${
+                  callout.revealText ? 'bg-gradient-to-br from-blue-500 to-purple-600' : ''
+                } ${
+                  hasBeenRevealed && !isEditing ? 'ring-2 ring-yellow-400 ring-opacity-60' : ''
+                }`}
+                style={{ 
+                  backgroundColor: callout.revealText ? undefined : (callout.style?.fillColor || callout.color),
+                  borderColor: borderColor,
+                  aspectRatio: '1 / 1',
+                  minWidth: '40px',
+                  minHeight: '40px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: `${fontSize}px`,
+                  fontFamily: fontFamily,
+                  color: fontColor
+                }}
+              >
+                <span>
                   {callout.number}
                 </span>
-              )}
-            </div>
-          );
-        
-        case "rectangle":
-          return (
-            <div
-              className={`w-full h-full transition-all duration-200 ${
-                isEditingThis ? 'border-white' : 'border-opacity-80'
-              }`}
-              style={{ 
-                backgroundColor: fillColor,
-                border: `${borderWidth}px solid ${borderColor}`,
-                minWidth: '40px',
-                minHeight: '25px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontFamily: fontFamily,
-                fontSize: `${fontSize}px`,
-                color: fontColor
-              }}
-            >
-              {callout.text && (
-                <span className="font-medium text-center px-1">
-                  {callout.text}
-                </span>
-              )}
-            </div>
-          );
-        
-        case "number":
-          return (
-            <div
-              className={`w-full h-full rounded-full border-2 font-bold transition-all duration-200 ${
-                isInteractive ? 'hover:scale-110 hover:shadow-lg cursor-pointer' : ''
-              } ${
-                callout.revealText ? 'bg-gradient-to-br from-blue-500 to-purple-600' : ''
-              } ${
-                hasBeenRevealed && !isEditing ? 'ring-2 ring-yellow-400 ring-opacity-60' : ''
-              }`}
-              style={{ 
-                backgroundColor: callout.revealText ? undefined : (callout.style?.fillColor || callout.color),
-                borderColor: borderColor,
-                aspectRatio: '1 / 1',
-                minWidth: '40px',
-                minHeight: '40px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: `${fontSize}px`,
-                fontFamily: fontFamily,
-                color: fontColor
-              }}
-            >
-              <span>
-                {callout.number}
-              </span>
-              {callout.revealText && (
-                <div className={`absolute -top-1 -right-1 w-3 h-3 rounded-full flex items-center justify-center transition-all duration-200 ${
-                  hasBeenRevealed ? 'bg-yellow-400' : 'bg-blue-400 animate-pulse'
-                }`}>
-                  <span className="text-xs text-black font-bold">
-                    {hasBeenRevealed ? '✓' : '?'}
-                  </span>
-                </div>
-              )}
-            </div>
-          );
-        
-        case "arrow":
-          return (
-            <div className="w-full h-full flex items-center justify-center" style={{ minWidth: '40px', minHeight: '25px' }}>
-              <svg width="100%" height="100%" viewBox="0 0 100 50" fill="none">
-                <polygon 
-                  points="10,15 65,15 65,5 95,25 65,45 65,35 10,35" 
-                  fill={callout.style?.fillColor || callout.color}
-                  stroke={callout.style?.borderColor || callout.color}
-                  strokeWidth={callout.style?.borderWidth || 2}
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </div>
-          );
-        
-        default:
-          return null;
-      }
-    };
+                {callout.revealText && (
+                  <div className={`absolute -top-1 -right-1 w-3 h-3 rounded-full flex items-center justify-center transition-all duration-200 ${
+                    hasBeenRevealed ? 'bg-yellow-400' : 'bg-blue-400 animate-pulse'
+                  }`}>
+                    <span className="text-xs text-black font-bold">
+                      {hasBeenRevealed ? '✓' : '?'}
+                    </span>
+                  </div>
+                )}
+              </div>
+            );
+          
+          case "arrow":
+            return (
+              <div className="w-full h-full flex items-center justify-center" style={{ minWidth: '40px', minHeight: '25px' }}>
+                <svg width="100%" height="100%" viewBox="0 0 100 50" fill="none">
+                  <polygon 
+                    points="10,15 65,15 65,5 95,25 65,45 65,35 10,35" 
+                    fill={callout.style?.fillColor || callout.color}
+                    stroke={callout.style?.borderColor || callout.color}
+                    strokeWidth={callout.style?.borderWidth || 2}
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </div>
+            );
+          
+          default:
+            return null;
+        }
+      };
 
-    return (
-      <motion.div
-        key={callout.id}
-        initial={{ scale: 0 }}
-        animate={{ scale: 1 }}
-        exit={{ scale: 0 }}
-        style={style}
-        onClick={(e) => handleCalloutClick(callout, e)}
-        className={`group ${isEditingThis ? 'ring-2 ring-white ring-opacity-50' : ''}`}
-      >
-        {renderShape()}
-        
-        {/* Edit Controls */}
-        <AnimatePresence>
-          {isEditingThis && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.8 }}
-              className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-black/90 backdrop-blur-sm rounded-lg p-1 flex items-center gap-1 z-20 border border-zinc-600"
-            >
-              {/* Delete Button */}
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  deleteCallout(callout.id);
-                }}
-                className="text-red-400 hover:text-red-300 hover:bg-red-400/20 rounded p-1"
+      return (
+        <motion.div
+          key={callout.id}
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          exit={{ scale: 0 }}
+          style={style}
+          onClick={(e) => handleCalloutClick(callout, e)}
+          className={`group ${isEditingThis ? 'ring-2 ring-white ring-opacity-50' : ''}`}
+        >
+          {renderShape()}
+          
+          {/* Edit Controls */}
+          <AnimatePresence>
+            {isEditingThis && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.8 }}
+                className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-black/90 backdrop-blur-sm rounded-lg p-1 flex items-center gap-1 z-20 border border-zinc-600"
               >
-                <Trash2 className="h-3 w-3" />
-              </button>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </motion.div>
-    );
+                {/* Delete Button */}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    deleteCallout(callout.id);
+                  }}
+                  className="text-red-400 hover:text-red-300 hover:bg-red-400/20 rounded p-1"
+                >
+                  <Trash2 className="h-3 w-3" />
+                </button>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </motion.div>
+      );
+    } catch (error) {
+      console.error("Error rendering standard callout:", error);
+      return null;
+    }
   };
 
   const renderCallout = (callout: Callout) => {
-    // Use advanced renderer for new callout types
-    if (["blur", "magnifier", "oval", "polygon", "freehand"].includes(callout.shape)) {
-      return (
-        <AdvancedCalloutRenderer
-          key={callout.id}
-          callout={callout}
-          screenshot={screenshot.dataUrl}
-          containerRef={overlayRef}
-          isEditing={isEditing}
-          onClick={(e) => handleCalloutClick(callout, e)}
-          isSelected={editingCallout === callout.id}
-        />
-      );
-    } else {
-      return renderStandardCallout(callout);
+    try {
+      if (!callout || !callout.id) return null;
+      
+      // Use advanced renderer for new callout types
+      if (["blur", "magnifier", "oval", "polygon", "freehand"].includes(callout.shape)) {
+        return (
+          <AdvancedCalloutRenderer
+            key={callout.id}
+            callout={callout}
+            screenshot={screenshot?.dataUrl || ""}
+            containerRef={overlayRef}
+            isEditing={isEditing}
+            onClick={(e) => handleCalloutClick(callout, e)}
+            isSelected={editingCallout === callout.id}
+          />
+        );
+      } else {
+        return renderStandardCallout(callout);
+      }
+    } catch (error) {
+      console.error("Error rendering callout:", error);
+      return null;
     }
   };
 
@@ -546,6 +608,9 @@ const EnhancedCalloutOverlay: React.FC<CalloutOverlayProps> = ({
     }));
   }, []);
 
+  // Safe callouts array access
+  const safeCallouts = screenshot?.callouts || [];
+
   return (
     <div className="relative w-full h-full">
       {/* Click-to-Reveal Popup */}
@@ -570,7 +635,7 @@ const EnhancedCalloutOverlay: React.FC<CalloutOverlayProps> = ({
                 <div className="flex items-start justify-between mb-2">
                   <div className="flex items-center gap-2">
                     <div className="w-6 h-6 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-sm font-bold">
-                      {screenshot.callouts.find(c => c.id === activeReveal)?.number}
+                      {safeCallouts.find(c => c?.id === activeReveal)?.number}
                     </div>
                     <span className="text-xs text-zinc-400 font-medium">Click-to-Reveal</span>
                   </div>
@@ -583,7 +648,7 @@ const EnhancedCalloutOverlay: React.FC<CalloutOverlayProps> = ({
                 </div>
                 
                 <div className="text-sm text-white leading-relaxed">
-                  {screenshot.callouts.find(c => c.id === activeReveal)?.revealText}
+                  {safeCallouts.find(c => c?.id === activeReveal)?.revealText}
                 </div>
                 
                 <div className="mt-3 pt-2 border-t border-zinc-700">
@@ -735,7 +800,7 @@ const EnhancedCalloutOverlay: React.FC<CalloutOverlayProps> = ({
       >
         {/* Render Callouts */}
         <AnimatePresence>
-          {screenshot.callouts.map(renderCallout)}
+          {safeCallouts.map(renderCallout)}
         </AnimatePresence>
         
         {/* Current Freehand Path Preview */}
