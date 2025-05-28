@@ -12,8 +12,7 @@ import {
   Loader2,
   Printer,
   Sparkles,
-  Info,
-  CheckCircle2
+  Info
 } from "lucide-react";
 import { SopDocument, ExportFormat, ExportOptions } from "@/types/sop";
 import { downloadPDFWithBrowserPrint } from "@/lib/pdf-generator";
@@ -95,110 +94,29 @@ const ExportPanel: React.FC<ExportPanelProps> = ({
       {/* Scrollable Content */}
       <div className="flex-1 overflow-y-auto p-6 space-y-6">
         
-        {/* Quick Print HTML Export - Now Primary */}
-        <Card className="bg-gradient-to-br from-green-900/30 to-blue-900/30 border-green-600/50">
-          <CardHeader>
-            <CardTitle className="text-white flex items-center gap-3">
-              <div className="p-2 bg-gradient-to-br from-green-500/20 to-blue-500/20 rounded-lg">
-                <Printer className="h-5 w-5 text-green-400" />
-              </div>
-              Quick Print Export (Recommended)
-            </CardTitle>
-            <div className="flex gap-2">
-              <Badge className="bg-gradient-to-r from-green-500/20 to-blue-500/20 text-green-300 border-green-500/30">
-                <Sparkles className="h-3 w-3 mr-1" />
-                Best Quality
-              </Badge>
-              <Badge className="bg-blue-500/20 text-blue-300 border-blue-500/30">
-                Perfect Screenshots
-              </Badge>
-              <Badge className="bg-purple-500/20 text-purple-300 border-purple-500/30">
-                Aligned Callouts
-              </Badge>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <p className="text-green-200 text-sm leading-relaxed">
-              Professional HTML document with perfect screenshot rendering and properly aligned callouts. 
-              Opens in browser for easy print-to-PDF with your organization branding in the correct positions.
-            </p>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <Button
-                onClick={handlePrintToPdf}
-                disabled={!canExport || isGeneratingPdf}
-                className="bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white"
-              >
-                {isGeneratingPdf ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Opening...
-                  </>
-                ) : (
-                  <>
-                    <Printer className="h-4 w-4 mr-2" />
-                    Quick Print
-                  </>
-                )}
-              </Button>
-
-              <Button
-                onClick={handleHtmlExport}
-                disabled={!canExport || isExporting}
-                variant="outline"
-                className="border-green-600/50 text-green-300 hover:bg-green-600/10"
-              >
-                {isExporting ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Exporting...
-                  </>
-                ) : (
-                  <>
-                    <Globe className="h-4 w-4 mr-2" />
-                    Save HTML
-                  </>
-                )}
-              </Button>
-            </div>
-            
-            <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-3">
-              <div className="flex items-center gap-2 mb-2">
-                <CheckCircle2 className="h-4 w-4 text-green-400" />
-                <span className="text-sm font-medium text-green-200">What's Fixed</span>
-              </div>
-              <ul className="text-xs text-green-300 space-y-1">
-                <li>✅ Organization name in top-left corner</li>
-                <li>✅ Screenshots display properly in exports</li>
-                <li>✅ Callouts aligned exactly where you click</li>
-                <li>✅ Footer: Organization © Year | Created by SOPifyapp.com</li>
-              </ul>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Professional HTML Export - Secondary */}
+        {/* Professional HTML Export */}
         <Card className="bg-gradient-to-br from-blue-900/30 to-purple-900/30 border-blue-600/50">
           <CardHeader>
             <CardTitle className="text-white flex items-center gap-3">
               <div className="p-2 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-lg">
                 <Globe className="h-5 w-5 text-blue-400" />
               </div>
-              Advanced HTML Export
+              Professional HTML Export
             </CardTitle>
             <div className="flex gap-2">
               <Badge className="bg-gradient-to-r from-blue-500/20 to-purple-500/20 text-blue-300 border-blue-500/30">
                 <Sparkles className="h-3 w-3 mr-1" />
-                Customizable
+                Premium Quality
               </Badge>
-              <Badge className="bg-purple-500/20 text-purple-300 border-purple-500/30">
-                Advanced Options
+              <Badge className="bg-green-500/20 text-green-300 border-green-500/30">
+                Print-to-PDF Ready
               </Badge>
             </div>
           </CardHeader>
           <CardContent className="space-y-6">
             <p className="text-blue-200 text-sm leading-relaxed">
-              Customizable HTML document with advanced styling options, color themes, and layout choices.
+              Beautiful, professional HTML document with stunning gradients, perfect typography, and business-grade styling. 
+              Includes all screenshots and callouts with pixel-perfect rendering.
             </p>
             
             {/* Business Tier Customization */}

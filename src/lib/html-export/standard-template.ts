@@ -97,55 +97,139 @@ export function generateStandardHtmlTemplate(
                         <div class="screenshot-wrapper" style="position: relative; display: inline-block; width: 100%;">
                             <img src="${step.screenshot.dataUrl}" alt="Step ${stepNumber} Screenshot" class="step-screenshot" style="width: 100%; height: auto; display: block;" />
                             ${step.screenshot.callouts && step.screenshot.callouts.length > 0 ? 
-                              step.screenshot.callouts.map((callout: any) => `
-                                <div class="callout callout-${callout.shape}" style="
-                                  position: absolute;
-                                  left: ${callout.x}%;
-                                  top: ${callout.y}%;
-                                  width: ${callout.width}%;
-                                  height: ${callout.height}%;
-                                  border: 2px solid ${callout.color};
-                                  background-color: ${callout.color}40;
-                                  transform: translate(-50%, -50%);
-                                  ${callout.shape === 'circle' || callout.shape === 'number' ? `
+                              step.screenshot.callouts.map((callout: any, calloutIndex: number) => {
+                                const calloutNumber = calloutIndex + 1;
+                                
+                                // Calculate precise positioning
+                                const leftPos = callout.x || 0;
+                                const topPos = callout.y || 0;
+                                const width = callout.width || 5;
+                                const height = callout.height || 5;
+                                
+                                // Generate callout based on shape
+                                if (callout.shape === 'circle') {
+                                  return `
+                                    <div class="callout callout-circle" style="
+                                      position: absolute;
+                                      left: ${leftPos}%;
+                                      top: ${topPos}%;
+                                      width: ${Math.max(width, 3)}%;
+                                      height: ${Math.max(height, 3)}%;
+                                      border: 3px solid ${callout.color || '#FF6B35'};
+                                      background-color: ${callout.color || '#FF6B35'}20;
+                                      border-radius: 50%;
+                                      transform: translate(-50%, -50%);
+                                      pointer-events: none;
+                                      z-index: 10;
+                                      min-width: 30px;
+                                      min-height: 30px;
+                                      aspect-ratio: 1 / 1;
+                                    "></div>
+                                  `;
+                                } else if (callout.shape === 'number') {
+                                  return `
+                                    <div class="callout callout-number" style="
+                                      position: absolute;
+                                      left: ${leftPos}%;
+                                      top: ${topPos}%;
+                                      width: ${Math.max(width, 4)}%;
+                                      height: ${Math.max(height, 4)}%;
+                                      background: ${callout.color || '#FF6B35'};
+                                      border: 2px solid white;
+                                      border-radius: 50%;
+                                      transform: translate(-50%, -50%);
+                                      pointer-events: none;
+                                      z-index: 10;
+                                      min-width: 35px;
+                                      min-height: 35px;
+                                      aspect-ratio: 1 / 1;
+                                      display: flex;
+                                      align-items: center;
+                                      justify-content: center;
+                                      font-weight: bold;
+                                      color: white;
+                                      font-size: 16px;
+                                      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+                                    ">${callout.number || calloutNumber}</div>
+                                  `;
+                                } else if (callout.shape === 'rectangle') {
+                                  return `
+                                    <div class="callout callout-rectangle" style="
+                                      position: absolute;
+                                      left: ${leftPos}%;
+                                      top: ${topPos}%;
+                                      width: ${Math.max(width, 5)}%;
+                                      height: ${Math.max(height, 3)}%;
+                                      border: 3px solid ${callout.color || '#FF6B35'};
+                                      background-color: ${callout.color || '#FF6B35'}20;
+                                      transform: translate(-50%, -50%);
+                                      pointer-events: none;
+                                      z-index: 10;
+                                      min-width: 40px;
+                                      min-height: 25px;
+                                      border-radius: 4px;
+                                      ${callout.text ? `
+                                        display: flex;
+                                        align-items: center;
+                                        justify-content: center;
+                                        font-size: 12px;
+                                        color: ${callout.color || '#FF6B35'};
+                                        font-weight: bold;
+                                        text-align: center;
+                                        padding: 2px;
+                                      ` : ''}
+                                    ">${callout.text || ''}</div>
+                                  `;
+                                } else if (callout.shape === 'arrow') {
+                                  return `
+                                    <div class="callout callout-arrow" style="
+                                      position: absolute;
+                                      left: ${leftPos}%;
+                                      top: ${topPos}%;
+                                      width: ${Math.max(width, 6)}%;
+                                      height: ${Math.max(height, 3)}%;
+                                      transform: translate(-50%, -50%);
+                                      pointer-events: none;
+                                      z-index: 10;
+                                      min-width: 50px;
+                                      min-height: 25px;
+                                    ">
+                                      <svg viewBox="0 0 100 40" style="width: 100%; height: 100%;">
+                                        <defs>
+                                          <marker id="arrowhead-${calloutIndex}" markerWidth="10" markerHeight="7" 
+                                                  refX="9" refY="3.5" orient="auto">
+                                            <polygon points="0 0, 10 3.5, 0 7" fill="${callout.color || '#FF6B35'}" />
+                                          </marker>
+                                        </defs>
+                                        <line x1="10" y1="20" x2="85" y2="20" 
+                                              stroke="${callout.color || '#FF6B35'}" 
+                                              stroke-width="3" 
+                                              marker-end="url(#arrowhead-${calloutIndex})" />
+                                      </svg>
+                                    </div>
+                                  `;
+                                }
+                                
+                                // Default fallback (circle)
+                                return `
+                                  <div class="callout callout-default" style="
+                                    position: absolute;
+                                    left: ${leftPos}%;
+                                    top: ${topPos}%;
+                                    width: ${Math.max(width, 3)}%;
+                                    height: ${Math.max(height, 3)}%;
+                                    border: 3px solid ${callout.color || '#FF6B35'};
+                                    background-color: ${callout.color || '#FF6B35'}20;
                                     border-radius: 50%;
-                                    aspect-ratio: 1 / 1;
+                                    transform: translate(-50%, -50%);
+                                    pointer-events: none;
+                                    z-index: 10;
                                     min-width: 30px;
                                     min-height: 30px;
-                                    display: flex;
-                                    align-items: center;
-                                    justify-content: center;
-                                  ` : ''}
-                                  ${callout.shape === 'rectangle' ? `
-                                    min-width: 40px;
-                                    min-height: 25px;
-                                    display: flex;
-                                    align-items: center;
-                                    justify-content: center;
-                                  ` : ''}
-                                  ${callout.shape === 'arrow' ? `
-                                    display: flex;
-                                    align-items: center;
-                                    justify-content: center;
-                                    min-width: 30px;
-                                    min-height: 20px;
-                                  ` : ''}
-                                  ${callout.shape === 'number' ? `
-                                    font-weight: bold;
-                                    color: white;
-                                    font-size: ${Math.max(10, callout.width * 0.6)}px;
-                                    background: ${callout.revealText ? 'linear-gradient(135deg, #3B82F6, #8B5CF6)' : callout.color};
-                                  ` : ''}
-                                ">
-                                  ${callout.shape === 'number' ? callout.number : ''}
-                                  ${callout.shape === 'arrow' ? `
-                                    <svg viewBox="0 0 100 50" fill="none" style="width: 100%; height: 100%;">
-                                      <polygon points="10,15 65,15 65,5 95,25 65,45 65,35 10,35" fill="${callout.color}" stroke="${callout.color}" stroke-width="2" stroke-linejoin="round" />
-                                    </svg>
-                                  ` : ''}
-                                  ${callout.text ? `<span style="color: white; font-size: 12px; text-align: center;">${callout.text}</span>` : ''}
-                                </div>
-                              `).join('') : ''
+                                    aspect-ratio: 1 / 1;
+                                  "></div>
+                                `;
+                              }).join('') : ''
                             }
                         </div>
                     </div>`;
@@ -160,55 +244,139 @@ export function generateStandardHtmlTemplate(
                             <div class="screenshot-wrapper" style="position: relative; display: inline-block; width: 100%;">
                                 <img src="${screenshot.dataUrl}" alt="Step ${stepNumber} Screenshot ${imgIndex + 1}" class="step-screenshot" style="width: 100%; height: auto; display: block;" />
                                 ${screenshot.callouts && screenshot.callouts.length > 0 ? 
-                                  screenshot.callouts.map((callout: any) => `
-                                    <div class="callout callout-${callout.shape}" style="
-                                      position: absolute;
-                                      left: ${callout.x}%;
-                                      top: ${callout.y}%;
-                                      width: ${callout.width}%;
-                                      height: ${callout.height}%;
-                                      border: 2px solid ${callout.color};
-                                      background-color: ${callout.color}40;
-                                      transform: translate(-50%, -50%);
-                                      ${callout.shape === 'circle' || callout.shape === 'number' ? `
+                                  screenshot.callouts.map((callout: any, calloutIndex: number) => {
+                                    const calloutNumber = calloutIndex + 1;
+                                    
+                                    // Calculate precise positioning
+                                    const leftPos = callout.x || 0;
+                                    const topPos = callout.y || 0;
+                                    const width = callout.width || 5;
+                                    const height = callout.height || 5;
+                                    
+                                    // Generate callout based on shape
+                                    if (callout.shape === 'circle') {
+                                      return `
+                                        <div class="callout callout-circle" style="
+                                          position: absolute;
+                                          left: ${leftPos}%;
+                                          top: ${topPos}%;
+                                          width: ${Math.max(width, 3)}%;
+                                          height: ${Math.max(height, 3)}%;
+                                          border: 3px solid ${callout.color || '#FF6B35'};
+                                          background-color: ${callout.color || '#FF6B35'}20;
+                                          border-radius: 50%;
+                                          transform: translate(-50%, -50%);
+                                          pointer-events: none;
+                                          z-index: 10;
+                                          min-width: 30px;
+                                          min-height: 30px;
+                                          aspect-ratio: 1 / 1;
+                                        "></div>
+                                      `;
+                                    } else if (callout.shape === 'number') {
+                                      return `
+                                        <div class="callout callout-number" style="
+                                          position: absolute;
+                                          left: ${leftPos}%;
+                                          top: ${topPos}%;
+                                          width: ${Math.max(width, 4)}%;
+                                          height: ${Math.max(height, 4)}%;
+                                          background: ${callout.color || '#FF6B35'};
+                                          border: 2px solid white;
+                                          border-radius: 50%;
+                                          transform: translate(-50%, -50%);
+                                          pointer-events: none;
+                                          z-index: 10;
+                                          min-width: 35px;
+                                          min-height: 35px;
+                                          aspect-ratio: 1 / 1;
+                                          display: flex;
+                                          align-items: center;
+                                          justify-content: center;
+                                          font-weight: bold;
+                                          color: white;
+                                          font-size: 16px;
+                                          box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+                                        ">${callout.number || calloutNumber}</div>
+                                      `;
+                                    } else if (callout.shape === 'rectangle') {
+                                      return `
+                                        <div class="callout callout-rectangle" style="
+                                          position: absolute;
+                                          left: ${leftPos}%;
+                                          top: ${topPos}%;
+                                          width: ${Math.max(width, 5)}%;
+                                          height: ${Math.max(height, 3)}%;
+                                          border: 3px solid ${callout.color || '#FF6B35'};
+                                          background-color: ${callout.color || '#FF6B35'}20;
+                                          transform: translate(-50%, -50%);
+                                          pointer-events: none;
+                                          z-index: 10;
+                                          min-width: 40px;
+                                          min-height: 25px;
+                                          border-radius: 4px;
+                                          ${callout.text ? `
+                                            display: flex;
+                                            align-items: center;
+                                            justify-content: center;
+                                            font-size: 12px;
+                                            color: ${callout.color || '#FF6B35'};
+                                            font-weight: bold;
+                                            text-align: center;
+                                            padding: 2px;
+                                          ` : ''}
+                                        ">${callout.text || ''}</div>
+                                      `;
+                                    } else if (callout.shape === 'arrow') {
+                                      return `
+                                        <div class="callout callout-arrow" style="
+                                          position: absolute;
+                                          left: ${leftPos}%;
+                                          top: ${topPos}%;
+                                          width: ${Math.max(width, 6)}%;
+                                          height: ${Math.max(height, 3)}%;
+                                          transform: translate(-50%, -50%);
+                                          pointer-events: none;
+                                          z-index: 10;
+                                          min-width: 50px;
+                                          min-height: 25px;
+                                        ">
+                                          <svg viewBox="0 0 100 40" style="width: 100%; height: 100%;">
+                                            <defs>
+                                              <marker id="arrowhead-${imgIndex}-${calloutIndex}" markerWidth="10" markerHeight="7" 
+                                                      refX="9" refY="3.5" orient="auto">
+                                                <polygon points="0 0, 10 3.5, 0 7" fill="${callout.color || '#FF6B35'}" />
+                                              </marker>
+                                            </defs>
+                                            <line x1="10" y1="20" x2="85" y2="20" 
+                                                  stroke="${callout.color || '#FF6B35'}" 
+                                                  stroke-width="3" 
+                                                  marker-end="url(#arrowhead-${imgIndex}-${calloutIndex})" />
+                                          </svg>
+                                        </div>
+                                      `;
+                                    }
+                                    
+                                    // Default fallback (circle)
+                                    return `
+                                      <div class="callout callout-default" style="
+                                        position: absolute;
+                                        left: ${leftPos}%;
+                                        top: ${topPos}%;
+                                        width: ${Math.max(width, 3)}%;
+                                        height: ${Math.max(height, 3)}%;
+                                        border: 3px solid ${callout.color || '#FF6B35'};
+                                        background-color: ${callout.color || '#FF6B35'}20;
                                         border-radius: 50%;
-                                        aspect-ratio: 1 / 1;
+                                        transform: translate(-50%, -50%);
+                                        pointer-events: none;
+                                        z-index: 10;
                                         min-width: 30px;
                                         min-height: 30px;
-                                        display: flex;
-                                        align-items: center;
-                                        justify-content: center;
-                                      ` : ''}
-                                      ${callout.shape === 'rectangle' ? `
-                                        min-width: 40px;
-                                        min-height: 25px;
-                                        display: flex;
-                                        align-items: center;
-                                        justify-content: center;
-                                      ` : ''}
-                                      ${callout.shape === 'arrow' ? `
-                                        display: flex;
-                                        align-items: center;
-                                        justify-content: center;
-                                        min-width: 30px;
-                                        min-height: 20px;
-                                      ` : ''}
-                                      ${callout.shape === 'number' ? `
-                                        font-weight: bold;
-                                        color: white;
-                                        font-size: ${Math.max(10, callout.width * 0.6)}px;
-                                        background: ${callout.revealText ? 'linear-gradient(135deg, #3B82F6, #8B5CF6)' : callout.color};
-                                      ` : ''}
-                                    ">
-                                      ${callout.shape === 'number' ? callout.number : ''}
-                                      ${callout.shape === 'arrow' ? `
-                                        <svg viewBox="0 0 100 50" fill="none" style="width: 100%; height: 100%;">
-                                          <polygon points="10,15 65,15 65,5 95,25 65,45 65,35 10,35" fill="${callout.color}" stroke="${callout.color}" stroke-width="2" stroke-linejoin="round" />
-                                        </svg>
-                                      ` : ''}
-                                      ${callout.text ? `<span style="color: white; font-size: 12px; text-align: center;">${callout.text}</span>` : ''}
-                                    </div>
-                                  `).join('') : ''
+                                        aspect-ratio: 1 / 1;
+                                      "></div>
+                                    `;
+                                  }).join('') : ''
                                 }
                             </div>
                             ${screenshot.title ? `<p class="screenshot-title">${screenshot.title}</p>` : ''}
@@ -480,9 +648,37 @@ export function generateStandardHtmlTemplate(
             border-radius: 12px;
         }
         
+        /* Callout Styles */
         .callout {
             pointer-events: none;
             z-index: 10;
+            box-sizing: border-box;
+        }
+        
+        .callout-circle {
+            border-radius: 50% !important;
+        }
+        
+        .callout-number {
+            border-radius: 50% !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            font-weight: bold !important;
+            color: white !important;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+        }
+        
+        .callout-rectangle {
+            border-radius: 4px !important;
+        }
+        
+        .callout-arrow {
+            /* Arrow styling handled by SVG */
+        }
+        
+        .callout-default {
+            border-radius: 50% !important;
         }
         
         .screenshot-title {
