@@ -11,95 +11,118 @@ import EnhancedExportPanel from "@/components/export/EnhancedExportPanel";
 import LivingSOPPanel from "@/components/collaboration/LivingSOPPanel";
 import TemplateMarketplace from "@/components/templates/TemplateMarketplace";
 import TemplateBuilder from "@/components/templates/TemplateBuilder";
+import { Callout } from "@/types/sop";
+import { v4 as uuidv4 } from "uuid";
 
-// Mock data for testing
+// Mock document for testing
 const mockDocument = {
   id: "test-doc",
   title: "Test SOP Document",
-  description: "A test document for trying new features",
+  description: "A test document for feature testing",
   topic: "Testing",
-  companyName: "SOPify Demo",
   date: new Date().toISOString(),
-  logo: "",
+  companyName: "SOPify Test Lab",
   steps: [
     {
       id: "step-1",
-      title: "First Step",
-      description: "This is a test step for demonstration",
-      instructions: "Follow these instructions carefully",
-      estimatedTime: 10,
-      screenshot: "/api/placeholder/800/600",
-      contentBlocks: []
-    },
-    {
-      id: "step-2", 
-      title: "Second Step",
-      description: "Another test step",
-      instructions: "Continue with the process",
-      estimatedTime: 15,
-      screenshot: "",
-      contentBlocks: []
+      title: "Test Step",
+      description: "A test step for demonstration",
+      resources: [],
+      order: 1,
+      estimatedTime: 5
     }
   ],
   createdAt: new Date(),
-  updatedAt: new Date(),
-  createdBy: "admin-user"
+  updatedAt: new Date()
 };
 
 const FeatureTestPage: React.FC = () => {
-  const [activeFeature, setActiveFeature] = useState("callouts");
+  const [activeFeature, setActiveFeature] = useState<string>("callouts");
   const [showLivingPanel, setShowLivingPanel] = useState(false);
+  
+  // State for Advanced Callouts testing
+  const [testCallouts, setTestCallouts] = useState<Callout[]>([]);
+  const [testScreenshot] = useState({
+    id: "test-screenshot",
+    dataUrl: "/api/placeholder/800/600",
+    callouts: testCallouts
+  });
 
   const features = [
     {
       id: "callouts",
       name: "Advanced Callouts",
       phase: "Phase 1",
-      status: "Ready for Testing",
-      description: "Enhanced screenshot annotation with new shapes, effects, and styling options"
+      status: "Ready",
+      description: "Enhanced annotation system with blur, magnifier, shapes, and freehand drawing"
     },
     {
       id: "export",
       name: "Enhanced Export",
       phase: "Phase 3", 
-      status: "Ready for Testing",
-      description: "Advanced PDF/HTML customization, branding, and share link generation"
+      status: "Ready",
+      description: "Advanced PDF/HTML export with branding and share links"
     },
     {
       id: "collaboration",
-      name: "Living SOP Features",
+      name: "Living SOP",
       phase: "Phase 4",
-      status: "Ready for Testing", 
-      description: "Real-time collaboration, comments, suggestions, and change tracking"
+      status: "Ready", 
+      description: "Real-time collaboration with comments and suggestions"
     },
     {
       id: "marketplace",
       name: "Template Marketplace",
       phase: "Phase 5",
-      status: "Ready for Testing",
-      description: "Browse and discover professional SOP templates"
+      status: "Ready",
+      description: "Browse and discover community templates"
     },
     {
       id: "builder",
       name: "Template Builder", 
       phase: "Phase 5",
-      status: "Ready for Testing",
-      description: "Create professional SOP templates with guided wizard"
+      status: "Ready",
+      description: "Create and publish custom templates"
     }
   ];
+
+  // Handle callout operations
+  const handleCalloutAdd = (calloutData: Omit<Callout, "id">) => {
+    const newCallout: Callout = {
+      ...calloutData,
+      id: uuidv4()
+    };
+    setTestCallouts(prev => [...prev, newCallout]);
+    console.log("Callout added:", newCallout);
+  };
+
+  const handleCalloutUpdate = (updatedCallout: Callout) => {
+    setTestCallouts(prev => 
+      prev.map(callout => 
+        callout.id === updatedCallout.id ? updatedCallout : callout
+      )
+    );
+    console.log("Callout updated:", updatedCallout);
+  };
+
+  const handleCalloutDelete = (calloutId: string) => {
+    setTestCallouts(prev => prev.filter(callout => callout.id !== calloutId));
+    console.log("Callout deleted:", calloutId);
+  };
 
   const renderFeatureDemo = () => {
     switch (activeFeature) {
       case "callouts":
         return (
-          <div className="relative">
+          <div>
             <div className="mb-4 p-4 bg-blue-900/20 border border-blue-600/30 rounded-lg">
               <h3 className="text-blue-300 font-medium mb-2">Testing Instructions:</h3>
               <ul className="text-blue-200 text-sm space-y-1">
-                <li>• Click on the image below to start adding callouts</li>
+                <li>• Click "Add Annotations" to start adding callouts</li>
                 <li>• Try the new shapes: Oval, Polygon, Freehand drawing</li>
                 <li>• Use the advanced styling panel for colors and effects</li>
                 <li>• Test blur and magnifier tools (visual mockups)</li>
+                <li>• Add numbered callouts with click-to-reveal text</li>
               </ul>
             </div>
             <div className="relative bg-zinc-800 rounded-lg overflow-hidden">
@@ -109,18 +132,36 @@ const FeatureTestPage: React.FC = () => {
                 className="w-full"
               />
               <EnhancedCalloutOverlay
-                imageUrl="/api/placeholder/800/600"
-                callouts={[]}
-                onCalloutsChange={(callouts) => console.log("Callouts updated:", callouts)}
+                screenshot={{
+                  id: testScreenshot.id,
+                  dataUrl: testScreenshot.dataUrl,
+                  callouts: testCallouts
+                }}
                 isEditing={true}
+                onCalloutAdd={handleCalloutAdd}
+                onCalloutUpdate={handleCalloutUpdate}
+                onCalloutDelete={handleCalloutDelete}
               />
+            </div>
+            <div className="mt-4 p-3 bg-zinc-800 rounded-lg">
+              <h4 className="text-white font-medium mb-2">Current Callouts: {testCallouts.length}</h4>
+              {testCallouts.length > 0 && (
+                <div className="space-y-2">
+                  {testCallouts.map((callout, index) => (
+                    <div key={callout.id} className="text-sm text-zinc-300 bg-zinc-700 p-2 rounded">
+                      <span className="font-medium">#{index + 1}</span> - {callout.shape} callout 
+                      {callout.revealText && <span className="text-blue-400"> (with reveal text)</span>}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         );
 
       case "export":
         return (
-          <div>
+          <div className="relative">
             <div className="mb-4 p-4 bg-green-900/20 border border-green-600/30 rounded-lg">
               <h3 className="text-green-300 font-medium mb-2">Testing Instructions:</h3>
               <ul className="text-green-200 text-sm space-y-1">
@@ -146,6 +187,10 @@ const FeatureTestPage: React.FC = () => {
                   id: "template-1",
                   name: "Corporate Template",
                   description: "Professional corporate styling",
+                  category: "business",
+                  isPublic: true,
+                  usageCount: 150,
+                  tags: ["corporate", "professional", "business"],
                   customization: {
                     brandKit: {
                       primaryColor: "#007AFF",
