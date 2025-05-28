@@ -418,13 +418,18 @@ export function generateStandardHtmlTemplate(
                             </div>
                           `;
                           break;
-                        case 'list':
+                        case 'checklist':
                           enhancedContentHtml += `
-                            <div class="enhanced-content-block list-block">
+                            <div class="enhanced-content-block checklist-block">
                               ${block.title ? `<h4 class="block-title">${block.title}</h4>` : ''}
-                              <${block.ordered ? 'ol' : 'ul'} class="content-list">
-                                ${block.items.map((item: string) => `<li>${item}</li>`).join('')}
-                              </${block.ordered ? 'ol' : 'ul'}>
+                              <ul class="checklist">
+                                ${block.items.map((item: any) => `
+                                  <li class="checklist-item">
+                                    <input type="checkbox" ${item.completed ? 'checked' : ''} disabled />
+                                    <span class="${item.completed ? 'completed' : ''}">${item.text}</span>
+                                  </li>
+                                `).join('')}
+                              </ul>
                             </div>
                           `;
                           break;
@@ -432,7 +437,26 @@ export function generateStandardHtmlTemplate(
                           enhancedContentHtml += `
                             <div class="enhanced-content-block text-block">
                               ${block.title ? `<h4 class="block-title">${block.title}</h4>` : ''}
-                              <div class="text-content">${block.content}</div>
+                              <div class="text-content ${block.style ? `text-${block.style}` : ''}">${block.content}</div>
+                            </div>
+                          `;
+                          break;
+                        case 'accordion':
+                          enhancedContentHtml += `
+                            <div class="enhanced-content-block accordion-block">
+                              <details ${block.defaultOpen ? 'open' : ''}>
+                                <summary class="accordion-title">${block.title}</summary>
+                                <div class="accordion-content">${block.content}</div>
+                              </details>
+                            </div>
+                          `;
+                          break;
+                        case 'alert':
+                          const alertClass = `alert-${block.variant || 'default'}`;
+                          enhancedContentHtml += `
+                            <div class="enhanced-content-block alert-block ${alertClass}">
+                              ${block.title ? `<h4 class="block-title alert-title">${block.title}</h4>` : ''}
+                              <div class="alert-content">${block.content}</div>
                             </div>
                           `;
                           break;
@@ -782,6 +806,117 @@ export function generateStandardHtmlTemplate(
         
         .warning-content {
             color: #F57C00;
+        }
+        
+        /* Checklist Styles */
+        .checklist {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .checklist-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+            padding: 4px 0;
+        }
+        
+        .checklist-item input[type="checkbox"] {
+            margin-right: 12px;
+            transform: scale(1.2);
+        }
+        
+        .checklist-item .completed {
+            text-decoration: line-through;
+            opacity: 0.7;
+        }
+        
+        /* Accordion Styles */
+        .accordion-block details {
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 0;
+            overflow: hidden;
+        }
+        
+        .accordion-title {
+            background: #f8f9fa;
+            padding: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            outline: none;
+            user-select: none;
+        }
+        
+        .accordion-title:hover {
+            background: #e9ecef;
+        }
+        
+        .accordion-content {
+            padding: 16px;
+            line-height: 1.6;
+        }
+        
+        /* Alert Styles */
+        .alert-block {
+            border-radius: 8px;
+            padding: 16px;
+            border-left: 4px solid;
+        }
+        
+        .alert-default {
+            background: #f8f9fa;
+            border-left-color: #6c757d;
+            color: #495057;
+        }
+        
+        .alert-info {
+            background: #e3f2fd;
+            border-left-color: #2196F3;
+            color: #1976D2;
+        }
+        
+        .alert-warning {
+            background: #fff3e0;
+            border-left-color: #FF9800;
+            color: #F57C00;
+        }
+        
+        .alert-destructive {
+            background: #ffebee;
+            border-left-color: #f44336;
+            color: #d32f2f;
+        }
+        
+        .alert-title {
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        
+        /* Text Block Styles */
+        .text-highlight {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 4px;
+            padding: 12px;
+        }
+        
+        .text-warning {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            border-radius: 4px;
+            padding: 12px;
+            color: #721c24;
+        }
+        
+        .text-info {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            border-radius: 4px;
+            padding: 12px;
+            color: #0c5460;
         }
         
         .footer {

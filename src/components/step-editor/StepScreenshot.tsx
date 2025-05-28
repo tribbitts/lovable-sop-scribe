@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { SopStep, ScreenshotData, CalloutShape } from "@/types/sop";
 import { toast } from "@/hooks/use-toast";
 import { Plus, Trash2, Image, Eye, EyeOff } from "lucide-react";
-import ScreenshotUploader from "./ScreenshotUploader";
+import { ScreenshotUpload } from "@/components/common/ScreenshotUpload";
 import ScreenshotEditor from "./ScreenshotEditor";
 import CalloutEditor from "./CalloutEditor";
 import { v4 as uuidv4 } from "uuid";
@@ -235,8 +235,8 @@ const StepScreenshot: React.FC<StepScreenshotProps> = ({
     const calloutData = {
       shape: selectedCalloutTool,
       color: calloutColor,
-      x: Math.max(0, Math.min(95, x - width / 2)),
-      y: Math.max(0, Math.min(95, y - height / 2)),
+      x: Math.max(width / 2, Math.min(100 - width / 2, x)),
+      y: Math.max(height / 2, Math.min(100 - height / 2, y)),
       width,
       height,
       number: selectedCalloutTool === "number" ? (activeScreenshot.callouts.length + 1) : undefined,
@@ -390,7 +390,39 @@ const StepScreenshot: React.FC<StepScreenshotProps> = ({
         // Show active screenshot
         <div className="space-y-3">
           {!activeScreenshot ? (
-            <ScreenshotUploader onScreenshotUpload={handleScreenshotUpload} />
+            <ScreenshotUpload 
+              variant="dropzone"
+              onUpload={(dataUrl, file) => {
+                // Create new screenshot data
+                const newScreenshot: ScreenshotData = {
+                  id: uuidv4(),
+                  dataUrl: dataUrl,
+                  callouts: [],
+                  title: `Screenshot ${allScreenshots.length + 1}`
+                };
+
+                // If this is the first screenshot, set it as the main screenshot
+                if (!step.screenshot && (!step.screenshots || step.screenshots.length === 0)) {
+                  if (onStepChange) {
+                    onStepChange(step.id, "screenshot", newScreenshot);
+                  }
+                  setActiveScreenshotIndex(0);
+                } else {
+                  // Add to screenshots array
+                  const updatedScreenshots = [...(step.screenshots || []), newScreenshot];
+                  if (onStepChange) {
+                    onStepChange(step.id, "screenshots", updatedScreenshots);
+                  }
+                  // Set active to the new screenshot
+                  setActiveScreenshotIndex(allScreenshots.length);
+                }
+                
+                toast({
+                  title: "Screenshot Added",
+                  description: "New screenshot has been added to this step",
+                });
+              }}
+            />
           ) : (
             <div className="space-y-3">
               <div className="flex justify-between items-center">
