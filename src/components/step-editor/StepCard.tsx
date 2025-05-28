@@ -19,10 +19,10 @@ import { SopStep, StepCardProps } from "@/types/sop";
 import { EnhancedContentBlock } from "@/types/enhanced-content";
 import { useScreenshotManager } from "@/hooks/useScreenshotManager";
 import { ScreenshotUpload } from "@/components/common/ScreenshotUpload";
-import CalloutOverlay from "./CalloutOverlay";
 import { ContentBlockSelector } from "@/components/content-blocks/ContentBlockSelector";
 import { ContentBlockRenderer } from "@/components/content-blocks/ContentBlockRenderer";
 import { v4 as uuidv4 } from "uuid";
+import EnhancedCalloutOverlay from "@/components/enhanced-annotations/EnhancedCalloutOverlay";
 
 const StepCard: React.FC<StepCardProps> = ({
   step,
@@ -274,7 +274,7 @@ const StepCard: React.FC<StepCardProps> = ({
                     />
                     
                     <div className="absolute inset-0">
-                      <CalloutOverlay
+                      <EnhancedCalloutOverlay
                         screenshot={step.screenshot}
                         isEditing={isEditingCallouts}
                         onCalloutAdd={(callout) => {

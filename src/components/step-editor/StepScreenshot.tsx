@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -7,7 +6,7 @@ import { SopStep, ScreenshotData, Callout } from "@/types/sop";
 import { toast } from "@/hooks/use-toast";
 import { Plus, Trash2, Image, Eye, EyeOff, Crop } from "lucide-react";
 import { ScreenshotUpload } from "@/components/common/ScreenshotUpload";
-import CalloutOverlay from "./CalloutOverlay";
+import EnhancedCalloutOverlay from "@/components/enhanced-annotations/EnhancedCalloutOverlay";
 import CropDialog from "./crop/CropDialog";
 import { useScreenshotManager } from "@/hooks/useScreenshotManager";
 
@@ -209,7 +208,7 @@ const StepScreenshot: React.FC<StepScreenshotProps> = ({
                   />
                   
                   <div className="absolute inset-0">
-                    <CalloutOverlay
+                    <EnhancedCalloutOverlay
                       screenshot={activeScreenshot}
                       isEditing={isEditingCallouts}
                       onCalloutAdd={handleCalloutAdd}

@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScreenshotData, Callout } from "@/types/sop";
-import CalloutOverlay from "../step-editor/CalloutOverlay";
+import EnhancedCalloutOverlay from "@/components/enhanced-annotations/EnhancedCalloutOverlay";
 import { Camera, Play, RotateCcw, Sparkles, Eye, MessageCircle } from "lucide-react";
 
 const ClickToRevealDemo: React.FC = () => {
@@ -250,7 +250,7 @@ const ClickToRevealDemo: React.FC = () => {
             />
             
             <div className="absolute inset-0">
-              <CalloutOverlay
+              <EnhancedCalloutOverlay
                 screenshot={currentScreenshot}
                 isEditing={isEditing}
                 onCalloutAdd={(callout) => handleCalloutAdd(currentStep, callout)}
