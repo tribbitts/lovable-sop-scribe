@@ -55,6 +55,10 @@ const ExportPanel: React.FC<ExportPanelProps> = ({
     const theme = exportThemes.find(t => t.id === selectedTheme) || exportThemes[0];
     const font = fontOptions.find(f => f.id === selectedFont)?.value || fontOptions[0].value;
     
+    console.log('🎨 ExportPanel: Selected theme:', theme.name, theme.id);
+    console.log('🔤 ExportPanel: Selected font:', font);
+    console.log('🎯 ExportPanel: Theme colors:', theme.colors);
+    
     const htmlOptions: ExportOptions = {
       ...exportOptions,
       mode: 'standalone',
@@ -66,6 +70,8 @@ const ExportPanel: React.FC<ExportPanelProps> = ({
         fontFamily: font as any
       }
     };
+    
+    console.log('📤 ExportPanel: Final export options:', htmlOptions);
     onExport("html", htmlOptions);
   };
 

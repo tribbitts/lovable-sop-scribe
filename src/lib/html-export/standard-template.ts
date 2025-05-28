@@ -74,9 +74,11 @@ export function generateStandardHtmlTemplate(
   // Try to find a matching theme based on primary color
   let selectedTheme = exportThemes.find(theme => theme.colors.primary === primaryColor);
   if (!selectedTheme) {
-    // Default to corporate-blue if no match
-    selectedTheme = exportThemes[0];
+    // If no exact match, find the closest theme or default to corporate-blue
+    selectedTheme = exportThemes.find(theme => theme.colors.primary.toLowerCase() === primaryColor.toLowerCase()) || exportThemes[0];
   }
+  
+  console.log('🎨 Using theme:', selectedTheme.name, 'with primary color:', primaryColor);
   
   const title = sopDocument.title || "Standard Operating Procedure";
   const companyName = sopDocument.companyName || "Your Organization";
@@ -519,7 +521,7 @@ export function generateStandardHtmlTemplate(
             --text-color: ${selectedTheme.colors.text};
             --background-color: ${selectedTheme.colors.background};
             --border-color: ${selectedTheme.colors.border};
-            --font-primary: ${typeof fontFamily === 'string' && fontFamily.includes("'") ? fontFamily : selectedTheme.fonts.primary};
+            --font-primary: ${fontFamily && fontFamily !== 'system' ? fontFamily : selectedTheme.fonts.primary};
             --font-secondary: ${selectedTheme.fonts.secondary};
             --font-monospace: ${selectedTheme.fonts.monospace};
             --border-radius: ${selectedTheme.styles.borderRadius};
@@ -1203,9 +1205,6 @@ export function generateStandardHtmlTemplate(
         <div class="header-center">
             <h1 class="title">${title}</h1>
             <p class="subtitle">${sopDocument.topic || 'Standard Operating Procedure'}</p>
-            <div class="demo-badge">
-                ✨ Professional SOPify Document
-            </div>
         </div>
     </div>
     

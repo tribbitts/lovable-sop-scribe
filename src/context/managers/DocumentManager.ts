@@ -1,4 +1,3 @@
-
 import { SopDocument, ExportFormat, ExportOptions } from "@/types/sop";
 import { saveAs } from "file-saver";
 import { toast } from "@/hooks/use-toast";
@@ -113,7 +112,8 @@ export class DocumentManager {
           quality: 0.85,
           includeTableOfContents: options?.includeTableOfContents,
           enhanced: options?.enhanced || false,
-          enhancedOptions: options?.enhancedOptions
+          enhancedOptions: options?.enhancedOptions,
+          customization: options?.customization
         };
         
         console.log('🚀 Exporting with options:', htmlOptions);
