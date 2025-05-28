@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, ReactNode } from "react";
 import { SopStep, Callout, StepResource } from "../types/sop";
 import { EnhancedContentBlock } from "../types/enhanced-content";
@@ -103,7 +104,12 @@ export const StepProvider = ({ children }: { children: ReactNode }) => {
       const updatedSteps = [...prev.steps];
       const step = updatedSteps[stepIndex];
       const currentBlocks = step.enhancedContentBlocks || [];
-      const newBlock = { ...block, order: currentBlocks.length };
+      
+      // Ensure the block has the correct order and is properly typed
+      const newBlock: EnhancedContentBlock = { 
+        ...block, 
+        order: currentBlocks.length 
+      };
       
       updatedSteps[stepIndex] = {
         ...step,
@@ -123,8 +129,8 @@ export const StepProvider = ({ children }: { children: ReactNode }) => {
       const step = updatedSteps[stepIndex];
       const blocks = step.enhancedContentBlocks || [];
       
-      const updatedBlocks = blocks.map(block =>
-        block.id === blockId ? { ...block, ...updates } : block
+      const updatedBlocks: EnhancedContentBlock[] = blocks.map(block =>
+        block.id === blockId ? { ...block, ...updates } as EnhancedContentBlock : block
       );
 
       updatedSteps[stepIndex] = {
@@ -169,7 +175,7 @@ export const StepProvider = ({ children }: { children: ReactNode }) => {
       blocks.splice(toIndex, 0, movedBlock);
       
       // Update order property
-      const reorderedBlocks = blocks.map((block, index) => ({
+      const reorderedBlocks: EnhancedContentBlock[] = blocks.map((block, index) => ({
         ...block,
         order: index
       }));
@@ -320,4 +326,4 @@ export const useStepContext = () => {
     throw new Error("useStepContext must be used within a StepProvider");
   }
   return context;
-}; 
+};
