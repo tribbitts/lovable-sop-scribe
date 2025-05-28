@@ -1,10 +1,12 @@
-
 import React from "react";
 import { InteractiveChecklistBlock } from "./InteractiveChecklistBlock";
 import { SimpleTableBlock } from "./SimpleTableBlock";
 import { AccordionBlock } from "./AccordionBlock";
 import { EnhancedAlertBlock } from "./EnhancedAlertBlock";
-import { EnhancedContentBlock } from "@/types/enhanced-content";
+import DecisionTreeBlock from "./DecisionTreeBlock";
+import EmbedContentBlock from "./EmbedContentBlock";
+import CodeContentBlock from "./CodeContentBlock";
+import type { EnhancedContentBlock } from "@/types/enhanced-content";
 import { Card, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -15,12 +17,14 @@ interface ContentBlockRendererProps {
   blocks: EnhancedContentBlock[];
   isEditing?: boolean;
   onChange?: (blocks: EnhancedContentBlock[]) => void;
+  availableSteps?: Array<{ id: string; title: string }>; // For decision tree navigation
 }
 
 export const ContentBlockRenderer: React.FC<ContentBlockRendererProps> = ({
   blocks,
   isEditing = false,
-  onChange
+  onChange,
+  availableSteps = []
 }) => {
   const updateBlock = (index: number, updatedBlock: EnhancedContentBlock) => {
     if (!onChange) return;
@@ -140,6 +144,37 @@ export const ContentBlockRenderer: React.FC<ContentBlockRendererProps> = ({
           case 'alert':
             return (
               <EnhancedAlertBlock
+                key={block.id}
+                block={block}
+                onChange={(updated) => updateBlock(index, updated)}
+                {...commonProps}
+              />
+            );
+
+          case 'decision-tree':
+            return (
+              <DecisionTreeBlock
+                key={block.id}
+                block={block}
+                onChange={(updated) => updateBlock(index, updated)}
+                availableSteps={availableSteps}
+                {...commonProps}
+              />
+            );
+
+          case 'embed':
+            return (
+              <EmbedContentBlock
+                key={block.id}
+                block={block}
+                onChange={(updated) => updateBlock(index, updated)}
+                {...commonProps}
+              />
+            );
+
+          case 'code':
+            return (
+              <CodeContentBlock
                 key={block.id}
                 block={block}
                 onChange={(updated) => updateBlock(index, updated)}

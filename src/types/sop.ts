@@ -1,6 +1,35 @@
 // Training Module Creator - Enhanced Types
 // Sync test: Updated for Lovable platform integration
-export type CalloutShape = "circle" | "rectangle" | "arrow" | "number";
+export type CalloutShape = "circle" | "rectangle" | "arrow" | "number" | "blur" | "magnifier" | "oval" | "polygon" | "freehand";
+
+export interface AdvancedCalloutStyle {
+  fillColor?: string;
+  borderColor?: string;
+  borderWidth?: number;
+  opacity?: number;
+  fontFamily?: string;
+  fontSize?: number;
+  fontColor?: string;
+}
+
+export interface BlurCalloutData {
+  intensity?: number; // 1-10, default 5
+  type?: "blur" | "pixelate"; // blur or pixelation effect
+}
+
+export interface MagnifierCalloutData {
+  zoomLevel?: number; // 1.5-5x, default 2x
+  showBorder?: boolean;
+}
+
+export interface PolygonCalloutData {
+  sides?: number; // 3-12, default 6
+}
+
+export interface FreehandCalloutData {
+  path?: string; // SVG path data
+  strokeWidth?: number;
+}
 
 export interface Callout {
   id: string;
@@ -13,6 +42,15 @@ export interface Callout {
   number?: number; // For numbered callouts
   text?: string; // For text callouts
   revealText?: string; // For click-to-reveal functionality on numbered callouts
+  
+  // Advanced styling options
+  style?: AdvancedCalloutStyle;
+  
+  // Shape-specific data
+  blurData?: BlurCalloutData;
+  magnifierData?: MagnifierCalloutData;
+  polygonData?: PolygonCalloutData;
+  freehandData?: FreehandCalloutData;
 }
 
 export interface ScreenshotData {
