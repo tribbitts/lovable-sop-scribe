@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from 'react';
 import { toast } from '@/hooks/use-toast';
 
@@ -15,8 +16,7 @@ export interface FileUploadState {
 }
 
 /**
- * Reusable hook for file upload functionality
- * Eliminates code duplication across screenshot upload components
+ * Fixed file upload hook with proper error handling
  */
 export const useFileUpload = (options: FileUploadOptions = {}) => {
   const {
@@ -33,6 +33,8 @@ export const useFileUpload = (options: FileUploadOptions = {}) => {
   });
 
   const validateFile = useCallback((file: File): string | null => {
+    if (!file) return 'No file selected';
+
     // Check file type
     const isValidType = allowedTypes.some(type => {
       if (type === 'image/*') return file.type.startsWith('image/');
@@ -55,14 +57,13 @@ export const useFileUpload = (options: FileUploadOptions = {}) => {
   const uploadFile = useCallback((file: File) => {
     const validationError = validateFile(file);
     if (validationError) {
-      const errorMessage = validationError;
-      setState(prev => ({ ...prev, error: errorMessage }));
+      setState(prev => ({ ...prev, error: validationError }));
       toast({
         title: "Upload Failed",
-        description: errorMessage,
+        description: validationError,
         variant: "destructive"
       });
-      onError?.(errorMessage);
+      onError?.(validationError);
       return;
     }
 
@@ -78,16 +79,16 @@ export const useFileUpload = (options: FileUploadOptions = {}) => {
     };
 
     reader.onload = (event) => {
-      const result = event.target?.result as string;
-      if (result) {
-        setState(prev => ({ ...prev, isUploading: false, progress: 100 }));
-        onSuccess?.(result, file);
-        toast({
-          title: "Upload Successful",
-          description: "File has been uploaded successfully.",
-        });
-      } else {
-        const errorMessage = "Failed to read the file";
+      try {
+        const result = event.target?.result as string;
+        if (result) {
+          setState(prev => ({ ...prev, isUploading: false, progress: 100 }));
+          onSuccess?.(result, file);
+        } else {
+          throw new Error("Failed to read the file");
+        }
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : "Failed to read the file";
         setState(prev => ({ ...prev, isUploading: false, error: errorMessage }));
         toast({
           title: "Upload Failed",
@@ -135,4 +136,4 @@ export const useFileUpload = (options: FileUploadOptions = {}) => {
     handleFileChange,
     reset
   };
-}; 
+};

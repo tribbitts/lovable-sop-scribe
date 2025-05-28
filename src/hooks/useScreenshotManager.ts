@@ -1,3 +1,4 @@
+
 import { useCallback } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { ScreenshotData, SopStep } from '@/types/sop';
@@ -10,22 +11,20 @@ export interface ScreenshotManagerOptions {
 }
 
 /**
- * Unified screenshot management hook
- * Consolidates all screenshot operations and eliminates legacy/new system complexity
+ * Simplified screenshot management hook
+ * Fixes TypeScript errors and integration issues
  */
 export const useScreenshotManager = ({ stepId, step, onStepChange }: ScreenshotManagerOptions) => {
   
-  // Get all screenshots (unified approach)
+  // Get all screenshots safely
   const getAllScreenshots = useCallback((): ScreenshotData[] => {
     const screenshots: ScreenshotData[] = [];
     
-    // Add legacy screenshot if it exists
     if (step.screenshot) {
       screenshots.push(step.screenshot);
     }
     
-    // Add new screenshots array
-    if (step.screenshots && step.screenshots.length > 0) {
+    if (step.screenshots && Array.isArray(step.screenshots)) {
       screenshots.push(...step.screenshots);
     }
     
@@ -44,18 +43,23 @@ export const useScreenshotManager = ({ stepId, step, onStepChange }: ScreenshotM
 
   // Add a new screenshot
   const addScreenshot = useCallback((dataUrl: string, title?: string) => {
-    if (!onStepChange) return;
+    if (!onStepChange) {
+      console.warn('onStepChange callback not provided to useScreenshotManager');
+      return;
+    }
 
-    const newScreenshot = createScreenshot(dataUrl, title);
-    const existingScreenshots = getAllScreenshots();
+    try {
+      const newScreenshot = createScreenshot(dataUrl, title);
+      const existingScreenshots = getAllScreenshots();
 
-    if (existingScreenshots.length === 0) {
-      // First screenshot - set as main screenshot for backward compatibility
-      onStepChange(stepId, "screenshot", newScreenshot);
-    } else {
-      // Additional screenshots - add to screenshots array
-      const updatedScreenshots = [...(step.screenshots || []), newScreenshot];
-      onStepChange(stepId, "screenshots", updatedScreenshots);
+      if (existingScreenshots.length === 0) {
+        onStepChange(stepId, "screenshot", newScreenshot);
+      } else {
+        const updatedScreenshots = [...(step.screenshots || []), newScreenshot];
+        onStepChange(stepId, "screenshots", updatedScreenshots);
+      }
+    } catch (error) {
+      console.error('Error adding screenshot:', error);
     }
   }, [stepId, onStepChange, createScreenshot, getAllScreenshots, step.screenshots]);
 
@@ -63,18 +67,20 @@ export const useScreenshotManager = ({ stepId, step, onStepChange }: ScreenshotM
   const updateScreenshot = useCallback((screenshotId: string, updates: Partial<ScreenshotData>) => {
     if (!onStepChange) return;
 
-    // Update legacy screenshot
-    if (step.screenshot?.id === screenshotId) {
-      onStepChange(stepId, "screenshot", { ...step.screenshot, ...updates });
-      return;
-    }
+    try {
+      if (step.screenshot?.id === screenshotId) {
+        onStepChange(stepId, "screenshot", { ...step.screenshot, ...updates });
+        return;
+      }
 
-    // Update in screenshots array
-    if (step.screenshots) {
-      const updatedScreenshots = step.screenshots.map(screenshot =>
-        screenshot.id === screenshotId ? { ...screenshot, ...updates } : screenshot
-      );
-      onStepChange(stepId, "screenshots", updatedScreenshots);
+      if (step.screenshots && Array.isArray(step.screenshots)) {
+        const updatedScreenshots = step.screenshots.map(screenshot =>
+          screenshot.id === screenshotId ? { ...screenshot, ...updates } : screenshot
+        );
+        onStepChange(stepId, "screenshots", updatedScreenshots);
+      }
+    } catch (error) {
+      console.error('Error updating screenshot:', error);
     }
   }, [stepId, step.screenshot, step.screenshots, onStepChange]);
 
@@ -82,48 +88,53 @@ export const useScreenshotManager = ({ stepId, step, onStepChange }: ScreenshotM
   const deleteScreenshot = useCallback((screenshotId: string) => {
     if (!onStepChange) return;
 
-    const allScreenshots = getAllScreenshots();
-    if (allScreenshots.length <= 1) {
-      throw new Error("Cannot delete the last screenshot. Each step must have at least one screenshot.");
-    }
+    try {
+      const allScreenshots = getAllScreenshots();
+      if (allScreenshots.length <= 1) {
+        console.warn("Cannot delete the last screenshot");
+        return;
+      }
 
-    // Delete legacy screenshot
-    if (step.screenshot?.id === screenshotId) {
-      onStepChange(stepId, "screenshot", null);
-      return;
-    }
+      if (step.screenshot?.id === screenshotId) {
+        onStepChange(stepId, "screenshot", null);
+        return;
+      }
 
-    // Delete from screenshots array
-    if (step.screenshots) {
-      const updatedScreenshots = step.screenshots.filter(screenshot => screenshot.id !== screenshotId);
-      onStepChange(stepId, "screenshots", updatedScreenshots);
+      if (step.screenshots && Array.isArray(step.screenshots)) {
+        const updatedScreenshots = step.screenshots.filter(screenshot => screenshot.id !== screenshotId);
+        onStepChange(stepId, "screenshots", updatedScreenshots);
+      }
+    } catch (error) {
+      console.error('Error deleting screenshot:', error);
     }
   }, [stepId, step.screenshot, step.screenshots, onStepChange, getAllScreenshots]);
 
-  // Replace a screenshot (used for editing/cropping)
+  // Replace a screenshot
   const replaceScreenshot = useCallback((screenshotId: string, newDataUrl: string) => {
     updateScreenshot(screenshotId, { dataUrl: newDataUrl });
   }, [updateScreenshot]);
 
-  // File upload integration
+  // File upload integration with proper error handling
   const fileUpload = useFileUpload({
     onSuccess: (dataUrl, file) => {
-      addScreenshot(dataUrl, file.name.split('.')[0]);
+      try {
+        addScreenshot(dataUrl, file.name.split('.')[0]);
+      } catch (error) {
+        console.error('Error handling file upload success:', error);
+      }
+    },
+    onError: (error) => {
+      console.error('File upload error:', error);
     }
   });
 
   return {
-    // Data
     screenshots: getAllScreenshots(),
     hasScreenshots: getAllScreenshots().length > 0,
-    
-    // Actions
     addScreenshot,
     updateScreenshot,
     deleteScreenshot,
     replaceScreenshot,
-    
-    // File upload
     ...fileUpload
   };
-}; 
+};

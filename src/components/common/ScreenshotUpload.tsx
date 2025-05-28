@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,8 +14,7 @@ export interface ScreenshotUploadProps {
 }
 
 /**
- * Unified screenshot upload component
- * Replaces all duplicated upload logic across the application
+ * Fixed screenshot upload component with proper file handling
  */
 export const ScreenshotUpload: React.FC<ScreenshotUploadProps> = ({
   onUpload,
@@ -24,7 +24,10 @@ export const ScreenshotUpload: React.FC<ScreenshotUploadProps> = ({
   children
 }) => {
   const { isUploading, progress, handleFileChange } = useFileUpload({
-    onSuccess: onUpload
+    onSuccess: onUpload,
+    onError: (error) => {
+      console.error('Screenshot upload error:', error);
+    }
   });
 
   if (variant === 'dropzone') {
@@ -54,6 +57,7 @@ export const ScreenshotUpload: React.FC<ScreenshotUploadProps> = ({
               variant="outline"
               className="mt-4 border-zinc-700 text-zinc-300 hover:bg-zinc-800"
               disabled={disabled || isUploading}
+              type="button"
             >
               {isUploading ? (
                 <>
@@ -80,46 +84,14 @@ export const ScreenshotUpload: React.FC<ScreenshotUploadProps> = ({
     );
   }
 
-  if (variant === 'inline') {
-    return (
-      <div className={`relative ${className}`}>
-        {children || (
-          <Button
-            variant="outline"
-            className="border-zinc-600 text-zinc-300 hover:bg-zinc-700"
-            disabled={disabled || isUploading}
-          >
-            {isUploading ? (
-              <>
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                Uploading...
-              </>
-            ) : (
-              <>
-                <Upload className="h-4 w-4 mr-2" />
-                Upload Screenshot
-              </>
-            )}
-          </Button>
-        )}
-        <Input
-          type="file"
-          accept="image/*"
-          className="absolute inset-0 opacity-0 cursor-pointer"
-          onChange={handleFileChange}
-          disabled={disabled || isUploading}
-        />
-      </div>
-    );
-  }
-
-  // Default button variant
+  // Default button variant and inline variant
   return (
     <div className={`relative ${className}`}>
       <Button
         variant="outline"
         className="border-zinc-700 text-zinc-300 hover:bg-zinc-800"
         disabled={disabled || isUploading}
+        type="button"
       >
         {isUploading ? (
           <>
@@ -142,4 +114,4 @@ export const ScreenshotUpload: React.FC<ScreenshotUploadProps> = ({
       />
     </div>
   );
-}; 
+};
