@@ -1,4 +1,3 @@
-
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { HelmetProvider } from "react-helmet-async";
@@ -15,6 +14,14 @@ import CookiePolicy from "./pages/CookiePolicy";
 import NotFound from "./pages/NotFound";
 import AppLayout from "./layouts/AppLayout";
 import { useAuth } from "./context/AuthContext";
+
+// Enhanced Feature Test Pages
+import AdvancedCalloutsTest from "./pages/AdvancedCalloutsTest";
+import EnhancedExportTest from "./pages/EnhancedExportTest";
+import LivingSOPTest from "./pages/LivingSOPTest";
+import TemplateMarketplaceTest from "./pages/TemplateMarketplaceTest";
+import TemplateBuilderTest from "./pages/TemplateBuilderTest";
+import FeaturesDashboard from "./pages/FeaturesDashboard";
 
 const queryClient = new QueryClient();
 
@@ -62,6 +69,57 @@ function App() {
                     </ProtectedRoute>
                   } 
                 />
+                
+                {/* Enhanced Feature Test Routes */}
+                <Route 
+                  path="/test/features-dashboard" 
+                  element={
+                    <ProtectedRoute>
+                      <FeaturesDashboard />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/test/advanced-callouts" 
+                  element={
+                    <ProtectedRoute>
+                      <AdvancedCalloutsTest />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/test/enhanced-export" 
+                  element={
+                    <ProtectedRoute>
+                      <EnhancedExportTest />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/test/living-sop" 
+                  element={
+                    <ProtectedRoute>
+                      <LivingSOPTest />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/test/template-marketplace" 
+                  element={
+                    <ProtectedRoute>
+                      <TemplateMarketplaceTest />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/test/template-builder" 
+                  element={
+                    <ProtectedRoute>
+                      <TemplateBuilderTest />
+                    </ProtectedRoute>
+                  } 
+                />
+                
                 <Route path="*" element={<NotFound />} />
               </Routes>
               <Toaster />

@@ -17,14 +17,17 @@ import {
   ChevronRight,
   Trash2,
   Download,
-  ArrowRight
+  ArrowRight,
+  Sparkles
 } from "lucide-react";
 import StepCard from "@/components/step-editor/StepCard";
 import ExportPanel from "@/components/step-editor/ExportPanel";
 import { useSopContext } from "@/context/SopContext";
 import { SopStep } from "@/types/sop";
+import { useNavigate } from "react-router-dom";
 
 const SopCreator: React.FC = () => {
+  const navigate = useNavigate();
   const {
     sopDocument,
     addStep,
@@ -169,6 +172,15 @@ const SopCreator: React.FC = () => {
           </div>
           
           <div className="flex items-center gap-3">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => navigate("/test/features-dashboard")}
+              className="text-zinc-300 border-zinc-700 hover:text-white hover:bg-zinc-800"
+            >
+              <Sparkles className="h-4 w-4 mr-2" />
+              Test Enhanced Features
+            </Button>
             <Button
               variant="outline"
               size="sm"

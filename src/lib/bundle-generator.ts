@@ -218,54 +218,11 @@ async function generateHtmlForBundle(sopDocument: SopDocument, options: HtmlExpo
 }
 
 async function createStandaloneHtml(sopDocument: SopDocument, options: HtmlExportOptions): Promise<string> {
-  // This is a simplified implementation
-  // In a real implementation, you'd extract the HTML generation logic from exportSopAsHtml
+  // Import the business template for consistent beautiful styling
+  const { generateBusinessHtmlTemplate } = await import("./html-export/business-template");
   
-  const title = sopDocument.title || "Training Module";
-  const date = sopDocument.date || new Date().toLocaleDateString();
-  
-  const stepsHtml = sopDocument.steps.map((step, index) => {
-    const stepNumber = index + 1;
-    const screenshotHtml = step.screenshots && step.screenshots.length > 0
-      ? step.screenshots.map(screenshot => `<img src="${screenshot.dataUrl}" alt="Step ${stepNumber} Screenshot" />`).join('')
-      : step.screenshot ? `<img src="${step.screenshot.dataUrl}" alt="Step ${stepNumber} Screenshot" />` : '';
-    
-    return `
-      <div class="training-step" id="step-${stepNumber}">
-        <h2>Step ${stepNumber}: ${step.title || `Step ${stepNumber}`}</h2>
-        <p>${step.description}</p>
-        ${screenshotHtml}
-        ${step.detailedInstructions ? `<div class="instructions">${step.detailedInstructions}</div>` : ''}
-        ${step.notes ? `<div class="notes">${step.notes}</div>` : ''}
-      </div>
-    `;
-  }).join('');
-  
-  return `
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-      <meta charset="UTF-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>${title}</title>
-      <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; margin: 40px; }
-        .training-step { margin-bottom: 40px; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px; }
-        img { max-width: 100%; height: auto; margin: 10px 0; border-radius: 4px; }
-        h2 { color: #007AFF; }
-        .instructions, .notes { margin-top: 15px; padding: 10px; background: #f8f9fa; border-radius: 4px; }
-      </style>
-    </head>
-    <body>
-      <header>
-        <h1>${title}</h1>
-        <p>Created: ${date}</p>
-        ${sopDocument.companyName ? `<p>Organization: ${sopDocument.companyName}</p>` : ''}
-      </header>
-      <main>${stepsHtml}</main>
-    </body>
-    </html>
-  `;
+  // Use the business template for consistent styling
+  return generateBusinessHtmlTemplate(sopDocument, options);
 }
 
 async function addBundleResources(zip: JSZip, sopDocument: SopDocument) {
