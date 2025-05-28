@@ -1,4 +1,3 @@
-
 import { SopDocument } from "@/types/sop";
 import { generateEnhancedHtmlTemplate } from "./enhanced-template";
 import { generateStandardHtmlTemplate } from "./standard-template";
@@ -14,6 +13,7 @@ export interface HtmlExportOptions {
   feedback?: FeedbackOptions;
   includeFeedback?: boolean;
   feedbackEmail?: string;
+  customization?: any;
 }
 
 export async function exportSopAsHtml(

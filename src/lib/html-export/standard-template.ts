@@ -78,8 +78,6 @@ export function generateStandardHtmlTemplate(
     selectedTheme = exportThemes.find(theme => theme.colors.primary.toLowerCase() === primaryColor.toLowerCase()) || exportThemes[0];
   }
   
-  console.log('🎨 Using theme:', selectedTheme.name, 'with primary color:', primaryColor);
-  
   const title = sopDocument.title || "Standard Operating Procedure";
   const companyName = sopDocument.companyName || "Your Organization";
   const currentYear = new Date().getFullYear();
@@ -125,16 +123,18 @@ export function generateStandardHtmlTemplate(
                                       top: ${topPos}%;
                                       width: ${Math.max(width, 3)}%;
                                       height: ${Math.max(height, 3)}%;
-                                      border: 3px solid ${callout.color || '#FF6B35'};
-                                      background-color: ${callout.color || '#FF6B35'}20;
+                                      border: 2px solid ${callout.color || '#FF6B35'};
+                                      background-color: ${callout.color || '#FF6B35'}40;
                                       border-radius: 50%;
-                                      transform: translate(-50%, -50%);
                                       pointer-events: none;
                                       z-index: 10;
-                                      min-width: 30px;
-                                      min-height: 30px;
+                                      min-width: 40px;
+                                      min-height: 40px;
                                       aspect-ratio: 1 / 1;
-                                    "></div>
+                                      display: flex;
+                                      align-items: center;
+                                      justify-content: center;
+                                    ">${callout.number ? `<span style="color: white; font-weight: bold; font-size: ${Math.max(14, width * 2)}px;">${callout.number}</span>` : ''}</div>
                                   `;
                                 } else if (callout.shape === 'number') {
                                   return `
@@ -145,20 +145,19 @@ export function generateStandardHtmlTemplate(
                                       width: ${Math.max(width, 4)}%;
                                       height: ${Math.max(height, 4)}%;
                                       background: ${callout.color || '#FF6B35'};
-                                      border: 2px solid white;
+                                      border: 2px solid ${callout.color || '#FF6B35'};
                                       border-radius: 50%;
-                                      transform: translate(-50%, -50%);
                                       pointer-events: none;
                                       z-index: 10;
-                                      min-width: 35px;
-                                      min-height: 35px;
+                                      min-width: 40px;
+                                      min-height: 40px;
                                       aspect-ratio: 1 / 1;
                                       display: flex;
                                       align-items: center;
                                       justify-content: center;
                                       font-weight: bold;
                                       color: white;
-                                      font-size: 16px;
+                                      font-size: 14px;
                                       box-shadow: 0 2px 8px rgba(0,0,0,0.3);
                                     ">${callout.number || calloutNumber}</div>
                                   `;
@@ -170,21 +169,20 @@ export function generateStandardHtmlTemplate(
                                       top: ${topPos}%;
                                       width: ${Math.max(width, 5)}%;
                                       height: ${Math.max(height, 3)}%;
-                                      border: 3px solid ${callout.color || '#FF6B35'};
-                                      background-color: ${callout.color || '#FF6B35'}20;
-                                      transform: translate(-50%, -50%);
+                                      border: 2px solid ${callout.color || '#FF6B35'};
+                                      background-color: ${callout.color || '#FF6B35'}40;
                                       pointer-events: none;
                                       z-index: 10;
                                       min-width: 40px;
                                       min-height: 25px;
-                                      border-radius: 4px;
+                                      border-radius: 0;
+                                      display: flex;
+                                      align-items: center;
+                                      justify-content: center;
                                       ${callout.text ? `
-                                        display: flex;
-                                        align-items: center;
-                                        justify-content: center;
                                         font-size: 12px;
-                                        color: ${callout.color || '#FF6B35'};
-                                        font-weight: bold;
+                                        color: white;
+                                        font-weight: 500;
                                         text-align: center;
                                         padding: 2px;
                                       ` : ''}
@@ -198,23 +196,22 @@ export function generateStandardHtmlTemplate(
                                       top: ${topPos}%;
                                       width: ${Math.max(width, 6)}%;
                                       height: ${Math.max(height, 3)}%;
-                                      transform: translate(-50%, -50%);
                                       pointer-events: none;
                                       z-index: 10;
-                                      min-width: 50px;
+                                      min-width: 40px;
                                       min-height: 25px;
+                                      display: flex;
+                                      align-items: center;
+                                      justify-content: center;
                                     ">
-                                      <svg viewBox="0 0 100 40" style="width: 100%; height: 100%;">
-                                        <defs>
-                                          <marker id="arrowhead-${calloutIndex}" markerWidth="10" markerHeight="7" 
-                                                  refX="9" refY="3.5" orient="auto">
-                                            <polygon points="0 0, 10 3.5, 0 7" fill="${callout.color || '#FF6B35'}" />
-                                          </marker>
-                                        </defs>
-                                        <line x1="10" y1="20" x2="85" y2="20" 
-                                              stroke="${callout.color || '#FF6B35'}" 
-                                              stroke-width="3" 
-                                              marker-end="url(#arrowhead-${calloutIndex})" />
+                                      <svg width="100%" height="100%" viewBox="0 0 100 50" fill="none" style="width: 100%; height: 100%;">
+                                        <polygon 
+                                          points="10,15 65,15 65,5 95,25 65,45 65,35 10,35" 
+                                          fill="${callout.color || '#FF6B35'}"
+                                          stroke="${callout.color || '#FF6B35'}"
+                                          stroke-width="2"
+                                          stroke-linejoin="round"
+                                        />
                                       </svg>
                                     </div>
                                   `;
@@ -231,7 +228,6 @@ export function generateStandardHtmlTemplate(
                                     border: 3px solid ${callout.color || '#FF6B35'};
                                     background-color: ${callout.color || '#FF6B35'}20;
                                     border-radius: 50%;
-                                    transform: translate(-50%, -50%);
                                     pointer-events: none;
                                     z-index: 10;
                                     min-width: 30px;
@@ -272,16 +268,18 @@ export function generateStandardHtmlTemplate(
                                           top: ${topPos}%;
                                           width: ${Math.max(width, 3)}%;
                                           height: ${Math.max(height, 3)}%;
-                                          border: 3px solid ${callout.color || '#FF6B35'};
-                                          background-color: ${callout.color || '#FF6B35'}20;
+                                          border: 2px solid ${callout.color || '#FF6B35'};
+                                          background-color: ${callout.color || '#FF6B35'}40;
                                           border-radius: 50%;
-                                          transform: translate(-50%, -50%);
                                           pointer-events: none;
                                           z-index: 10;
-                                          min-width: 30px;
-                                          min-height: 30px;
+                                          min-width: 40px;
+                                          min-height: 40px;
                                           aspect-ratio: 1 / 1;
-                                        "></div>
+                                          display: flex;
+                                          align-items: center;
+                                          justify-content: center;
+                                        ">${callout.number ? `<span style="color: white; font-weight: bold; font-size: ${Math.max(14, width * 2)}px;">${callout.number}</span>` : ''}</div>
                                       `;
                                     } else if (callout.shape === 'number') {
                                       return `
@@ -292,20 +290,19 @@ export function generateStandardHtmlTemplate(
                                           width: ${Math.max(width, 4)}%;
                                           height: ${Math.max(height, 4)}%;
                                           background: ${callout.color || '#FF6B35'};
-                                          border: 2px solid white;
+                                          border: 2px solid ${callout.color || '#FF6B35'};
                                           border-radius: 50%;
-                                          transform: translate(-50%, -50%);
                                           pointer-events: none;
                                           z-index: 10;
-                                          min-width: 35px;
-                                          min-height: 35px;
+                                          min-width: 40px;
+                                          min-height: 40px;
                                           aspect-ratio: 1 / 1;
                                           display: flex;
                                           align-items: center;
                                           justify-content: center;
                                           font-weight: bold;
                                           color: white;
-                                          font-size: 16px;
+                                          font-size: 14px;
                                           box-shadow: 0 2px 8px rgba(0,0,0,0.3);
                                         ">${callout.number || calloutNumber}</div>
                                       `;
@@ -317,21 +314,20 @@ export function generateStandardHtmlTemplate(
                                           top: ${topPos}%;
                                           width: ${Math.max(width, 5)}%;
                                           height: ${Math.max(height, 3)}%;
-                                          border: 3px solid ${callout.color || '#FF6B35'};
-                                          background-color: ${callout.color || '#FF6B35'}20;
-                                          transform: translate(-50%, -50%);
+                                          border: 2px solid ${callout.color || '#FF6B35'};
+                                          background-color: ${callout.color || '#FF6B35'}40;
                                           pointer-events: none;
                                           z-index: 10;
                                           min-width: 40px;
                                           min-height: 25px;
-                                          border-radius: 4px;
+                                          border-radius: 0;
+                                          display: flex;
+                                          align-items: center;
+                                          justify-content: center;
                                           ${callout.text ? `
-                                            display: flex;
-                                            align-items: center;
-                                            justify-content: center;
                                             font-size: 12px;
-                                            color: ${callout.color || '#FF6B35'};
-                                            font-weight: bold;
+                                            color: white;
+                                            font-weight: 500;
                                             text-align: center;
                                             padding: 2px;
                                           ` : ''}
@@ -345,23 +341,22 @@ export function generateStandardHtmlTemplate(
                                           top: ${topPos}%;
                                           width: ${Math.max(width, 6)}%;
                                           height: ${Math.max(height, 3)}%;
-                                          transform: translate(-50%, -50%);
                                           pointer-events: none;
                                           z-index: 10;
-                                          min-width: 50px;
+                                          min-width: 40px;
                                           min-height: 25px;
+                                          display: flex;
+                                          align-items: center;
+                                          justify-content: center;
                                         ">
-                                          <svg viewBox="0 0 100 40" style="width: 100%; height: 100%;">
-                                            <defs>
-                                              <marker id="arrowhead-${imgIndex}-${calloutIndex}" markerWidth="10" markerHeight="7" 
-                                                      refX="9" refY="3.5" orient="auto">
-                                                <polygon points="0 0, 10 3.5, 0 7" fill="${callout.color || '#FF6B35'}" />
-                                              </marker>
-                                            </defs>
-                                            <line x1="10" y1="20" x2="85" y2="20" 
-                                                  stroke="${callout.color || '#FF6B35'}" 
-                                                  stroke-width="3" 
-                                                  marker-end="url(#arrowhead-${imgIndex}-${calloutIndex})" />
+                                          <svg width="100%" height="100%" viewBox="0 0 100 50" fill="none" style="width: 100%; height: 100%;">
+                                            <polygon 
+                                              points="10,15 65,15 65,5 95,25 65,45 65,35 10,35" 
+                                              fill="${callout.color || '#FF6B35'}"
+                                              stroke="${callout.color || '#FF6B35'}"
+                                              stroke-width="2"
+                                              stroke-linejoin="round"
+                                            />
                                           </svg>
                                         </div>
                                       `;
@@ -378,7 +373,6 @@ export function generateStandardHtmlTemplate(
                                         border: 3px solid ${callout.color || '#FF6B35'};
                                         background-color: ${callout.color || '#FF6B35'}20;
                                         border-radius: 50%;
-                                        transform: translate(-50%, -50%);
                                         pointer-events: none;
                                         z-index: 10;
                                         min-width: 30px;
@@ -600,22 +594,22 @@ export function generateStandardHtmlTemplate(
         
         .header-center {
             text-align: center;
-            padding: 20px 40px 40px;
+            padding: 15px 40px 25px;
             ${selectedTheme.styles.headerGradient ? `background: ${selectedTheme.styles.headerGradient};` : ''}
         }
         
         .title {
-            font-size: 3rem;
+            font-size: 2.5rem;
             font-weight: 800;
             color: ${selectedTheme.styles.headerGradient ? 'white' : 'var(--text-color)'};
-            margin-bottom: 16px;
+            margin-bottom: 12px;
             letter-spacing: -0.02em;
         }
         
         .subtitle {
-            font-size: 1.25rem;
+            font-size: 1.1rem;
             color: ${selectedTheme.styles.headerGradient ? 'rgba(255,255,255,0.9)' : '#666'};
-            margin-bottom: 24px;
+            margin-bottom: 0;
             font-weight: 400;
         }
         
@@ -985,15 +979,8 @@ export function generateStandardHtmlTemplate(
         /* Print-specific styles for PDF generation */
         @media print {
             @page {
-                margin: 0.75in;
+                margin: 0.5in;
                 size: letter;
-                /* Disable browser headers/footers */
-                @top-left { content: ""; }
-                @top-center { content: ""; }
-                @top-right { content: ""; }
-                @bottom-left { content: ""; }
-                @bottom-center { content: ""; }
-                @bottom-right { content: ""; }
             }
             
             * {
@@ -1004,28 +991,85 @@ export function generateStandardHtmlTemplate(
             body {
                 background: white !important;
                 margin: 0 !important;
-                padding: 0 !important;
+                padding: 20px !important;
                 max-width: none !important;
+                font-size: 14px !important;
             }
             
             .header {
                 page-break-inside: avoid !important;
-                margin-bottom: 30px !important;
+                margin-bottom: 25px !important;
                 background: white !important;
-                border-bottom: 3px solid ${selectedTheme.colors.primary} !important;
                 box-shadow: none !important;
+                border: 1px solid #e0e0e0 !important;
             }
             
             .header-top {
                 background: white !important;
+                padding: 20px 30px 15px !important;
                 -webkit-print-color-adjust: exact !important;
                 print-color-adjust: exact !important;
+                display: flex !important;
+                justify-content: space-between !important;
+                align-items: flex-start !important;
+            }
+            
+            .header-left {
+                text-align: left !important;
+                flex-shrink: 0 !important;
+            }
+            
+            .header-right {
+                text-align: right !important;
+                flex-shrink: 0 !important;
+                min-width: 150px !important;
+            }
+            
+            .company-name {
+                font-size: 18px !important;
+                font-weight: bold !important;
+                margin-bottom: 4px !important;
+            }
+            
+            .version {
+                font-size: 12px !important;
+                padding: 2px 8px !important;
+                border-radius: 12px !important;
+            }
+            
+            .document-date {
+                font-size: 14px !important;
+                font-weight: 500 !important;
+                margin-bottom: 2px !important;
+            }
+            
+            .last-revised {
+                font-size: 12px !important;
+            }
+            
+            .header-center {
+                padding: 12px 30px 20px !important;
+                background: ${selectedTheme.styles.headerGradient || `linear-gradient(135deg, ${selectedTheme.colors.primary}, ${selectedTheme.colors.accent})`} !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+            
+            .title {
+                font-size: 2.2rem !important;
+                margin-bottom: 10px !important;
+                color: ${selectedTheme.styles.headerGradient ? 'white' : 'var(--text-color)'} !important;
+            }
+            
+            .subtitle {
+                font-size: 1rem !important;
+                margin-bottom: 0 !important;
+                color: ${selectedTheme.styles.headerGradient ? 'rgba(255,255,255,0.9)' : '#666'} !important;
             }
             
             .step {
                 page-break-inside: avoid !important;
                 break-inside: avoid !important;
-                margin-bottom: 30px !important;
+                margin-bottom: 25px !important;
                 box-shadow: none !important;
                 border: 1px solid #e0e0e0 !important;
             }
@@ -1035,11 +1079,13 @@ export function generateStandardHtmlTemplate(
                 -webkit-print-color-adjust: exact !important;
                 print-color-adjust: exact !important;
                 color: white !important;
+                padding: 20px 30px !important;
             }
             
             .step-content {
                 background: white !important;
                 border-top: none !important;
+                padding: 25px 30px !important;
             }
             
             .step-screenshot {
@@ -1047,49 +1093,25 @@ export function generateStandardHtmlTemplate(
                 height: auto !important;
                 page-break-inside: avoid !important;
                 box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+                border-radius: var(--border-radius) !important;
             }
             
-            .callouts-list {
-                background: linear-gradient(135deg, #e8f5e8, #f0f8f0) !important;
+            .screenshot-wrapper {
+                border-radius: var(--border-radius) !important;
+                overflow: visible !important;
+                box-shadow: var(--shadow-style) !important;
+            }
+            
+            /* Ensure callouts print correctly */
+            .callout {
                 -webkit-print-color-adjust: exact !important;
                 print-color-adjust: exact !important;
+                opacity: 1 !important;
             }
             
-            /* Enhanced Content Blocks Print Styles */
-            .enhanced-content-block {
-                page-break-inside: avoid !important;
-                break-inside: avoid !important;
-                margin: 15px 0 !important;
-                -webkit-print-color-adjust: exact !important;
-                print-color-adjust: exact !important;
-            }
-            
-            .content-table {
-                page-break-inside: avoid !important;
-                break-inside: avoid !important;
-            }
-            
-            .content-table th {
-                background: ${selectedTheme.styles.headerGradient ? `linear-gradient(135deg, ${selectedTheme.colors.primary}15, ${selectedTheme.colors.accent}15)` : 'linear-gradient(135deg, ${selectedTheme.colors.primary}15, ${selectedTheme.colors.accent}15)'} !important;
-                -webkit-print-color-adjust: exact !important;
-                print-color-adjust: exact !important;
-            }
-            
-            .table-block,
-            .list-block,
-            .text-block,
-            .note-block,
-            .warning-block,
-            .detailed-instructions,
-            .notes-section,
-            .file-link-section {
-                -webkit-print-color-adjust: exact !important;
-                print-color-adjust: exact !important;
-            }
-            
-            .resource-link {
-                border: 2px solid ${selectedTheme.colors.primary} !important;
-                color: ${selectedTheme.colors.primary} !important;
+            .callout-number {
+                background: var(--primary-color) !important;
+                color: white !important;
                 -webkit-print-color-adjust: exact !important;
                 print-color-adjust: exact !important;
             }
@@ -1101,7 +1123,7 @@ export function generateStandardHtmlTemplate(
                 right: 0 !important;
                 background: white !important;
                 border-top: 2px solid ${selectedTheme.colors.primary} !important;
-                padding: 10px 0 !important;
+                padding: 8px 0 !important;
                 margin-top: 0 !important;
                 z-index: 1000 !important;
                 box-shadow: none !important;
@@ -1114,19 +1136,7 @@ export function generateStandardHtmlTemplate(
                 max-width: 100% !important;
                 margin: 0 auto !important;
                 padding: 0 20px !important;
-                position: relative !important;
-            }
-            
-            .footer-left {
-                position: absolute !important;
-                left: 20px !important;
-                text-align: left !important;
-            }
-            
-            .footer-right {
-                position: absolute !important;
-                right: 20px !important;
-                text-align: right !important;
+                font-size: 12px !important;
             }
         }
         
@@ -1165,6 +1175,29 @@ export function generateStandardHtmlTemplate(
             .footer-left,
             .footer-right {
                 position: relative;
+            }
+        }
+        
+        /* Print overrides for mobile styles */
+        @media print {
+            .header-top {
+                flex-direction: row !important;
+                gap: 0 !important;
+                text-align: initial !important;
+            }
+            
+            .header-left {
+                text-align: left !important;
+            }
+            
+            .header-right {
+                text-align: right !important;
+            }
+            
+            .footer-content {
+                flex-direction: row !important;
+                gap: 0 !important;
+                text-align: initial !important;
             }
         }
     </style>

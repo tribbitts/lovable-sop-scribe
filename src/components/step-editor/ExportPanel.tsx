@@ -55,10 +55,6 @@ const ExportPanel: React.FC<ExportPanelProps> = ({
     const theme = exportThemes.find(t => t.id === selectedTheme) || exportThemes[0];
     const font = fontOptions.find(f => f.id === selectedFont)?.value || fontOptions[0].value;
     
-    console.log('🎨 ExportPanel: Selected theme:', theme.name, theme.id);
-    console.log('🔤 ExportPanel: Selected font:', font);
-    console.log('🎯 ExportPanel: Theme colors:', theme.colors);
-    
     const htmlOptions: ExportOptions = {
       ...exportOptions,
       mode: 'standalone',
@@ -71,7 +67,6 @@ const ExportPanel: React.FC<ExportPanelProps> = ({
       }
     };
     
-    console.log('📤 ExportPanel: Final export options:', htmlOptions);
     onExport("html", htmlOptions);
   };
 
@@ -153,15 +148,15 @@ const ExportPanel: React.FC<ExportPanelProps> = ({
                     value={selectedTheme}
                     onValueChange={setSelectedTheme}
                   >
-                    <SelectTrigger className="h-10 bg-zinc-800 border-zinc-700 text-white text-sm">
+                    <SelectTrigger className="h-10 bg-zinc-800 border-zinc-700 text-white text-sm relative z-50">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent className="bg-zinc-800 border-zinc-700 max-h-[300px]">
+                    <SelectContent className="bg-zinc-800 border-zinc-700 max-h-[300px] z-[10000]">
                       {exportThemes.map((theme) => (
                         <SelectItem 
                           key={theme.id} 
                           value={theme.id} 
-                          className="text-white hover:bg-zinc-700"
+                          className="text-white hover:bg-zinc-700 cursor-pointer"
                         >
                           <div className="flex items-center gap-3">
                             <div 
@@ -186,15 +181,15 @@ const ExportPanel: React.FC<ExportPanelProps> = ({
                     value={selectedFont}
                     onValueChange={setSelectedFont}
                   >
-                    <SelectTrigger className="h-10 bg-zinc-800 border-zinc-700 text-white text-sm">
+                    <SelectTrigger className="h-10 bg-zinc-800 border-zinc-700 text-white text-sm relative z-50">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent className="bg-zinc-800 border-zinc-700 max-h-[300px]">
+                    <SelectContent className="bg-zinc-800 border-zinc-700 max-h-[300px] z-[10000]">
                       {fontOptions.map((font) => (
                         <SelectItem 
                           key={font.id} 
                           value={font.id} 
-                          className="text-white hover:bg-zinc-700"
+                          className="text-white hover:bg-zinc-700 cursor-pointer"
                         >
                           <div>
                             <div className="text-sm font-medium">{font.name}</div>
@@ -258,13 +253,13 @@ const ExportPanel: React.FC<ExportPanelProps> = ({
                       }
                     }))}
                   >
-                    <SelectTrigger className="h-8 bg-zinc-800 border-zinc-700 text-white text-xs">
+                    <SelectTrigger className="h-8 bg-zinc-800 border-zinc-700 text-white text-xs relative z-50">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent className="bg-zinc-800 border-zinc-700">
-                      <SelectItem value="standard" className="text-white hover:bg-zinc-700 text-xs">Standard (Balanced)</SelectItem>
-                      <SelectItem value="compact" className="text-white hover:bg-zinc-700 text-xs">Compact (Space-efficient)</SelectItem>
-                      <SelectItem value="spacious" className="text-white hover:bg-zinc-700 text-xs">Spacious (Generous spacing)</SelectItem>
+                    <SelectContent className="bg-zinc-800 border-zinc-700 z-[10000]">
+                      <SelectItem value="standard" className="text-white hover:bg-zinc-700 text-xs cursor-pointer">Standard (Balanced)</SelectItem>
+                      <SelectItem value="compact" className="text-white hover:bg-zinc-700 text-xs cursor-pointer">Compact (Space-efficient)</SelectItem>
+                      <SelectItem value="spacious" className="text-white hover:bg-zinc-700 text-xs cursor-pointer">Spacious (Generous spacing)</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
