@@ -38,6 +38,9 @@ const CalloutOverlay: React.FC<CalloutOverlayProps> = ({
   const [activeReveal, setActiveReveal] = useState<string | null>(null);
   const [revealPosition, setRevealPosition] = useState({ x: 0, y: 0 });
   
+  // Hover preview for callout placement
+  const [hoverPosition, setHoverPosition] = useState<{ x: number; y: number } | null>(null);
+  
   const overlayRef = useRef<HTMLDivElement>(null);
 
   const colors = [
@@ -68,24 +71,52 @@ const CalloutOverlay: React.FC<CalloutOverlayProps> = ({
   const handleOverlayClick = useCallback((event: React.MouseEvent<HTMLDivElement>) => {
     if (!isEditing || !isAddingCallout || !overlayRef.current || !onCalloutAdd) return;
 
+    // Prevent the click if it's on an existing callout
+    const target = event.target as HTMLElement;
+    if (target !== overlayRef.current) return;
+
+    // Get the exact position relative to the overlay element
     const rect = overlayRef.current.getBoundingClientRect();
-    const x = ((event.clientX - rect.left) / rect.width) * 100;
-    const y = ((event.clientY - rect.top) / rect.height) * 100;
+    
+    // Calculate position - using layerX/layerY as primary, with fallbacks
+    let x: number;
+    let y: number;
+    
+    // Try multiple methods to get the most accurate position
+    const nativeEvent = event.nativeEvent as any;
+    
+    if (nativeEvent.layerX !== undefined && nativeEvent.layerY !== undefined) {
+      // layerX/layerY gives position relative to the positioned parent
+      x = (nativeEvent.layerX / overlayRef.current.offsetWidth) * 100;
+      y = (nativeEvent.layerY / overlayRef.current.offsetHeight) * 100;
+    } else if (nativeEvent.offsetX !== undefined && nativeEvent.offsetY !== undefined) {
+      // offsetX/offsetY is relative to the target element
+      x = (nativeEvent.offsetX / overlayRef.current.offsetWidth) * 100;
+      y = (nativeEvent.offsetY / overlayRef.current.offsetHeight) * 100;
+    } else {
+      // Fallback to client coordinates
+      x = ((event.clientX - rect.left) / rect.width) * 100;
+      y = ((event.clientY - rect.top) / rect.height) * 100;
+    }
+
+    // Ensure coordinates are within bounds
+    x = Math.max(0, Math.min(100, x));
+    y = Math.max(0, Math.min(100, y));
 
     // Default dimensions based on callout type
-    let width = 5;  // percentage
-    let height = 5; // percentage
+    let width = 6;  // percentage - slightly larger for better visibility
+    let height = 6; // percentage
 
     if (selectedTool === "rectangle") {
       width = 15;
       height = 10;
     } else if (selectedTool === "arrow") {
-      width = 8;
+      width = 10;
       height = 8;
     } else if (selectedTool === "circle" || selectedTool === "number") {
       // Ensure circles are perfectly square
-      width = 5;
-      height = 5;
+      width = 6;
+      height = 6;
     }
 
     // Calculate next number for numbered callouts
@@ -108,8 +139,8 @@ const CalloutOverlay: React.FC<CalloutOverlayProps> = ({
     const calloutData = {
       shape: selectedTool,
       color: selectedColor,
-      x: Math.max(0, Math.min(95, x - width / 2)),
-      y: Math.max(0, Math.min(95, y - height / 2)),
+      x: Math.max(0, Math.min(100 - width, x - width / 2)),
+      y: Math.max(0, Math.min(100 - height, y - height / 2)),
       width,
       height,
       number: getNextNumber(),
@@ -124,7 +155,7 @@ const CalloutOverlay: React.FC<CalloutOverlayProps> = ({
     } else {
       onCalloutAdd(calloutData);
     }
-  }, [isEditing, isAddingCallout, selectedTool, selectedColor, screenshot.callouts.length, onCalloutAdd]);
+  }, [isEditing, isAddingCallout, selectedTool, selectedColor, screenshot.callouts, onCalloutAdd]);
 
   const handleCalloutClick = useCallback((callout: Callout, event: React.MouseEvent) => {
     event.stopPropagation();
@@ -192,6 +223,36 @@ const CalloutOverlay: React.FC<CalloutOverlayProps> = ({
     (window as any).tempCalloutData = null;
   }, []);
 
+  const handleOverlayMouseMove = useCallback((event: React.MouseEvent<HTMLDivElement>) => {
+    if (!isEditing || !isAddingCallout || !overlayRef.current) {
+      setHoverPosition(null);
+      return;
+    }
+
+    const rect = overlayRef.current.getBoundingClientRect();
+    const nativeEvent = event.nativeEvent as any;
+    
+    let x: number;
+    let y: number;
+    
+    if (nativeEvent.layerX !== undefined && nativeEvent.layerY !== undefined) {
+      x = (nativeEvent.layerX / overlayRef.current.offsetWidth) * 100;
+      y = (nativeEvent.layerY / overlayRef.current.offsetHeight) * 100;
+    } else if (nativeEvent.offsetX !== undefined && nativeEvent.offsetY !== undefined) {
+      x = (nativeEvent.offsetX / overlayRef.current.offsetWidth) * 100;
+      y = (nativeEvent.offsetY / overlayRef.current.offsetHeight) * 100;
+    } else {
+      x = ((event.clientX - rect.left) / rect.width) * 100;
+      y = ((event.clientY - rect.top) / rect.height) * 100;
+    }
+
+    setHoverPosition({ x, y });
+  }, [isEditing, isAddingCallout]);
+
+  const handleOverlayMouseLeave = useCallback(() => {
+    setHoverPosition(null);
+  }, []);
+
   const renderCallout = (callout: Callout) => {
     const isEditingThis = editingCallout === callout.id;
     const hasBeenRevealed = revealedCallouts.has(callout.id);
@@ -221,8 +282,8 @@ const CalloutOverlay: React.FC<CalloutOverlayProps> = ({
                 backgroundColor: `${callout.color}40`,
                 borderColor: callout.color,
                 aspectRatio: '1 / 1',
-                minWidth: '30px',
-                minHeight: '30px',
+                minWidth: '40px',
+                minHeight: '40px',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center'
@@ -231,7 +292,7 @@ const CalloutOverlay: React.FC<CalloutOverlayProps> = ({
               {callout.number && (
                 <span 
                   className="text-white font-bold"
-                  style={{ fontSize: `${Math.max(10, callout.width * 0.6)}px` }}
+                  style={{ fontSize: `${Math.max(14, callout.width * 2)}px` }}
                 >
                   {callout.number}
                 </span>
@@ -277,14 +338,15 @@ const CalloutOverlay: React.FC<CalloutOverlayProps> = ({
                 backgroundColor: callout.revealText ? undefined : callout.color,
                 borderColor: callout.color,
                 aspectRatio: '1 / 1',
-                minWidth: '30px',
-                minHeight: '30px',
+                minWidth: '40px',
+                minHeight: '40px',
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'center'
+                justifyContent: 'center',
+                fontSize: '14px'
               }}
             >
-              <span style={{ fontSize: `${Math.max(10, callout.width * 0.6)}px` }}>
+              <span style={{ fontSize: `${Math.max(14, callout.width * 2)}px` }}>
                 {callout.number}
               </span>
               {callout.revealText && (
@@ -526,7 +588,10 @@ const CalloutOverlay: React.FC<CalloutOverlayProps> = ({
           {!isAddingCallout ? (
             <Button
               size="sm"
-              onClick={() => setIsAddingCallout(true)}
+              onClick={() => {
+                setIsAddingCallout(true);
+                setShowToolbar(true); // Auto-show toolbar when adding
+              }}
               className="h-8 px-3 text-xs bg-purple-600 hover:bg-purple-700 text-white shadow-lg"
             >
               <Plus className="h-3 w-3 mr-1" />
@@ -535,7 +600,10 @@ const CalloutOverlay: React.FC<CalloutOverlayProps> = ({
           ) : (
             <Button
               size="sm"
-              onClick={() => setIsAddingCallout(false)}
+              onClick={() => {
+                setIsAddingCallout(false);
+                setShowToolbar(false); // Hide toolbar when done
+              }}
               className="h-8 px-3 text-xs bg-green-600 hover:bg-green-700 text-white shadow-lg"
             >
               ✓ Done Adding
@@ -553,21 +621,22 @@ const CalloutOverlay: React.FC<CalloutOverlayProps> = ({
               >
                 {/* Tool Selection - Compact */}
                 {[
-                  { type: "circle", icon: Circle },
-                  { type: "rectangle", icon: Square },
-                  { type: "arrow", icon: MousePointer },
-                  { type: "number", icon: Type },
-                ].map(({ type, icon: Icon }) => (
+                  { type: "circle", icon: Circle, label: "Circle" },
+                  { type: "rectangle", icon: Square, label: "Rectangle" },
+                  { type: "arrow", icon: MousePointer, label: "Arrow" },
+                  { type: "number", icon: Type, label: "Number" },
+                ].map(({ type, icon: Icon, label }) => (
                   <button
                     key={type}
                     onClick={() => setSelectedTool(type as any)}
-                    className={`p-1 rounded ${
+                    className={`p-1.5 rounded transition-all ${
                       selectedTool === type 
-                        ? 'bg-purple-600 text-white' 
+                        ? 'bg-purple-600 text-white shadow-md ring-2 ring-purple-400 ring-opacity-50' 
                         : 'text-zinc-400 hover:text-white hover:bg-zinc-700'
                     }`}
+                    title={label}
                   >
-                    <Icon className="h-3 w-3" />
+                    <Icon className="h-4 w-4" />
                   </button>
                 ))}
                 
@@ -609,11 +678,79 @@ const CalloutOverlay: React.FC<CalloutOverlayProps> = ({
           isAddingCallout ? 'cursor-crosshair' : 'cursor-default'
         }`}
         onClick={handleOverlayClick}
+        onMouseMove={handleOverlayMouseMove}
+        onMouseLeave={handleOverlayMouseLeave}
+        style={{ 
+          pointerEvents: isEditing || screenshot.callouts.some(c => c.shape === "number" && c.revealText) ? 'auto' : 'none',
+          touchAction: 'none' // Prevent touch scrolling interference
+        }}
       >
         {/* Render Callouts */}
         <AnimatePresence>
           {screenshot.callouts.map(renderCallout)}
         </AnimatePresence>
+        
+        {/* Hover Preview */}
+        {isAddingCallout && hoverPosition && (
+          <div
+            className="pointer-events-none absolute opacity-50"
+            style={{
+              left: `${hoverPosition.x}%`,
+              top: `${hoverPosition.y}%`,
+              transform: 'translate(-50%, -50%)',
+            }}
+          >
+            {selectedTool === "circle" && (
+              <div
+                className="rounded-full border-2"
+                style={{
+                  width: '48px',
+                  height: '48px',
+                  backgroundColor: `${selectedColor}40`,
+                  borderColor: selectedColor,
+                }}
+              />
+            )}
+            {selectedTool === "rectangle" && (
+              <div
+                className="border-2"
+                style={{
+                  width: '120px',
+                  height: '80px',
+                  backgroundColor: `${selectedColor}40`,
+                  borderColor: selectedColor,
+                }}
+              />
+            )}
+            {selectedTool === "arrow" && (
+              <div style={{ width: '80px', height: '40px' }}>
+                <svg width="100%" height="100%" viewBox="0 0 100 50" fill="none">
+                  <polygon 
+                    points="10,15 65,15 65,5 95,25 65,45 65,35 10,35" 
+                    fill={selectedColor}
+                    stroke={selectedColor}
+                    strokeWidth="2"
+                    opacity="0.6"
+                  />
+                </svg>
+              </div>
+            )}
+            {selectedTool === "number" && (
+              <div
+                className="rounded-full border-2 flex items-center justify-center text-white font-bold"
+                style={{
+                  width: '48px',
+                  height: '48px',
+                  backgroundColor: selectedColor,
+                  borderColor: selectedColor,
+                  fontSize: '16px'
+                }}
+              >
+                {screenshot.callouts.filter(c => c.shape === "number").length + 1}
+              </div>
+            )}
+          </div>
+        )}
       </div>
       
       {/* Interactive Callouts Indicator */}
@@ -626,8 +763,19 @@ const CalloutOverlay: React.FC<CalloutOverlayProps> = ({
       
       {/* Minimal Status Indicators */}
       {isAddingCallout && (
-        <div className="absolute bottom-2 right-2 bg-black/80 backdrop-blur-sm rounded-lg px-2 py-1 text-xs text-white border border-zinc-600">
-          Click anywhere to add callouts • ESC or "Done Adding" to finish
+        <div className="absolute bottom-2 right-2 bg-black/80 backdrop-blur-sm rounded-lg px-3 py-2 text-xs text-white border border-zinc-600 flex items-center gap-2">
+          <div className="flex items-center gap-2">
+            <span>Click to add</span>
+            <div className="flex items-center gap-1 bg-purple-600/20 px-2 py-0.5 rounded">
+              {selectedTool === "circle" && <Circle className="h-3 w-3" />}
+              {selectedTool === "rectangle" && <Square className="h-3 w-3" />}
+              {selectedTool === "arrow" && <MousePointer className="h-3 w-3" />}
+              {selectedTool === "number" && <Type className="h-3 w-3" />}
+              <span className="font-medium capitalize">{selectedTool}</span>
+            </div>
+            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: selectedColor }} />
+          </div>
+          <span className="text-zinc-400">• ESC to cancel</span>
         </div>
       )}
       
