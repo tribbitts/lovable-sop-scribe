@@ -164,10 +164,6 @@ const SopCreator: React.FC = () => {
           <div className="flex-1">
             <div className="flex items-center gap-3 mb-2">
               <h1 className="text-2xl font-bold text-white">SOP Creator</h1>
-              <Badge className="bg-gradient-to-r from-blue-600 to-purple-600 text-white">
-                <FileText className="h-3 w-3 mr-1" />
-                Professional
-              </Badge>
             </div>
             <p className="text-zinc-400 text-sm">Create professional Standard Operating Procedures</p>
           </div>
