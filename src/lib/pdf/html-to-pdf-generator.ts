@@ -1,5 +1,5 @@
 import { SopDocument } from "@/types/sop";
-import { generateBusinessHtmlTemplate } from "../html-export/business-template";
+import { generateStandardHtmlTemplate } from "../html-export/standard-template";
 
 export interface HtmlToPdfOptions {
   includeTableOfContents?: boolean;
@@ -21,7 +21,7 @@ export async function generateHtmlToPdf(
       console.log("Generating HTML template for PDF conversion");
       
       // Use our enhanced HTML template with beautiful styling
-      const htmlContent = generateBusinessHtmlTemplate(sopDocument, {
+      const htmlContent = generateStandardHtmlTemplate(sopDocument, {
         customization: {
           primaryColor: "#007AFF",
           accentColor: "#5856D6",

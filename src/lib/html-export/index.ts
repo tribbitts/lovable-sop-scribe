@@ -1,6 +1,6 @@
 import { SopDocument } from "@/types/sop";
 import { generateEnhancedHtmlTemplate } from "./enhanced-template";
-import { generateBusinessHtmlTemplate } from "./business-template";
+import { generateStandardHtmlTemplate } from "./standard-template";
 import { generateZipBundle } from "./zip-generator";
 import { FeedbackOptions } from "./feedback-renderer";
 
@@ -30,8 +30,8 @@ export async function exportSopAsHtml(
       console.log("📱 Generating enhanced LMS-style HTML template");
       htmlContent = generateEnhancedHtmlTemplate(sopDocument, options.enhancedOptions);
     } else {
-      console.log("📄 Generating business HTML template");
-      htmlContent = generateBusinessHtmlTemplate(sopDocument, options);
+      console.log("📄 Generating standard HTML template");
+      htmlContent = generateStandardHtmlTemplate(sopDocument, options);
     }
     
     const fileName = `${sopDocument.title || 'SOP'}_${new Date().toISOString().split('T')[0]}`;
