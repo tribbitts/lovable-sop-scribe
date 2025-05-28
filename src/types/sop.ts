@@ -6,11 +6,24 @@ export interface SopDocument {
   id: string;
   title: string;
   description?: string;
+  topic: string;
+  date: string;
+  version?: string;
+  lastRevised?: string;
+  author?: string;
+  logo?: string | null;
+  backgroundImage?: string | null;
+  companyName: string;
+  tableOfContents?: boolean;
+  darkMode?: boolean;
+  trainingMode?: boolean;
+  progressTracking?: {
+    enabled: boolean;
+    sessionName?: string;
+  };
   steps: SopStep[];
   createdAt: Date;
   updatedAt: Date;
-  author?: string;
-  version?: string;
   tags?: string[];
   category?: string;
   estimatedTime?: number;
@@ -28,6 +41,8 @@ export interface SopStep {
   title?: string;
   description: string;
   screenshot?: ScreenshotData;
+  screenshots?: ScreenshotData[];
+  secondaryScreenshot?: ScreenshotData;
   resources: StepResource[];
   order: number;
   estimatedTime?: number;
@@ -36,6 +51,14 @@ export interface SopStep {
   warnings?: string[];
   tips?: string[];
   healthcareContent?: HealthcareContent[];
+  completed?: boolean;
+  enhancedContentBlocks?: any[];
+  keyTakeaway?: string;
+  detailedInstructions?: string;
+  notes?: string;
+  fileLink?: string;
+  fileLinkText?: string;
+  tags?: string[];
 }
 
 export interface StepResource {
@@ -54,6 +77,8 @@ export interface ScreenshotData {
   callouts: Callout[];
   timestamp?: Date;
   filename?: string;
+  title?: string;
+  description?: string;
   dimensions?: {
     width: number;
     height: number;
@@ -181,6 +206,8 @@ export interface ExportOptions {
   quality?: 'low' | 'medium' | 'high';
   watermark?: string;
   customization?: any;
+  theme?: string;
+  mode?: 'standalone' | 'zip';
 }
 
 // Component Props Types
@@ -192,6 +219,10 @@ export interface StepCardProps {
   onMove: (stepId: string, direction: 'up' | 'down') => void;
   isSelected: boolean;
   onSelect: () => void;
+  isActive?: boolean;
+  onStepChange?: (stepId: string, field: keyof SopStep, value: any) => void;
+  onStepComplete?: (stepId: string, completed: boolean) => void;
+  onDeleteStep?: (stepId: string) => void;
 }
 
 export interface ImageCropperProps {
@@ -201,10 +232,12 @@ export interface ImageCropperProps {
   aspectRatio?: number;
   minCropBoxWidth?: number;
   minCropBoxHeight?: number;
+  imageDataUrl?: string;
+  onCropComplete?: (croppedImageUrl: string) => void;
 }
 
 // Subscription Types
-export type SubscriptionTier = 'free' | 'pro' | 'pro-complete';
+export type SubscriptionTier = 'free' | 'pro' | 'pro-complete' | 'pro-learning';
 
 export interface SubscriptionFeatures {
   pdfExports: number;
@@ -325,4 +358,69 @@ export interface SOPAnalytics {
     errorRate: number;
     userSatisfaction: number;
   };
+}
+
+// Enhanced Export Types
+export interface EnhancedExportOptions {
+  format: ExportFormat;
+  includeImages: boolean;
+  includeTableOfContents?: boolean;
+  includeRevisionHistory?: boolean;
+  includeSignatures?: boolean;
+  pageSize?: 'A4' | 'Letter' | 'Legal';
+  orientation?: 'portrait' | 'landscape';
+  quality?: 'low' | 'medium' | 'high';
+  watermark?: string;
+  customization?: any;
+  theme?: string;
+  mode?: 'standalone' | 'zip';
+  advanced?: any;
+  template?: any;
+  optimization?: any;
+}
+
+export interface AdvancedExportCustomization {
+  brandKit?: {
+    primaryColor: string;
+    secondaryColor: string;
+    accentColor: string;
+    fontFamily: string;
+  };
+  layout?: {
+    headerHeight: number;
+    footerHeight: number;
+    margins: {
+      top: number;
+      bottom: number;
+      left: number;
+      right: number;
+    };
+  };
+  content?: {
+    showStepNumbers: boolean;
+    showEstimatedTime: boolean;
+    showCalloutNumbers: boolean;
+    highlightCriticalSteps: boolean;
+  };
+}
+
+// Template Ecosystem Types
+export interface ExportTemplate {
+  id: string;
+  name: string;
+  description: string;
+  category: string;
+  isPublic: boolean;
+  usageCount: number;
+  tags: string[];
+  customization: {
+    brandKit: {
+      primaryColor: string;
+      secondaryColor: string;
+      accentColor: string;
+      fontFamily: string;
+    };
+  };
+  preview?: string;
+  createdBy?: string;
 }
