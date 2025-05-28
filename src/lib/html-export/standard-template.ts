@@ -1,4 +1,5 @@
 import { SopDocument } from "@/types/sop";
+import { exportThemes, applyThemeToTemplate } from "@/lib/export-themes";
 
 // Helper function to get font family CSS
 function getFontFamilyCSS(fontFamily: string): string {
@@ -69,6 +70,13 @@ export function generateStandardHtmlTemplate(
   const fontFamily = customization.fontFamily || "system";
   const headerStyle = customization.headerStyle || "modern";
   const layout = customization.layout || "standard";
+  
+  // Try to find a matching theme based on primary color
+  let selectedTheme = exportThemes.find(theme => theme.colors.primary === primaryColor);
+  if (!selectedTheme) {
+    // Default to corporate-blue if no match
+    selectedTheme = exportThemes[0];
+  }
   
   const title = sopDocument.title || "Standard Operating Procedure";
   const companyName = sopDocument.companyName || "Your Organization";
@@ -502,7 +510,21 @@ export function generateStandardHtmlTemplate(
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>${title}</title>
     <style>
-        ${getFontFamilyCSS(fontFamily)}
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:wght@400;500;600;700&family=Roboto:wght@400;500;700&family=Work+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=Merriweather:wght@400;700&family=Lora:wght@400;600&display=swap');
+        
+        :root {
+            --primary-color: ${selectedTheme.colors.primary};
+            --secondary-color: ${selectedTheme.colors.secondary};
+            --accent-color: ${selectedTheme.colors.accent};
+            --text-color: ${selectedTheme.colors.text};
+            --background-color: ${selectedTheme.colors.background};
+            --border-color: ${selectedTheme.colors.border};
+            --font-primary: ${typeof fontFamily === 'string' && fontFamily.includes("'") ? fontFamily : selectedTheme.fonts.primary};
+            --font-secondary: ${selectedTheme.fonts.secondary};
+            --font-monospace: ${selectedTheme.fonts.monospace};
+            --border-radius: ${selectedTheme.styles.borderRadius};
+            --shadow-style: ${selectedTheme.styles.shadowStyle};
+        }
         
         * {
             margin: 0;
@@ -511,10 +533,10 @@ export function generateStandardHtmlTemplate(
         }
         
         body {
-            font-family: ${fontFamily === 'system' ? '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif' : fontFamily};
+            font-family: var(--font-primary);
             line-height: 1.6;
-            color: #333;
-            background: #f8f9fa;
+            color: var(--text-color);
+            background: var(--background-color);
             max-width: 1200px;
             margin: 0 auto;
             padding: 40px 20px;
@@ -523,8 +545,8 @@ export function generateStandardHtmlTemplate(
         
         .header {
             background: white;
-            border-radius: 16px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-style);
             margin-bottom: 40px;
             overflow: hidden;
             position: relative;
@@ -535,7 +557,7 @@ export function generateStandardHtmlTemplate(
             justify-content: space-between;
             align-items: flex-start;
             padding: 30px 40px 20px;
-            background: linear-gradient(135deg, ${primaryColor}08, ${accentColor}08);
+            background: linear-gradient(135deg, ${selectedTheme.colors.primary}08, ${selectedTheme.colors.accent}08);
         }
         
         .header-left {
@@ -543,7 +565,7 @@ export function generateStandardHtmlTemplate(
         }
         
         .company-name {
-            color: ${primaryColor};
+            color: var(--primary-color);
             font-size: 24px;
             font-weight: bold;
             margin-bottom: 8px;
@@ -552,7 +574,7 @@ export function generateStandardHtmlTemplate(
         .version {
             color: #666;
             font-size: 14px;
-            background: ${primaryColor}15;
+            background: ${selectedTheme.colors.primary}15;
             padding: 4px 12px;
             border-radius: 20px;
             display: inline-block;
@@ -577,38 +599,38 @@ export function generateStandardHtmlTemplate(
         .header-center {
             text-align: center;
             padding: 20px 40px 40px;
-            ${getHeaderStyles(headerStyle, primaryColor)}
+            ${selectedTheme.styles.headerGradient ? `background: ${selectedTheme.styles.headerGradient};` : ''}
         }
         
         .title {
             font-size: 3rem;
             font-weight: 800;
-            color: #1a1a1a;
+            color: ${selectedTheme.styles.headerGradient ? 'white' : 'var(--text-color)'};
             margin-bottom: 16px;
             letter-spacing: -0.02em;
         }
         
         .subtitle {
             font-size: 1.25rem;
-            color: #666;
+            color: ${selectedTheme.styles.headerGradient ? 'rgba(255,255,255,0.9)' : '#666'};
             margin-bottom: 24px;
             font-weight: 400;
         }
         
         .demo-badge {
-            background: linear-gradient(135deg, ${primaryColor}, ${accentColor});
+            background: ${selectedTheme.styles.headerGradient || `linear-gradient(135deg, ${selectedTheme.colors.primary}, ${selectedTheme.colors.accent})`};
             color: white;
             padding: 12px 24px;
             border-radius: 30px;
             font-weight: 600;
             display: inline-block;
-            box-shadow: 0 4px 15px ${primaryColor}40;
+            box-shadow: 0 4px 15px ${selectedTheme.colors.primary}40;
         }
         
         .step {
             background: white;
-            border-radius: 16px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-style);
             margin-bottom: 32px;
             overflow: hidden;
             transition: all 0.3s ease;
@@ -619,7 +641,7 @@ export function generateStandardHtmlTemplate(
         }
         
         .step-header {
-            background: linear-gradient(135deg, ${primaryColor}, ${accentColor});
+            background: ${selectedTheme.styles.headerGradient || `linear-gradient(135deg, ${selectedTheme.colors.primary}, ${selectedTheme.colors.secondary})`};
             color: white;
             padding: 32px 40px;
             position: relative;
@@ -660,16 +682,16 @@ export function generateStandardHtmlTemplate(
             position: relative;
             display: inline-block;
             max-width: 100%;
-            border-radius: 12px;
+            border-radius: var(--border-radius);
             overflow: hidden;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+            box-shadow: var(--shadow-style);
         }
         
         .step-screenshot {
             width: 100%;
             height: auto;
             display: block;
-            border-radius: 12px;
+            border-radius: var(--border-radius);
         }
         
         /* Callout Styles */
@@ -746,7 +768,7 @@ export function generateStandardHtmlTemplate(
             font-size: 18px;
             font-weight: 600;
             margin-bottom: 16px;
-            color: ${primaryColor};
+            color: ${selectedTheme.colors.primary};
         }
         
         .content-table {
@@ -763,7 +785,7 @@ export function generateStandardHtmlTemplate(
         }
         
         .content-table th {
-            background: linear-gradient(135deg, ${primaryColor}15, ${accentColor}15);
+            background: linear-gradient(135deg, ${selectedTheme.colors.primary}15, ${selectedTheme.colors.accent}15);
             font-weight: 600;
             color: #495057;
         }
@@ -922,7 +944,7 @@ export function generateStandardHtmlTemplate(
         .footer {
             margin-top: 60px;
             padding: 30px 0;
-            border-top: 2px solid ${primaryColor};
+            border-top: 2px solid ${selectedTheme.colors.primary};
             background: white;
             border-radius: 16px;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
@@ -948,7 +970,7 @@ export function generateStandardHtmlTemplate(
         }
         
         .footer-right a {
-            color: ${primaryColor};
+            color: ${selectedTheme.colors.primary};
             text-decoration: none;
             font-weight: bold;
             font-size: 14px;
@@ -988,7 +1010,7 @@ export function generateStandardHtmlTemplate(
                 page-break-inside: avoid !important;
                 margin-bottom: 30px !important;
                 background: white !important;
-                border-bottom: 3px solid ${primaryColor} !important;
+                border-bottom: 3px solid ${selectedTheme.colors.primary} !important;
                 box-shadow: none !important;
             }
             
@@ -1007,7 +1029,7 @@ export function generateStandardHtmlTemplate(
             }
             
             .step-header {
-                background: linear-gradient(135deg, ${primaryColor}, ${accentColor}) !important;
+                background: ${selectedTheme.styles.headerGradient || `linear-gradient(135deg, ${selectedTheme.colors.primary}, ${selectedTheme.colors.accent})`} !important;
                 -webkit-print-color-adjust: exact !important;
                 print-color-adjust: exact !important;
                 color: white !important;
@@ -1046,7 +1068,7 @@ export function generateStandardHtmlTemplate(
             }
             
             .content-table th {
-                background: linear-gradient(135deg, ${primaryColor}15, ${accentColor}15) !important;
+                background: ${selectedTheme.styles.headerGradient ? `linear-gradient(135deg, ${selectedTheme.colors.primary}15, ${selectedTheme.colors.accent}15)` : 'linear-gradient(135deg, ${selectedTheme.colors.primary}15, ${selectedTheme.colors.accent}15)'} !important;
                 -webkit-print-color-adjust: exact !important;
                 print-color-adjust: exact !important;
             }
@@ -1064,8 +1086,8 @@ export function generateStandardHtmlTemplate(
             }
             
             .resource-link {
-                border: 2px solid ${primaryColor} !important;
-                color: ${primaryColor} !important;
+                border: 2px solid ${selectedTheme.colors.primary} !important;
+                color: ${selectedTheme.colors.primary} !important;
                 -webkit-print-color-adjust: exact !important;
                 print-color-adjust: exact !important;
             }
@@ -1076,7 +1098,7 @@ export function generateStandardHtmlTemplate(
                 left: 0 !important;
                 right: 0 !important;
                 background: white !important;
-                border-top: 2px solid ${primaryColor} !important;
+                border-top: 2px solid ${selectedTheme.colors.primary} !important;
                 padding: 10px 0 !important;
                 margin-top: 0 !important;
                 z-index: 1000 !important;

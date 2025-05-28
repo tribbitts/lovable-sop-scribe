@@ -12,11 +12,13 @@ import {
   Loader2,
   Printer,
   Sparkles,
-  Info
+  Info,
+  Palette
 } from "lucide-react";
 import { SopDocument, ExportFormat, ExportOptions } from "@/types/sop";
 import { downloadPDFWithBrowserPrint } from "@/lib/pdf-generator";
 import { toast } from "sonner";
+import { exportThemes, fontOptions } from "@/lib/export-themes";
 
 interface ExportPanelProps {
   document: SopDocument;
@@ -32,6 +34,8 @@ const ExportPanel: React.FC<ExportPanelProps> = ({
   exportProgress = ""
 }) => {
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+  const [selectedTheme, setSelectedTheme] = useState("corporate-blue");
+  const [selectedFont, setSelectedFont] = useState("helvetica");
   const [exportOptions, setExportOptions] = useState<ExportOptions>({
     theme: "auto",
     includeTableOfContents: true,
@@ -48,10 +52,19 @@ const ExportPanel: React.FC<ExportPanelProps> = ({
   });
 
   const handleHtmlExport = () => {
+    const theme = exportThemes.find(t => t.id === selectedTheme) || exportThemes[0];
+    const font = fontOptions.find(f => f.id === selectedFont)?.value || fontOptions[0].value;
+    
     const htmlOptions: ExportOptions = {
       ...exportOptions,
       mode: 'standalone',
-      enhanced: false
+      enhanced: false,
+      customization: {
+        ...exportOptions.customization,
+        primaryColor: theme.colors.primary,
+        accentColor: theme.colors.accent,
+        fontFamily: font as any
+      }
     };
     onExport("html", htmlOptions);
   };
@@ -115,72 +128,127 @@ const ExportPanel: React.FC<ExportPanelProps> = ({
           </CardHeader>
           <CardContent className="space-y-6">
             <p className="text-blue-200 text-sm leading-relaxed">
-              Beautiful, professional HTML document with stunning gradients, perfect typography, and business-grade styling. 
+              Beautiful, professional HTML document with stunning designs, perfect typography, and business-grade styling. 
               Includes all screenshots and callouts with pixel-perfect rendering.
             </p>
             
-            {/* Business Tier Customization */}
+            {/* Professional Theme Selection */}
             <div className="p-4 bg-gradient-to-r from-purple-900/30 to-blue-900/30 border border-purple-600/50 rounded-lg">
               <h4 className="text-purple-200 font-medium text-sm mb-4 flex items-center gap-2">
-                <Sparkles className="h-4 w-4" />
-                Professional Customization
+                <Palette className="h-4 w-4" />
+                Professional Theme & Typography
               </h4>
               
-              <div className="grid grid-cols-2 gap-4">
-                {/* Primary Color */}
+              <div className="space-y-4">
+                {/* Theme Selection */}
                 <div className="space-y-2">
-                  <Label className="text-purple-200 text-xs font-medium">Primary Color</Label>
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="color"
-                      value={exportOptions.customization?.primaryColor || "#007AFF"}
-                      onChange={(e) => setExportOptions(prev => ({
-                        ...prev,
-                        customization: {
-                          ...prev.customization,
-                          primaryColor: e.target.value
-                        }
-                      }))}
-                      className="w-10 h-8 rounded border border-zinc-600 bg-transparent cursor-pointer"
-                    />
-                    <span className="text-xs text-purple-300 font-mono">
-                      {exportOptions.customization?.primaryColor || "#007AFF"}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Accent Color */}
-                <div className="space-y-2">
-                  <Label className="text-purple-200 text-xs font-medium">Accent Color</Label>
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="color"
-                      value={exportOptions.customization?.accentColor || "#5856D6"}
-                      onChange={(e) => setExportOptions(prev => ({
-                        ...prev,
-                        customization: {
-                          ...prev.customization,
-                          accentColor: e.target.value
-                        }
-                      }))}
-                      className="w-10 h-8 rounded border border-zinc-600 bg-transparent cursor-pointer"
-                    />
-                    <span className="text-xs text-purple-300 font-mono">
-                      {exportOptions.customization?.accentColor || "#5856D6"}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Font Family */}
-                <div className="space-y-2">
-                  <Label className="text-purple-200 text-xs font-medium">Font Style</Label>
+                  <Label className="text-purple-200 text-xs font-medium">Document Theme</Label>
                   <Select
-                    value={exportOptions.customization?.fontFamily || "system"}
+                    value={selectedTheme}
+                    onValueChange={setSelectedTheme}
+                  >
+                    <SelectTrigger className="h-10 bg-zinc-800 border-zinc-700 text-white text-sm">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-zinc-800 border-zinc-700 max-h-[300px]">
+                      {exportThemes.map((theme) => (
+                        <SelectItem 
+                          key={theme.id} 
+                          value={theme.id} 
+                          className="text-white hover:bg-zinc-700"
+                        >
+                          <div className="flex items-center gap-3">
+                            <div 
+                              className="w-4 h-4 rounded-full border border-zinc-600" 
+                              style={{ background: theme.styles.headerGradient || theme.colors.primary }}
+                            />
+                            <div>
+                              <div className="text-sm font-medium">{theme.name}</div>
+                              <div className="text-xs text-zinc-400">{theme.description}</div>
+                            </div>
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Font Selection */}
+                <div className="space-y-2">
+                  <Label className="text-purple-200 text-xs font-medium">Typography</Label>
+                  <Select
+                    value={selectedFont}
+                    onValueChange={setSelectedFont}
+                  >
+                    <SelectTrigger className="h-10 bg-zinc-800 border-zinc-700 text-white text-sm">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-zinc-800 border-zinc-700 max-h-[300px]">
+                      {fontOptions.map((font) => (
+                        <SelectItem 
+                          key={font.id} 
+                          value={font.id} 
+                          className="text-white hover:bg-zinc-700"
+                        >
+                          <div>
+                            <div className="text-sm font-medium">{font.name}</div>
+                            <div className="text-xs text-zinc-400">{font.description}</div>
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Theme Preview */}
+                {(() => {
+                  const theme = exportThemes.find(t => t.id === selectedTheme);
+                  if (!theme) return null;
+                  
+                  return (
+                    <div className="mt-4 p-3 rounded-lg border border-purple-600/30 bg-zinc-900/50">
+                      <div className="text-xs text-purple-300 mb-2">Theme Preview</div>
+                      <div className="flex gap-2 items-center">
+                        <div className="flex gap-1">
+                          <div 
+                            className="w-6 h-6 rounded border border-zinc-600" 
+                            style={{ backgroundColor: theme.colors.primary }}
+                            title="Primary"
+                          />
+                          <div 
+                            className="w-6 h-6 rounded border border-zinc-600" 
+                            style={{ backgroundColor: theme.colors.secondary }}
+                            title="Secondary"
+                          />
+                          <div 
+                            className="w-6 h-6 rounded border border-zinc-600" 
+                            style={{ backgroundColor: theme.colors.accent }}
+                            title="Accent"
+                          />
+                          <div 
+                            className="w-6 h-6 rounded border border-zinc-600" 
+                            style={{ backgroundColor: theme.colors.background }}
+                            title="Background"
+                          />
+                        </div>
+                        <div className="text-xs text-zinc-400 ml-2">
+                          {theme.styles.borderRadius} corners • {theme.styles.buttonStyle} style
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })()}
+
+                {/* Layout Options */}
+                <div className="space-y-2">
+                  <Label className="text-purple-200 text-xs font-medium">Document Layout</Label>
+                  <Select
+                    value={exportOptions.customization?.layout || "standard"}
                     onValueChange={(value) => setExportOptions(prev => ({
                       ...prev,
                       customization: {
                         ...prev.customization,
-                        fontFamily: value as any
+                        layout: value as any
                       }
                     }))}
                   >
@@ -188,74 +256,24 @@ const ExportPanel: React.FC<ExportPanelProps> = ({
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent className="bg-zinc-800 border-zinc-700">
-                      <SelectItem value="system" className="text-white hover:bg-zinc-700 text-xs">Helvetica (Recommended)</SelectItem>
-                      <SelectItem value="serif" className="text-white hover:bg-zinc-700 text-xs">Serif (Traditional)</SelectItem>
-                      <SelectItem value="sans-serif" className="text-white hover:bg-zinc-700 text-xs">Sans Serif (Clean)</SelectItem>
-                      <SelectItem value="monospace" className="text-white hover:bg-zinc-700 text-xs">Monospace (Technical)</SelectItem>
+                      <SelectItem value="standard" className="text-white hover:bg-zinc-700 text-xs">Standard (Balanced)</SelectItem>
+                      <SelectItem value="compact" className="text-white hover:bg-zinc-700 text-xs">Compact (Space-efficient)</SelectItem>
+                      <SelectItem value="spacious" className="text-white hover:bg-zinc-700 text-xs">Spacious (Generous spacing)</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
-                {/* Header Style */}
-                <div className="space-y-2">
-                  <Label className="text-purple-200 text-xs font-medium">Header Style</Label>
-                  <Select
-                    value={exportOptions.customization?.headerStyle || "modern"}
-                    onValueChange={(value) => setExportOptions(prev => ({
-                      ...prev,
-                      customization: {
-                        ...prev.customization,
-                        headerStyle: value as any
-                      }
-                    }))}
-                  >
-                    <SelectTrigger className="h-8 bg-zinc-800 border-zinc-700 text-white text-xs">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="bg-zinc-800 border-zinc-700">
-                      <SelectItem value="modern" className="text-white hover:bg-zinc-700 text-xs">Modern (Gradient)</SelectItem>
-                      <SelectItem value="classic" className="text-white hover:bg-zinc-700 text-xs">Classic (Traditional)</SelectItem>
-                      <SelectItem value="minimal" className="text-white hover:bg-zinc-700 text-xs">Minimal (Clean)</SelectItem>
-                      <SelectItem value="corporate" className="text-white hover:bg-zinc-700 text-xs">Corporate (Professional)</SelectItem>
-                    </SelectContent>
-                  </Select>
+                {/* Table of Contents Toggle */}
+                <div className="flex items-center justify-between mt-4 pt-4 border-t border-purple-600/30">
+                  <div>
+                    <Label className="text-purple-200 text-xs font-medium">Table of Contents</Label>
+                    <p className="text-xs text-purple-300/70">Add navigation menu to document</p>
+                  </div>
+                  <Switch
+                    checked={exportOptions.includeTableOfContents}
+                    onCheckedChange={(checked) => setExportOptions(prev => ({ ...prev, includeTableOfContents: checked }))}
+                  />
                 </div>
-              </div>
-
-              {/* Layout Style */}
-              <div className="mt-4 space-y-2">
-                <Label className="text-purple-200 text-xs font-medium">Document Layout</Label>
-                <Select
-                  value={exportOptions.customization?.layout || "standard"}
-                  onValueChange={(value) => setExportOptions(prev => ({
-                    ...prev,
-                    customization: {
-                      ...prev.customization,
-                      layout: value as any
-                    }
-                  }))}
-                >
-                  <SelectTrigger className="h-8 bg-zinc-800 border-zinc-700 text-white text-xs">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="bg-zinc-800 border-zinc-700">
-                    <SelectItem value="standard" className="text-white hover:bg-zinc-700 text-xs">Standard (Balanced)</SelectItem>
-                    <SelectItem value="compact" className="text-white hover:bg-zinc-700 text-xs">Compact (Space-efficient)</SelectItem>
-                    <SelectItem value="spacious" className="text-white hover:bg-zinc-700 text-xs">Spacious (Generous spacing)</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Table of Contents Toggle */}
-              <div className="flex items-center justify-between mt-4 pt-4 border-t border-purple-600/30">
-                <div>
-                  <Label className="text-purple-200 text-xs font-medium">Table of Contents</Label>
-                  <p className="text-xs text-purple-300/70">Add navigation menu to document</p>
-                </div>
-                <Switch
-                  checked={exportOptions.includeTableOfContents}
-                  onCheckedChange={(checked) => setExportOptions(prev => ({ ...prev, includeTableOfContents: checked }))}
-                />
               </div>
             </div>
 
@@ -325,15 +343,15 @@ const ExportPanel: React.FC<ExportPanelProps> = ({
           </h4>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm text-zinc-300">
             <div className="space-y-2">
-              <p>✨ Beautiful gradient headers</p>
+              <p>🎨 8 Professional themes</p>
               <p>📸 Perfect screenshot rendering</p>
               <p>🎯 Precise callout positioning</p>
-              <p>🎨 Full color customization</p>
+              <p>🔤 10 Typography options</p>
             </div>
             <div className="space-y-2">
               <p>📱 Mobile-responsive design</p>
               <p>🖨️ Print-optimized layouts</p>
-              <p>🏢 Professional business styling</p>
+              <p>🏢 Industry-specific styling</p>
               <p>⚡ Lightning-fast generation</p>
             </div>
           </div>
