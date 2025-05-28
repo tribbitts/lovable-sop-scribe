@@ -19,9 +19,10 @@ import { SopStep, StepCardProps } from "@/types/sop";
 import { EnhancedContentBlock } from "@/types/enhanced-content";
 import { useScreenshotManager } from "@/hooks/useScreenshotManager";
 import { ScreenshotUpload } from "@/components/common/ScreenshotUpload";
-import EnhancedScreenshotEditor from "./EnhancedScreenshotEditor";
+import CalloutOverlay from "./CalloutOverlay";
 import { ContentBlockSelector } from "@/components/content-blocks/ContentBlockSelector";
 import { ContentBlockRenderer } from "@/components/content-blocks/ContentBlockRenderer";
+import { v4 as uuidv4 } from "uuid";
 
 const StepCard: React.FC<StepCardProps> = ({
   step,
@@ -33,9 +34,6 @@ const StepCard: React.FC<StepCardProps> = ({
 }) => {
   const [isExpanded, setIsExpanded] = useState(isActive);
   const [isEditingCallouts, setIsEditingCallouts] = useState(false);
-  const [calloutColor, setCalloutColor] = useState("#FF6B35");
-  const [showCalloutCursor, setShowCalloutCursor] = useState(false);
-  const [cursorPosition, setCursorPosition] = useState({ x: 0, y: 0 });
 
   // Use unified screenshot management
   const screenshotManager = useScreenshotManager({
@@ -48,42 +46,8 @@ const StepCard: React.FC<StepCardProps> = ({
     onStepChange?.(step.id, field, value);
   };
 
-  const handleScreenshotMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (isEditingCallouts) {
-      setCursorPosition({ x: e.clientX, y: e.clientY });
-    }
-  };
-
-  const handleScreenshotMouseEnter = () => {
-    if (isEditingCallouts) {
-      setShowCalloutCursor(true);
-    }
-  };
-
-  const handleScreenshotMouseLeave = () => {
-    setShowCalloutCursor(false);
-  };
-
   const toggleEditMode = () => {
     setIsEditingCallouts(!isEditingCallouts);
-    if (!isEditingCallouts) {
-      setShowCalloutCursor(false);
-    }
-  };
-
-  const addCallout = (stepId: string, callout: Omit<any, "id">) => {
-    if (step.screenshot) {
-      const newCallout = { ...callout, id: Date.now().toString() };
-      const updatedCallouts = [...(step.screenshot.callouts || []), newCallout];
-      handleInputChange("screenshot", { ...step.screenshot, callouts: updatedCallouts });
-    }
-  };
-
-  const deleteCallout = (stepId: string, calloutId: string) => {
-    if (step.screenshot) {
-      const updatedCallouts = step.screenshot.callouts.filter(c => c.id !== calloutId);
-      handleInputChange("screenshot", { ...step.screenshot, callouts: updatedCallouts });
-    }
   };
 
   const toggleCompletion = () => {
@@ -98,16 +62,6 @@ const StepCard: React.FC<StepCardProps> = ({
 
   const handleUpdateContentBlocks = (blocks: EnhancedContentBlock[]) => {
     handleInputChange("enhancedContentBlocks", blocks);
-  };
-
-  const handleEnhancedCalloutUpdate = (callouts: any[]) => {
-    if (step.screenshot) {
-      handleInputChange("screenshot", { ...step.screenshot, callouts });
-    }
-  };
-
-  const handleCalloutClick = (calloutId: string) => {
-    deleteCallout(step.id, calloutId);
   };
 
   return (
@@ -281,96 +235,95 @@ const StepCard: React.FC<StepCardProps> = ({
             <div className="space-y-4">
               <Label className="text-zinc-300 font-medium">Screenshot & Annotations</Label>
               
-              {screenshotManager.hasScreenshots ? (
-                <EnhancedScreenshotEditor
-                  stepId={step.id}
-                  screenshot={step.screenshot!}
-                  isEditingCallouts={isEditingCallouts}
-                  calloutColor={calloutColor}
-                  setCalloutColor={setCalloutColor}
-                  onScreenshotUpload={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file) {
-                      const reader = new FileReader();
-                      reader.onload = (event) => {
-                        const dataUrl = event.target?.result as string;
-                        if (dataUrl && step.screenshot) {
-                          screenshotManager.replaceScreenshot(step.screenshot.id, dataUrl);
-                        }
-                      };
-                      reader.readAsDataURL(file);
-                    }
-                  }}
-                  onScreenshotClick={(e) => {
-                    if (isEditingCallouts) {
-                      const rect = e.currentTarget.getBoundingClientRect();
-                      const x = ((e.clientX - rect.left) / rect.width) * 100;
-                      const y = ((e.clientY - rect.top) / rect.height) * 100;
-                      
-                      addCallout(step.id, {
-                        shape: "circle",
-                        color: calloutColor,
-                        x,
-                        y,
-                        width: 5,
-                        height: 5
-                      });
-                    }
-                  }}
-                  onCalloutClick={handleCalloutClick}
-                  onCalloutUpdate={handleEnhancedCalloutUpdate}
-                  cursorPosition={cursorPosition}
-                  showCalloutCursor={showCalloutCursor}
-                  handleScreenshotMouseMove={handleScreenshotMouseMove}
-                  handleScreenshotMouseEnter={handleScreenshotMouseEnter}
-                  handleScreenshotMouseLeave={handleScreenshotMouseLeave}
-                  onUpdateScreenshot={(dataUrl) => {
-                    if (step.screenshot) {
-                      handleInputChange("screenshot", { ...step.screenshot, dataUrl });
-                    }
-                  }}
-                />
+              {screenshotManager.hasScreenshots && step.screenshot ? (
+                <div className="space-y-4">
+                  <div className="relative border rounded-lg shadow-md overflow-hidden border-zinc-700">
+                    <div className="absolute right-3 top-3 z-10 flex gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="bg-zinc-800/80 backdrop-blur-sm border-zinc-700 text-zinc-300 hover:bg-zinc-700"
+                        onClick={() => {
+                          const input = document.createElement('input');
+                          input.type = 'file';
+                          input.accept = 'image/*';
+                          input.onchange = (e) => {
+                            const file = (e.target as HTMLInputElement).files?.[0];
+                            if (file) {
+                              const reader = new FileReader();
+                              reader.onload = (event) => {
+                                const dataUrl = event.target?.result as string;
+                                if (dataUrl && step.screenshot) {
+                                  screenshotManager.replaceScreenshot(step.screenshot.id, dataUrl);
+                                }
+                              };
+                              reader.readAsDataURL(file);
+                            }
+                          };
+                          input.click();
+                        }}
+                      >
+                        Replace
+                      </Button>
+                    </div>
+                    
+                    <img
+                      src={step.screenshot.dataUrl}
+                      alt="Screenshot"
+                      className="w-full h-auto"
+                    />
+                    
+                    <div className="absolute inset-0">
+                      <CalloutOverlay
+                        screenshot={step.screenshot}
+                        isEditing={isEditingCallouts}
+                        onCalloutAdd={(callout) => {
+                          const newCallout = { ...callout, id: uuidv4() };
+                          const updatedCallouts = [...(step.screenshot?.callouts || []), newCallout];
+                          handleInputChange("screenshot", { ...step.screenshot, callouts: updatedCallouts });
+                        }}
+                        onCalloutUpdate={(callout) => {
+                          if (step.screenshot) {
+                            const updatedCallouts = step.screenshot.callouts.map(c => 
+                              c.id === callout.id ? callout : c
+                            );
+                            handleInputChange("screenshot", { ...step.screenshot, callouts: updatedCallouts });
+                          }
+                        }}
+                        onCalloutDelete={(calloutId) => {
+                          if (step.screenshot) {
+                            const updatedCallouts = step.screenshot.callouts.filter(c => c.id !== calloutId);
+                            handleInputChange("screenshot", { ...step.screenshot, callouts: updatedCallouts });
+                          }
+                        }}
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center gap-2">
+                    <Button
+                      size="sm"
+                      variant={isEditingCallouts ? "default" : "outline"}
+                      onClick={toggleEditMode}
+                      className={isEditingCallouts 
+                        ? "bg-green-600 hover:bg-green-700 text-white" 
+                        : "border-zinc-600 text-zinc-300 hover:bg-zinc-700"
+                      }
+                    >
+                      {isEditingCallouts ? "✓ Done Editing" : "Edit Callouts"}
+                    </Button>
+                  </div>
+                </div>
               ) : (
                 <ScreenshotUpload
                   variant="dropzone"
                   onUpload={(dataUrl) => screenshotManager.addScreenshot(dataUrl)}
                 />
               )}
-              
-              <div className="flex items-center gap-2">
-                <Button
-                  size="sm"
-                  variant={isEditingCallouts ? "default" : "outline"}
-                  onClick={toggleEditMode}
-                  className={isEditingCallouts 
-                    ? "bg-blue-600 hover:bg-blue-700 text-white" 
-                    : "border-zinc-600 text-zinc-300 hover:bg-zinc-700"
-                  }
-                >
-                  {isEditingCallouts ? "Finish Editing" : "Edit Callouts"}
-                </Button>
-              </div>
             </div>
           </CardContent>
         )}
       </Card>
-
-      {/* Cursor for callout editing */}
-      {showCalloutCursor && (
-        <div
-          className="fixed pointer-events-none z-50"
-          style={{ 
-            left: cursorPosition.x - 4, 
-            top: cursorPosition.y - 4,
-            transform: 'translate(-50%, -50%)'
-          }}
-        >
-          <div 
-            className="w-8 h-8 rounded-full border-2 border-white opacity-80"
-            style={{ backgroundColor: calloutColor }}
-          />
-        </div>
-      )}
     </motion.div>
   );
 };

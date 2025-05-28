@@ -2,50 +2,30 @@ import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { SopStep, ScreenshotData, CalloutShape } from "@/types/sop";
+import { SopStep, ScreenshotData, Callout } from "@/types/sop";
 import { toast } from "@/hooks/use-toast";
-import { Plus, Trash2, Image, Eye, EyeOff } from "lucide-react";
+import { Plus, Trash2, Image, Eye, EyeOff, Crop } from "lucide-react";
 import { ScreenshotUpload } from "@/components/common/ScreenshotUpload";
-import ScreenshotEditor from "./ScreenshotEditor";
-import CalloutEditor from "./CalloutEditor";
+import CalloutOverlay from "./CalloutOverlay";
+import CropDialog from "./crop/CropDialog";
 import { v4 as uuidv4 } from "uuid";
 
 interface StepScreenshotProps {
   step: SopStep;
   isEditingCallouts: boolean;
-  calloutColor: string;
-  setCalloutColor: (color: string) => void;
-  showCalloutCursor: boolean;
-  cursorPosition: { x: number; y: number };
-  handleScreenshotMouseMove: (e: React.MouseEvent<HTMLDivElement>) => void;
-  handleScreenshotMouseEnter: () => void;
-  handleScreenshotMouseLeave: () => void;
   toggleEditMode: () => void;
-  setStepScreenshot: (id: string, dataUrl: string) => void;
-  addCallout: (stepId: string, callout: Omit<any, "id">) => void;
-  deleteCallout: (stepId: string, calloutId: string) => void;
   onStepChange?: (stepId: string, field: keyof SopStep, value: any) => void;
 }
 
 const StepScreenshot: React.FC<StepScreenshotProps> = ({
   step,
   isEditingCallouts,
-  calloutColor,
-  setCalloutColor,
-  showCalloutCursor,
-  cursorPosition,
-  handleScreenshotMouseMove,
-  handleScreenshotMouseEnter,
-  handleScreenshotMouseLeave,
   toggleEditMode,
-  setStepScreenshot,
-  addCallout,
-  deleteCallout,
   onStepChange
 }) => {
   const [activeScreenshotIndex, setActiveScreenshotIndex] = useState(0);
-  const [selectedCalloutTool, setSelectedCalloutTool] = useState<CalloutShape>("circle");
   const [showAllScreenshots, setShowAllScreenshots] = useState(false);
+  const [isCropDialogOpen, setIsCropDialogOpen] = useState(false);
 
   // Get all screenshots (both legacy single screenshot and new multiple screenshots)
   const allScreenshots: ScreenshotData[] = [];
@@ -65,8 +45,6 @@ const StepScreenshot: React.FC<StepScreenshotProps> = ({
   const handleScreenshotUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
-    console.log('File selected:', file.name, file.type, file.size);
 
     // Validate file type
     if (!file.type.startsWith('image/')) {
@@ -92,7 +70,6 @@ const StepScreenshot: React.FC<StepScreenshotProps> = ({
     const reader = new FileReader();
     reader.onloadend = () => {
       const result = reader.result as string;
-      console.log('FileReader result:', result ? 'Success' : 'Failed');
       
       if (!result) {
         toast({
@@ -111,17 +88,13 @@ const StepScreenshot: React.FC<StepScreenshotProps> = ({
         title: `Screenshot ${allScreenshots.length + 1}`
       };
 
-      console.log('Creating new screenshot:', newScreenshot.id);
-
       // If this is the first screenshot, set it as the main screenshot
       if (!step.screenshot && (!step.screenshots || step.screenshots.length === 0)) {
-        console.log('Setting as main screenshot');
         if (onStepChange) {
           onStepChange(step.id, "screenshot", newScreenshot);
         }
         setActiveScreenshotIndex(0);
       } else {
-        console.log('Adding to screenshots array');
         // Add to screenshots array
         const updatedScreenshots = [...(step.screenshots || []), newScreenshot];
         if (onStepChange) {
@@ -141,7 +114,6 @@ const StepScreenshot: React.FC<StepScreenshotProps> = ({
     };
 
     reader.onerror = () => {
-      console.error('FileReader error:', reader.error);
       toast({
         title: "Upload Failed",
         description: "Failed to read the image file",
@@ -149,7 +121,6 @@ const StepScreenshot: React.FC<StepScreenshotProps> = ({
       });
     };
 
-    console.log('Starting file read...');
     reader.readAsDataURL(file);
   };
 
@@ -213,37 +184,11 @@ const StepScreenshot: React.FC<StepScreenshotProps> = ({
     });
   };
 
-  const handleScreenshotClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!activeScreenshot || !isEditingCallouts) return;
-
-    const rect = e.currentTarget.getBoundingClientRect();
-    const x = ((e.clientX - rect.left) / rect.width) * 100;
-    const y = ((e.clientY - rect.top) / rect.height) * 100;
-
-    // Default dimensions based on callout type
-    let width = 5;
-    let height = 5;
-
-    if (selectedCalloutTool === "rectangle") {
-      width = 15;
-      height = 10;
-    } else if (selectedCalloutTool === "arrow") {
-      width = 8;
-      height = 8;
-    }
-
-    const calloutData = {
-      shape: selectedCalloutTool,
-      color: calloutColor,
-      x: Math.max(width / 2, Math.min(100 - width / 2, x)),
-      y: Math.max(height / 2, Math.min(100 - height / 2, y)),
-      width,
-      height,
-      number: selectedCalloutTool === "number" ? (activeScreenshot.callouts.length + 1) : undefined,
-    };
-
-    // Add callout to active screenshot
-    const updatedCallouts = [...activeScreenshot.callouts, { ...calloutData, id: uuidv4() }];
+  const handleCalloutAdd = (callout: Omit<Callout, "id">) => {
+    if (!activeScreenshot) return;
+    
+    const newCallout = { ...callout, id: uuidv4() };
+    const updatedCallouts = [...activeScreenshot.callouts, newCallout];
     const updatedScreenshot = { ...activeScreenshot, callouts: updatedCallouts };
 
     // Update the appropriate screenshot
@@ -260,21 +205,52 @@ const StepScreenshot: React.FC<StepScreenshotProps> = ({
         onStepChange(step.id, "screenshots", updatedScreenshots);
       }
     }
-
-    toast({
-      title: "Callout Added",
-      description: "Click on the callout to remove it if needed",
-    });
   };
 
-  const handleCalloutConfigured = (config: {
-    shape: CalloutShape;
-    color: string;
-    revealText?: string;
-    text?: string;
-  }) => {
-    setSelectedCalloutTool(config.shape);
-    setCalloutColor(config.color);
+  const handleCalloutUpdate = (callout: Callout) => {
+    if (!activeScreenshot) return;
+    
+    const updatedCallouts = activeScreenshot.callouts.map(c => 
+      c.id === callout.id ? callout : c
+    );
+    const updatedScreenshot = { ...activeScreenshot, callouts: updatedCallouts };
+
+    // Update the appropriate screenshot
+    if (activeScreenshotIndex === 0 && step.screenshot && !step.screenshots?.length) {
+      if (onStepChange) {
+        onStepChange(step.id, "screenshot", updatedScreenshot);
+      }
+    } else {
+      const updatedScreenshots = [...(step.screenshots || [])];
+      const arrayIndex = step.screenshot ? activeScreenshotIndex - 1 : activeScreenshotIndex;
+      updatedScreenshots[arrayIndex] = updatedScreenshot;
+      
+      if (onStepChange) {
+        onStepChange(step.id, "screenshots", updatedScreenshots);
+      }
+    }
+  };
+
+  const handleCalloutDelete = (calloutId: string) => {
+    if (!activeScreenshot) return;
+    
+    const updatedCallouts = activeScreenshot.callouts.filter(c => c.id !== calloutId);
+    const updatedScreenshot = { ...activeScreenshot, callouts: updatedCallouts };
+
+    // Update the appropriate screenshot
+    if (activeScreenshotIndex === 0 && step.screenshot && !step.screenshots?.length) {
+      if (onStepChange) {
+        onStepChange(step.id, "screenshot", updatedScreenshot);
+      }
+    } else {
+      const updatedScreenshots = [...(step.screenshots || [])];
+      const arrayIndex = step.screenshot ? activeScreenshotIndex - 1 : activeScreenshotIndex;
+      updatedScreenshots[arrayIndex] = updatedScreenshot;
+      
+      if (onStepChange) {
+        onStepChange(step.id, "screenshots", updatedScreenshots);
+      }
+    }
   };
 
   return (
@@ -335,18 +311,6 @@ const StepScreenshot: React.FC<StepScreenshotProps> = ({
         </div>
       )}
 
-      {/* Callout editor when editing */}
-      {isEditingCallouts && activeScreenshot && (
-        <CalloutEditor
-          stepId={step.id}
-          calloutColor={calloutColor}
-          setCalloutColor={setCalloutColor}
-          selectedTool={selectedCalloutTool}
-          onToolChange={setSelectedCalloutTool}
-          onCalloutConfigured={handleCalloutConfigured}
-        />
-      )}
-
       {/* Screenshot display */}
       {showAllScreenshots ? (
         // Show all screenshots in a grid
@@ -368,21 +332,22 @@ const StepScreenshot: React.FC<StepScreenshotProps> = ({
                   </Button>
                 )}
               </div>
-              <ScreenshotEditor
-                stepId={step.id}
-                screenshot={screenshot}
-                isEditingCallouts={false}
-                calloutColor={calloutColor}
-                onScreenshotUpload={handleScreenshotUpload}
-                onScreenshotClick={() => {}}
-                onCalloutClick={() => {}}
-                cursorPosition={cursorPosition}
-                showCalloutCursor={false}
-                handleScreenshotMouseMove={() => {}}
-                handleScreenshotMouseEnter={() => {}}
-                handleScreenshotMouseLeave={() => {}}
-                onUpdateScreenshot={() => {}}
-              />
+              <div className="relative border rounded-lg shadow-md overflow-hidden border-zinc-700">
+                <img
+                  src={screenshot.dataUrl}
+                  alt={screenshot.title || `Screenshot ${index + 1}`}
+                  className="w-full h-auto"
+                />
+                <div className="absolute inset-0">
+                  <CalloutOverlay
+                    screenshot={screenshot}
+                    isEditing={false}
+                    onCalloutAdd={() => {}}
+                    onCalloutUpdate={() => {}}
+                    onCalloutDelete={() => {}}
+                  />
+                </div>
+              </div>
             </div>
           ))}
         </div>
@@ -429,34 +394,63 @@ const StepScreenshot: React.FC<StepScreenshotProps> = ({
                 <Label className="text-zinc-400 text-sm">
                   {activeScreenshot.title || `Screenshot ${activeScreenshotIndex + 1}`}
                 </Label>
-                {allScreenshots.length > 1 && (
+                <div className="flex gap-2">
                   <Button
                     size="sm"
-                    variant="ghost"
-                    onClick={() => handleDeleteScreenshot(activeScreenshotIndex)}
-                    className="text-red-400 hover:text-red-300 hover:bg-red-900/20"
+                    variant="outline"
+                    className="text-zinc-300 border-zinc-700 hover:bg-zinc-800 flex items-center gap-1"
+                    onClick={() => setIsCropDialogOpen(true)}
                   >
-                    <Trash2 className="h-4 w-4 mr-1" />
-                    Delete
+                    <Crop className="h-4 w-4" />
+                    Crop
                   </Button>
-                )}
+                  {allScreenshots.length > 1 && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => handleDeleteScreenshot(activeScreenshotIndex)}
+                      className="text-red-400 hover:text-red-300 hover:bg-red-900/20"
+                    >
+                      <Trash2 className="h-4 w-4 mr-1" />
+                      Delete
+                    </Button>
+                  )}
+                </div>
               </div>
 
-              <ScreenshotEditor
-                stepId={step.id}
-                screenshot={activeScreenshot}
-                isEditingCallouts={isEditingCallouts}
-                calloutColor={calloutColor}
-                onScreenshotUpload={handleScreenshotUpload}
-                onScreenshotClick={handleScreenshotClick}
-                onCalloutClick={(calloutId) => deleteCallout(step.id, calloutId)}
-                cursorPosition={cursorPosition}
-                showCalloutCursor={showCalloutCursor}
-                handleScreenshotMouseMove={handleScreenshotMouseMove}
-                handleScreenshotMouseEnter={handleScreenshotMouseEnter}
-                handleScreenshotMouseLeave={handleScreenshotMouseLeave}
-                onUpdateScreenshot={handleUpdateScreenshot}
-              />
+              <div className="relative border rounded-lg shadow-md overflow-hidden border-zinc-700">
+                <div className="absolute right-3 top-3 z-10">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="bg-zinc-800/80 backdrop-blur-sm border-zinc-700 text-zinc-300 hover:bg-zinc-700"
+                  >
+                    Replace
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="absolute inset-0 opacity-0 cursor-pointer"
+                      onChange={handleScreenshotUpload}
+                    />
+                  </Button>
+                </div>
+                
+                <img
+                  src={activeScreenshot.dataUrl}
+                  alt={activeScreenshot.title || `Screenshot ${activeScreenshotIndex + 1}`}
+                  className="w-full h-auto"
+                />
+                
+                <div className="absolute inset-0">
+                  <CalloutOverlay
+                    screenshot={activeScreenshot}
+                    isEditing={isEditingCallouts}
+                    onCalloutAdd={handleCalloutAdd}
+                    onCalloutUpdate={handleCalloutUpdate}
+                    onCalloutDelete={handleCalloutDelete}
+                  />
+                </div>
+              </div>
             </div>
           )}
         </div>
@@ -483,6 +477,13 @@ const StepScreenshot: React.FC<StepScreenshotProps> = ({
           />
         </div>
       )}
+      
+      <CropDialog
+        open={isCropDialogOpen}
+        onOpenChange={setIsCropDialogOpen}
+        imageUrl={activeScreenshot?.dataUrl || ''}
+        onCropComplete={handleUpdateScreenshot}
+      />
     </div>
   );
 };
