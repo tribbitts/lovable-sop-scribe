@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -201,12 +202,12 @@ const LivingSOPPanel: React.FC<LivingSOPPanelProps> = ({
                 </SelectContent>
               </Select>
               
-              <Select value={selectedStep || ""} onValueChange={setSelectedStep}>
+              <Select value={selectedStep || "document-level"} onValueChange={(value) => setSelectedStep(value === "document-level" ? null : value)}>
                 <SelectTrigger className="flex-1 bg-zinc-900 border-zinc-600 text-white">
                   <SelectValue placeholder="Select step (optional)" />
                 </SelectTrigger>
                 <SelectContent className="bg-zinc-800 border-zinc-600">
-                  <SelectItem value="" className="text-white">Document-level comment</SelectItem>
+                  <SelectItem value="document-level" className="text-white">Document-level comment</SelectItem>
                   {document.steps.map((step, index) => (
                     <SelectItem key={step.id} value={step.id} className="text-white">
                       Step {index + 1}: {step.title || step.description.slice(0, 30)}...
@@ -501,4 +502,4 @@ const LivingSOPPanel: React.FC<LivingSOPPanelProps> = ({
   );
 };
 
-export default LivingSOPPanel; 
+export default LivingSOPPanel;
