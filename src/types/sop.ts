@@ -20,6 +20,7 @@ export interface SopDocument {
   progressTracking?: {
     enabled: boolean;
     sessionName?: string;
+    lastSaved?: string;
   };
   steps: SopStep[];
   createdAt: Date;
@@ -59,6 +60,13 @@ export interface SopStep {
   fileLink?: string;
   fileLinkText?: string;
   tags?: string[];
+  trainingMode?: boolean;
+  quizQuestions?: any[];
+  learningObjectives?: string[];
+  contentBlocks?: any[];
+  patientSafetyNote?: string;
+  hipaaAlert?: string;
+  communicationTip?: string;
 }
 
 export interface StepResource {
@@ -69,6 +77,7 @@ export interface StepResource {
   description?: string;
   fileSize?: string;
   duration?: string;
+  itmOnly?: boolean;
 }
 
 export interface ScreenshotData {
@@ -83,6 +92,9 @@ export interface ScreenshotData {
     width: number;
     height: number;
   };
+  originalDataUrl?: string;
+  secondaryDataUrl?: string;
+  secondaryCallouts?: Callout[];
 }
 
 // Healthcare-specific types
@@ -99,6 +111,7 @@ export interface HealthcareContent {
   content: string;
   priority: "high" | "medium" | "low";
   icon?: string;
+  itmOnly?: boolean;
 }
 
 export interface RevisionHistoryEntry {
@@ -193,7 +206,7 @@ export interface FreehandCalloutData {
 }
 
 // Export and Template Types
-export type ExportFormat = 'pdf' | 'html' | 'docx' | 'json';
+export type ExportFormat = 'pdf' | 'html' | 'docx' | 'json' | 'bundle' | 'training-module';
 
 export interface ExportOptions {
   format: ExportFormat;
@@ -208,6 +221,8 @@ export interface ExportOptions {
   customization?: any;
   theme?: string;
   mode?: 'standalone' | 'zip';
+  includeProgressInfo?: boolean;
+  enhanced?: any;
 }
 
 // Component Props Types
@@ -374,7 +389,7 @@ export interface EnhancedExportOptions {
   customization?: any;
   theme?: string;
   mode?: 'standalone' | 'zip';
-  advanced?: any;
+  advanced?: AdvancedExportCustomization;
   template?: any;
   optimization?: any;
 }
