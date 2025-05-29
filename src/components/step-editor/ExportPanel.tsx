@@ -37,6 +37,8 @@ const ExportPanel: React.FC<ExportPanelProps> = ({
   const [selectedTheme, setSelectedTheme] = useState("corporate-blue");
   const [selectedFont, setSelectedFont] = useState("helvetica");
   const [exportOptions, setExportOptions] = useState<ExportOptions>({
+    format: "html",
+    includeImages: true,
     theme: "auto",
     includeTableOfContents: true,
     includeProgressInfo: false,
@@ -56,6 +58,8 @@ const ExportPanel: React.FC<ExportPanelProps> = ({
     const font = fontOptions.find(f => f.id === selectedFont)?.value || fontOptions[0].value;
     
     const htmlOptions: ExportOptions = {
+      format: "html",
+      includeImages: true,
       ...exportOptions,
       mode: 'standalone',
       enhanced: false,

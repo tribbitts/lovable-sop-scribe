@@ -67,6 +67,9 @@ export interface SopStep {
   patientSafetyNote?: string;
   hipaaAlert?: string;
   communicationTip?: string;
+  allowRetakes?: boolean;
+  requiredScore?: number;
+  itmOnlyContent?: any;
 }
 
 export interface StepResource {
@@ -96,6 +99,7 @@ export interface ScreenshotData {
   originalDataUrl?: string;
   secondaryDataUrl?: string;
   secondaryCallouts?: Callout[];
+  isCropped?: boolean;
 }
 
 // Healthcare-specific types
@@ -380,21 +384,17 @@ export interface SOPAnalytics {
 
 // Enhanced Export Types
 export interface EnhancedExportOptions extends ExportOptions {
-  format: ExportFormat;
-  includeImages: boolean;
-  includeTableOfContents?: boolean;
-  includeRevisionHistory?: boolean;
-  includeSignatures?: boolean;
-  pageSize?: 'A4' | 'Letter' | 'Legal';
-  orientation?: 'portrait' | 'landscape';
-  quality?: 'low' | 'medium' | 'high';
-  watermark?: string;
-  customization?: any;
-  theme?: string;
-  mode?: 'standalone' | 'zip';
-  advanced?: any;
-  template?: any;
-  optimization?: any;
+  advanced?: AdvancedExportCustomization;
+  template?: {
+    useCustomTemplate: boolean;
+    templateId: string;
+  };
+  optimization?: {
+    imageQuality: 'low' | 'medium' | 'high';
+    fileSize: 'compact' | 'balanced' | 'high-quality';
+    webOptimized: boolean;
+    includeMetadata: boolean;
+  };
 }
 
 export interface AdvancedExportCustomization {
@@ -403,22 +403,29 @@ export interface AdvancedExportCustomization {
     secondaryColor: string;
     accentColor: string;
     fontFamily: string;
+    logoUrl?: string;
   };
   layout?: {
-    headerHeight: number;
-    footerHeight: number;
-    margins: {
-      top: number;
-      bottom: number;
-      left: number;
-      right: number;
-    };
+    pageSize?: 'A4' | 'US-Letter' | 'Legal' | 'A3';
+    orientation?: 'portrait' | 'landscape';
+    margins?: 'narrow' | 'normal' | 'wide';
+    columnLayout?: 'single' | 'two-column' | 'three-column';
   };
-  content?: {
-    showStepNumbers: boolean;
-    showEstimatedTime: boolean;
-    showCalloutNumbers: boolean;
-    highlightCriticalSteps: boolean;
+  sections?: {
+    includeCoverPage?: boolean;
+    includeTableOfContents?: boolean;
+    includeGlossary?: boolean;
+    includeAppendix?: boolean;
+    includeRevisionHistory?: boolean;
+    includeSignaturePage?: boolean;
+    includeFeedbackQR?: boolean;
+  };
+  interactivity?: {
+    enableClickableLinks?: boolean;
+    enableFormFields?: boolean;
+    enableDigitalSignatures?: boolean;
+    enableBookmarks?: boolean;
+    enableComments?: boolean;
   };
 }
 
@@ -431,16 +438,45 @@ export interface ExportTemplate {
   isPublic: boolean;
   usageCount: number;
   tags: string[];
-  customization: {
-    brandKit: {
-      primaryColor: string;
-      secondaryColor: string;
-      accentColor: string;
-      fontFamily: string;
-    };
-  };
+  customization: AdvancedExportCustomization;
   preview?: string;
   createdBy?: string;
   createdAt: Date;
   updatedAt: Date;
+}
+
+// Enhanced Export Format Type
+export type EnhancedExportFormat = 'pdf' | 'html' | 'word' | 'powerpoint' | 'training-module';
+
+// Share Link Types
+export interface ShareLinkOptions {
+  access: {
+    type: 'public' | 'password-protected' | 'time-limited' | 'restricted';
+    password?: string;
+    expiresAt?: Date;
+  };
+  permissions: {
+    canView: boolean;
+    canComment: boolean;
+    canSuggestEdits: boolean;
+    canDownload: boolean;
+    canShare: boolean;
+    canPrint: boolean;
+    trackViewing: boolean;
+  };
+  appearance: {
+    showHeader: boolean;
+    showFooter: boolean;
+    showWatermark: boolean;
+    theme: 'auto' | 'light' | 'dark';
+    hideSOPifyBranding: boolean;
+  };
+  analytics: {
+    enabled: boolean;
+    trackPageViews: boolean;
+    trackTimeSpent: boolean;
+    trackInteractions: boolean;
+    trackDownloads: boolean;
+    notifyOnAccess: boolean;
+  };
 }

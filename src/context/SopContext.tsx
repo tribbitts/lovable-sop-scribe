@@ -1,18 +1,14 @@
 import React, { createContext, useState, useContext, ReactNode } from "react";
-import { SopDocument, SopStep, Callout, StepResource, ExportFormat } from "../types/sop";
-import { EnhancedContentBlock } from "../types/enhanced-content";
-import { Folder, Tag, SavedSop } from "../types/organization";
+import { SopDocument, ExportFormat } from "../types/sop";
 import { toast } from "@/hooks/use-toast";
 import { StorageManager } from "@/utils/storageManager";
 import { DocumentManager } from "./managers/DocumentManager";
-import { StepManager } from "./managers/StepManager";
-import { ScreenshotManager } from "./managers/ScreenshotManager";
-import { useFolders } from "@/hooks/useFolders";
-import { useTags } from "@/hooks/useTags";
-import { useSavedSops } from "@/hooks/useSavedSops";
 
-interface SopContextType {
+interface DocumentContextType {
+  // Document state
   sopDocument: SopDocument;
+  
+  // Document metadata operations
   setSopTitle: (title: string) => void;
   setSopTopic: (topic: string) => void;
   setSopDate: (date: string) => void;
@@ -23,50 +19,12 @@ interface SopContextType {
   setBackgroundImage: (image: string | null) => void;
   setCompanyName: (name: string) => void;
   
-  // Step management
-  addStep: () => void;
-  addStepFromTemplate: (templateType: "standard" | "knowledge-check" | "scenario" | "resource-focus") => void;
-  updateStep: (stepId: string, field: keyof SopStep, value: any) => void;
-  moveStepUp: (stepId: string) => void;
-  moveStepDown: (stepId: string) => void;
-  deleteStep: (stepId: string) => void;
-  duplicateStep: (stepId: string) => void;
-  toggleStepCompletion: (stepId: string) => void;
-  
-  // Enhanced content blocks
-  addStepContentBlock: (stepId: string, block: EnhancedContentBlock) => void;
-  updateStepContentBlock: (stepId: string, blockId: string, updates: Partial<EnhancedContentBlock>) => void;
-  removeStepContentBlock: (stepId: string, blockId: string) => void;
-  reorderStepContentBlocks: (stepId: string, fromIndex: number, toIndex: number) => void;
-  
-  // Screenshot management
-  setStepScreenshot: (stepId: string, dataUrl: string) => void;
-  setStepSecondaryScreenshot: (stepId: string, dataUrl: string) => void;
-  cropStepScreenshot: (stepId: string, croppedDataUrl: string) => void;
-  undoCropStepScreenshot: (stepId: string) => void;
-  
-  // Multiple screenshots management
-  addStepScreenshot: (stepId: string, dataUrl: string, title?: string, description?: string) => void;
-  updateStepScreenshot: (stepId: string, screenshotId: string, updates: Partial<any>) => void;
-  deleteStepScreenshot: (stepId: string, screenshotId: string) => void;
-  reorderStepScreenshots: (stepId: string, fromIndex: number, toIndex: number) => void;
-  cropSpecificScreenshot: (stepId: string, screenshotId: string, croppedDataUrl: string) => void;
-  undoCropSpecificScreenshot: (stepId: string, screenshotId: string) => void;
-  
-  // Callout management
-  addCallout: (stepId: string, callout: Omit<Callout, "id">) => void;
-  updateCallout: (stepId: string, callout: Callout) => void;
-  deleteCallout: (stepId: string, calloutId: string) => void;
-  addSecondaryCallout: (stepId: string, callout: Omit<Callout, "id">) => void;
-  updateSecondaryCallout: (stepId: string, callout: Callout) => void;
-  deleteSecondaryCallout: (stepId: string, calloutId: string) => void;
-  
-  // Tags and resources
-  addStepTag: (stepId: string, tag: string) => void;
-  removeStepTag: (stepId: string, tag: string) => void;
-  addStepResource: (stepId: string, resource: StepResource) => void;
-  removeStepResource: (stepId: string, resourceId: string) => void;
-  updateStepResource: (stepId: string, resourceId: string, updates: Partial<StepResource>) => void;
+  // Document settings
+  setTableOfContents: (enabled: boolean) => void;
+  setDarkMode: (enabled: boolean) => void;
+  setTrainingMode: (enabled: boolean) => void;
+  enableProgressTracking: (sessionName?: string) => void;
+  disableProgressTracking: () => void;
   
   // Document management
   saveDocumentToJSON: () => void;
@@ -81,34 +39,12 @@ interface SopContextType {
   getCompletedStepsCount: () => number;
   getProgressPercentage: () => number;
   
-  // Settings
-  setTableOfContents: (enabled: boolean) => void;
-  setDarkMode: (enabled: boolean) => void;
-  setTrainingMode: (enabled: boolean) => void;
-  enableProgressTracking: (sessionName?: string) => void;
-  disableProgressTracking: () => void;
-
-  // Organization system
-  folders: Folder[];
-  tags: Tag[];
-  savedSops: SavedSop[];
-  organizationLoading: boolean;
-  createFolder: (name: string, description?: string, color?: string) => Promise<Folder | null>;
-  updateFolder: (id: string, updates: Partial<Folder>) => Promise<Folder | null>;
-  deleteFolder: (id: string) => Promise<boolean>;
-  createTag: (name: string, color?: string) => Promise<Tag | null>;
-  updateTag: (id: string, updates: Partial<Tag>) => Promise<Tag | null>;
-  deleteTag: (id: string) => Promise<boolean>;
-  saveSopToDatabase: (folderId?: string, description?: string) => Promise<SavedSop | null>;
-  updateSopInDatabase: (id: string, folderId?: string, description?: string) => Promise<SavedSop | null>;
-  deleteSopFromDatabase: (id: string) => Promise<boolean>;
-  loadSopFromDatabase: (savedSop: SavedSop) => void;
-  addTagToSop: (sopId: string, tagId: string) => Promise<boolean>;
-  removeTagFromSop: (sopId: string, tagId: string) => Promise<boolean>;
-  refreshOrganization: () => void;
+  // Internal state updater (for step operations)
+  updateDocument: (updater: (prev: SopDocument) => SopDocument) => void;
 }
 
 const defaultSopDocument: SopDocument = {
+  id: crypto.randomUUID(),
   title: "",
   topic: "",
   date: new Date().toISOString().split("T")[0],
@@ -122,17 +58,28 @@ const defaultSopDocument: SopDocument = {
   trainingMode: true,
   progressTracking: {
     enabled: false
-  }
+  },
+  createdAt: new Date(),
+  updatedAt: new Date()
 };
 
-export const SopContext = createContext<SopContextType>({} as SopContextType);
+export const DocumentContext = createContext<DocumentContextType>({} as DocumentContextType);
 
-export const SopProvider = ({ children }: { children: ReactNode }) => {
+/**
+ * Specialized context for document-level operations
+ * Handles document metadata, settings, and export functionality
+ */
+export const DocumentProvider = ({ children }: { children: ReactNode }) => {
   const [sopDocument, setSopDocument] = useState<SopDocument>(() => {
     const savedDocument = StorageManager.loadDocument();
     if (savedDocument) {
       try {
-        return { ...defaultSopDocument, ...savedDocument };
+        return { 
+          ...defaultSopDocument, 
+          ...savedDocument,
+          createdAt: savedDocument.createdAt ? new Date(savedDocument.createdAt) : new Date(),
+          updatedAt: savedDocument.updatedAt ? new Date(savedDocument.updatedAt) : new Date()
+        };
       } catch (error) {
         console.error("Failed to load saved document:", error);
         toast({
@@ -145,38 +92,7 @@ export const SopProvider = ({ children }: { children: ReactNode }) => {
     return defaultSopDocument;
   });
 
-  // Organization hooks
-  const {
-    folders,
-    loading: foldersLoading,
-    createFolder,
-    updateFolder,
-    deleteFolder,
-    refetch: refetchFolders
-  } = useFolders();
-
-  const {
-    tags,
-    loading: tagsLoading,
-    createTag,
-    updateTag,
-    deleteTag,
-    refetch: refetchTags
-  } = useTags();
-
-  const {
-    savedSops,
-    loading: sopsLoading,
-    saveSop,
-    updateSop,
-    deleteSop,
-    addTagToSop,
-    removeTagFromSop,
-    refetch: refetchSops
-  } = useSavedSops();
-
-  const organizationLoading = foldersLoading || tagsLoading || sopsLoading;
-
+  // Document metadata operations
   const setSopTitle = (title: string) => {
     setSopDocument(prev => DocumentManager.updateTitle(prev, title));
   };
@@ -204,7 +120,7 @@ export const SopProvider = ({ children }: { children: ReactNode }) => {
   const setLogo = (logo: string | null) => {
     setSopDocument(prev => DocumentManager.updateLogo(prev, logo));
   };
-  
+
   const setBackgroundImage = (image: string | null) => {
     setSopDocument(prev => DocumentManager.updateBackgroundImage(prev, image));
   };
@@ -213,6 +129,7 @@ export const SopProvider = ({ children }: { children: ReactNode }) => {
     setSopDocument(prev => DocumentManager.updateCompanyName(prev, companyName));
   };
 
+  // Document settings
   const setTableOfContents = (enabled: boolean) => {
     setSopDocument(prev => DocumentManager.updateTableOfContents(prev, enabled));
   };
@@ -233,218 +150,18 @@ export const SopProvider = ({ children }: { children: ReactNode }) => {
     setSopDocument(prev => DocumentManager.disableProgressTracking(prev));
   };
 
-  const addStep = () => {
-    setSopDocument(prev => StepManager.addStep(prev));
-  };
-
-  const addStepFromTemplate = (templateType: "standard" | "knowledge-check" | "scenario" | "resource-focus") => {
-    setSopDocument(prev => StepManager.addStepFromTemplate(prev, templateType));
-  };
-
-  const updateStep = (stepId: string, field: keyof SopStep, value: any) => {
-    setSopDocument(prev => StepManager.updateStep(prev, stepId, field, value));
-  };
-
-  const moveStepUp = (stepId: string) => {
-    setSopDocument(prev => StepManager.moveStepUp(prev, stepId));
-  };
-
-  const moveStepDown = (stepId: string) => {
-    setSopDocument(prev => StepManager.moveStepDown(prev, stepId));
-  };
-
-  const deleteStep = (stepId: string) => {
-    setSopDocument(prev => StepManager.deleteStep(prev, stepId));
-  };
-
-  const duplicateStep = (stepId: string) => {
-    setSopDocument(prev => StepManager.duplicateStep(prev, stepId));
-  };
-
-  const toggleStepCompletion = (stepId: string) => {
-    setSopDocument(prev => StepManager.toggleStepCompletion(prev, stepId));
-  };
-
-  // Enhanced content block operations - FIXED to properly handle types
-  const addStepContentBlock = (stepId: string, block: EnhancedContentBlock) => {
-    setSopDocument(prev => {
-      const stepIndex = prev.steps.findIndex(s => s.id === stepId);
-      if (stepIndex === -1) return prev;
-
-      const updatedSteps = [...prev.steps];
-      const currentBlocks = updatedSteps[stepIndex].enhancedContentBlocks || [];
-      
-      // Ensure the block has the correct order
-      const blockWithOrder = { ...block, order: currentBlocks.length };
-      updatedSteps[stepIndex].enhancedContentBlocks = [...currentBlocks, blockWithOrder];
-
-      return { ...prev, steps: updatedSteps };
-    });
-  };
-
-  const updateStepContentBlock = (stepId: string, blockId: string, updates: Partial<EnhancedContentBlock>) => {
-    setSopDocument(prev => {
-      const stepIndex = prev.steps.findIndex(s => s.id === stepId);
-      if (stepIndex === -1) return prev;
-
-      const updatedSteps = [...prev.steps];
-      const currentBlocks = updatedSteps[stepIndex].enhancedContentBlocks || [];
-      const blockIndex = currentBlocks.findIndex(b => b.id === blockId);
-      
-      if (blockIndex === -1) return prev;
-
-      const currentBlock = currentBlocks[blockIndex];
-      
-      // Create updated block with proper typing
-      const updatedBlock = Object.assign({}, currentBlock, updates) as EnhancedContentBlock;
-
-      const newBlocks = [...currentBlocks];
-      newBlocks[blockIndex] = updatedBlock;
-      
-      updatedSteps[stepIndex].enhancedContentBlocks = newBlocks;
-
-      return { ...prev, steps: updatedSteps };
-    });
-  };
-
-  const removeStepContentBlock = (stepId: string, blockId: string) => {
-    setSopDocument(prev => {
-      const stepIndex = prev.steps.findIndex(s => s.id === stepId);
-      if (stepIndex === -1) return prev;
-
-      const updatedSteps = [...prev.steps];
-      const currentBlocks = updatedSteps[stepIndex].enhancedContentBlocks || [];
-      updatedSteps[stepIndex].enhancedContentBlocks = currentBlocks.filter(b => b.id !== blockId);
-
-      return { ...prev, steps: updatedSteps };
-    });
-  };
-
-  const reorderStepContentBlocks = (stepId: string, fromIndex: number, toIndex: number) => {
-    setSopDocument(prev => {
-      const stepIndex = prev.steps.findIndex(s => s.id === stepId);
-      if (stepIndex === -1) return prev;
-
-      const updatedSteps = [...prev.steps];
-      const currentBlocks = [...(updatedSteps[stepIndex].enhancedContentBlocks || [])];
-      
-      const [movedBlock] = currentBlocks.splice(fromIndex, 1);
-      currentBlocks.splice(toIndex, 0, movedBlock);
-      
-      // Update order property
-      currentBlocks.forEach((block, index) => {
-        block.order = index;
-      });
-
-      updatedSteps[stepIndex].enhancedContentBlocks = currentBlocks;
-      return { ...prev, steps: updatedSteps };
-    });
-  };
-
-  const addStepTag = (stepId: string, tag: string) => {
-    setSopDocument(prev => StepManager.addStepTag(prev, stepId, tag));
-  };
-
-  const removeStepTag = (stepId: string, tag: string) => {
-    setSopDocument(prev => StepManager.removeStepTag(prev, stepId, tag));
-  };
-
-  const addStepResource = (stepId: string, resource: StepResource) => {
-    setSopDocument(prev => StepManager.addStepResource(prev, stepId, resource));
-  };
-
-  const removeStepResource = (stepId: string, resourceId: string) => {
-    setSopDocument(prev => StepManager.removeStepResource(prev, stepId, resourceId));
-  };
-
-  const updateStepResource = (stepId: string, resourceId: string, updates: Partial<StepResource>) => {
-    setSopDocument(prev => StepManager.updateStepResource(prev, stepId, resourceId, updates));
-  };
-
-  // Screenshot operations
-  const setStepScreenshot = (stepId: string, dataUrl: string) => {
-    setSopDocument(prev => ScreenshotManager.setStepScreenshot(prev, stepId, dataUrl));
-  };
-
-  const setStepSecondaryScreenshot = (stepId: string, dataUrl: string) => {
-    setSopDocument(prev => ScreenshotManager.setStepSecondaryScreenshot(prev, stepId, dataUrl));
-  };
-
-  const cropStepScreenshot = (stepId: string, croppedDataUrl: string) => {
-    // Use the first screenshot ID for backward compatibility
-    const step = sopDocument.steps.find(s => s.id === stepId);
-    const screenshotId = step?.screenshot?.id || step?.screenshots?.[0]?.id;
-    if (screenshotId) {
-      setSopDocument(prev => ScreenshotManager.cropStepScreenshot(prev, stepId, screenshotId, croppedDataUrl));
-    }
-  };
-
-  const undoCropStepScreenshot = (stepId: string) => {
-    // Use the first screenshot ID for backward compatibility
-    const step = sopDocument.steps.find(s => s.id === stepId);
-    const screenshotId = step?.screenshot?.id || step?.screenshots?.[0]?.id;
-    if (screenshotId) {
-      setSopDocument(prev => ScreenshotManager.undoCropStepScreenshot(prev, stepId, screenshotId));
-    }
-  };
-
-  // Multiple screenshots management
-  const addStepScreenshot = (stepId: string, dataUrl: string, title?: string, description?: string) => {
-    setSopDocument(prev => ScreenshotManager.addStepScreenshot(prev, stepId, dataUrl, title, description));
-  };
-
-  const updateStepScreenshot = (stepId: string, screenshotId: string, updates: Partial<any>) => {
-    setSopDocument(prev => ScreenshotManager.updateStepScreenshot(prev, stepId, screenshotId, updates));
-  };
-
-  const deleteStepScreenshot = (stepId: string, screenshotId: string) => {
-    setSopDocument(prev => ScreenshotManager.deleteStepScreenshot(prev, stepId, screenshotId));
-  };
-
-  const reorderStepScreenshots = (stepId: string, fromIndex: number, toIndex: number) => {
-    setSopDocument(prev => ScreenshotManager.reorderStepScreenshots(prev, stepId, fromIndex, toIndex));
-  };
-
-  const cropSpecificScreenshot = (stepId: string, screenshotId: string, croppedDataUrl: string) => {
-    setSopDocument(prev => ScreenshotManager.cropStepScreenshot(prev, stepId, screenshotId, croppedDataUrl));
-  };
-
-  const undoCropSpecificScreenshot = (stepId: string, screenshotId: string) => {
-    setSopDocument(prev => ScreenshotManager.undoCropStepScreenshot(prev, stepId, screenshotId));
-  };
-
-  const addCallout = (stepId: string, callout: Omit<Callout, "id">) => {
-    setSopDocument(prev => ScreenshotManager.addCallout(prev, stepId, callout));
-  };
-
-  const updateCallout = (stepId: string, callout: Callout) => {
-    setSopDocument(prev => ScreenshotManager.updateCallout(prev, stepId, callout));
-  };
-
-  const deleteCallout = (stepId: string, calloutId: string) => {
-    setSopDocument(prev => ScreenshotManager.deleteCallout(prev, stepId, calloutId));
-  };
-
-  const addSecondaryCallout = (stepId: string, callout: Omit<Callout, "id">) => {
-    setSopDocument(prev => ScreenshotManager.addSecondaryCallout(prev, stepId, callout));
-  };
-
-  const updateSecondaryCallout = (stepId: string, callout: Callout) => {
-    setSopDocument(prev => ScreenshotManager.updateSecondaryCallout(prev, stepId, callout));
-  };
-
-  const deleteSecondaryCallout = (stepId: string, calloutId: string) => {
-    setSopDocument(prev => ScreenshotManager.deleteSecondaryCallout(prev, stepId, calloutId));
-  };
-
   // Document management
   const saveDocumentToJSON = () => {
     DocumentManager.saveToJSON(sopDocument);
   };
 
   const loadDocumentFromJSON = (jsonData: string) => {
-    const loadedDocument = DocumentManager.loadFromJSON(jsonData, defaultSopDocument);
-    setSopDocument(loadedDocument);
+    try {
+      const parsedDocument = DocumentManager.loadFromJSON(jsonData, defaultSopDocument);
+      setSopDocument(parsedDocument);
+    } catch (error) {
+      console.error("Failed to load document:", error);
+    }
   };
 
   const resetDocument = () => {
@@ -452,72 +169,35 @@ export const SopProvider = ({ children }: { children: ReactNode }) => {
     localStorage.removeItem("sop-document-draft");
     toast({
       title: "Document Reset",
-      description: "Your SOP document has been reset"
+      description: "Document has been reset to default state.",
     });
   };
 
+  // Export functionality
   const exportDocument = async (format: ExportFormat | "bundle", options?: any): Promise<void> => {
     return DocumentManager.exportDocument(sopDocument, format, options);
   };
-  
+
   const getPdfPreview = async (): Promise<string> => {
     return DocumentManager.getPdfPreview(sopDocument);
   };
 
+  // Progress tracking
   const getCompletedStepsCount = (): number => {
-    return DocumentManager.getProgressInfo(sopDocument).completed;
+    return sopDocument.steps.filter(step => step.completed).length;
   };
 
   const getProgressPercentage = (): number => {
-    return DocumentManager.getProgressInfo(sopDocument).percentage;
+    if (sopDocument.steps.length === 0) return 0;
+    return (getCompletedStepsCount() / sopDocument.steps.length) * 100;
   };
 
-  // Organization system functions
-  const saveSopToDatabase = async (folderId?: string, description?: string) => {
-    return await saveSop(sopDocument, folderId, description);
+  // Internal state updater for step operations
+  const updateDocument = (updater: (prev: SopDocument) => SopDocument) => {
+    setSopDocument(updater);
   };
 
-  const updateSopInDatabase = async (id: string, folderId?: string, description?: string) => {
-    return await updateSop(id, sopDocument, folderId, description);
-  };
-
-  const deleteSopFromDatabase = async (id: string) => {
-    return await deleteSop(id);
-  };
-
-  const loadSopFromDatabase = (savedSop: SavedSop) => {
-    if (savedSop.content) {
-      setSopDocument(savedSop.content as SopDocument);
-      toast({
-        title: "Success",
-        description: `Loaded SOP: ${savedSop.title}`
-      });
-    }
-  };
-
-  const refreshOrganization = () => {
-    refetchFolders();
-    refetchTags();
-    refetchSops();
-  };
-
-  React.useEffect(() => {
-    // TEMPORARILY DISABLED: Auto-save causing infinite loop
-    // TODO: Fix StorageManager.clearOldData() to not clear auth tokens
-    /*
-    const saveSuccess = StorageManager.saveDocument(sopDocument);
-    
-    if (!saveSuccess) {
-      toast({
-        title: "Storage Warning",
-        description: "Document is too large for auto-save. Consider exporting to file.",
-        variant: "destructive"
-      });
-    }
-    */
-  }, [sopDocument]);
-
-  const contextValue: SopContextType = {
+  const contextValue: DocumentContextType = {
     sopDocument,
     setSopTitle,
     setSopTopic,
@@ -528,97 +208,32 @@ export const SopProvider = ({ children }: { children: ReactNode }) => {
     setLogo,
     setBackgroundImage,
     setCompanyName,
-    
-    // Step management
-    addStep,
-    addStepFromTemplate,
-    updateStep,
-    moveStepUp,
-    moveStepDown,
-    deleteStep,
-    duplicateStep,
-    toggleStepCompletion,
-    
-    // Enhanced content blocks
-    addStepContentBlock,
-    updateStepContentBlock,
-    removeStepContentBlock,
-    reorderStepContentBlocks,
-    
-    // Screenshot management
-    setStepScreenshot,
-    setStepSecondaryScreenshot,
-    cropStepScreenshot,
-    undoCropStepScreenshot,
-    
-    // Multiple screenshots management
-    addStepScreenshot,
-    updateStepScreenshot,
-    deleteStepScreenshot,
-    reorderStepScreenshots,
-    cropSpecificScreenshot,
-    undoCropSpecificScreenshot,
-    
-    // Callout management
-    addCallout,
-    updateCallout,
-    deleteCallout,
-    addSecondaryCallout,
-    updateSecondaryCallout,
-    deleteSecondaryCallout,
-    
-    // Tags and resources
-    addStepTag,
-    removeStepTag,
-    addStepResource,
-    removeStepResource,
-    updateStepResource,
-    
-    // Document management
-    saveDocumentToJSON,
-    loadDocumentFromJSON,
-    resetDocument,
-    
-    // Export functionality
-    exportDocument,
-    getPdfPreview,
-    
-    // Progress tracking
-    getCompletedStepsCount,
-    getProgressPercentage,
-    
-    // Settings
     setTableOfContents,
     setDarkMode,
     setTrainingMode,
     enableProgressTracking,
     disableProgressTracking,
-
-    // Organization system
-    folders,
-    tags,
-    savedSops,
-    organizationLoading,
-    createFolder,
-    updateFolder,
-    deleteFolder,
-    createTag,
-    updateTag,
-    deleteTag,
-    saveSopToDatabase,
-    updateSopInDatabase,
-    deleteSopFromDatabase,
-    loadSopFromDatabase,
-    addTagToSop,
-    removeTagFromSop,
-    refreshOrganization
+    saveDocumentToJSON,
+    loadDocumentFromJSON,
+    resetDocument,
+    exportDocument,
+    getPdfPreview,
+    getCompletedStepsCount,
+    getProgressPercentage,
+    updateDocument
   };
 
   return (
-    <SopContext.Provider value={contextValue}>
+    <DocumentContext.Provider value={contextValue}>
       {children}
-    </SopContext.Provider>
+    </DocumentContext.Provider>
   );
 };
 
-export const useSopContext = () => useContext(SopContext);
+export const useDocumentContext = () => {
+  const context = useContext(DocumentContext);
+  if (!context) {
+    throw new Error("useDocumentContext must be used within a DocumentProvider");
+  }
+  return context;
+};

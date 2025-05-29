@@ -130,6 +130,8 @@ const EnhancedExportPanel: React.FC<EnhancedExportPanelProps> = ({
 
   const handleExport = useCallback(() => {
     const exportOptions: EnhancedExportOptions = {
+      format: selectedFormat,
+      includeImages: true,
       advanced: customization,
       template: selectedTemplate ? {
         useCustomTemplate: true,
@@ -849,4 +851,4 @@ const EnhancedExportPanel: React.FC<EnhancedExportPanelProps> = ({
   );
 };
 
-export default EnhancedExportPanel; 
+export default EnhancedExportPanel;
