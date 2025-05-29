@@ -1,6 +1,7 @@
 import React, { useRef, useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Callout } from "@/types/sop";
+import * as StackBlur from "stackblur-canvas";
 
 interface AdvancedCalloutRendererProps {
   callout: Callout;
@@ -33,7 +34,7 @@ const AdvancedCalloutRenderer: React.FC<AdvancedCalloutRendererProps> = ({
     opacity: callout.style?.opacity || 1,
   };
 
-  // Process blur/pixelate effects
+  // Process blur/pixelate effects with proper image processing
   useEffect(() => {
     try {
       if (callout.shape === "blur" && typeof screenshot === 'string' && canvasRef.current) {
@@ -49,17 +50,17 @@ const AdvancedCalloutRenderer: React.FC<AdvancedCalloutRendererProps> = ({
             if (!containerElement) return;
 
             const containerRect = containerElement.getBoundingClientRect();
-            const calloutWidth = (callout.width / 100) * containerRect.width;
-            const calloutHeight = (callout.height / 100) * containerRect.height;
+            const calloutWidth = Math.max(1, (callout.width / 100) * containerRect.width);
+            const calloutHeight = Math.max(1, (callout.height / 100) * containerRect.height);
             
             canvas.width = calloutWidth;
             canvas.height = calloutHeight;
 
             // Calculate source coordinates from the image
-            const sourceX = (callout.x / 100) * img.width;
-            const sourceY = (callout.y / 100) * img.height;
-            const sourceWidth = (callout.width / 100) * img.width;
-            const sourceHeight = (callout.height / 100) * img.height;
+            const sourceX = Math.max(0, (callout.x / 100) * img.width);
+            const sourceY = Math.max(0, (callout.y / 100) * img.height);
+            const sourceWidth = Math.max(1, (callout.width / 100) * img.width);
+            const sourceHeight = Math.max(1, (callout.height / 100) * img.height);
 
             // Draw the relevant portion of the image
             ctx.drawImage(
@@ -68,11 +69,13 @@ const AdvancedCalloutRenderer: React.FC<AdvancedCalloutRendererProps> = ({
               0, 0, calloutWidth, calloutHeight
             );
 
-            // Apply blur or pixelation effect
+            // Apply blur or pixelation effect with proper libraries
             if (callout.blurData?.type === "pixelate") {
               applyPixelateEffect(ctx, calloutWidth, calloutHeight, callout.blurData.intensity || 5);
             } else {
-              applyBlurEffect(ctx, callout.blurData?.intensity || 5);
+              // Use StackBlur for real blur effect
+              const intensity = Math.max(1, Math.min(50, callout.blurData?.intensity || 5));
+              StackBlur.canvasRGBA(canvas, 0, 0, calloutWidth, calloutHeight, intensity);
             }
 
             setProcessedImageData(canvas.toDataURL());
@@ -83,24 +86,13 @@ const AdvancedCalloutRenderer: React.FC<AdvancedCalloutRendererProps> = ({
         img.onerror = () => {
           console.error("Error loading image for blur effect");
         };
+        img.crossOrigin = "anonymous"; // Handle CORS for external images
         img.src = screenshot;
       }
     } catch (error) {
       console.error("Error in blur effect useEffect:", error);
     }
   }, [callout, screenshot, containerRef]);
-
-  const applyBlurEffect = (ctx: CanvasRenderingContext2D, intensity: number) => {
-    try {
-      // Apply CSS filter blur effect
-      ctx.filter = `blur(${Math.max(0, intensity)}px)`;
-      const imageData = ctx.getImageData(0, 0, ctx.canvas.width, ctx.canvas.height);
-      ctx.putImageData(imageData, 0, 0);
-      ctx.filter = 'none';
-    } catch (error) {
-      console.error("Error applying blur effect:", error);
-    }
-  };
 
   const applyPixelateEffect = (ctx: CanvasRenderingContext2D, width: number, height: number, intensity: number) => {
     try {
@@ -110,7 +102,7 @@ const AdvancedCalloutRenderer: React.FC<AdvancedCalloutRendererProps> = ({
       const imageData = ctx.getImageData(0, 0, width, height);
       const data = imageData.data;
       
-      // Create pixelated effect
+      // Create pixelated effect by sampling and filling blocks
       for (let y = 0; y < height; y += pixelSize) {
         for (let x = 0; x < width; x += pixelSize) {
           // Get the color of the top-left pixel in this block
