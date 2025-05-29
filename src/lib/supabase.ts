@@ -28,72 +28,107 @@ export const storeSupabaseCredentials = (url: string, key: string): void => {
   window.location.reload(); // Reload to initialize with new credentials
 };
 
-// Initialize Supabase client with more detailed error handling
+// Initialize Supabase client with production-ready configuration
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     persistSession: true,
     autoRefreshToken: true,
-    detectSessionInUrl: true
+    detectSessionInUrl: true,
+    flowType: 'pkce'
+  },
+  db: {
+    schema: 'public'
+  },
+  global: {
+    headers: {
+      'X-Client-Info': 'sopify-app'
+    }
   }
 });
 
-// Check if Supabase connection is working
-export const testSupabaseConnection = async () => {
-  try {
-    // Simple ping to verify connection
-    const { error } = await supabase.from('pdf_usage').select('count', { count: 'exact', head: true });
-    return error === null || error.message !== 'FetchError: fetch failed';
-  } catch (error) {
-    console.error("Supabase connection test failed:", error);
-    return false;
+// Enhanced connection test with retry logic
+export const testSupabaseConnection = async (retries: number = 3): Promise<boolean> => {
+  for (let i = 0; i < retries; i++) {
+    try {
+      const { error } = await supabase.from('subscriptions').select('count', { count: 'exact', head: true });
+      if (!error) return true;
+      
+      if (i < retries - 1) {
+        await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1))); // Exponential backoff
+      }
+    } catch (error) {
+      console.warn(`Supabase connection attempt ${i + 1} failed:`, error);
+      if (i < retries - 1) {
+        await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1)));
+      }
+    }
   }
+  return false;
 };
 
-// Create a PDF usage record that will be used to track PDF usage
-export const createPdfUsageRecord = async (userId: string) => {
+// Enhanced PDF usage tracking with error handling
+export const createPdfUsageRecord = async (userId: string): Promise<any> => {
   try {
-    // Use the supabase client from the integrations folder to bypass RLS
     const { data, error } = await supabase
       .from('pdf_usage')
       .insert({
         user_id: userId,
         created_at: new Date().toISOString()
-      });
+      })
+      .select()
+      .single();
       
-    if (error) throw error;
+    if (error) {
+      console.error("Error creating PDF usage record:", error);
+      throw error;
+    }
+    
     return data;
   } catch (error) {
-    console.error("Error creating PDF usage record:", error);
+    console.error("Failed to create PDF usage record:", error);
     return null;
   }
 };
 
-// Check if user has reached daily PDF limit (1 per day for free tier)
+// Enhanced PDF usage limit check with better date handling
 export const checkPdfUsageLimit = async (userId: string): Promise<boolean> => {
   try {
-    // Get current date in ISO format without the time component
-    const today = new Date().toISOString().split('T')[0];
+    const today = new Date();
+    const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const endOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1);
     
-    // Count PDFs generated today by this user
-    const { data, error, count } = await supabase
+    const { count, error } = await supabase
       .from('pdf_usage')
-      .select('*', { count: 'exact' })
+      .select('*', { count: 'exact', head: true })
       .eq('user_id', userId)
-      .gte('created_at', `${today}T00:00:00`)
-      .lt('created_at', `${today}T23:59:59`);
+      .gte('created_at', startOfDay.toISOString())
+      .lt('created_at', endOfDay.toISOString());
       
-    if (error) throw error;
+    if (error) {
+      console.error("Error checking PDF usage limit:", error);
+      return false; // Default to restricting access on error
+    }
     
-    // Return true if user has not reached daily limit
-    return (count !== undefined && count < 1);
+    return (count !== null && count < 1);
   } catch (error) {
-    console.error("Error checking PDF usage limit:", error);
-    return false; // Default to restricting access on error
+    console.error("Failed to check PDF usage limit:", error);
+    return false;
   }
 };
 
-// Get user subscription status
-export const getUserSubscription = async (userId: string) => {
+// Enhanced subscription retrieval with caching
+let subscriptionCache: { [userId: string]: { data: any; timestamp: number } } = {};
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
+export const getUserSubscription = async (userId: string, useCache: boolean = true): Promise<any> => {
+  // Check cache first if enabled
+  if (useCache && subscriptionCache[userId]) {
+    const { data, timestamp } = subscriptionCache[userId];
+    if (Date.now() - timestamp < CACHE_DURATION) {
+      return data;
+    }
+  }
+
   try {
     const { data, error } = await supabase
       .from('subscriptions')
@@ -101,11 +136,71 @@ export const getUserSubscription = async (userId: string) => {
       .eq('user_id', userId)
       .single();
       
-    if (error && error.code !== 'PGRST116') throw error; // PGRST116 is "no rows found" error
+    if (error && error.code !== 'PGRST116') {
+      console.error("Error getting user subscription:", error);
+      throw error;
+    }
     
-    return data || null;
+    const result = data || null;
+    
+    // Cache the result
+    if (useCache) {
+      subscriptionCache[userId] = {
+        data: result,
+        timestamp: Date.now()
+      };
+    }
+    
+    return result;
   } catch (error) {
-    console.error("Error getting user subscription:", error);
+    console.error("Failed to get user subscription:", error);
     return null;
   }
+};
+
+// Clear subscription cache
+export const clearSubscriptionCache = (userId?: string): void => {
+  if (userId) {
+    delete subscriptionCache[userId];
+  } else {
+    subscriptionCache = {};
+  }
+};
+
+// Health check function for monitoring
+export const performHealthCheck = async (): Promise<{
+  supabase: boolean;
+  auth: boolean;
+  database: boolean;
+}> => {
+  const results = {
+    supabase: false,
+    auth: false,
+    database: false
+  };
+
+  try {
+    // Test basic Supabase connection
+    results.supabase = await testSupabaseConnection(1);
+    
+    // Test auth system
+    try {
+      const { data } = await supabase.auth.getSession();
+      results.auth = true;
+    } catch {
+      results.auth = false;
+    }
+    
+    // Test database queries
+    try {
+      const { error } = await supabase.from('subscriptions').select('count', { count: 'exact', head: true });
+      results.database = !error;
+    } catch {
+      results.database = false;
+    }
+  } catch (error) {
+    console.error("Health check failed:", error);
+  }
+
+  return results;
 };
