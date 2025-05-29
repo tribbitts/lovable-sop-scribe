@@ -188,7 +188,7 @@ const EnhancedExportPanel: React.FC<EnhancedExportPanelProps> = ({
       description: "Modern, responsive web document"
     },
     { 
-      id: "word", 
+      id: "docx", 
       name: "Microsoft Word", 
       icon: FileText, 
       description: "Editable document format"

@@ -191,6 +191,8 @@ const FeatureTestPage: React.FC = () => {
                   isPublic: true,
                   usageCount: 150,
                   tags: ["corporate", "professional", "business"],
+                  createdAt: new Date(),
+                  updatedAt: new Date(),
                   customization: {
                     brandKit: {
                       primaryColor: "#007AFF",

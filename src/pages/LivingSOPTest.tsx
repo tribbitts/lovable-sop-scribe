@@ -13,14 +13,16 @@ const LivingSOPTest: React.FC = () => {
   // Mock SOP document for testing
   const mockSopDocument = {
     id: "test-sop-123",
-    title: "Sample Living SOP Document",
-    topic: "Testing Collaboration Features",
-    description: "A comprehensive test document showcasing real-time collaboration",
+    title: "Sample SOP Document",
+    topic: "Testing Living SOP Features",
+    description: "A comprehensive test document showcasing collaboration capabilities",
     companyName: "SOPify Test Company",
     version: "1.0",
     date: new Date().toISOString(),
     lastRevised: new Date().toISOString(),
     logo: null,
+    createdAt: new Date(),
+    updatedAt: new Date(),
     steps: [
       {
         id: "step-1",
@@ -29,7 +31,20 @@ const LivingSOPTest: React.FC = () => {
         completed: false,
         screenshot: null,
         callouts: [],
-        contentBlocks: []
+        contentBlocks: [],
+        resources: [],
+        order: 0
+      },
+      {
+        id: "step-2", 
+        title: "Advanced Features Step",
+        description: "Testing various collaboration and feedback features",
+        completed: false,
+        screenshot: null,
+        callouts: [],
+        contentBlocks: [],
+        resources: [],
+        order: 1
       }
     ]
   };

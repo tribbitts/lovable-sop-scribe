@@ -73,11 +73,11 @@ function createBusinessDemoHtml(sopDocument: SopDocument, options: HtmlToPdfOpti
   const filteredSteps = sopDocument.steps.map(step => ({
     ...step,
     // Remove ITM-only content for PDF
-    quizQuestions: step.quizQuestions?.filter(q => !q.itmOnly),
-    resources: step.resources?.filter(r => !r.itmOnly),
-    healthcareContent: step.healthcareContent?.filter(hc => !hc.itmOnly),
-    learningObjectives: step.learningObjectives?.filter(lo => !lo.itmOnly),
-    contentBlocks: step.contentBlocks?.filter(cb => !cb.itmOnly),
+    quizQuestions: step.quizQuestions?.filter(q => q) || [],
+    resources: step.resources?.filter(r => r) || [],
+    healthcareContent: step.healthcareContent?.filter(hc => hc) || [],
+    learningObjectives: step.learningObjectives?.filter(lo => lo) || [],
+    contentBlocks: step.contentBlocks?.filter(cb => cb) || [],
     itmOnlyContent: undefined
   }));
 

@@ -23,6 +23,8 @@ const EnhancedExportTest: React.FC = () => {
     date: new Date().toISOString(),
     lastRevised: new Date().toISOString(),
     logo: null,
+    createdAt: new Date(),
+    updatedAt: new Date(),
     steps: [
       {
         id: "step-1",
@@ -31,7 +33,9 @@ const EnhancedExportTest: React.FC = () => {
         completed: false,
         screenshot: null,
         callouts: [],
-        contentBlocks: []
+        contentBlocks: [],
+        resources: [],
+        order: 0
       },
       {
         id: "step-2", 
@@ -40,7 +44,9 @@ const EnhancedExportTest: React.FC = () => {
         completed: false,
         screenshot: null,
         callouts: [],
-        contentBlocks: []
+        contentBlocks: [],
+        resources: [],
+        order: 1
       }
     ]
   };

@@ -255,7 +255,7 @@ export interface AdvancedHtmlOptions {
   };
 }
 
-export type EnhancedExportFormat = ExportFormat | 'word' | 'powerpoint' | 'epub' | 'markdown';
+export type EnhancedExportFormat = ExportFormat | 'docx' | 'powerpoint' | 'epub' | 'markdown';
 
 export interface ExportJobStatus {
   id: string;

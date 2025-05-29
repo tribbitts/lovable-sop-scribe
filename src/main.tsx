@@ -1,14 +1,14 @@
-
+import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import App from './App.tsx'
 import './index.css'
 import { ThemeProvider } from './context/ThemeContext'
-import { SopProvider } from './context/SopContext'
+import { DocumentProvider } from './context/DocumentContext'
 
 createRoot(document.getElementById("root")!).render(
   <ThemeProvider>
-    <SopProvider>
+    <DocumentProvider>
       <App />
-    </SopProvider>
+    </DocumentProvider>
   </ThemeProvider>
 );

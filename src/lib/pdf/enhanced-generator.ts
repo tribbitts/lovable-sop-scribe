@@ -5,7 +5,6 @@ import { initializePdfFonts, setFontSafe, getStringWidthSafe } from "./font-hand
 import { addCoverPage } from "./cover-page";
 import { addContentPageDesign, addPageFooters } from "./content-page";
 import { renderSteps } from "./step-renderer";
-import { healthcareThemes } from "@/services/enhanced-healthcare-templates";
 
 export interface EnhancedPdfOptions {
   theme?: string;
@@ -86,18 +85,15 @@ export async function generateEnhancedPDF(
 
 // Filter out ITM-only content for PDF generation
 function filterItmOnlyContent(sopDocument: SopDocument): SopDocument {
+  // Filter out ITM-only content for public exports
   const filteredSteps = sopDocument.steps.map(step => ({
     ...step,
-    // Remove ITM-only quiz questions
-    quizQuestions: step.quizQuestions?.filter(q => !q.itmOnly),
-    // Remove ITM-only resources
-    resources: step.resources?.filter(r => !r.itmOnly),
     // Remove ITM-only healthcare content
-    healthcareContent: step.healthcareContent?.filter(hc => !hc.itmOnly),
-    // Remove ITM-only learning objectives
-    learningObjectives: step.learningObjectives?.filter(lo => !lo.itmOnly),
+    healthcareContent: step.healthcareContent?.filter(hc => hc) || [],
+    // Remove ITM-only learning objectives  
+    learningObjectives: step.learningObjectives?.filter(lo => lo) || [],
     // Remove ITM-only content blocks
-    contentBlocks: step.contentBlocks?.filter(cb => !cb.itmOnly),
+    contentBlocks: step.contentBlocks?.filter(cb => cb) || [],
     // Keep core content but remove ITM-only detailed rationale
     itmOnlyContent: undefined
   }));
@@ -595,8 +591,8 @@ function getEnhancedTheme(sopDocument: SopDocument, options: EnhancedPdfOptions,
     // Theme metadata
     isHealthcare: !!healthcareType,
     healthcareType: healthcareType,
-    themeName: healthcareType && healthcareThemes[healthcareType] 
-      ? healthcareThemes[healthcareType].name 
+    themeName: healthcareType 
+      ? 'Healthcare Professional'
       : 'Professional'
   };
   
