@@ -44,6 +44,7 @@ interface DocumentContextType {
 }
 
 const defaultSopDocument: SopDocument = {
+  id: crypto.randomUUID(),
   title: "",
   topic: "",
   date: new Date().toISOString().split("T")[0],
@@ -57,7 +58,9 @@ const defaultSopDocument: SopDocument = {
   trainingMode: true,
   progressTracking: {
     enabled: false
-  }
+  },
+  createdAt: new Date(),
+  updatedAt: new Date()
 };
 
 export const DocumentContext = createContext<DocumentContextType>({} as DocumentContextType);
@@ -71,7 +74,12 @@ export const DocumentProvider = ({ children }: { children: ReactNode }) => {
     const savedDocument = StorageManager.loadDocument();
     if (savedDocument) {
       try {
-        return { ...defaultSopDocument, ...savedDocument };
+        return { 
+          ...defaultSopDocument, 
+          ...savedDocument,
+          createdAt: savedDocument.createdAt ? new Date(savedDocument.createdAt) : new Date(),
+          updatedAt: savedDocument.updatedAt ? new Date(savedDocument.updatedAt) : new Date()
+        };
       } catch (error) {
         console.error("Failed to load saved document:", error);
         toast({
@@ -228,4 +236,4 @@ export const useDocumentContext = () => {
     throw new Error("useDocumentContext must be used within a DocumentProvider");
   }
   return context;
-}; 
+};

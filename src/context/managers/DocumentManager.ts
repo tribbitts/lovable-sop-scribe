@@ -1,3 +1,4 @@
+
 import { SopDocument, ExportFormat, ExportOptions } from "@/types/sop";
 import { saveAs } from "file-saver";
 import { toast } from "@/hooks/use-toast";
@@ -44,8 +45,7 @@ export class DocumentManager {
       ...document,
       progressTracking: {
         enabled: true,
-        sessionName,
-        lastSaved: new Date().toISOString()
+        sessionName
       }
     };
   }

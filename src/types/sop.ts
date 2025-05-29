@@ -59,6 +59,14 @@ export interface SopStep {
   fileLink?: string;
   fileLinkText?: string;
   tags?: string[];
+  // Additional optional properties for enhanced features
+  trainingMode?: boolean;
+  quizQuestions?: any[];
+  learningObjectives?: string[];
+  contentBlocks?: any[];
+  patientSafetyNote?: string;
+  hipaaAlert?: string;
+  communicationTip?: string;
 }
 
 export interface StepResource {
@@ -69,6 +77,7 @@ export interface StepResource {
   description?: string;
   fileSize?: string;
   duration?: string;
+  itmOnly?: boolean; // For ITM-specific resources
 }
 
 export interface ScreenshotData {
@@ -83,6 +92,10 @@ export interface ScreenshotData {
     width: number;
     height: number;
   };
+  // Additional optional properties for enhanced features
+  originalDataUrl?: string;
+  secondaryDataUrl?: string;
+  secondaryCallouts?: Callout[];
 }
 
 // Healthcare-specific types
@@ -99,6 +112,7 @@ export interface HealthcareContent {
   content: string;
   priority: "high" | "medium" | "low";
   icon?: string;
+  itmOnly?: boolean; // For ITM-specific content
 }
 
 export interface RevisionHistoryEntry {
@@ -193,7 +207,7 @@ export interface FreehandCalloutData {
 }
 
 // Export and Template Types
-export type ExportFormat = 'pdf' | 'html' | 'docx' | 'json';
+export type ExportFormat = 'pdf' | 'html' | 'docx' | 'json' | 'training-module';
 
 export interface ExportOptions {
   format: ExportFormat;
@@ -208,6 +222,10 @@ export interface ExportOptions {
   customization?: any;
   theme?: string;
   mode?: 'standalone' | 'zip';
+  // Additional options for enhanced exports
+  enhanced?: boolean;
+  enhancedOptions?: any;
+  includeProgressInfo?: boolean;
 }
 
 // Component Props Types
@@ -361,7 +379,7 @@ export interface SOPAnalytics {
 }
 
 // Enhanced Export Types
-export interface EnhancedExportOptions {
+export interface EnhancedExportOptions extends ExportOptions {
   format: ExportFormat;
   includeImages: boolean;
   includeTableOfContents?: boolean;
@@ -423,4 +441,6 @@ export interface ExportTemplate {
   };
   preview?: string;
   createdBy?: string;
+  createdAt: Date;
+  updatedAt: Date;
 }
