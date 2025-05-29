@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Bundle Export Issue</title>
+    <style>
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            margin: 0;
+        }
+        .container { 
+            max-width: 900px; 
+            margin: 0 auto; 
+            background: white; 
+            border-radius: 20px; 
+            padding: 40px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.15);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .title {
+            font-size: 2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+        .debug-section {
+            background: #f8f9fa;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .debug-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 15px;
+        }
+        .step-item {
+            margin: 10px 0;
+            padding: 10px;
+            background: white;
+            border-radius: 6px;
+            border-left: 4px solid #007AFF;
+        }
+        .test-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 10px;
+        }
+        .test-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+        }
+        .console-log {
+            background: #1f2937;
+            color: #e5e7eb;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Monaco', 'Courier New', monospace;
+            font-size: 12px;
+            overflow-x: auto;
+            margin: 15px 0;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .error {
+            color: #ef4444;
+        }
+        .success {
+            color: #10b981;
+        }
+        .warning {
+            color: #f59e0b;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1 class="title">🔍 Debug Bundle Export</h1>
+            <p>Debug tool to identify and fix bundle export issues</p>
+        </div>
+
+        <div class="debug-section">
+            <h2 class="debug-title">🎯 Quick Test Steps</h2>
+            <div class="step-item">
+                <strong>Step 1:</strong> Open SOPify app at <a href="http://localhost:8080" target="_blank">localhost:8080</a>
+            </div>
+            <div class="step-item">
+                <strong>Step 2:</strong> Create a document with title "Test Bundle Export"
+            </div>
+            <div class="step-item">
+                <strong>Step 3:</strong> Add topic "Debug Test"
+            </div>
+            <div class="step-item">
+                <strong>Step 4:</strong> Add at least one step with some content
+            </div>
+            <div class="step-item">
+                <strong>Step 5:</strong> Open browser Developer Tools (F12) → Console tab
+            </div>
+            <div class="step-item">
+                <strong>Step 6:</strong> Click "Export Module" → Choose "Bundled Training Package" → Export
+            </div>
+            <div class="step-item">
+                <strong>Step 7:</strong> Copy the console output and paste below for analysis
+            </div>
+        </div>
+
+        <div class="debug-section">
+            <h2 class="debug-title">📋 Console Output Analysis</h2>
+            <p>Open the browser console and look for these messages when you try to export:</p>
+            
+            <div class="console-log">
+<span class="success">✅ Expected Success Messages:</span>
+🎯 SopCreator handling bundle export with options: {...}
+🎯 Bundle export triggered with options: {...}
+Starting training bundle generation
+SOP Document: {...}
+Bundle Options: {...}
+PDF Options: {...}
+PDF generation completed, base64 length: [number]
+PDF blob created, size: [number]
+PDF added to ZIP
+Training bundle created successfully: [filename].zip
+
+<span class="error">❌ Look for Error Messages:</span>
+- "PDF generation failed: [error message]"
+- "Bundle generation failed: [error message]"
+- "Export Failed - Failed to export SOP as Bundled Training Package"
+- Any red error messages in console
+
+<span class="warning">⚠️ Common Issues:</span>
+- Missing font files (Inter font warnings)
+- Image processing errors (screenshot/callout issues)
+- JSZip errors (ZIP generation problems)
+- File-saver errors (download problems)
+            </div>
+        </div>
+
+        <div class="debug-section">
+            <h2 class="debug-title">🔧 Diagnostic Information</h2>
+            <div id="diagnostic-info">
+                <p><strong>Current URL:</strong> <span id="current-url"></span></p>
+                <p><strong>User Agent:</strong> <span id="user-agent"></span></p>
+                <p><strong>Local Storage:</strong> <span id="local-storage-status"></span></p>
+                <p><strong>File API Support:</strong> <span id="file-api-support"></span></p>
+                <p><strong>Blob API Support:</strong> <span id="blob-api-support"></span></p>
+            </div>
+        </div>
+
+        <div class="debug-section">
+            <h2 class="debug-title">🎯 Immediate Fixes to Try</h2>
+            <div class="step-item">
+                <strong>Clear Browser Cache:</strong> Ctrl+Shift+R (or Cmd+Shift+R on Mac)
+            </div>
+            <div class="step-item">
+                <strong>Check Network Tab:</strong> Look for failed requests to fonts or assets
+            </div>
+            <div class="step-item">
+                <strong>Try Different Browser:</strong> Test in Chrome, Firefox, or Safari
+            </div>
+            <div class="step-item">
+                <strong>Disable Extensions:</strong> Try in incognito/private mode
+            </div>
+            <div class="step-item">
+                <strong>Check File Permissions:</strong> Ensure downloads folder is writable
+            </div>
+        </div>
+
+        <div style="text-align: center; margin-top: 30px;">
+            <button class="test-button" onclick="openApp()">
+                🚀 Open SOPify App
+            </button>
+            <button class="test-button" onclick="showTroubleshooting()">
+                🔧 Show Troubleshooting
+            </button>
+        </div>
+
+        <div id="troubleshooting" style="display: none;" class="debug-section">
+            <h2 class="debug-title">🔧 Advanced Troubleshooting</h2>
+            
+            <h3>If PDF Generation Fails:</h3>
+            <ul>
+                <li>Check if jsPDF library loaded properly</li>
+                <li>Look for font registration errors</li>
+                <li>Try with a simple document (no images)</li>
+                <li>Check if Inter font files are accessible</li>
+            </ul>
+            
+            <h3>If HTML Generation Fails:</h3>
+            <ul>
+                <li>Check if html-export module is loaded</li>
+                <li>Look for image processing errors</li>
+                <li>Try with steps that have no screenshots</li>
+                <li>Check callout processing errors</li>
+            </ul>
+            
+            <h3>If ZIP Creation Fails:</h3>
+            <ul>
+                <li>Check if JSZip library loaded properly</li>
+                <li>Look for memory issues with large files</li>
+                <li>Try with smaller documents</li>
+                <li>Check file-saver library status</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // Fill diagnostic information
+        document.getElementById('current-url').textContent = window.location.href;
+        document.getElementById('user-agent').textContent = navigator.userAgent.substring(0, 60) + '...';
+        
+        // Check localStorage
+        try {
+            localStorage.setItem('test', 'test');
+            localStorage.removeItem('test');
+            document.getElementById('local-storage-status').textContent = '✅ Available';
+        } catch (e) {
+            document.getElementById('local-storage-status').textContent = '❌ Not Available';
+        }
+        
+        // Check File API
+        document.getElementById('file-api-support').textContent = 
+            (window.File && window.FileReader && window.FileList && window.Blob) ? '✅ Supported' : '❌ Not Supported';
+        
+        // Check Blob API
+        document.getElementById('blob-api-support').textContent = 
+            (window.Blob && typeof window.Blob === 'function') ? '✅ Supported' : '❌ Not Supported';
+        
+        function openApp() {
+            window.open('http://localhost:8080', '_blank');
+        }
+        
+        function showTroubleshooting() {
+            const troubleshooting = document.getElementById('troubleshooting');
+            if (troubleshooting.style.display === 'none') {
+                troubleshooting.style.display = 'block';
+            } else {
+                troubleshooting.style.display = 'none';
+            }
+        }
+        
+        // Log current timestamp for debugging
+        console.log('🔍 Debug page loaded at:', new Date().toISOString());
+        console.log('🌐 Page URL:', window.location.href);
+        console.log('🔧 Ready to debug bundle export issues');
+    </script>
+</body>
+</html> 

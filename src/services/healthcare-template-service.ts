@@ -1,6 +1,5 @@
 import { HealthcareTemplate, healthcareTemplates, TemplateSection } from "@/types/healthcare-templates";
 import { SopStep, HealthcareContent, HealthcareContentType } from "@/types/sop";
-import { v4 as uuidv4 } from "uuid";
 
 export class HealthcareTemplateService {
   static getAllTemplates(): HealthcareTemplate[] {
@@ -23,7 +22,7 @@ export class HealthcareTemplateService {
 
     return template.sections.map((section, index) => {
       const step: SopStep = {
-        id: uuidv4(),
+        id: crypto.randomUUID(),
         title: section.title,
         description: section.suggestedContent,
         detailedInstructions: this.generateDetailedInstructions(section, template),
@@ -36,7 +35,9 @@ export class HealthcareTemplateService {
         allowRetakes: true,
         requiredScore: 80,
         healthcareContent: this.generateHealthcareContent(section, template),
-        quizQuestions: this.generateQuizQuestions(section, template)
+        quizQuestions: this.generateQuizQuestions(section, template),
+        resources: [],
+        order: 0
       };
 
       return step;
@@ -76,7 +77,7 @@ export class HealthcareTemplateService {
     // Add safety alerts for critical sections
     if (section.contentType === "safety-note" || ["hipaa-privacy", "emergency-protocols"].includes(section.id)) {
       content.push({
-        id: uuidv4(),
+        id: crypto.randomUUID(),
         type: "critical-safety",
         content: this.getSafetyMessage(section.id),
         priority: "high"
@@ -87,7 +88,7 @@ export class HealthcareTemplateService {
     if (template.enabledFeatures.communicationSnippets && 
         (["patient-first", "core-procedures", "difficult-conversations", "communication-practice"].includes(section.id))) {
       content.push({
-        id: uuidv4(),
+        id: crypto.randomUUID(),
         type: "patient-communication",
         content: this.getCommunicationSnippet(section.id),
         priority: "medium"
@@ -97,7 +98,7 @@ export class HealthcareTemplateService {
     // Add scenario-based content for continued learning
     if (section.contentType === "scenario" && template.category === "continued-learning") {
       content.push({
-        id: uuidv4(),
+        id: crypto.randomUUID(),
         type: "scenario-guidance",
         content: this.getScenarioGuidance(section.id),
         priority: "medium"
@@ -107,7 +108,7 @@ export class HealthcareTemplateService {
     // Add HIPAA alerts where relevant
     if (["systems-navigation", "core-procedures", "protocol-details"].includes(section.id)) {
       content.push({
-        id: uuidv4(),
+        id: crypto.randomUUID(),
         type: "hipaa-alert",
         content: "Remember: All patient information accessed through these systems is protected under HIPAA. Only access information necessary for your job duties.",
         priority: "high"
@@ -221,7 +222,7 @@ export class HealthcareTemplateService {
     if (!questionData) return [];
 
     return [{
-      id: uuidv4(),
+      id: crypto.randomUUID(),
       ...questionData
     }];
   }

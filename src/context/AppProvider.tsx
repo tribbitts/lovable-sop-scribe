@@ -1,6 +1,5 @@
 import React, { ReactNode } from 'react';
 import { DocumentProvider } from './DocumentContext';
-import { StepProvider } from './StepContext';
 
 interface AppProviderProps {
   children: ReactNode;
@@ -13,13 +12,10 @@ interface AppProviderProps {
 export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   return (
     <DocumentProvider>
-      <StepProvider>
-        {children}
-      </StepProvider>
+      {children}
     </DocumentProvider>
   );
 };
 
 // Re-export hooks for convenience
-export { useDocumentContext } from './DocumentContext';
-export { useStepContext } from './StepContext'; 
+export { useDocumentContext } from './DocumentContext'; 

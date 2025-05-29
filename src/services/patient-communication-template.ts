@@ -1,4 +1,3 @@
-
 import { SopDocument, SopStep } from "@/types/sop";
 
 export interface PatientCommunicationTemplate {
@@ -204,11 +203,14 @@ export const createPatientCommunicationSOP = (companyName: string = "Healthcare 
   const template = patientCommunicationProtocolTemplate;
   
   return {
-    title: template.title,
+    id: crypto.randomUUID(),
+    title: "Patient Communication Protocol",
     topic: "Healthcare Communication",
     date: new Date().toLocaleDateString(),
-    description: template.description,
+    description: "Comprehensive guide for effective patient communication in healthcare settings",
     logo: null,
+    createdAt: new Date(),
+    updatedAt: new Date(),
     steps: template.steps.map((step, index) => ({
       id: `step-${index + 1}`,
       title: step.title || `Step ${index + 1}`,
@@ -224,22 +226,6 @@ export const createPatientCommunicationSOP = (companyName: string = "Healthcare 
       estimatedTime: 8 // 8 minutes per communication step
     })) as SopStep[],
     companyName,
-    trainingMode: true,
-    healthcareMetadata: {
-      revisionHistory: [{
-        id: "v1",
-        version: "1.0",
-        date: new Date().toLocaleDateString(),
-        changes: "Initial patient communication protocol template",
-        author: "SOPify Healthcare Team",
-        approved: true,
-        approver: "Clinical Director",
-        approvalDate: new Date().toLocaleDateString()
-      }],
-      approvalSignatures: [],
-      complianceLevel: "hipaa",
-      patientImpact: "direct",
-      criticalityLevel: "critical"
-    }
+    trainingMode: true
   };
 };

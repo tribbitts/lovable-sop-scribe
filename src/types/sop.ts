@@ -1,4 +1,3 @@
-
 import React from "react";
 
 // Core SOP Document Types
@@ -211,7 +210,7 @@ export interface FreehandCalloutData {
 }
 
 // Export and Template Types
-export type ExportFormat = 'pdf' | 'html' | 'docx' | 'json' | 'training-module';
+export type ExportFormat = 'pdf' | 'html' | 'docx' | 'json' | 'training-module' | 'powerpoint';
 
 export interface ExportOptions {
   format: ExportFormat;

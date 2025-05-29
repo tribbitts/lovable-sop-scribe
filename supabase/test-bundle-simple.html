@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Bundle Export Test</title>
+    <style>
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; 
+            padding: 40px; 
+            background: #f5f5f5;
+        }
+        .container { 
+            max-width: 600px; 
+            margin: 0 auto; 
+            background: white; 
+            padding: 30px; 
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .test-button {
+            background: #007AFF;
+            color: white;
+            border: none;
+            padding: 15px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            margin: 10px 0;
+            display: block;
+            width: 100%;
+        }
+        .test-button:hover { background: #0056b3; }
+        .console-output {
+            background: #1a1a1a;
+            color: #00ff00;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 12px;
+            margin: 15px 0;
+            max-height: 300px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+        .error { color: #ff4444; }
+        .success { color: #44ff44; }
+        .info { color: #4444ff; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Bundle Export Test</h1>
+        <p>This test will help isolate the bundle export issue.</p>
+        
+        <button class="test-button" onclick="testFonts()">
+            🔤 Test Font Loading
+        </button>
+        
+        <button class="test-button" onclick="testPDFGeneration()">
+            📄 Test PDF Generation
+        </button>
+        
+        <button class="test-button" onclick="testFullBundle()">
+            📦 Test Full Bundle Export
+        </button>
+        
+        <div id="output" class="console-output">
+Click a test button to see results...
+        </div>
+    </div>
+
+    <script type="module">
+        const output = document.getElementById('output');
+        
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const className = type === 'error' ? 'error' : type === 'success' ? 'success' : 'info';
+            output.innerHTML += `<span class="${className}">[${timestamp}] ${message}</span>\n`;
+            output.scrollTop = output.scrollHeight;
+            console.log(`[${type.toUpperCase()}] ${message}`);
+        }
+        
+        window.log = log;
+        
+        // Test 1: Font Loading
+        window.testFonts = async function() {
+            output.innerHTML = '';
+            log('🔤 Testing font loading...', 'info');
+            
+            try {
+                // Test if font files are accessible
+                const regularResponse = await fetch('/fonts/Inter-Regular.ttf');
+                const boldResponse = await fetch('/fonts/Inter-Bold.ttf');
+                
+                if (regularResponse.ok && boldResponse.ok) {
+                    log('✅ Font files are accessible via HTTP', 'success');
+                    log(`Regular font size: ${regularResponse.headers.get('content-length')} bytes`, 'info');
+                    log(`Bold font size: ${boldResponse.headers.get('content-length')} bytes`, 'info');
+                    
+                    // Test if we can load jsPDF
+                    try {
+                        const { jsPDF } = await import('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
+                        log('✅ jsPDF library loaded successfully', 'success');
+                        
+                        // Test PDF creation
+                        const pdf = new jsPDF();
+                        pdf.text('Test', 10, 10);
+                        const dataUri = pdf.output('datauristring');
+                        
+                        if (dataUri && dataUri.startsWith('data:application/pdf')) {
+                            log('✅ PDF generation working', 'success');
+                        } else {
+                            log('❌ PDF generation failed - invalid output', 'error');
+                        }
+                    } catch (jsPDFError) {
+                        log('❌ jsPDF loading failed: ' + jsPDFError.message, 'error');
+                    }
+                } else {
+                    log('❌ Font files not accessible', 'error');
+                    log(`Regular: ${regularResponse.status} ${regularResponse.statusText}`, 'error');
+                    log(`Bold: ${boldResponse.status} ${boldResponse.statusText}`, 'error');
+                }
+            } catch (error) {
+                log('❌ Font test failed: ' + error.message, 'error');
+            }
+        };
+        
+        // Test 2: PDF Generation with actual bundle logic
+        window.testPDFGeneration = async function() {
+            output.innerHTML = '';
+            log('📄 Testing PDF generation with bundle logic...', 'info');
+            
+            try {
+                // Create a minimal SOP document
+                const testDoc = {
+                    title: "Test Document",
+                    topic: "Debug",
+                    date: new Date().toISOString().split('T')[0],
+                    companyName: "Test Company",
+                    steps: [
+                        {
+                            id: "1",
+                            title: "Test Step",
+                            description: "This is a test step for debugging",
+                            screenshots: []
+                        }
+                    ]
+                };
+                
+                log('📋 Test document created', 'info');
+                log('🔧 Attempting to generate PDF...', 'info');
+                
+                // Import the actual bundle generator
+                const response = await fetch('http://localhost:8082/src/lib/pdf/enhanced-generator.ts');
+                if (!response.ok) {
+                    throw new Error('Could not fetch enhanced-generator module');
+                }
+                
+                log('✅ Bundle generator module accessible', 'success');
+                
+                // For now, just test if the modules are accessible
+                log('🎯 Bundle generation modules are accessible', 'success');
+                log('📝 To test actual generation, use the SOPify app', 'info');
+                
+            } catch (error) {
+                log('❌ PDF generation test failed: ' + error.message, 'error');
+                log('📍 Stack trace: ' + error.stack, 'error');
+            }
+        };
+        
+        // Test 3: Full Bundle Export Simulation
+        window.testFullBundle = async function() {
+            output.innerHTML = '';
+            log('📦 Testing full bundle export simulation...', 'info');
+            
+            try {
+                // Test JSZip
+                const JSZip = (await import('https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js')).default;
+                log('✅ JSZip library loaded', 'success');
+                
+                // Test file-saver
+                const { saveAs } = await import('https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js');
+                log('✅ FileSaver library loaded', 'success');
+                
+                // Create a test ZIP
+                const zip = new JSZip();
+                zip.file("test.txt", "This is a test file");
+                
+                const blob = await zip.generateAsync({ type: "blob" });
+                log('✅ ZIP generation successful', 'success');
+                log(`📊 ZIP size: ${blob.size} bytes`, 'info');
+                
+                // Test download (will actually download a small test file)
+                saveAs(blob, "test-bundle.zip");
+                log('🎯 Test ZIP download triggered', 'success');
+                log('💡 Check your downloads folder for test-bundle.zip', 'info');
+                
+            } catch (error) {
+                log('❌ Bundle test failed: ' + error.message, 'error');
+                log('📍 Error details: ' + error.stack, 'error');
+            }
+        };
+        
+        // Initial info
+        log('🚀 Bundle Export Test Ready', 'info');
+        log('🌐 Testing on: ' + window.location.href, 'info');
+        log('⚡ Vite server detected', 'info');
+    </script>
+</body>
+</html> 

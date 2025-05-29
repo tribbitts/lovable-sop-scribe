@@ -1,14 +1,16 @@
-
 import { SopDocument } from "@/types/sop";
 
 export const createTrainingModuleSOP = (): SopDocument => {
   return {
+    id: crypto.randomUUID(),
     title: "Interactive Training Module",
     topic: "Training & Development",
     description: "An interactive training module with quizzes and progress tracking",
     companyName: "",
     date: new Date().toISOString().split('T')[0],
     logo: null,
+    createdAt: new Date(),
+    updatedAt: new Date(),
     steps: [
       {
         id: crypto.randomUUID(),
@@ -20,6 +22,8 @@ export const createTrainingModuleSOP = (): SopDocument => {
         tags: ["objectives", "learning"],
         trainingMode: true,
         screenshot: null,
+        resources: [],
+        order: 0,
         quizQuestions: [
           {
             id: crypto.randomUUID(),

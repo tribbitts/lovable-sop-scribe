@@ -1,25 +1,29 @@
-
 import { SopDocument } from "@/types/sop";
 
-export const createTroubleshootingGuideSOP = (): SopDocument => {
+export const createTroubleshootingGuide = (): SopDocument => {
   return {
-    title: "Troubleshooting Guide",
+    id: crypto.randomUUID(),
+    title: "Troubleshooting Guide Template",
     topic: "Technical Support",
-    description: "A guide to quickly resolve common issues and problems",
+    description: "Step-by-step troubleshooting guide for common issues",
     companyName: "",
     date: new Date().toISOString().split('T')[0],
     logo: null,
+    createdAt: new Date(),
+    updatedAt: new Date(),
     steps: [
       {
         id: crypto.randomUUID(),
         title: "Problem Identification",
-        description: "How to identify and categorize issues",
-        detailedInstructions: "Follow these steps to properly identify and categorize the problem.",
+        description: "Identify and categorize the issue",
+        detailedInstructions: "Follow these steps to properly identify the problem before attempting solutions.",
         estimatedTime: 5,
         completed: false,
-        tags: ["troubleshooting", "problem-solving", "technical"],
+        tags: ["troubleshooting", "diagnosis", "technical"],
         trainingMode: true,
-        screenshot: null
+        screenshot: null,
+        resources: [],
+        order: 0,
       }
     ],
     tableOfContents: true,
